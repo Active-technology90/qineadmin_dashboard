@@ -1,12 +1,13 @@
-import './App.css'
+import { Routes, Route } from 'react-router-dom';
+import SignIn from './components/pages/SignIn';
+import AdminDashboard from './components/dashboard/AdminDashboard';
 
-function App() {
-  
+export default function App() {
   return (
-   <div>
-    <h1>Admin Dashboard</h1>
-   </div>
-  )
+    <Routes>
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/dashboard" element={<AdminDashboard />} />
+      <Route path="/" element={<SignIn />} />
+    </Routes>
+  );
 }
-
-export default App
