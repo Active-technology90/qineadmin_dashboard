@@ -1,43 +1,99 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getCompanyProducts } from './../services/api';  // adjusted path
-import type { CompanyProductListItem } from './../types';
+import { useState, useCallback, useEffect } from 'react';
+import { getCompanyProducts, createCompanyProduct, updateCompanyProduct, deleteCompanyProduct } from '../services/api';
+import type { CompanyProductListItem } from '../types';
+import { useDebounce } from './useDebounce';
 
-interface UseCompanyProductsParams {
-  search?: string;
-  ordering?: string;
-  page?: number;
+interface UseCompanyProductsOptions {
+  companySlug: string | null;
+  pageSize?: number;
 }
 
-export function useCompanyProducts(
-  companySlug: string | undefined,
-  params?: UseCompanyProductsParams,
-) {
-  const [products, setProducts] = useState<CompanyProductListItem[]>([]);
+export function useCompanyProducts({ companySlug, pageSize = 10 }: UseCompanyProductsOptions) {
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasNext, setHasNext] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
 
   const fetchProducts = useCallback(async () => {
-    if (!companySlug) return;
+    if (!companySlug) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const { data } = await getCompanyProducts(companySlug, params);
-      setProducts(data.results);
-      setTotalCount(data.count);
-      setHasNext(!!data.next);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load products');
-      console.error('useCompanyProducts error:', err);
+      const response = await getCompanyProducts(companySlug, {
+        page: currentPage,
+        search: debouncedSearch,
+        page_size: pageSize,
+      });
+      const items = response.data.results || [];
+      setProducts(items.map((item: CompanyProductListItem) => ({
+        id: item.id,
+        sku: item.sku || '',
+        title: item.title,
+        price: parseFloat(item.price),
+        stock: item.stock,
+        unit: item.unit || 'pc',
+         image: item.primary_image,        // add this
+    image_url: item.image_url 
+      })));
+      setTotalItems(response.data.count);
+      setTotalPages(Math.ceil(response.data.count / pageSize));
+    } catch (err) {
+      setError('Failed to load products. Please try again.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [companySlug, params?.search, params?.ordering, params?.page]);
+  }, [companySlug, currentPage, debouncedSearch, pageSize]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    if (companySlug) fetchProducts();
+  }, [companySlug, currentPage, fetchProducts]); // fetchProducts is stable
 
-  return { products, loading, error, totalCount, hasNext, refetch: fetchProducts };
+ const createProduct = async (data: any) => {
+  if (!companySlug) throw new Error('No company selected');
+  const response = await createCompanyProduct(companySlug, data);
+  await fetchProducts();
+  return response.data; // 👈 return created product
+};
+
+const updateProduct = async (id: number, data: any) => {
+  if (!companySlug) throw new Error('No company selected');
+  const response = await updateCompanyProduct(companySlug, id, data);
+  await fetchProducts();
+  return response.data; // 👈 return updated product
+};
+
+  const deleteProduct = async (id: number) => {
+    if (!companySlug) throw new Error('No company selected');
+    await deleteCompanyProduct(companySlug, id);
+    await fetchProducts();
+  };
+
+  return {
+    products,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    totalItems,
+    search,
+    setSearch,
+    setCurrentPage,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    refetch: fetchProducts,
+  };
 }

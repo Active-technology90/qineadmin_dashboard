@@ -14,10 +14,11 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import Overview from "./Overview";
 // Import your specific components – adjust paths as needed
-import CompanyProducts from "./CompanyProducts";     // to be created
+     // to be created
 import CompanyUsers from "./CompanyUsers";           // to be created
 import Orders from "./Orders";                       // to be created
 import Payments from "./Payments";                   // to be created
+import CompanyProducts from "./company-products/CompanyProducts";
 
 type Tab =
   | "overview"

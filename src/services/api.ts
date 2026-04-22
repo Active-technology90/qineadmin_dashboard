@@ -16,6 +16,7 @@ import type {
   CheckoutResponse,
   PaginatedResponse,
   User,
+  ProductImage,
 } from '../types';
 
 // ── Configuration ──
@@ -408,5 +409,55 @@ export const updateSubCategory = async (slug: string, data: Partial<SubCategory>
 export const deleteSubCategory = async (slug: string) => {
   return api.delete(`/subcategories/${slug}/`);
 };
+// ── Product Images ──
 
+export const uploadProductImage = async (
+  companySlug: string,
+  productId: number,
+  file: File,
+  isPrimary: boolean = false
+) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  if (isPrimary) formData.append('is_primary', 'true');
+  
+  return api.post<ProductImage>(
+    `/catalog/company/${companySlug}/${productId}/images/`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }
+  );
+};
+
+export const deleteProductImage = async (
+  companySlug: string,
+  productId: number,
+  imageId: number
+) => {
+  return api.delete(`/catalog/company/${companySlug}/${productId}/images/${imageId}/`);
+};
+
+export const updateProductImage = async (
+  companySlug: string,
+  productId: number,
+  imageId: number,
+  data: Partial<{ order: number; is_primary: boolean }>
+) => {
+  return api.patch<ProductImage>(
+    `/catalog/company/${companySlug}/${productId}/images/${imageId}/`,
+    data
+  );
+};
+
+// Optional: reorder all images in one go (if API supports bulk)
+export const reorderProductImages = async (
+  companySlug: string,
+  productId: number,
+  imageIds: number[] // ordered list of image IDs
+) => {
+  return api.patch(`/catalog/company/${companySlug}/${productId}/images/reorder/`, {
+    image_ids: imageIds,
+  });
+};
 export default api;
