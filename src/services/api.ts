@@ -44,22 +44,22 @@ api.interceptors.request.use(
 );
 
 // ── Response Interceptor: Auto‑refresh on 401 ──
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
-}> = [];
+// let isRefreshing = false;
+// let failedQueue: Array<{
+//   resolve: (value: any) => void;
+//   reject: (reason?: any) => void;
+// }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
+// const processQueue = (error: any, token: string | null = null) => {
+//   failedQueue.forEach((prom) => {
+//     if (error) {
+//       prom.reject(error);
+//     } else {
+//       prom.resolve(token);
+//     }
+//   });
+//   failedQueue = [];
+// };
 
 api.interceptors.response.use(
   (response) => response,
@@ -219,6 +219,7 @@ export const getCompanyProducts = async (
     search?: string;
     ordering?: string;
     page?: number;
+    page_size?: number; // ✅ add this
   },
 ) => {
   return api.get<PaginatedResponse<CompanyProductListItem>>(
@@ -331,7 +332,7 @@ export const uploadPaymentReceipt = async (
   const formData = new FormData();
   formData.append('receipt_image', file);
   if (bankId) formData.append('bank_id', bankId);
-  if (bankName) formData.append('bank_name', bankName);
+  if (bankName) formData.append('bank_name ', bankName);
   if (amount) formData.append('amount', amount);
 
   return api.post(`/orders/${orderId}/upload-receipt/`, formData, {
@@ -371,8 +372,41 @@ export const updateCompanyProduct = async (
 ) => {
   return api.patch<CompanyProduct>(`/catalog/company/${companySlug}/${productId}/`, data);
 };
+// Add this to your src/services/api.ts
+export const updateCompany = async (slug: string, data: Partial<Company>) => {
+  return api.patch<Company>(`/companies/${slug}/`, data);
+};
 export const deleteCompanyProduct = async (companySlug: string, productId: number) => {
   return api.delete(`/catalog/company/${companySlug}/${productId}/`);
+};
+// Add to api.ts
+export const getCompanyStaff = async (companySlug: string) => {
+  return api.get(`/companies/${companySlug}/staff/`);
+};
+// Categories
+export const createCategory = async (data: { name: string; name_am?: string; slug?: string; description?: string }) => {
+  return api.post<Category>('/categories/', data);
+};
+
+export const updateCategory = async (slug: string, data: Partial<Category>) => {
+  return api.patch<Category>(`/categories/${slug}/`, data);
+};
+
+export const deleteCategory = async (slug: string) => {
+  return api.delete(`/categories/${slug}/`);
+};
+
+// SubCategories
+export const createSubCategory = async (data: { name: string; name_am?: string; category: number; slug?: string }) => {
+  return api.post<SubCategory>('/subcategories/', data);
+};
+
+export const updateSubCategory = async (slug: string, data: Partial<SubCategory>) => {
+  return api.patch<SubCategory>(`/subcategories/${slug}/`, data);
+};
+
+export const deleteSubCategory = async (slug: string) => {
+  return api.delete(`/subcategories/${slug}/`);
 };
 
 export default api;

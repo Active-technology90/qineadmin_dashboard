@@ -1,6 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
-import SignIn from './components/pages/SignIn';
-import AdminDashboard from './components/dashboard/AdminDashboard';
+import { Routes, Route } from "react-router-dom";
+import SignIn from "./pages/SignIn";
+import AdminDashboard from "./components/dashboard/AdminDashboard";
 
 export default function App() {
   return (
