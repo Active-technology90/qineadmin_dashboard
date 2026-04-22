@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative top-0 left-0 h-screen w-72 bg-gradient-to-b from-gray-900 to-gray-950 text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-300
+        className={`fixed lg:relative top-0 left-0 h-screen w-72 bg-gradient-to-b from-purple-900 to-[#6750A4] text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-300
           ${isSidebarOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
@@ -68,8 +68,8 @@ export default function AdminDashboard() {
         `}
       >
         <div className="p-8 border-b border-gray-800 flex items-center gap-3">
-          <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-            <Layout className="h-6 w-6 text-indigo-400" />
+          <div className="bg-white/10 p-1 w-12 h-12 rounded-lg backdrop-blur-sm">
+            <img src="/qinemartethio.jpeg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
           </div>
           <div>
             <span className="block text-lg font-bold tracking-wide font-primary">
@@ -96,15 +96,15 @@ export default function AdminDashboard() {
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
               ${activeTab === "overview"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                : "text-gray-200 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <LayoutDashboard
               className={`h-5 w-5 ${activeTab === "overview"
                 ? "text-white"
-                : "text-gray-400 group-hover:text-white"
+                : "text-gray-200 group-hover:text-white"
                 }`}
             />
             Overview
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
               ${activeTab === "products"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
                 : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
               ${activeTab === "users"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
                 : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
               ${activeTab === "orders"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
                 : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
               ${activeTab === "payments"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
                 : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
           </button>
         </nav>
 
-        <div className="p-4 m-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700/50">
+        {/* <div className="p-4 m-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700/50">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
               {user?.first_name?.[0] || "A"}
@@ -215,11 +215,11 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-400 truncate">{user?.email}</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-gray-50/50">
+      <main className="flex-1 overflow-auto bg-purple-200">
         <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
           <div className="flex items-center gap-4">
             <button
@@ -228,19 +228,21 @@ export default function AdminDashboard() {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <div className='flex justify-center items-center gap-2'>
-              <p className="text-sm text-gray-500 font-secondary hidden sm:block">
-                Welcome back,
-              </p>
-              <button 
-                onClick={()=> window.open('/home', '_blank')}
-                className="bg-blue-900 px-3 rounded-md text-white font-third text-[15px] py-1 cursor-pointer">
-                Home
-              </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+                {user?.first_name?.[0] || "A"}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {user?.first_name || "Admin"} {user?.last_name}
+                </p>
+                <p className="text-xs text-gray-700 truncate">{user?.email}</p>
+              </div>
             </div>
           </div>
+
           <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
+            {/* <div className="text-right hidden sm:block">
               <span className="block text-sm font-bold text-gray-900">
                 {new Date().toLocaleDateString("en-US", { weekday: "long" })}
               </span>
@@ -251,10 +253,11 @@ export default function AdminDashboard() {
                   day: "numeric",
                 })}
               </span>
-            </div>
-            <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 border border-gray-200">
+            </div> */}
+
+            {/* <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 border border-gray-200">
               <Calendar className="h-5 w-5" />
-            </div>
+            </div> */}
             <button
               onClick={logout}
               className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-all"
