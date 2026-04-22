@@ -261,7 +261,7 @@ export default function AdminDashboard() {
             </div> */}
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all"
             >
               <LogOut className="h-4 w-4" /> Logout
             </button>

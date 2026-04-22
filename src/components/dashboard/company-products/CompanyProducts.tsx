@@ -163,7 +163,7 @@ const handleSave = async (data: any) => {
           <div className="flex gap-3">
             <button
               onClick={resetCompany}
-              className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
               Switch
@@ -171,7 +171,7 @@ const handleSave = async (data: any) => {
 
             <button
               onClick={handleAdd}
-              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 rounded-full bg-secondary text-white hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               Add
@@ -186,7 +186,7 @@ const handleSave = async (data: any) => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-full focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
           />
         </div>
       </div>
