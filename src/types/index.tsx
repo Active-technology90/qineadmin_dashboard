@@ -350,3 +350,36 @@ export interface Service {
   is_active: boolean;
   is_featured: boolean;
 }
+export interface ProductImage {
+  id: number;
+  image: string;           // URL
+ 
+  created_at: string;
+}
+
+// Extend CompanyProduct and CompanyProductListItem to include images
+// Remove the duplicate (lines ~175-180) and keep the one near line 210+
+export interface ProductImage {
+  id: number;
+  image: string;           // URL
+
+  created_at: string;
+}
+
+// Keep this version (with images array)
+export interface CompanyProduct extends CompanyProductListItem {
+  images: ProductImage[];
+}
+
+// Keep this version (without images array – list view doesn't include full images)
+export interface CompanyProductListItem {
+  id: number;
+
+  title: string;
+  title_am?: string;
+  price: string;
+  stock: number;
+
+  image?: string;          // primary image URL (for listing)
+  // images?: ProductImage[]; // ❌ remove this line – list items don't have full images
+}
