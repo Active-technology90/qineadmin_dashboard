@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { login as loginApi, getMe } from "../../services/api";
 import { useAuth } from "../../context/authContext";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function SignIn(): JSX.Element {
+export default function SignIn(): React.JSX.Element {
   const [email, setEmail] = useState(""); // UI keeps email input
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
