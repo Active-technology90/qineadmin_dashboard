@@ -142,7 +142,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           {/* Progress bar */}
           <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-600 transition-all duration-300"
+              className="h-full bg-[#6750A8] transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>

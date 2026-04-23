@@ -75,7 +75,7 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
       )}
       <div
         className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${
-          dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 bg-gray-50'
+          dragActive ? 'border-[#6750A4] bg-indigo-50' : 'border-gray-300 bg-gray-50'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}

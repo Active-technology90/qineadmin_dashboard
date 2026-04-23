@@ -366,47 +366,54 @@ export default function CompanyManagement() {
   ),
   validate: validateBasicInfo,
 },
-    {
-      id: "images",
-      title: "Images & Status",
-      content: (
-        <div className="space-y-6">
-          <DragDropImageUpload
-            label="Logo"
-            value={formData.logo}
-            onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
-            previewUrl={logoPreview}
-            required={false}
+  // Inside the MultiStepFormModal steps array – replace the 'images' step content
+{
+  id: "images",
+  title: "Images & Status",
+  content: (
+    <div className="space-y-6">
+      {/* Logo upload – now takes half the width */}
+      <div className="md:w-1/2">
+        <DragDropImageUpload
+          label="Logo"
+          value={formData.logo}
+          onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
+          previewUrl={logoPreview}
+          required={false}
+        />
+      </div>
+
+      {/* Cover image upload – full width */}
+      <DragDropImageUpload
+        label="Cover Image"
+        value={formData.cover_image}
+        onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
+        previewUrl={coverPreview}
+      />
+
+      <div className="flex items-center space-x-6">
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={formData.is_active}
+            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+            className="h-4 w-4 text-indigo-600 rounded"
           />
-          <DragDropImageUpload
-            label="Cover Image"
-            value={formData.cover_image}
-            onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
-            previewUrl={coverPreview}
+          <span className="text-sm text-gray-700">Active</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={formData.is_featured}
+            onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+            className="h-4 w-4 text-indigo-600 rounded"
           />
-          <div className="flex items-center space-x-6">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="h-4 w-4 text-indigo-600 rounded"
-              />
-              <span className="text-sm text-gray-700">Active</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_featured}
-                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                className="h-4 w-4 text-indigo-600 rounded"
-              />
-              <span className="text-sm text-gray-700">Featured</span>
-            </label>
-          </div>
-        </div>
-      ),
-    },
+          <span className="text-sm text-gray-700">Featured</span>
+        </label>
+      </div>
+    </div>
+  ),
+},
   ];
 
   // Table columns with sortable definitions
