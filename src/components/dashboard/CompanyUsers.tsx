@@ -33,7 +33,7 @@ const {
 } = useCompanySelection(user);
 
 const companySlug = selectedCompany?.slug ?? null;
-// const companyName = selectedCompany?.name ?? '';
+const companyName = selectedCompany?.name ?? '';
 
 const { users, loading, error, refetch } = useCompanyUsers(companySlug);
 
@@ -92,13 +92,29 @@ const handleAddUser = async () => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Company Users</h2>
+       <h2 className="text-xl font-bold text-gray-900">
+  Company Users
+</h2>
+
+<p className="text-sm text-gray-500 mt-1">
+  Managing: <span className="text-indigo-600 font-medium">{companyName}</span>
+</p>
+<div className="flex items-center gap-2">
+      <button
+  onClick={resetCompany}
+  className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+>
+  Switch
+</button> 
+
        <button
   onClick={() => setShowModal(true)}
 className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90 flex items-center gap-2 shadow-sm"
 >
           <UserPlus className="h-4 w-4" /> Add User
         </button>
+  
+</div>
       </div>
 
       <div className="relative mb-4">
