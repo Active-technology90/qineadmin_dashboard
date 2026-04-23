@@ -1,26 +1,65 @@
 import { useState } from 'react';
+
+
+import { useAuth } from '../../context/authContext';
+import { useCompanySelection } from '../../hooks/useCompanySelection';
+import { useCompanyUsers } from '../../hooks/useCompanyUsers';
+
+import { CompanySelector } from './company-products/CompanySelector';
+import { NoCompanyView } from './company-products/NoCompanyView';
+import { ErrorView } from '../ui/ErrorView';
 import { Search, Edit, Trash2, UserPlus } from 'lucide-react';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: 'active' | 'inactive';
-}
+// interface User {
+//   id: number;
+//   name: string;
+//   email: string;
+//   role: string;
+//   status: 'active' | 'inactive';
+// }
 
 export default function CompanyUsers() {
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'active' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Staff', status: 'inactive' },
-  ]);
+  
+  const { user } = useAuth();
+
+const {
+  selectedCompany,
+  showSelector,
+  companies,
+  isLoadingCompanies,
+  selectCompany,
+  resetCompany,
+} = useCompanySelection(user);
+
+const companySlug = selectedCompany?.slug ?? null;
+// const companyName = selectedCompany?.name ?? '';
+
+const { users, loading, error } = useCompanyUsers(companySlug);
+ 
   const [search, setSearch] = useState('');
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+const filteredUsers = users.filter(u =>
+  `${u.first_name} ${u.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+  u.email.toLowerCase().includes(search.toLowerCase())
+);
+if (showSelector) {
+  return (
+    <CompanySelector
+      companies={companies}
+      isLoading={isLoadingCompanies}
+      onSelect={selectCompany}
+      onBack={resetCompany}
+    />
   );
+}
+
+if (error && !companySlug) {
+  return <ErrorView error={error} onRetry={() => window.location.reload()} />;
+}
+
+if (!companySlug) {
+  return <NoCompanyView onSelectCompany={resetCompany} />;
+}
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -54,15 +93,28 @@ export default function CompanyUsers() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.map((user) => (
+  {loading ? (
+    <tr>
+      <td colSpan={5} className="text-center py-4">
+        Loading users...
+      </td>
+    </tr>
+  ) : (
+    filteredUsers.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.role}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {user.status}
-                  </span>
+               <span
+  className={`px-2 inline-flex text-xs font-semibold rounded-full ${
+    user.is_active
+      ? 'bg-green-100 text-green-800'
+      : 'bg-red-100 text-red-800'
+  }`}
+>
+  {user.is_active ? 'active' : 'inactive'}
+</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button className="text-indigo-600 hover:text-indigo-900 mr-3">
@@ -73,7 +125,8 @@ export default function CompanyUsers() {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+  )}
           </tbody>
         </table>
       </div>
