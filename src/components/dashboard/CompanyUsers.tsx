@@ -9,6 +9,7 @@ import { CompanySelector } from './company-products/CompanySelector';
 import { NoCompanyView } from './company-products/NoCompanyView';
 import { ErrorView } from '../ui/ErrorView';
 import { Search, Edit, Trash2, UserPlus } from 'lucide-react';
+import { useAddCompanyUser } from "../../hooks/useAddCompanyUser";
 
 // interface User {
 //   id: number;
@@ -34,11 +35,18 @@ const {
 const companySlug = selectedCompany?.slug ?? null;
 // const companyName = selectedCompany?.name ?? '';
 
-const { users, loading, error } = useCompanyUsers(companySlug);
+const { users, loading, error, refetch } = useCompanyUsers(companySlug);
+
+const { addUser } = useAddCompanyUser();
+
+const [showModal, setShowModal] = useState(false);
+const [selectedEmail, setSelectedEmail] = useState("");
+const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | "viewer">("staff");
+const [adding, setAdding] = useState(false);
  
   const [search, setSearch] = useState('');
 
-const filteredUsers = users.filter(u =>
+const filteredUsers = (users || []).filter(u =>
   `${u.first_name} ${u.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
   u.email.toLowerCase().includes(search.toLowerCase())
 );
@@ -61,11 +69,34 @@ if (!companySlug) {
   return <NoCompanyView onSelectCompany={resetCompany} />;
 }
 
+const handleAddUser = async () => {
+  if (!companySlug || !selectedEmail) return;
+
+  try {
+    setAdding(true);
+
+    await addUser(companySlug, selectedEmail, selectedRole);
+
+    setShowModal(false);
+    setSelectedEmail("");
+    setSelectedRole("staff");
+
+    await refetch();  
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setAdding(false);
+  }
+};
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <div className="flex justify-between items-center mb-6">
+     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">Company Users</h2>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+       <button
+  onClick={() => setShowModal(true)}
+className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90 flex items-center gap-2 shadow-sm"
+>
           <UserPlus className="h-4 w-4" /> Add User
         </button>
       </div>
@@ -100,7 +131,7 @@ if (!companySlug) {
       </td>
     </tr>
   ) : (
-    filteredUsers.map((user) => (
+   (filteredUsers || []).map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
@@ -130,6 +161,54 @@ if (!companySlug) {
           </tbody>
         </table>
       </div>
+      {showModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white w-[420px] p-6 rounded-2xl shadow-lg">
+
+     <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        Add User to Company
+      </h2>
+
+      {/* USER SELECT */}
+  <input
+  type="email"
+  placeholder="Enter user email"
+  value={selectedEmail}
+  onChange={(e) => setSelectedEmail(e.target.value)}
+  className="w-full border px-3 py-2 rounded-full mb-3 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+/>
+
+      {/* ROLE SELECT */}
+      <select
+        className="w-full border px-3 py-2 rounded-full mb-4 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+        value={selectedRole}
+        onChange={(e) => setSelectedRole(e.target.value as any)}
+      >
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+        <option value="viewer">Viewer</option>
+      </select>
+
+      {/* ACTIONS */}
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          onClick={() => setShowModal(false)}
+         className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleAddUser}
+          disabled={adding}
+         className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90"
+        >
+          {adding ? "Adding..." : "Add"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
