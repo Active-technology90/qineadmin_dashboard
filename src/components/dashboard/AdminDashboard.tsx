@@ -9,19 +9,25 @@ import {
   Menu,
   X,
   Layout,
-  Calendar,
+
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import Overview from "./Overview";
 // Import your specific components – adjust paths as needed
-     // to be created
-import CompanyUsers from "./CompanyUsers";           // to be created
-import Orders from "./Orders";                       // to be created
-import Payments from "./Payments";                   // to be created
+// to be created
+import CompanyUsers from "./CompanyUsers"; // to be created
+import Orders from "./Orders"; // to be created
+import Payments from "./Payments"; // to be created
 import CompanyProducts from "./company-products/CompanyProducts";
+import CategoryManagement from "./CategoryManagement";
+import SubCategoryManagement from "./SubCategoryManagement";
+import CompanyManagement from "./CompanyManagement";
 
 type Tab =
   | "overview"
+  | "categories"
+  | "subcategories"
+  | "companies"
   | "products"
   | "users"
   | "orders"
@@ -44,6 +50,12 @@ export default function AdminDashboard() {
         return <Orders />;
       case "payments":
         return <Payments />;
+      case "categories":
+        return <CategoryManagement />;
+      case "subcategories":
+        return <SubCategoryManagement />;
+      case "companies":
+        return <CompanyManagement />;
       default:
         return <Overview />;
     }
@@ -62,15 +74,20 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative top-0 left-0 h-screen w-72 bg-gradient-to-b from-purple-900 to-[#6750A4] text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-300
-          ${isSidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full lg:translate-x-0"
+          ${
+            isSidebarOpen
+              ? "translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
           }
         `}
       >
         <div className="p-8 border-b border-gray-800 flex items-center gap-3">
           <div className="bg-white/10 p-1 w-12 h-12 rounded-lg backdrop-blur-sm">
-            <img src="/qinemartethio.jpeg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
+            <img
+              src="/qinemartethio.jpeg"
+              alt="Qine Logo"
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
           <div>
             <span className="block text-lg font-bold tracking-wide font-primary">
@@ -96,21 +113,62 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${activeTab === "overview"
-                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-200 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${
+                activeTab === "overview"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-200 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <LayoutDashboard
-              className={`h-5 w-5 ${activeTab === "overview"
-                ? "text-white"
-                : "text-gray-200 group-hover:text-white"
-                }`}
+              className={`h-5 w-5 ${
+                activeTab === "overview"
+                  ? "text-white"
+                  : "text-gray-200 group-hover:text-white"
+              }`}
             />
             Overview
           </button>
 
+          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8">
+            Platform Admin
+          </p>
+
+          {/* Categories */}
+          <button
+            onClick={() => {
+              setActiveTab("categories");
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+    ${activeTab === "categories" ? "bg-white/40 text-white shadow-lg translate-x-1" : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"}`}
+          >
+            <Layout className="h-5 w-5" /> Categories
+          </button>
+
+          {/* SubCategories */}
+          <button
+            onClick={() => {
+              setActiveTab("subcategories");
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+    ${activeTab === "subcategories" ? "bg-white/40 text-white shadow-lg translate-x-1" : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"}`}
+          >
+            <Layout className="h-5 w-5" /> SubCategories
+          </button>
+
+          {/* Companies */}
+          <button
+            onClick={() => {
+              setActiveTab("companies");
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+    ${activeTab === "companies" ? "bg-white/40 text-white shadow-lg translate-x-1" : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"}`}
+          >
+            <Users className="h-5 w-5" /> Companies
+          </button>
           <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8">
             Management
           </p>
@@ -122,17 +180,19 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${activeTab === "products"
-                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${
+                activeTab === "products"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <Package
-              className={`h-5 w-5 ${activeTab === "products"
-                ? "text-white"
-                : "text-gray-400 group-hover:text-white"
-                }`}
+              className={`h-5 w-5 ${
+                activeTab === "products"
+                  ? "text-white"
+                  : "text-gray-400 group-hover:text-white"
+              }`}
             />
             Company Products
           </button>
@@ -144,17 +204,19 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${activeTab === "users"
-                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${
+                activeTab === "users"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <Users
-              className={`h-5 w-5 ${activeTab === "users"
-                ? "text-white"
-                : "text-gray-400 group-hover:text-white"
-                }`}
+              className={`h-5 w-5 ${
+                activeTab === "users"
+                  ? "text-white"
+                  : "text-gray-400 group-hover:text-white"
+              }`}
             />
             Company Users
           </button>
@@ -166,17 +228,19 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${activeTab === "orders"
-                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${
+                activeTab === "orders"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <ShoppingBag
-              className={`h-5 w-5 ${activeTab === "orders"
-                ? "text-white"
-                : "text-gray-400 group-hover:text-white"
-                }`}
+              className={`h-5 w-5 ${
+                activeTab === "orders"
+                  ? "text-white"
+                  : "text-gray-400 group-hover:text-white"
+              }`}
             />
             Orders
           </button>
@@ -188,17 +252,19 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${activeTab === "payments"
-                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${
+                activeTab === "payments"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
             <CreditCard
-              className={`h-5 w-5 ${activeTab === "payments"
-                ? "text-white"
-                : "text-gray-400 group-hover:text-white"
-                }`}
+              className={`h-5 w-5 ${
+                activeTab === "payments"
+                  ? "text-white"
+                  : "text-gray-400 group-hover:text-white"
+              }`}
             />
             Payments
           </button>
