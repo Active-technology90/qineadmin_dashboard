@@ -9,7 +9,6 @@ import {
   Menu,
   X,
   Layout,
-
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import Overview from "./Overview";
@@ -22,6 +21,7 @@ import CompanyProducts from "./company-products/CompanyProducts";
 import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
 import CompanyManagement from "./CompanyManagement";
+import AdminProfile from "./AdminProfile";
 
 type Tab =
   | "overview"
@@ -31,7 +31,8 @@ type Tab =
   | "products"
   | "users"
   | "orders"
-  | "payments";
+  | "payments"
+  | "profile";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -50,6 +51,8 @@ export default function AdminDashboard() {
         return <Orders />;
       case "payments":
         return <Payments />;
+      case "profile":
+        return <AdminProfile />;
       case "categories":
         return <CategoryManagement />;
       case "subcategories":
@@ -267,6 +270,37 @@ export default function AdminDashboard() {
               }`}
             />
             Payments
+          </button>
+
+          {/* Profile */}
+          <button
+            onClick={() => {
+              setActiveTab("profile");
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+    ${
+      activeTab === "profile"
+        ? "bg-white/40 text-white shadow-lg translate-x-1"
+        : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+    }`}
+          >
+            👤 Profile
+          </button>
+
+          {/* Divider */}
+          <div className="mt-8 px-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Account
+            </p>
+          </div>
+
+          <button
+            onClick={logout}
+            className="flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200 hover:translate-x-1"
+          >
+            <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
+            Logout
           </button>
         </nav>
 
