@@ -9,14 +9,6 @@ import { ErrorView } from '../ui/ErrorView';
 import { Search, Edit, Trash2, UserPlus } from 'lucide-react';
 import { useAddCompanyUser } from "../../hooks/useAddCompanyUser";
 
-// interface User {
-//   id: number;
-//   name: string;
-//   email: string;
-//   role: string;
-//   status: 'active' | 'inactive';
-// }
-
 export default function CompanyUsers() {
 
   const { user } = useAuth();
@@ -46,7 +38,7 @@ export default function CompanyUsers() {
   const [search, setSearch] = useState('');
 
   const filteredUsers = (users || []).filter(u =>
-    `${u.first_name} ${u.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+    `${u.username}`.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
   if (showSelector) {
@@ -131,7 +123,7 @@ export default function CompanyUsers() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -148,7 +140,7 @@ export default function CompanyUsers() {
             ) : (
               (filteredUsers || []).map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.role}</td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -1,15 +1,8 @@
 // src/hooks/useCompanyUsers.ts
 import { useEffect, useState } from 'react';
 import { getCompanyStaff } from '../services/api';
+import type { User } from '../types';
 
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  is_active: boolean;
-  role?: string;
-}
 
 export function useCompanyUsers(companySlug: string | null) {
   const [users, setUsers] = useState<User[]>([]);
@@ -26,6 +19,7 @@ export function useCompanyUsers(companySlug: string | null) {
       // Flatten nested 'user' object
       const flattened = items.map((item: any) => ({
         id: item.user?.id ?? item.id,
+        username: item.user?.username,
         first_name: item.user?.first_name ?? '',
         last_name: item.user?.last_name ?? '',
         email: item.user?.email,

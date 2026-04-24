@@ -20,6 +20,7 @@ export interface User {
   image?: string;
   profile_image?: string;
   role?: string;
+  is_active?: boolean;
 }
 
 // ── Categories & SubCategories ──

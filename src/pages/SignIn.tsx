@@ -75,7 +75,7 @@ export default function SignIn(): React.JSX.Element {
             </div>
 
             <h1 className="text-3xl font-bold mb-2">
-              Qine Mart Admin
+              Qine Mart
             </h1>
 
             <p className="text-sm opacity-90">
@@ -93,7 +93,7 @@ export default function SignIn(): React.JSX.Element {
             </h2>
 
             <p className="text-gray-500 text-sm">
-              Enter your credentials to access admin panel
+              Enter your credentials to access the panel
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export default function SignIn(): React.JSX.Element {
 
             <div>
               <label className="text-sm text-gray-600">
-                Email / Username
+                Username
               </label>
 
               <input
@@ -146,7 +146,7 @@ export default function SignIn(): React.JSX.Element {
           </form>
 
           <div className="mt-6 text-xs text-gray-400 text-center">
-            Qine Market Admin • v1.0.0
+            Qine Mart • v1.0.0
           </div>
 
         </div>
