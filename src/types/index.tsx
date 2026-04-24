@@ -1,8 +1,7 @@
-// types/index.ts
+// src/types/index.ts
 // All types match the exact backend serializer response shapes
 
 // ── Auth & Users ──
-
 export interface Membership {
   company_id: number;
   company_name: string;
@@ -24,7 +23,6 @@ export interface User {
 }
 
 // ── Categories & SubCategories ──
-
 export interface Category {
   id: number;
   name: string;
@@ -37,12 +35,13 @@ export interface Category {
   order?: number;
   is_active?: boolean;
   company_count?: number;
-  subcategories?: SubCategory[]; // Only present in CategorySerializer (detail view)
+    rowNumber: number; 
+  subcategories?: SubCategory[]; // Only in detail view
 }
 
 export interface SubCategory {
   id: number;
-  category: number;
+  category: number; // parent category ID
   name: string;
   name_am?: string;
   slug: string;
@@ -55,7 +54,6 @@ export interface SubCategory {
 }
 
 // ── Companies ──
-
 export interface Company {
   id: number;
   name: string;
@@ -83,13 +81,14 @@ export interface Company {
   tax_type?: string;
 }
 
-// Lightweight version from CompanyListSerializer
+// Lightweight version from CompanyListSerializer (includes all list fields)
 export interface CompanyListItem {
   id: number;
   name: string;
   name_am?: string;
   slug: string;
   logo?: string | null;
+  cover_image?: string | null;  // ✅ added – present in API response
   category: number;
   category_name: string;
   sub_category: number;
@@ -97,16 +96,17 @@ export interface CompanyListItem {
   business_type: string;
   is_active: boolean;
   is_featured: boolean;
+  description?: string; // optional, not always in list
 }
 
 // ── Catalog / Products ──
-
 export interface ProductImage {
   id: number;
-  image: string;
+  image: string; // URL
   alt_text?: string;
   order?: number;
   is_primary?: boolean;
+  created_at?: string; // sometimes present
 }
 
 export interface GlobalProduct {
@@ -134,7 +134,7 @@ export interface CompanyProduct {
   title_am?: string;
   description?: string;
   description_am?: string;
-  price: string; // Decimal comes as string from DRF
+  price: string; // Decimal as string
   compare_at_price?: string | null;
   currency: string;
   stock: number;
@@ -148,7 +148,7 @@ export interface CompanyProduct {
   updated_at: string;
 }
 
-// Lightweight product for list views
+// Lightweight product for list views (no full images array)
 export interface CompanyProductListItem {
   id: number;
   company: number;
@@ -165,11 +165,10 @@ export interface CompanyProductListItem {
   unit?: string;
   is_active: boolean;
   is_featured: boolean;
-  primary_image?: string | null; // URL string in list serializer
+  primary_image?: string | null; // URL string
 }
 
 // ── Cart ──
-
 export interface CartItem {
   id: number;
   company_product: number;
@@ -186,17 +185,16 @@ export interface Cart {
   id: number;
   items: CartItem[];
   total: string;
-  subtotal?: string;      
-  tax_total?: string;     
-  total_amount?: string;  
+  subtotal?: string;
+  tax_total?: string;
+  total_amount?: string;
   item_count: number;
   vendor_count: number;
   updated_at: string;
 }
 
-// Local cart item (for guest users)
 export interface LocalCartItem {
-  id: string | number;           // company_product ID
+  id: string | number;
   company_product_id: number;
   title: string;
   price: number;
@@ -209,7 +207,6 @@ export interface LocalCartItem {
 }
 
 // ── Orders ──
-
 export interface OrderItem {
   id: number;
   title: string;
@@ -308,7 +305,6 @@ export interface CheckoutResponse {
 }
 
 // ── Pagination ──
-
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -316,6 +312,7 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+// ── Legacy / Deprecated (keep for compatibility) ──
 export interface Product {
   id: number;
   company: number;
@@ -326,60 +323,22 @@ export interface Product {
   is_active: boolean;
   is_featured: boolean;
   created_at: string;
-   
   updated_at: string;
 }
+
 export interface Service {
   id: number;
   name: string;
   name_am: string;
   slug: string;
-
   address: string;
   business_type: "service";
-
   category: number;
   category_name: string;
-
   sub_category: number;
   sub_category_name: string;
-
   logo: string | null;
   cover_image: string | null;
-
   is_active: boolean;
   is_featured: boolean;
-}
-export interface ProductImage {
-  id: number;
-  image: string;           // URL
- 
-  created_at: string;
-}
-
-// Extend CompanyProduct and CompanyProductListItem to include images
-// Remove the duplicate (lines ~175-180) and keep the one near line 210+
-export interface ProductImage {
-  id: number;
-  image: string;           // URL
-
-  created_at: string;
-}
-
-// Keep this version (with images array)
-export interface CompanyProduct extends CompanyProductListItem {
-  images: ProductImage[];
-}
-
-// Keep this version (without images array – list view doesn't include full images)
-export interface CompanyProductListItem {
-  id: number;
-
-  title: string;
-  title_am?: string;
-  price: string;
-  stock: number;
-
-  image?: string;          // primary image URL (for listing)
-  // images?: ProductImage[]; // ❌ remove this line – list items don't have full images
 }

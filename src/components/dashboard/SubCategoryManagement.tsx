@@ -1,0 +1,548 @@
+// src/components/admin/SubCategoryManagement.tsx
+import React, { useEffect, useState, useMemo } from "react";
+import { Plus, ImageIcon } from "lucide-react";
+import {
+  getSubCategories,
+  createSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
+  getCategories,
+} from "../../services/api";
+import type { SubCategory, Category } from "../../types";
+import { SearchInput } from "../ui/SearchInput";
+import { DataTable, type Column } from "../ui/DataTable";
+import { FormModal } from "../ui/FormModal";
+import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
+import { ErrorView } from "../ui/ErrorView";
+import { Toast } from "../ui/Toast";
+import { useToast } from "../../hooks/useToast";
+import { usePagination } from "../../hooks/usePagination";
+import { useSorting } from "../../hooks/useSorting";
+
+const ITEMS_PER_PAGE = 10;
+
+export default function SubCategoryManagement() {
+  const [subs, setSubs] = useState<SubCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    name_am: "",
+    slug: "",
+    category: 0,
+    item_code: "",
+    description: "",
+    icon: null as File | null,
+    iconPreview: "" as string,
+    order: 0,
+    is_active: true,
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SubCategory | null>(null);
+  const { toast, showToast } = useToast();
+
+  // Fetch subcategories and categories
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [subRes, catRes] = await Promise.all([
+        getSubCategories(),
+        getCategories(),
+      ]);
+      setSubs(subRes.data);
+      setCategories(catRes.data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Filter subcategories based on search
+  const filteredSubs = useMemo(() => {
+    if (!searchTerm.trim()) return subs;
+    const term = searchTerm.toLowerCase();
+    return subs.filter(
+      (sub) =>
+        sub.name.toLowerCase().includes(term) ||
+        sub.name_am?.toLowerCase().includes(term) ||
+        sub.slug.toLowerCase().includes(term) ||
+        sub.item_code?.toLowerCase().includes(term) ||
+        categories
+          .find((c) => c.id === sub.category)
+          ?.name.toLowerCase()
+          .includes(term),
+    );
+  }, [subs, categories, searchTerm]);
+
+  // Apply sorting to filtered subcategories
+  const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
+    filteredSubs,
+    "name",
+    "asc"
+  );
+
+  // Paginate sorted items
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    resetPage,
+    itemsPerPage,
+  } = usePagination(sortedItems, ITEMS_PER_PAGE);
+const paginatedItemsWithRowNumber = useMemo(() => {
+  return paginatedItems.map((item, index) => ({
+    ...item,
+    rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
+  }));
+}, [paginatedItems, currentPage, itemsPerPage]);
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, resetPage]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) errors.name = "Name is required";
+    if (formData.category === 0) errors.category = "Please select a category";
+    if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug))
+      errors.slug =
+        "Slug must contain only lowercase letters, numbers, and hyphens";
+    if (formData.order < 0) errors.order = "Order must be a positive number";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+
+    try {
+      const form = new FormData();
+
+      form.append("name", formData.name);
+      if (formData.name_am) form.append("name_am", formData.name_am);
+      if (formData.slug) form.append("slug", formData.slug);
+      form.append("category", String(formData.category));
+      if (formData.item_code) form.append("item_code", formData.item_code);
+      if (formData.description)
+        form.append("description", formData.description);
+      form.append("order", String(formData.order));
+      form.append("is_active", String(formData.is_active));
+
+      // Upload file if present
+      if (formData.icon instanceof File) {
+        form.append("icon", formData.icon);
+      }
+
+      if (editingId) {
+        const existing = subs.find((s) => s.id === editingId);
+        if (existing) await updateSubCategory(existing.slug, form);
+        showToast("success", "Updated successfully");
+      } else {
+        await createSubCategory(form);
+        showToast("success", "Created successfully");
+      }
+
+      setModalOpen(false);
+      resetForm();
+      fetchData();
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteSubCategory(deleteTarget.slug);
+      showToast("success", "Subcategory deleted successfully");
+      setDeleteTarget(null);
+      fetchData();
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Delete failed");
+    }
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      name: "",
+      name_am: "",
+      slug: "",
+      category: 0,
+      item_code: "",
+      description: "",
+      icon: null,
+      iconPreview: "",
+      order: 0,
+      is_active: true,
+    });
+    setFormErrors({});
+  };
+
+  const openEdit = (sub: SubCategory) => {
+    setEditingId(sub.id);
+    setFormData({
+      name: sub.name,
+      name_am: sub.name_am || "",
+      slug: sub.slug,
+      category: sub.category,
+      item_code: sub.item_code || "",
+      description: sub.description || "",
+      icon: null,
+      iconPreview: sub.icon || "",
+      order: sub.order || 0,
+      is_active: sub.is_active ?? true,
+    });
+    setModalOpen(true);
+  };
+
+  // Table columns with sortable definitions
+  const columns: Column<SubCategory>[] = [
+    { 
+    key: 'rowNumber', 
+    header: 'No.', 
+    sortable: false,
+    render: (cat) => cat.rowNumber 
+      },
+     {
+      key: "icon",
+      header: "Icon",
+      sortable: false,
+      render: (sub) =>
+        sub.icon ? (
+          <img
+            src={sub.icon}
+            alt={sub.name}
+            className="h-8 w-8 rounded object-cover"
+          />
+        ) : (
+          <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
+            <ImageIcon size={14} className="text-gray-400" />
+          </div>
+        ),
+    },
+    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900" },
+    {
+      key: "name_am",
+      header: "Name (Am)",
+      sortable: true,
+      render: (sub) => sub.name_am || "-",
+    },
+    {
+      key: "category",
+      header: "Category",
+      sortable: true,
+      sortKey: "category_name", // will sort by category name via custom logic in useSorting
+      render: (sub) =>
+        categories.find((c) => c.id === sub.category)?.name || sub.category,
+    },
+    {
+      key: "item_code",
+      header: "Item Code",
+      sortable: true,
+      render: (sub) => sub.item_code || "-",
+    },
+    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500" },
+ 
+    { key: "order", header: "Order", sortable: true, render: (sub) => sub.order ?? "-" },
+    {
+      key: "is_active",
+      header: "Active",
+      sortable: true,
+      render: (sub) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${sub.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+        >
+          {sub.is_active ? "Yes" : "No"}
+        </span>
+      ),
+    },
+    {
+      key: "company_count",
+      header: "Companies",
+      sortable: true,
+      render: (sub) => sub.company_count ?? 0,
+    },
+  ];
+
+  if (error) return <ErrorView error={error} onRetry={fetchData} />;
+
+  return (
+    <div>
+      <Toast toast={toast} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">SubCategories</h2>
+        <button
+          onClick={() => {
+            resetForm();
+            setModalOpen(true);
+          }}
+          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#6750A4] transition shadow-sm"
+        >
+          <Plus size={18} /> Add SubCategory
+        </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex-1">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search by name, Amharic name, slug, item code, or category..."
+          />
+        </div>
+        <select
+          value={`${sortField}|${sortOrder}`}
+          onChange={(e) => {
+            const [field, desiredOrder] = e.target.value.split('|');
+            // Apply sort using handleSort
+            if (field === sortField) {
+              if (desiredOrder !== sortOrder) handleSort(field);
+            } else {
+              handleSort(field);
+              if (desiredOrder === 'desc') handleSort(field); // second call toggles to desc
+            }
+          }}
+          className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
+        >
+          <option value="name|asc">Name (A-Z)</option>
+          <option value="name|desc">Name (Z-A)</option>
+          <option value="id|asc">Oldest (ID ↑)</option>
+          <option value="id|desc">Newest (ID ↓)</option>
+          <option value="order|asc">Order (Ascending)</option>
+          <option value="order|desc">Order (Descending)</option>
+          <option value="item_code|asc">Item Code (A-Z)</option>
+          <option value="company_count|desc">Most Companies</option>
+          <option value="company_count|asc">Fewest Companies</option>
+          <option value="is_active|desc">Active First</option>
+          <option value="is_active|asc">Inactive First</option>
+        </select>
+      </div>
+
+      <DataTable
+         data={paginatedItemsWithRowNumber} 
+        columns={columns}
+        loading={loading}
+        emptyMessage="No subcategories found"
+        onEdit={openEdit}
+        onDelete={setDeleteTarget}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+        totalItems={sortedItems.length}
+        itemsPerPage={itemsPerPage}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+      />
+
+      <FormModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingId ? "Edit SubCategory" : "New SubCategory"}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+        maxWidth="lg"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name (English) *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+              required
+            />
+            {formErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name (Amharic)
+            </label>
+            <input
+              type="text"
+              value={formData.name_am}
+              onChange={(e) =>
+                setFormData({ ...formData, name_am: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg p-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Slug (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="auto-generated"
+              value={formData.slug}
+              onChange={(e) =>
+                setFormData({ ...formData, slug: e.target.value })
+              }
+              className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+            />
+            {formErrors.slug && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: Number(e.target.value) })
+              }
+              className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+              required
+            >
+              <option value={0}>Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            {formErrors.category && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Item Code
+            </label>
+            <input
+              type="text"
+              value={formData.item_code}
+              onChange={(e) =>
+                setFormData({ ...formData, item_code: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg p-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Order
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.order}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  order: parseInt(e.target.value) || 0,
+                })
+              }
+              className="w-full border border-gray-300 rounded-lg p-2"
+            />
+            {formErrors.order && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Icon
+            </label>
+            <div className="flex items-center gap-4">
+              {(formData.iconPreview || formData.icon) && (
+                <img
+                  src={
+                    formData.icon
+                      ? URL.createObjectURL(formData.icon)
+                      : formData.iconPreview
+                  }
+                  className="h-12 w-12 rounded object-cover border"
+                  alt="Preview"
+                />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setFormData({
+                    ...formData,
+                    icon: file,
+                    iconPreview: URL.createObjectURL(file),
+                  });
+                }}
+                className="text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg p-2"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="is_active"
+              checked={formData.is_active}
+              onChange={(e) =>
+                setFormData({ ...formData, is_active: e.target.checked })
+              }
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="is_active"
+              className="text-sm font-medium text-gray-700"
+            >
+              Active
+            </label>
+          </div>
+        </div>
+      </FormModal>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title={deleteTarget?.name || ""}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+}
