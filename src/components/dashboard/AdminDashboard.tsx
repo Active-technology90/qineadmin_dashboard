@@ -220,7 +220,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-purple-200">
+      <main className="flex-1 overflow-auto bg-white">
         <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
           <div className="flex items-center gap-4">
             <button
