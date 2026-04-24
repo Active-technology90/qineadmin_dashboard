@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from "axios";
 import type {
   Category,
@@ -17,6 +16,7 @@ import type {
   PaginatedResponse,
   User,
   ProductImage,
+  VendorOrder,
 } from "../types";
 
 const API_URL = "https://backend-qine.activetechet.com/api/v1";
@@ -27,44 +27,91 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Request interceptor (attach token)
+// Flag to prevent multiple simultaneous token refresh calls
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Request interceptor: attach token
 api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem("access");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
-// Response interceptor (refresh token)
+// Response interceptor: handle 401 and refresh token
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // If not 401 or already retried → reject
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);
     }
+
+    if (isRefreshing) {
+      // Queue this request while refresh is in progress
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      })
+        .then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        })
+        .catch((err) => Promise.reject(err));
+    }
+
     originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshToken = localStorage.getItem("refresh");
+    if (!refreshToken) {
+      // No refresh token → force logout
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+      window.location.href = "/login";
+      return Promise.reject(new Error("SESSION_EXPIRED"));
+    }
+
     try {
-      const refreshToken = localStorage.getItem("refresh");
-      if (!refreshToken) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        return Promise.reject(new Error("SESSION_EXPIRED"));
-      }
       const { data } = await axios.post(`${API_URL}/auth/jwt/refresh/`, {
         refresh: refreshToken,
       });
       if (data.access) {
         localStorage.setItem("access", data.access);
+        processQueue(null, data.access);
         originalRequest.headers.Authorization = `Bearer ${data.access}`;
         return api(originalRequest);
+      } else {
+        throw new Error("No access token in refresh response");
       }
-      throw new Error("No access token");
-    } catch {
+    } catch (refreshError) {
+      // Refresh failed → clear tokens and redirect to login
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
-      return Promise.reject(new Error("SESSION_EXPIRED"));
+      processQueue(refreshError as Error, null);
+      window.location.href = "/login";
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
     }
-  },
+  }
 );
 
 // ========== AUTHENTICATION ==========
@@ -111,16 +158,10 @@ export const getCategories = async () => api.get<Category[]>("/categories/");
 export const getCategoryDetail = async (slug: string) =>
   api.get<Category>(`/categories/${slug}/`);
 
-// Create category (admin only)
-// src/services/api.ts
-
 export const createCategory = async (data: FormData | Record<string, any>) => {
   const isFormData = data instanceof FormData;
-
-  return api.post('/categories/', data, {
-    headers: isFormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : undefined,
+  return api.post("/categories/", data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
 
@@ -129,14 +170,11 @@ export const updateCategory = async (
   data: FormData | Partial<Category>
 ) => {
   const isFormData = data instanceof FormData;
-
   return api.patch(`/categories/${slug}/`, data, {
-    headers: isFormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : undefined,
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
-// Delete category (admin only)
+
 export const deleteCategory = async (slug: string) =>
   api.delete(`/categories/${slug}/`);
 
@@ -149,30 +187,20 @@ export const getSubCategories = async (categorySlug?: string) => {
 export const getSubCategoryDetail = async (slug: string) =>
   api.get<SubCategory>(`/subcategories/${slug}/`);
 
-// Create subcategory (admin only)
 export const createSubCategory = async (data: FormData | any) => {
   const isFormData = data instanceof FormData;
-
   return api.post("/subcategories/", data, {
-    headers: isFormData
-      ? { "Content-Type": "multipart/form-data" }
-      : undefined,
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
 
-export const updateSubCategory = async (
-  slug: string,
-  data: FormData | any
-) => {
+export const updateSubCategory = async (slug: string, data: FormData | any) => {
   const isFormData = data instanceof FormData;
-
   return api.patch(`/subcategories/${slug}/`, data, {
-    headers: isFormData
-      ? { "Content-Type": "multipart/form-data" }
-      : undefined,
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
-// Delete subcategory (admin only)
+
 export const deleteSubCategory = async (slug: string) =>
   api.delete(`/subcategories/${slug}/`);
 
@@ -195,26 +223,26 @@ export const getFeaturedCompanies = async () =>
     params: { featured: "true" },
   });
 
-// Create company (admin only) – supports both JSON and FormData
-// In api.ts
 export const createCompany = async (data: FormData | Record<string, any>) => {
   const isFormData = data instanceof FormData;
-  return api.post<Company>('/companies/', data, {
-    headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+  return api.post<Company>("/companies/", data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
 
-export const updateCompany = async (slug: string, data: FormData | Partial<Company>) => {
+export const updateCompany = async (
+  slug: string,
+  data: FormData | Partial<Company>
+) => {
   const isFormData = data instanceof FormData;
   return api.patch<Company>(`/companies/${slug}/`, data, {
-    headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
-// Delete company (admin only)
+
 export const deleteCompany = async (slug: string) =>
   api.delete(`/companies/${slug}/`);
 
-// Get company staff (admin)
 export const getCompanyStaff = async (companySlug: string) =>
   api.get(`/companies/${companySlug}/staff/`);
 
@@ -229,7 +257,7 @@ export const getGlobalProductDetail = async (id: number) =>
 
 export const getGlobalProductOffers = async (id: number) =>
   api.get<PaginatedResponse<CompanyProductListItem>>(
-    `/catalog/global/${id}/offers/`,
+    `/catalog/global/${id}/offers/`
   );
 
 export const getCompanyProducts = async (
@@ -239,16 +267,16 @@ export const getCompanyProducts = async (
     ordering?: string;
     page?: number;
     page_size?: number;
-  },
+  }
 ) =>
   api.get<PaginatedResponse<CompanyProductListItem>>(
     `/catalog/company/${companySlug}/`,
-    { params },
+    { params }
   );
 
 export const getCompanyProductDetail = async (
   companySlug: string,
-  productId: number,
+  productId: number
 ) => api.get<CompanyProduct>(`/catalog/company/${companySlug}/${productId}/`);
 
 export const searchProducts = async (params?: {
@@ -264,7 +292,7 @@ export const searchProducts = async (params?: {
     params,
   });
 
-// Company Product Management (for the company admin)
+// Company Product Management
 export const createCompanyProduct = async (
   companySlug: string,
   data: {
@@ -274,7 +302,7 @@ export const createCompanyProduct = async (
     price: string | number;
     stock: number;
     unit: string;
-  },
+  }
 ) => api.post<CompanyProduct>(`/catalog/company/${companySlug}/`, data);
 
 export const updateCompanyProduct = async (
@@ -287,16 +315,13 @@ export const updateCompanyProduct = async (
     price: string | number;
     stock: number;
     unit: string;
-  }>,
+  }>
 ) =>
-  api.patch<CompanyProduct>(
-    `/catalog/company/${companySlug}/${productId}/`,
-    data,
-  );
+  api.patch<CompanyProduct>(`/catalog/company/${companySlug}/${productId}/`, data);
 
 export const deleteCompanyProduct = async (
   companySlug: string,
-  productId: number,
+  productId: number
 ) => api.delete(`/catalog/company/${companySlug}/${productId}/`);
 
 // Product Images
@@ -304,7 +329,7 @@ export const uploadProductImage = async (
   companySlug: string,
   productId: number,
   file: File,
-  isPrimary: boolean = false,
+  isPrimary: boolean = false
 ) => {
   const formData = new FormData();
   formData.append("image", file);
@@ -314,32 +339,34 @@ export const uploadProductImage = async (
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
-    },
+    }
   );
 };
 
 export const deleteProductImage = async (
   companySlug: string,
   productId: number,
-  imageId: number,
+  imageId: number
 ) =>
-  api.delete(`/catalog/company/${companySlug}/${productId}/images/${imageId}/`);
+  api.delete(
+    `/catalog/company/${companySlug}/${productId}/images/${imageId}/`
+  );
 
 export const updateProductImage = async (
   companySlug: string,
   productId: number,
   imageId: number,
-  data: Partial<{ order: number; is_primary: boolean }>,
+  data: Partial<{ order: number; is_primary: boolean }>
 ) =>
   api.patch<ProductImage>(
     `/catalog/company/${companySlug}/${productId}/images/${imageId}/`,
-    data,
+    data
   );
 
 export const reorderProductImages = async (
   companySlug: string,
   productId: number,
-  imageIds: number[],
+  imageIds: number[]
 ) =>
   api.patch(`/catalog/company/${companySlug}/${productId}/images/reorder/`, {
     image_ids: imageIds,
@@ -372,11 +399,11 @@ export const getOrderDetail = async (id: number) =>
 export const getShippingAddresses = async () =>
   api.get<ShippingAddress[]>("/orders/shipping-addresses/");
 export const addShippingAddress = async (
-  data: Omit<ShippingAddress, "id" | "created_at" | "is_default">,
+  data: Omit<ShippingAddress, "id" | "created_at" | "is_default">
 ) => api.post<ShippingAddress>("/orders/shipping-addresses/", data);
 export const updateShippingAddress = async (
   id: number,
-  data: Partial<ShippingAddress>,
+  data: Partial<ShippingAddress>
 ) => api.patch<ShippingAddress>(`/orders/shipping-addresses/${id}/`, data);
 export const deleteShippingAddress = async (id: number) =>
   api.delete(`/orders/shipping-addresses/${id}/`);
@@ -391,7 +418,7 @@ export const uploadPaymentReceipt = async (
   file: File | Blob,
   bankId?: string,
   bankName?: string,
-  amount?: string,
+  amount?: string
 ) => {
   const formData = new FormData();
   formData.append("receipt_image", file);
@@ -405,5 +432,30 @@ export const uploadPaymentReceipt = async (
     },
   });
 };
+
+// ========== ADMIN ORDERS ==========
+export const getAdminMasterOrders = async (params?: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  status?: string;
+  ordering?: string;
+}) =>
+  api.get<PaginatedResponse<MasterOrder>>("/orders/admin/master-orders", {
+    params,
+  });
+
+export const getAdminVendorOrders = async (params?: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  company?: string;
+  status?: string;
+  master_order?: number;
+  ordering?: string;
+}) =>
+  api.get<PaginatedResponse<VendorOrder>>("orders/admin/vendor-orders/", {
+    params,
+  });
 
 export default api;

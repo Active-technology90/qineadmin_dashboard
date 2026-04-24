@@ -3,14 +3,14 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import api from "../../services/api";
 import {
-
   createCompany,
   updateCompany,
   deleteCompany,
   getCategories,
   getSubCategories,
+  getCompanyDetail,
 } from "../../services/api";
-import type { CompanyListItem, Category, SubCategory } from "../../types";
+import type { CompanyListItem, Category, SubCategory, Company } from "../../types";
 import { SearchInput } from "../ui/SearchInput";
 import { DataTable, type Column } from "../ui/DataTable";
 import { MultiStepFormModal, type FormStep } from "../ui/MultiStepFormModal";
@@ -21,6 +21,7 @@ import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
+import { useAuth } from "../../hooks/useAuth";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -30,6 +31,10 @@ type PaginatedResponse<T> = {
 };
 
 export default function CompanyManagement() {
+  const { user } = useAuth();
+  const isCompanyAdmin = user?.memberships && user.memberships.length > 0;
+  const userCompanySlug = isCompanyAdmin ? user.memberships[0].company_slug : null;
+
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
@@ -58,7 +63,7 @@ export default function CompanyManagement() {
   const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
   const { toast, showToast } = useToast();
 
-  // Filter companies by search term
+  // Filter companies by search term (only used for super admin)
   const filteredCompanies = useMemo(() => {
     if (!searchTerm.trim()) return companies;
     const term = searchTerm.toLowerCase();
@@ -73,14 +78,13 @@ export default function CompanyManagement() {
     );
   }, [companies, searchTerm]);
 
-  // Apply sorting to filtered companies
+  // For company admin, we have only one company → skip sorting/pagination
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
-    filteredCompanies,
+    isCompanyAdmin ? companies : filteredCompanies,
     "name",
     "asc"
   );
 
-  // Paginate sorted items
   const {
     paginatedItems,
     currentPage,
@@ -89,40 +93,65 @@ export default function CompanyManagement() {
     resetPage,
     itemsPerPage,
   } = usePagination(sortedItems, ITEMS_PER_PAGE);
+
   const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
       ...item,
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
+
   useEffect(() => {
     resetPage();
   }, [searchTerm, resetPage]);
 
-  // Fetch all companies (paginated) + categories + subcategories
+  // Fetch data based on role
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let allCompanies: CompanyListItem[] = [];
-      let nextUrl: string | null = "/companies/?page=1&ordering=name";
+      if (isCompanyAdmin && userCompanySlug) {
+        // Company admin: fetch only their own company
+        const companyRes = await getCompanyDetail(userCompanySlug);
+        const company = companyRes.data as Company;
+        // Convert to CompanyListItem shape for consistent table display
+        const companyListItem: CompanyListItem = {
+          id: company.id,
+          name: company.name,
+          name_am: company.name_am || "",
+          slug: company.slug,
+          logo: company.logo,
+          cover_image: company.cover_image,
+          category: company.category,
+          category_name: company.category_name,
+          sub_category: company.sub_category,
+          sub_category_name: company.sub_category_name,
+          business_type: company.business_type,
+          is_active: company.is_active,
+          is_featured: company.is_featured,
+          description: company.description || "",
+        };
+        setCompanies([companyListItem]);
+      } else {
+        // Super admin: fetch all companies (paginated)
+        let allCompanies: CompanyListItem[] = [];
+        let nextUrl: string | null = "/companies/?page=1&ordering=name";
 
-      while (nextUrl) {
-        const res = await api.get(nextUrl);
-
-        const data = res.data as PaginatedResponse<CompanyListItem>;
-
-        allCompanies = [...allCompanies, ...data.results];
-        nextUrl = data.next;
+        while (nextUrl) {
+          const res = await api.get(nextUrl);
+          const data = res.data as PaginatedResponse<CompanyListItem>;
+          allCompanies = [...allCompanies, ...data.results];
+          nextUrl = data.next;
+        }
+        setCompanies(allCompanies);
       }
 
+      // Fetch categories and subcategories (common to both roles)
       const [categoriesRes, subcategoriesRes] = await Promise.all([
         getCategories(),
         getSubCategories(),
       ]);
-
-      setCompanies(allCompanies);
       setCategories(categoriesRes.data);
       setSubcategories(subcategoriesRes.data);
     } catch (err: any) {
@@ -374,13 +403,11 @@ export default function CompanyManagement() {
       ),
       validate: validateBasicInfo,
     },
-    // Inside the MultiStepFormModal steps array – replace the 'images' step content
     {
       id: "images",
       title: "Images & Status",
       content: (
         <div className="space-y-6">
-          {/* Logo upload – now takes half the width */}
           <div className="md:w-1/2">
             <DragDropImageUpload
               label="Logo"
@@ -390,15 +417,12 @@ export default function CompanyManagement() {
               required={false}
             />
           </div>
-
-          {/* Cover image upload – full width */}
           <DragDropImageUpload
             label="Cover Image"
             value={formData.cover_image}
             onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
             previewUrl={coverPreview}
           />
-
           <div className="flex items-center space-x-6">
             <label className="flex items-center space-x-2">
               <input
@@ -424,7 +448,7 @@ export default function CompanyManagement() {
     },
   ];
 
-  // Table columns with sortable definitions
+  // Table columns (same for both roles)
   const columns: Column<CompanyListItem>[] = [
     {
       key: "rowNumber",
@@ -433,7 +457,6 @@ export default function CompanyManagement() {
       render: (cat: CompanyListItem & { rowNumber?: number }) => cat.rowNumber,
     },
     {
-
       key: "logo",
       header: "Logo",
       sortable: false,
@@ -485,61 +508,63 @@ export default function CompanyManagement() {
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Companies</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setModalOpen(true);
-          }}
-          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#6750A4] transition shadow-sm"
-        >
-          <Plus size={18} /> Add Company
-        </button>
+        {/* Only super admin can add new companies */}
+        {!isCompanyAdmin && (
+          <button
+            onClick={() => {
+              resetForm();
+              setModalOpen(true);
+            }}
+            className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#6750A4] transition shadow-sm"
+          >
+            <Plus size={18} /> Add Company
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="flex-1">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search by name, slug, category, subcategory, or type..."
-          />
+      {/* Search & Sort – super admin only; company admin sees no filters because only one company */}
+      {!isCompanyAdmin && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by name, slug, category, subcategory, or type..."
+            />
+          </div>
+          <select
+            value={`${sortField}|${sortOrder}`}
+            onChange={(e) => {
+              const [field, desiredOrder] = e.target.value.split('|');
+              if (field === sortField) {
+                if (desiredOrder !== sortOrder) handleSort(field);
+              } else {
+                handleSort(field);
+                if (desiredOrder === 'desc') handleSort(field);
+              }
+            }}
+            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
+          >
+            <option value="name|asc">Name (A-Z)</option>
+            <option value="name|desc">Name (Z-A)</option>
+            <option value="id|asc">Oldest (ID ↑)</option>
+            <option value="id|desc">Newest (ID ↓)</option>
+            <option value="business_type|asc">Business Type (A-Z)</option>
+            <option value="category_name|asc">Category (A-Z)</option>
+            <option value="sub_category_name|asc">Subcategory (A-Z)</option>
+            <option value="is_active|desc">Active First</option>
+            <option value="is_featured|desc">Featured First</option>
+          </select>
         </div>
-        <select
-          value={`${sortField}|${sortOrder}`}
-          onChange={(e) => {
-            const [field, desiredOrder] = e.target.value.split('|');
-            // Apply the selected sort using the hook's handleSort
-            if (field === sortField) {
-              // If same field, toggle order if needed
-              if (desiredOrder !== sortOrder) handleSort(field);
-            } else {
-              handleSort(field);
-              // If desired order is 'desc', call handleSort again to toggle
-              if (desiredOrder === 'desc') handleSort(field);
-            }
-          }}
-          className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
-        >
-          <option value="name|asc">Name (A-Z)</option>
-          <option value="name|desc">Name (Z-A)</option>
-          <option value="id|asc">Oldest (ID ↑)</option>
-          <option value="id|desc">Newest (ID ↓)</option>
-          <option value="business_type|asc">Business Type (A-Z)</option>
-          <option value="category_name|asc">Category (A-Z)</option>
-          <option value="sub_category_name|asc">Subcategory (A-Z)</option>
-          <option value="is_active|desc">Active First</option>
-          <option value="is_featured|desc">Featured First</option>
-        </select>
-      </div>
-
+      )}
 
       <DataTable
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No companies found"
-        onEdit={openEdit}
-        onDelete={setDeleteTarget}
+        onEdit={openEdit}  // Both roles can edit (company admin edits own company)
+        onDelete={!isCompanyAdmin ? setDeleteTarget : undefined}  // Only super admin can delete
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
@@ -547,7 +572,7 @@ export default function CompanyManagement() {
         itemsPerPage={itemsPerPage}
         sortField={sortField}
         sortOrder={sortOrder}
-        onSort={handleSort}
+        onSort={!isCompanyAdmin ? handleSort : undefined} // Sorting only for super admin
       />
 
       <MultiStepFormModal

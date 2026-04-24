@@ -129,7 +129,7 @@ export const FormModal: React.FC<Props> = ({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition"
+                className="w-full bg-[#6750A4] text-white py-2.5 rounded-lg font-medium hover:bg-[#5a458c] disabled:opacity-50 flex items-center justify-center gap-2 transition"
               >
                 {submitting && (
                   <Loader2 className="h-4 w-4 animate-spin" />

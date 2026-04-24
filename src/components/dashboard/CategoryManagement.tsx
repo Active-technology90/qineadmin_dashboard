@@ -269,7 +269,7 @@ export default function CategoryManagement() {
             resetForm();
             setModalOpen(true);
           }}
-          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-indigo-700 transition shadow-sm"
+          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm"
         >
           <Plus size={18} /> Add Category
         </button>

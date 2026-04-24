@@ -15,6 +15,9 @@ import { NoCompanyView } from './NoCompanyView';
 export default function CompanyProducts() {
   const { user } = useAuth();
 
+  // Determine if user is a company admin (exactly one membership)
+  const isCompanyAdmin = user?.memberships?.length === 1;
+
   const {
     selectedCompany,
     showSelector,
@@ -78,23 +81,23 @@ export default function CompanyProducts() {
       setDeleteTarget(null);
     }
   };
-const handleSave = async (data: any) => {
-  try {
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, data);
-      showToast('success', 'Product updated');
-      // Return the existing product id (or the full product object)
-      return { id: editingProduct.id };
-    } else {
-      const created = await createProduct(data);
-      showToast('success', 'Product created');
-      return created; // must have .id
+
+  const handleSave = async (data: any) => {
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, data);
+        showToast('success', 'Product updated');
+        return { id: editingProduct.id };
+      } else {
+        const created = await createProduct(data);
+        showToast('success', 'Product created');
+        return created; // must have .id
+      }
+    } catch (err: any) {
+      showToast('error', err?.response?.data?.detail || 'Save failed');
+      throw err;
     }
-  } catch (err: any) {
-    showToast('error', err?.response?.data?.detail || 'Save failed');
-    throw err;
-  }
-};
+  };
 
   // ─────────────────────────────
   // Render guards (clean order)
@@ -134,13 +137,13 @@ const handleSave = async (data: any) => {
       />
 
       <ProductModal
-  isOpen={isModalOpen}
-  editingProduct={editingProduct}
-  companySlug={companySlug || ''}
-  onClose={() => setIsModalOpen(false)}
-  onSave={handleSave}
-  onProductUpdated={refetch}   // to refresh product list after image changes
-/>
+        isOpen={isModalOpen}
+        editingProduct={editingProduct}
+        companySlug={companySlug || ''}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        onProductUpdated={refetch}
+      />
 
       {/* HEADER */}
       <div className="p-6 border-b">
@@ -161,13 +164,16 @@ const handleSave = async (data: any) => {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <button
-              onClick={resetCompany}
-              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Switch
-            </button>
+            {/* Switch button – hidden for company admins */}
+            {!isCompanyAdmin && (
+              <button
+                onClick={resetCompany}
+                className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Switch
+              </button>
+            )}
 
             <button
               onClick={handleAdd}
