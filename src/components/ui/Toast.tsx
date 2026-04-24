@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
 import { Package, AlertCircle } from 'lucide-react';
+import type { ToastType } from '../../hooks/useToast';
+
 
 interface ToastProps {
-  toast: { type: 'success' | 'error'; message: string } | null;
+  toast: { type: ToastType; message: string } | null;
 }
 
 export function Toast({ toast }: ToastProps) {

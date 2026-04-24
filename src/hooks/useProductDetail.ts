@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanyProductDetail } from '@/services/api';
-import type { CompanyProduct } from '@/types';
+import { getCompanyProductDetail } from '../services/api';
+import type { CompanyProduct } from '../types/index';
 
 export function useProductDetail(
   companySlug: string | undefined,

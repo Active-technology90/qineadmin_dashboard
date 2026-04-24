@@ -13,7 +13,6 @@ interface DragDropImageUploadProps {
 }
 
 export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
-  value,
   onChange,
   previewUrl: externalPreview,
   label = 'Upload Image',

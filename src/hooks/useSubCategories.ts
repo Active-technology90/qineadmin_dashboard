@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSubCategories, getSubCategoryDetail } from '@/services/api';
-import type { SubCategory } from '@/types';
+import { getSubCategories } from '../services/api';
+import type { SubCategory } from '../types/index';
 
 export function useSubCategories(categorySlug?: string) {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);

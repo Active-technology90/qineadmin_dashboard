@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type ToastType = 'success' | 'error';
+export type ToastType = 'success' | 'error' | 'info';
 
 export const useToast = () => {
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);

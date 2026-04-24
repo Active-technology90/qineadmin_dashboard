@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { searchProducts } from '@/services/api';
-import type { CompanyProductListItem } from '@/types';
+import { searchProducts } from '../services/api';
+import type { CompanyProductListItem } from '../types/index';
 
 interface SearchParams {
   search?: string;

@@ -9,7 +9,7 @@ interface UseCompanyProductsOptions {
 }
 
 export function useCompanyProducts({ companySlug, pageSize = 10 }: UseCompanyProductsOptions) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,7 +40,6 @@ export function useCompanyProducts({ companySlug, pageSize = 10 }: UseCompanyPro
         stock: item.stock,
         unit: item.unit || 'pc',
          image: item.primary_image,        // add this
-    image_url: item.image_url 
       })));
       setTotalItems(response.data.count);
       setTotalPages(Math.ceil(response.data.count / pageSize));

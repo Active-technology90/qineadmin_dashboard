@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Edit, Trash2, ImageOff } from 'lucide-react';
+import { Package, Edit, Trash2 } from 'lucide-react';
 
 interface Product {
   id: number;

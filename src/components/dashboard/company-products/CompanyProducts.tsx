@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Plus, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '../../../context/authContext';
 import { useCompanySelection } from '../../../hooks/useCompanySelection';

@@ -1,5 +1,5 @@
 // src/components/admin/Orders.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Search, Eye, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getMyOrders } from "../../services/api";
 import type { MasterOrder } from "../../types";
@@ -17,6 +17,7 @@ export default function Orders() {
   const [totalCount, setTotalCount] = useState(0);
   const { toast, showToast } = useToast();
 
+  console.log("totalCount", totalCount);
   // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

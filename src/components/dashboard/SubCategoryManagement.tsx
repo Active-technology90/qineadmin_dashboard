@@ -218,7 +218,7 @@ const paginatedItemsWithRowNumber = useMemo(() => {
     key: 'rowNumber', 
     header: 'No.', 
     sortable: false,
-    render: (cat) => cat.rowNumber 
+    render: (cat: SubCategory & { rowNumber?: number }) => cat.rowNumber 
       },
      {
       key: "icon",

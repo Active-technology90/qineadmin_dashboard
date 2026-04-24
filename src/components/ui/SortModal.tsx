@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp, ArrowDown, Text, Hash, SortAsc, X } from 'lucide-react';
+import { Text, Hash, SortAsc, X } from 'lucide-react';
 
 export interface SortOption {
   label: string;

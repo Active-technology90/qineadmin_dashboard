@@ -1,5 +1,5 @@
 // src/components/admin/Payments.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Search, Download, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getMyOrders } from "../../services/api";
 import type { MasterOrder } from "../../types";
@@ -57,7 +57,7 @@ export default function Payments() {
       let hasMore = true;
 
       while (hasMore) {
-        const res = await getMyOrders({ page, page_size: 100 });
+        const res = await getMyOrders();
         const data = res.data;
         allOrders = [...allOrders, ...data.results];
         hasMore = !!data.next;
@@ -123,7 +123,7 @@ export default function Payments() {
     }
   };
 
-  const handleDownloadReceipt = (payment: PaymentDisplay) => {
+  const handleDownloadReceipt = () => {
     // Placeholder for receipt download
     showToast("info", "Receipt download not yet implemented");
   };
@@ -215,7 +215,7 @@ export default function Payments() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => handleDownloadReceipt(payment)}
+                      onClick={() => handleDownloadReceipt()}
                       className="text-indigo-600 hover:text-indigo-900"
                       title="Download receipt"
                     >

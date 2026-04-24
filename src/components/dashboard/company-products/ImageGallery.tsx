@@ -16,7 +16,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Upload, Trash2, Star, Loader2, GripVertical, Image as ImageIcon, Download } from 'lucide-react';
+import { Upload, Trash2, Star, Loader2, GripVertical, Download } from 'lucide-react';
 import type { ProductImage } from '../../../types';
 import { uploadProductImage, deleteProductImage, updateProductImage } from '../../../services/api';
 

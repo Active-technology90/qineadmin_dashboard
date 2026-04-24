@@ -17,11 +17,9 @@ export function usePagination<T>(items: T[], itemsPerPage: number = 10) {
 
   // Use useCallback to avoid recreating function unnecessarily
   const goToPage = useCallback((page: number) => {
-    setCurrentPage(prev => {
-      const target = Math.min(Math.max(1, page), totalPages);
-      return target;
-    });
-  }, [totalPages]); //  depends on totalPages, but won't be called before totalPages is ready
+    const target = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(target);
+  }, [totalPages]);
 
   const resetPage = useCallback(() => setCurrentPage(1), []);
 

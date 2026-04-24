@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCompanies, getCompanyDetail } from '@/services/api';
-import type { CompanyListItem, Company, PaginatedResponse } from '@/types';
+import { getCompanies, getCompanyDetail } from '../services/api';
+import type { CompanyListItem, Company } from '../types/index';
 
 interface UseCompaniesParams {
   category?: string;

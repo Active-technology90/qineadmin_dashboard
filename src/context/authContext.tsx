@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (access: string, refresh: string, user: User) => Promise<void>;
+  login: (access: string, refresh: string, user: User | null) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   getAccessToken: () => string | null;
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const login = async (access: string, refresh: string, userData: User) => {
+  const login = async (access: string, refresh: string, userData: User | null) => {
     try {
       localStorage.setItem("access", access);
       localStorage.setItem("refresh", refresh);

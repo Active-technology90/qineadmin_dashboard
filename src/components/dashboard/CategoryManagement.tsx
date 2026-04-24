@@ -1,6 +1,6 @@
 // src/components/admin/CategoryManagement.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, ImageIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, ImageIcon } from "lucide-react";
 import {
   getCategories,
   createCategory,
@@ -95,26 +95,7 @@ export default function CategoryManagement() {
   useEffect(() => {
     fetchCategories();
   }, []);
-  const applySortFromModal = (value: string) => {
-    if (!value) {
-      // Reset to default
-      handleSort("name"); // if currently not on name, set it
-      if (sortField !== "name" || sortOrder !== "asc") {
-        handleSort("name");
-        if (sortOrder !== "asc") handleSort("name");
-      }
-      return;
-    }
-    const [field, order] = value.split("|");
-    // Use the same logic as before
-    if (field === sortField && sortOrder === order) return;
-    if (field === sortField) {
-      handleSort(field); // toggle order
-    } else {
-      handleSort(field);
-      if (order === "desc") handleSort(field); // toggle to desc
-    }
-  };
+  
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = "Name is required";

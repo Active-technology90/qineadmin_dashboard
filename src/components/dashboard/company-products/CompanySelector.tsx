@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Building2, Loader2, Search, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Building2, Search, ChevronRight } from 'lucide-react';
 import type { CompanyListItem } from '../../../types';
 
 interface CompanySelectorProps {

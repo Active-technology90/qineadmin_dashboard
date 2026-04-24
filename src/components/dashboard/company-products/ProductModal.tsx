@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
 import { ImageGallery } from './ImageGallery';
 import { getCompanyProductDetail } from '../../../services/api';
 import type { ProductImage } from '../../../types';

@@ -45,7 +45,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     const [internalValue, setInternalValue] = useState(
       externalValue || ""
     );
-    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const isControlled = externalValue !== undefined;

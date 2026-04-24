@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCategories, getCategoryDetail } from '@/services/api';
-import type { Category } from '@/types';
+import { getCategories, getCategoryDetail } from '../services/api';
+import type { Category } from '../types/index';
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import api from "../../services/api";
 import {
- 
+
   createCompany,
   updateCompany,
   deleteCompany,
@@ -23,6 +23,11 @@ import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 
 const ITEMS_PER_PAGE = 10;
+
+type PaginatedResponse<T> = {
+  results: T[];
+  next: string | null;
+};
 
 export default function CompanyManagement() {
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
@@ -84,7 +89,7 @@ export default function CompanyManagement() {
     resetPage,
     itemsPerPage,
   } = usePagination(sortedItems, ITEMS_PER_PAGE);
- const paginatedItemsWithRowNumber = useMemo(() => {
+  const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
       ...item,
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
@@ -105,8 +110,11 @@ export default function CompanyManagement() {
 
       while (nextUrl) {
         const res = await api.get(nextUrl);
-        allCompanies = [...allCompanies, ...res.data.results];
-        nextUrl = res.data.next;
+
+        const data = res.data as PaginatedResponse<CompanyListItem>;
+
+        allCompanies = [...allCompanies, ...data.results];
+        nextUrl = data.next;
       }
 
       const [categoriesRes, subcategoriesRes] = await Promise.all([
@@ -275,161 +283,161 @@ export default function CompanyManagement() {
 
   // Multi-step form steps (unchanged)
   const steps: FormStep[] = [
- {
-  id: "basic",
-  title: "Basic Information",
-  content: (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <input
-          type="text"
-          placeholder="Company Name (English) *"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
-        />
-        {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
-      </div>
-      <div>
-        <input
-          type="text"
-          placeholder="Name (Amharic)"
-          value={formData.name_am}
-          onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg p-2"
-        />
-      </div>
-      <div>
-        <input
-          type="text"
-          placeholder="Slug (unique, optional)"
-          value={formData.slug}
-          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-          className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
-        />
-        {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
-      </div>
-      <div>
-        <select
-          value={formData.category}
-          onChange={(e) => {
-            const catId = Number(e.target.value);
-            setFormData({ ...formData, category: catId, sub_category: 0 });
-          }}
-          className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
-        >
-          <option value={0}>Select Category *</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </select>
-        {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
-      </div>
-      <div>
-        <select
-          value={formData.sub_category}
-          onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
-          className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
-          disabled={!formData.category}
-        >
-          <option value={0}>Select Subcategory *</option>
-          {filteredSubcategories.map((sub) => (
-            <option key={sub.id} value={sub.id}>{sub.name}</option>
-          ))}
-        </select>
-        {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
-      </div>
-      <div>
-        <select
-          value={formData.business_type}
-          onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
-          className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
-        >
-          <option value="">Select Business Type *</option>
-          <option value="brand">Brand</option>
-          <option value="store">Store</option>
-          <option value="service">Service</option>
-          <option value="factory">Factory</option>
-        </select>
-        {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
-      </div>
-      <div className="md:col-span-2">
-        <textarea
-          placeholder="Description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg p-2"
-          rows={3}
-        />
-      </div>
-    </div>
-  ),
-  validate: validateBasicInfo,
-},
-  // Inside the MultiStepFormModal steps array – replace the 'images' step content
-{
-  id: "images",
-  title: "Images & Status",
-  content: (
-    <div className="space-y-6">
-      {/* Logo upload – now takes half the width */}
-      <div className="md:w-1/2">
-        <DragDropImageUpload
-          label="Logo"
-          value={formData.logo}
-          onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
-          previewUrl={logoPreview}
-          required={false}
-        />
-      </div>
+    {
+      id: "basic",
+      title: "Basic Information",
+      content: (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Company Name (English) *"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+            />
+            {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="Name (Amharic)"
+              value={formData.name_am}
+              onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg p-2"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="Slug (unique, optional)"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+            />
+            {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+          </div>
+          <div>
+            <select
+              value={formData.category}
+              onChange={(e) => {
+                const catId = Number(e.target.value);
+                setFormData({ ...formData, category: catId, sub_category: 0 });
+              }}
+              className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+            >
+              <option value={0}>Select Category *</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+          </div>
+          <div>
+            <select
+              value={formData.sub_category}
+              onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+              className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+              disabled={!formData.category}
+            >
+              <option value={0}>Select Subcategory *</option>
+              {filteredSubcategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
+              ))}
+            </select>
+            {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+          </div>
+          <div>
+            <select
+              value={formData.business_type}
+              onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+              className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+            >
+              <option value="">Select Business Type *</option>
+              <option value="brand">Brand</option>
+              <option value="store">Store</option>
+              <option value="service">Service</option>
+              <option value="factory">Factory</option>
+            </select>
+            {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+          </div>
+          <div className="md:col-span-2">
+            <textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg p-2"
+              rows={3}
+            />
+          </div>
+        </div>
+      ),
+      validate: validateBasicInfo,
+    },
+    // Inside the MultiStepFormModal steps array – replace the 'images' step content
+    {
+      id: "images",
+      title: "Images & Status",
+      content: (
+        <div className="space-y-6">
+          {/* Logo upload – now takes half the width */}
+          <div className="md:w-1/2">
+            <DragDropImageUpload
+              label="Logo"
+              value={formData.logo}
+              onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
+              previewUrl={logoPreview}
+              required={false}
+            />
+          </div>
 
-      {/* Cover image upload – full width */}
-      <DragDropImageUpload
-        label="Cover Image"
-        value={formData.cover_image}
-        onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
-        previewUrl={coverPreview}
-      />
+          {/* Cover image upload – full width */}
+          <DragDropImageUpload
+            label="Cover Image"
+            value={formData.cover_image}
+            onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
+            previewUrl={coverPreview}
+          />
 
-      <div className="flex items-center space-x-6">
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={formData.is_active}
-            onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-            className="h-4 w-4 text-indigo-600 rounded"
-          />
-          <span className="text-sm text-gray-700">Active</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={formData.is_featured}
-            onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-            className="h-4 w-4 text-indigo-600 rounded"
-          />
-          <span className="text-sm text-gray-700">Featured</span>
-        </label>
-      </div>
-    </div>
-  ),
-},
+          <div className="flex items-center space-x-6">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="h-4 w-4 text-indigo-600 rounded"
+              />
+              <span className="text-sm text-gray-700">Active</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                className="h-4 w-4 text-indigo-600 rounded"
+              />
+              <span className="text-sm text-gray-700">Featured</span>
+            </label>
+          </div>
+        </div>
+      ),
+    },
   ];
 
   // Table columns with sortable definitions
-    const columns: Column<CompanyListItem>[] = [
-   {
+  const columns: Column<CompanyListItem>[] = [
+    {
       key: "rowNumber",
       header: "No.",
       sortable: false,
-      render: (cat) => cat.rowNumber,
+      render: (cat: CompanyListItem & { rowNumber?: number }) => cat.rowNumber,
     },
-      {
-        
+    {
+
       key: "logo",
       header: "Logo",
       sortable: false,
-      render: (comp) =>
+      render: (comp: CompanyListItem) =>
         comp.logo ? (
           <img src={comp.logo} alt={comp.name} className="h-10 w-10 rounded-full object-cover" />
         ) : (
@@ -488,7 +496,7 @@ export default function CompanyManagement() {
         </button>
       </div>
 
-       <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex-1">
           <SearchInput
             value={searchTerm}
@@ -526,7 +534,7 @@ export default function CompanyManagement() {
 
 
       <DataTable
-         data={paginatedItemsWithRowNumber} 
+        data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No companies found"

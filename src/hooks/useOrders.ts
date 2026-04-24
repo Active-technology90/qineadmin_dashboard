@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getMyOrders, getOrderDetail } from '@/services/api';
-import type { MasterOrder } from '@/types';
+import { getMyOrders, getOrderDetail } from '../services/api';
+import type { MasterOrder } from '../types/index';
 
 export function useOrders() {
   const [orders, setOrders] = useState<MasterOrder[]>([]);
