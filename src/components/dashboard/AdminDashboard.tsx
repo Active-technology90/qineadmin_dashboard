@@ -290,7 +290,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Payments – only for super admin */}
-          {isCompanyAdmin && (
+          {!isCompanyAdmin && (
             <button
               onClick={() => {
                 setActiveTab("payments");
