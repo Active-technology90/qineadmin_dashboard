@@ -33,8 +33,8 @@ type PaginatedResponse<T> = {
 export default function CompanyManagement() {
   const { user } = useAuth();
   const isCompanyAdmin = user?.memberships && user.memberships.length > 0;
-  const userCompanySlug = isCompanyAdmin ? user.memberships[0].company_slug : null;
-
+  // const userCompanySlug = isCompanyAdmin ? user.memberships[0].company_slug : null;
+  const userCompanySlug = user?.memberships?.[0]?.company_slug ?? null;
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);

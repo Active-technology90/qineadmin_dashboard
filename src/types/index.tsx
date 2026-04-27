@@ -220,6 +220,7 @@ export interface OrderItem {
   line_total: string;
   company_name?: string;
   product_reference?: number;
+  product_image?: string;
 }
 
 export interface TaxInvoice {
@@ -237,7 +238,11 @@ export interface TaxInvoice {
   currency: string;
   pdf_url?: string;
 }
-
+export interface Delivery {
+  delivery_person_name?: string;
+  tracking_id?: string;
+  status?: string;
+}
 export interface VendorOrder {
   id: number;
   company: CompanyListItem;
@@ -253,6 +258,8 @@ export interface VendorOrder {
   recipient_name?: string;
   shipping_phone?: string;
   shipping_address_text?: string;
+  delivery?: Delivery;
+  payment_method: string;
 }
 
 export interface MasterOrder {
@@ -343,3 +350,4 @@ export interface Service {
   is_active: boolean;
   is_featured: boolean;
 }
+

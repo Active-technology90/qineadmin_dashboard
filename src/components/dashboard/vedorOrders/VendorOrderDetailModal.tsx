@@ -256,8 +256,16 @@ const VendorDeliveryTracking = ({ delivery }: { delivery: VendorOrder["delivery"
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15, ease: "easeIn" } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.2, ease: "easeOut" as const },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    transition: { duration: 0.15, ease: "easeIn" as const },
+  },
 };
 
 const backdropVariants = {
@@ -333,7 +341,7 @@ export function VendorOrderDetailModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-        className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
+          className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -378,12 +386,14 @@ export function VendorOrderDetailModal({
                 <VendorSummaryCard
                   icon={Truck}
                   label="Delivery Status"
-                  badge={{ text: order.delivery_status || "pending", color: getDeliveryStatusColor(order.delivery_status) }}
-                />
+                  badge={{
+                    text: order.delivery_status || "pending",
+                    color: getDeliveryStatusColor(order.delivery_status ?? "pending"),
+                  }} />
                 <VendorSummaryCard
                   icon={CreditCard}
                   label="Payment Method"
-                  value={order.master_order?.payment_method || "N/A"}
+                  value={order?.payment_method || "N/A"}
                 />
                 <VendorSummaryCard
                   icon={TrendingUp}
@@ -393,7 +403,7 @@ export function VendorOrderDetailModal({
                 />
               </div>
 
-              
+
 
               {/* Delivery Tracking (if present) */}
               {order.delivery && <VendorDeliveryTracking delivery={order.delivery} />}

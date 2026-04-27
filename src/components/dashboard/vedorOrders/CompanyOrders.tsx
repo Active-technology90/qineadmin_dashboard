@@ -35,7 +35,7 @@ export default function CompanyOrders() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const res = await getCompanies({ page_size: 100 });
+        const res = await getCompanies();
         setCompanies(res.data.results);
       } catch (err) {
         console.error("Failed to load companies", err);
@@ -257,9 +257,9 @@ export default function CompanyOrders() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getDeliveryStatusColor(order.delivery_status)}`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getDeliveryStatusColor(order.delivery?.status || "pending")}`}
                     >
-                      {order.delivery_status || "pending"}
+                      {order.delivery?.status || "pending"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

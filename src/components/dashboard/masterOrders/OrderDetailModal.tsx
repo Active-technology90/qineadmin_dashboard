@@ -24,6 +24,7 @@ import type { MasterOrder, VendorOrder } from "../../../types";
 // Subcomponents (light theme, no dark mode)
 // -----------------------------------------------------------------------------
 
+
 const OrderHeader = ({
   orderId,
   onClose,
@@ -371,12 +372,12 @@ const modalVariants = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.2, ease: "easeOut" },
+    transition: { duration: 0.2, ease: "easeOut"  as const },
   },
   exit: {
     opacity: 0,
     scale: 0.95,
-    transition: { duration: 0.15, ease: "easeIn" },
+    transition: { duration: 0.15, ease: "easeIn"  as const },
   },
 };
 
