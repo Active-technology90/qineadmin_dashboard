@@ -17,6 +17,7 @@ import type {
   User,
   ProductImage,
   VendorOrder,
+  Delivery,
 } from "../types";
 
 const API_URL = "https://backend-qine.activetechet.com/api/v1";
@@ -85,7 +86,7 @@ api.interceptors.response.use(
       // No refresh token → force logout
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
-      window.location.href = "/login";
+      window.location.href = "/signin";
       return Promise.reject(new Error("SESSION_EXPIRED"));
     }
 
@@ -106,7 +107,7 @@ api.interceptors.response.use(
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
       processQueue(refreshError as Error, null);
-      window.location.href = "/login";
+      window.location.href = "/signin";
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
@@ -118,6 +119,7 @@ api.interceptors.response.use(
 export const login = async (username: string, password: string) =>
   api.post("/auth/jwt/create/", { username, password });
 
+export const getAllUsers = async () => api.get<User[]>("users/admin/all-users/");
 export const registerUser = async (data: {
   email: string;
   username: string;
@@ -457,5 +459,37 @@ export const getAdminVendorOrders = async (params?: {
   api.get<PaginatedResponse<VendorOrder>>("orders/admin/vendor-orders/", {
     params,
   });
+  // ========== COMPANY ORDERS (for company admin) ==========
+export const getCompanyVendorOrders = async (
+  companySlug: string,
+  params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    status?: string;
+    ordering?: string;
+  }
+) =>
+  api.get<PaginatedResponse<VendorOrder>>(`/orders/company/${companySlug}/`, {
+    params,
+  });
+  // ========== DELIVERIES ==========
+export const assignDelivery = async (data: { vendor_order: number; delivery_person: number }) =>
+  api.post("/deliveries/", data);
 
+export const updateDeliveryPerson = async (deliveryId: number, deliveryPersonId: number) =>
+  api.patch(`/deliveries/${deliveryId}/`, { delivery_person: deliveryPersonId });
+export const getDeliveries = async (params?: {
+  vendor_order?: number;
+  delivery_person?: number;
+  status?: string;
+}) => api.get<PaginatedResponse<Delivery>>("/deliveries/", { params });
+// ========== USER SEARCH (for company admin) ==========
+export const searchUsers = async (query: string) =>
+  api.get<PaginatedResponse<User>>("/users/search/", { params: { q: query } });
+
+
+// NEW: Get company staff filtered by role (e.g., delivery)
+export const getCompanyStaffByRole = async (companySlug: string, role: string) =>
+  api.get(`/companies/${companySlug}/staff/`, { params: { role } });
 export default api;

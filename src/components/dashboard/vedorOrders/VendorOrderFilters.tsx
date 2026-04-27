@@ -12,6 +12,9 @@ interface VendorOrderFiltersProps {
   onClear: () => void;
   showMobile: boolean;
   onToggleMobile: () => void;
+  deliveryStatusFilter: string;
+  onDeliveryStatusChange: (val: string) => void;
+  hideCompanyFilter?: boolean; // new prop – hides company dropdown when true
 }
 
 export function VendorOrderFilters({
@@ -25,8 +28,14 @@ export function VendorOrderFilters({
   onClear,
   showMobile,
   onToggleMobile,
+  deliveryStatusFilter,
+  onDeliveryStatusChange,
+  hideCompanyFilter = false,
 }: VendorOrderFiltersProps) {
-  const hasFilters = !!searchTerm || !!statusFilter || !!selectedCompanyId;
+  // Only consider search and status for active filter badge when company filter is hidden
+  const hasFilters = hideCompanyFilter
+    ? !!searchTerm || !!statusFilter
+    : !!searchTerm || !!statusFilter || !!selectedCompanyId;
 
   return (
     <>
@@ -58,29 +67,36 @@ export function VendorOrderFilters({
               className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => onStatusChange(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-          >
-            <option value="">All Order Statuses</option>
+          
+           <select
+          value={deliveryStatusFilter}
+          onChange={(e) => onDeliveryStatusChange(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+        >
+          <option value="">All Delivery Statuses</option>
+          <option value="accepted">Accepted</option>
+          <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
             <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select
-            value={selectedCompanyId}
-            onChange={(e) => onCompanyChange(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-          >
-            <option value="">All Companies</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <option value="out_for_delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            
+          <option value="cancelled">Cancelled</option>
+        </select>
+          {!hideCompanyFilter && (
+            <select
+              value={selectedCompanyId}
+              onChange={(e) => onCompanyChange(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+            >
+              <option value="">All Companies</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
           {hasFilters && (
             <button
               onClick={onClear}

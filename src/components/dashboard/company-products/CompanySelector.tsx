@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Building2, Search, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../../hooks/useAuth';
 import type { CompanyListItem } from '../../../types';
 
 interface CompanySelectorProps {
@@ -15,8 +16,39 @@ export function CompanySelector({
   onSelect,
   onBack,
 }: CompanySelectorProps) {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+
+  // Permission guard: only super admin (no memberships) can use this selector
+  const isSuperAdmin = !user?.memberships || user.memberships.length === 0;
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </button>
+          <h2 className="text-xl font-semibold text-gray-900">Company Selector</h2>
+        </div>
+        <div className="p-12 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Building2 className="h-8 w-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
+          <p className="text-gray-500 text-sm">
+            Only super administrators can switch companies.<br />
+            You already have a company assigned.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const filteredCompanies = companies.filter((company) =>
     company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,7 +59,6 @@ export function CompanySelector({
     setImageErrors((prev) => ({ ...prev, [companyId]: true }));
   };
 
-  // Loading skeleton rows
   const SkeletonRow = () => (
     <div className="flex items-center gap-4 px-4 py-4 border border-gray-100 rounded-xl animate-pulse">
       <div className="p-2 rounded-lg bg-gray-100">

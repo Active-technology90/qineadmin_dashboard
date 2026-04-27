@@ -145,7 +145,7 @@ export function ProductModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-200"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-2xl shadow-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Sticky Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -204,20 +204,22 @@ export function ProductModal({
           <div className="transition-all duration-300 ease-out">
             {step === 'details' ? (
               <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-5">
-                {/* SKU */}
+                {/* SKU – disabled when editing */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     SKU <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register('sku')}
+                    disabled={isSubmitting || !!editingProduct}
                     className={`w-full px-4 py-2 rounded-lg border ${
                       errors.sku
                         ? 'border-red-500 focus:ring-red-100'
                         : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
-                    } transition-all outline-none`}
+                    } transition-all outline-none ${
+                      !!editingProduct ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                    }`}
                     placeholder="e.g., FLR-001"
-                    disabled={isSubmitting}
                   />
                   {errors.sku && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -331,7 +333,7 @@ export function ProductModal({
                 type="submit"
                 form="product-details-form"
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Continue to Images <ChevronRight className="h-4 w-4" />
@@ -349,7 +351,7 @@ export function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition shadow-sm"
+                className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition shadow-sm"
               >
                 Done
               </button>
