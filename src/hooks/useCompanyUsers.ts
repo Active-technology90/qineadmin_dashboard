@@ -18,7 +18,8 @@ export function useCompanyUsers(companySlug: string | null) {
       const items = res.data.results ?? res.data;
       // Flatten nested 'user' object
       const flattened = items.map((item: any) => ({
-        id: item.user?.id ?? item.id,
+        id: item.id,
+user_id: item.user?.id,
         username: item.user?.username,
         first_name: item.user?.first_name ?? '',
         last_name: item.user?.last_name ?? '',

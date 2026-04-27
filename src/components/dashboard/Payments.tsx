@@ -1,10 +1,17 @@
 // src/components/admin/Payments.tsx
 import { useEffect, useState, useMemo } from "react";
-import { Search, Download, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { getMyOrders } from "../../services/api";
-import type { MasterOrder } from "../../types";
+import {
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { useAdminPayouts } from "../../hooks/useAdminPayouts";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
+import { useApprovePayout } from "../../hooks/useApprovePayout";
+import { useRejectPayout } from "../../hooks/useRejectPayout";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -19,85 +26,26 @@ interface PaymentDisplay {
 }
 
 export default function Payments() {
-  const [payments, setPayments] = useState<PaymentDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { payouts, loading, error, refetch } = useAdminPayouts();
+  const { approvePayout } = useApprovePayout();
+  const { rejectPayout } = useRejectPayout();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast, showToast } = useToast();
 
-  const mapOrderStatusToPaymentStatus = (orderStatus: string): "completed" | "pending" | "failed" => {
-    switch (orderStatus.toLowerCase()) {
-      case "completed":
-      case "delivered":
-        return "completed";
-      case "cancelled":
-        return "failed";
-      default:
-        return "pending";
-    }
-  };
-
-  const formatPaymentMethod = (method: string): string => {
-    switch (method) {
-      case "chapa": return "Chapa";
-      case "bank_transfer": return "Bank Transfer";
-      case "cod": return "Cash on Delivery";
-      default: return method;
-    }
-  };
-
-  // Fetch all orders (payments) from all pages
-  const fetchAllOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      let allOrders: MasterOrder[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const res = await getMyOrders();
-        const data = res.data;
-        allOrders = [...allOrders, ...data.results];
-        hasMore = !!data.next;
-        page++;
-      }
-
-      // Map orders to payment display format
-      const mappedPayments: PaymentDisplay[] = allOrders.map((order) => ({
-        id: order.id,
-        order_number: `#${order.id}`,
-        amount: Number(order.total_amount),
-        method: formatPaymentMethod(order.payment_method),
-        status: mapOrderStatusToPaymentStatus(order.status),
-        date: order.created_at,
-      }));
-
-      setPayments(mappedPayments);
-    } catch (err: any) {
-      setError(err.message || "Failed to load payments");
-      showToast("error", "Failed to load payment data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllOrders();
-  }, []);
-
-  // Filter payments
   const filteredPayments = useMemo(() => {
-    if (!searchTerm.trim()) return payments;
+    if (!searchTerm.trim()) return payouts;
+
     const term = searchTerm.toLowerCase();
-    return payments.filter(
+
+    return payouts.filter(
       (p) =>
-        p.order_number.toLowerCase().includes(term) ||
-        p.method.toLowerCase().includes(term) ||
-        p.status.toLowerCase().includes(term)
+        p.order_number?.toLowerCase().includes(term) ||
+        p.method?.toLowerCase().includes(term) ||
+        p.status?.toLowerCase().includes(term),
     );
-  }, [payments, searchTerm]);
+  }, [payouts, searchTerm]);
 
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
@@ -134,7 +82,7 @@ export default function Payments() {
         <div className="text-center py-12">
           <p className="text-red-600">{error}</p>
           <button
-            onClick={fetchAllOrders}
+            onClick={refetch}
             className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             Retry
@@ -171,12 +119,24 @@ export default function Payments() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (ETB)</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order #
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Amount (ETB)
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Method
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -199,28 +159,61 @@ export default function Payments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {payment.order_number}
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {payment.amount.toLocaleString()}
+                    {Number(payment.amount).toLocaleString()}
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {payment.method}
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}
+                    >
                       {payment.status}
                     </span>
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(payment.date).toLocaleDateString()}
+                    {new Date(payment.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleDownloadReceipt()}
-                      className="text-indigo-600 hover:text-indigo-900"
-                      title="Download receipt"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
+                    <div className="inline-flex gap-3 justify-end items-center">
+                      {/* Download */}
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadReceipt()}
+                        className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+
+                      {/* Approve */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await approvePayout(payment.id);
+                          refetch();
+                        }}
+                        className="text-green-600 hover:text-green-800 cursor-pointer"
+                      >
+                        Approve
+                      </button>
+
+                      {/* Reject */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await rejectPayout(payment.id);
+                          refetch();
+                        }}
+                        className="text-red-600 hover:text-red-800 cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

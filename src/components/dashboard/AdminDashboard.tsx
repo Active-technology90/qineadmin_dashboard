@@ -25,6 +25,8 @@ import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
 import CompanyManagement from "./CompanyManagement";
 import MasterOrders from "./masterOrders/MasterOrders";
+import AdminProfile from "./AdminProfile";
+
 
 type Tab =
   | "overview"
@@ -35,7 +37,9 @@ type Tab =
   | "users"
   | "masterOrders"
   | "companyOrders"
-  | "payments";
+  | "payments"
+  | "orders"
+  | "profile";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -63,6 +67,8 @@ export default function AdminDashboard() {
         return <CompanyOrders />;
       case "payments":
         return <Payments />;
+      case "profile":
+        return <AdminProfile />;
       case "categories":
         return <CategoryManagement />;
       case "subcategories":
@@ -87,10 +93,9 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative top-0 left-0 h-screen w-72 bg-gradient-to-b from-purple-900 to-[#6750A4] text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-300
-          ${
-            isSidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
+          ${isSidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
           }
         `}
       >
@@ -126,10 +131,9 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${
-                activeTab === "overview"
-                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                  : "text-gray-200 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${activeTab === "overview"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                : "text-gray-200 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
@@ -192,10 +196,9 @@ export default function AdminDashboard() {
               setIsSidebarOpen(false);
             }}
             className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-              ${
-                activeTab === "products"
-                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              ${activeTab === "products"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }
             `}
           >
@@ -211,10 +214,9 @@ export default function AdminDashboard() {
                 setIsSidebarOpen(false);
               }}
               className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-                ${
-                  activeTab === "users"
-                    ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+                ${activeTab === "users"
+                  ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
                 }
               `}
             >
@@ -228,10 +230,9 @@ export default function AdminDashboard() {
             <button
               onClick={() => setOrdersMenuOpen(!ordersMenuOpen)}
               className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-                ${
-                  activeTab === "masterOrders" || activeTab === "companyOrders"
-                    ? "bg-white/40 text-white shadow-lg translate-x-1"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+                ${activeTab === "masterOrders" || activeTab === "companyOrders"
+                  ? "bg-white/40 text-white shadow-lg translate-x-1"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
                 }
               `}
             >
@@ -245,7 +246,6 @@ export default function AdminDashboard() {
                 <ChevronDown className="h-4 w-4" />
               )}
             </button>
-
             {ordersMenuOpen && (
               <div className="ml-4 mt-1 space-y-1">
                 {/* Company Orders – always visible */}
@@ -255,10 +255,9 @@ export default function AdminDashboard() {
                     setIsSidebarOpen(false);
                   }}
                   className={`flex items-center gap-3 w-full text-left px-4 py-2 text-sm rounded-lg transition
-                    ${
-                      activeTab === "companyOrders"
-                        ? "bg-white/20 text-white font-semibold"
-                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                    ${activeTab === "companyOrders"
+                      ? "bg-white/20 text-white font-semibold"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
                     }
                   `}
                 >
@@ -266,93 +265,142 @@ export default function AdminDashboard() {
                   Company Orders
                 </button>
 
-                {/* Master Orders – only for super admin */}
-                {!isCompanyAdmin && (
-                  <button
-                    onClick={() => {
-                      setActiveTab("masterOrders");
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-2 text-sm rounded-lg transition
-                      ${
-                        activeTab === "masterOrders"
-                          ? "bg-white/20 text-white font-semibold"
-                          : "text-gray-300 hover:bg-white/5 hover:text-white"
-                      }
-                    `}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Master Orders
-                  </button>
-                )}
+                {/* Payments */}
+                <button
+                  onClick={() => {
+                    setActiveTab("payments");
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+              ${activeTab === "payments"
+                      ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+                    }
+            `}
+                >
+                  <CreditCard
+                    className={`h-5 w-5 ${activeTab === "payments"
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-white"
+                      }`}
+                  />
+                  Payments
+                </button>
+
+                {/* Profile */}
+                <button
+                  onClick={() => {
+                    setActiveTab("profile");
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+    ${activeTab === "profile"
+                      ? "bg-white/40 text-white shadow-lg translate-x-1"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+                    }`}
+                >
+                  👤 Profile
+                </button>
+
+                {/* Divider */}
+                <div className="mt-8 px-4">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    Account
+                  </p>
+                </div>
+
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200 hover:translate-x-1"
+                >
+                  <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
+                  Logout
+                </button>
               </div>
+            )}
+                {/* Master Orders – only for super admin */}
+            {!isCompanyAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab("masterOrders");
+                  setIsSidebarOpen(false);
+                }}
+                className={`flex items-center gap-3 w-full text-left px-4 py-2 text-sm rounded-lg transition
+                      ${activeTab === "masterOrders"
+                    ? "bg-white/20 text-white font-semibold"
+                    : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }
+                    `}
+              >
+                <FileText className="h-4 w-4" />
+                Master Orders
+              </button>
             )}
           </div>
 
-          {/* Payments – only for super admin */}
-          {!isCompanyAdmin && (
-            <button
-              onClick={() => {
-                setActiveTab("payments");
-                setIsSidebarOpen(false);
-              }}
-              className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-                ${
-                  activeTab === "payments"
-                    ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
-                }
+        {/* Payments – only for super admin */}
+        {!isCompanyAdmin && (
+          <button
+            onClick={() => {
+              setActiveTab("payments");
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
+                ${activeTab === "payments"
+                ? "bg-white/40 text-white shadow-lg shadow-indigo-900/50 translate-x-1"
+                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              }
               `}
-            >
-              <CreditCard className="h-5 w-5" />
-              Payments
-            </button>
-          )}
-        </nav>
-      </aside>
+          >
+            <CreditCard className="h-5 w-5" />
+            Payments
+          </button>
+        )}
+      </nav>
+    </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-white">
-        <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
-                {user?.first_name?.[0] || "A"}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-bold text-gray-900 truncate">
-                  {user?.first_name || "Admin"} {user?.last_name}
-                </p>
-                <p className="text-xs text-gray-700 truncate">{user?.email}</p>
-                {isCompanyAdmin && user?.memberships?.[0] && (
-                  <p className="text-xs text-indigo-600 truncate">
-                    {user.memberships[0].company_name}
-                  </p>
-                )}
-              </div>
-            </div>
+      {/* Main Content */ }
+  <main className="flex-1 overflow-auto bg-white">
+    <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setIsSidebarOpen((prev) => !prev)}
+          className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+            {user?.first_name?.[0] || "A"}
           </div>
-
-          <div className="flex items-center gap-6">
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all"
-            >
-              <LogOut className="h-4 w-4" /> Logout
-            </button>
+          <div className="overflow-hidden">
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {user?.first_name || "Admin"} {user?.last_name}
+            </p>
+            <p className="text-xs text-gray-700 truncate">{user?.email}</p>
+            {isCompanyAdmin && user?.memberships?.[0] && (
+              <p className="text-xs text-indigo-600 truncate">
+                {user.memberships[0].company_name}
+              </p>
+            )}
           </div>
-        </header>
-
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {renderContent()}
         </div>
-      </main>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all"
+        >
+          <LogOut className="h-4 w-4" /> Logout
+        </button>
+      </div>
+    </header>
+
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {renderContent()}
     </div>
+  </main>
+    </div >
   );
 }
