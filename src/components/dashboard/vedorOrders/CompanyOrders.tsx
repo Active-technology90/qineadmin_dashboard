@@ -12,6 +12,8 @@ import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
 import { VendorOrderFilters } from "./VendorOrderFilters";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
+import { Pagination } from "../../ui/Pagination";
+import { TableControls } from "../../ui/TableControls";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,6 +29,7 @@ export default function CompanyOrders() {
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
   const { toast, showToast } = useToast();
 
   const fetchingRef = useRef(false);
@@ -60,7 +63,7 @@ export default function CompanyOrders() {
         setError(null);
         const res = await getAdminVendorOrders({
           page,
-          page_size: ITEMS_PER_PAGE,
+         page_size: pageSize,
           search: search || undefined,
           status: status || undefined,
           company: companyId || undefined,
@@ -92,9 +95,9 @@ export default function CompanyOrders() {
       return;
     }
     fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId);
-  }, [currentPage, searchTerm, statusFilter, selectedCompanyId, fetchOrders]);
+ }, [currentPage, searchTerm, statusFilter, selectedCompanyId, pageSize, fetchOrders]);
 
-  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+ const totalPages = Math.ceil(totalCount / pageSize);
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   const clearFilters = () => {
@@ -138,7 +141,7 @@ export default function CompanyOrders() {
   const SkeletonRow = () => (
     <tr className="animate-pulse">
       {[...Array(7)].map((_, i) => (
-        <td key={i} className="px-6 py-4">
+        <td key={i} className="px-2 py-2">
           <div className="h-4 bg-gray-200 rounded w-20" />
         </td>
       ))}
@@ -148,42 +151,55 @@ export default function CompanyOrders() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-      <VendorOrderFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        selectedCompanyId={selectedCompanyId}
-        onCompanyChange={setSelectedCompanyId}
-        companies={companies}
-        onClear={clearFilters}
-        showMobile={showFilters}
-        onToggleMobile={() => setShowFilters(!showFilters)}
-      />
+<TableControls
+  pageSize={pageSize}
+  onPageSizeChange={(size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }}
+>
+  {/* LEFT SIDE: FILTERS WRAPPED IN FLEX ROW */}
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+
+    <VendorOrderFilters
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      statusFilter={statusFilter}
+      onStatusChange={setStatusFilter}
+      selectedCompanyId={selectedCompanyId}
+      onCompanyChange={setSelectedCompanyId}
+      companies={companies}
+      onClear={clearFilters}
+      showMobile={showFilters}
+      onToggleMobile={() => setShowFilters(!showFilters)}
+    />
+
+  </div>
+</TableControls>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Order ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Company
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Amount
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Delivery
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
                 Date
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                 Actions
               </th>
             </tr>
@@ -223,10 +239,10 @@ export default function CompanyOrders() {
                   key={order.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     #{order.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       {/* Company Logo with fallback */}
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -245,70 +261,52 @@ export default function CompanyOrders() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-semibold text-gray-900">
                     {Number(order.amount).toLocaleString()} ETB
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}
                     >
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-2 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${getDeliveryStatusColor(order.delivery?.status || "pending")}`}
                     >
                       {order.delivery?.status || "pending"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                     {formatDateTime(order.created_at)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </td>
+<td className="px-4 py-2 whitespace-nowrap text-right">
+  <button
+    onClick={() => setSelectedOrder(order)}
+    className="inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 text-xs font-medium transition-colors"
+  >
+    <Eye className="h-4 w-4" />
+    <span>View Detail</span>
+  </button>
+</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
-
-      {!loading && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t mt-4">
-          <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
-            {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount}{" "}
-            orders
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-md border disabled:opacity-50"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="px-3 py-1 text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-md border disabled:opacity-50"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
+<div className="flex justify-end mt-4">
+  {!loading && totalPages > 1 && (
+    <Pagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      totalItems={totalCount}
+      itemsPerPage={ITEMS_PER_PAGE}
+      onPageChange={goToPage}
+    />
+  )}
+</div>
       <VendorOrderDetailModal
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}

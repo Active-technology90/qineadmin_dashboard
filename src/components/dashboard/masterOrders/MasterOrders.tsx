@@ -5,9 +5,11 @@ import type { MasterOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
 import { OrderFilters } from "./OrderFilters";
+import { TableControls } from "../../ui/TableControls";
 import { OrderDetailModal } from "./OrderDetailModal";
+import { Pagination } from "../../ui/Pagination";
 
-const ITEMS_PER_PAGE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 const DEBOUNCE_DELAY = 500;
 
 export default function Orders() {
@@ -18,6 +20,7 @@ export default function Orders() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+ const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<MasterOrder | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -31,6 +34,9 @@ export default function Orders() {
     }, DEBOUNCE_DELAY);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+  useEffect(() => {
+  setCurrentPage(1);
+}, [pageSize]);
 
   // Fetch orders
   const fetchOrders = async (page: number, search: string, status: string) => {
@@ -45,7 +51,7 @@ export default function Orders() {
       setError(null);
       const res = await getAdminMasterOrders({
         page,
-        page_size: ITEMS_PER_PAGE,
+       page_size: pageSize,
         search: search || undefined,
         status: status || undefined,
         ordering: "-created_at",
@@ -70,14 +76,21 @@ export default function Orders() {
     if (localStorage.getItem("access")) {
       fetchOrders(currentPage, debouncedSearch, statusFilter);
     }
-  }, [currentPage, debouncedSearch, statusFilter]);
+ }, [currentPage, debouncedSearch, statusFilter, pageSize]);
 
   const totalPages = useMemo(
-    () => Math.ceil(totalCount / ITEMS_PER_PAGE),
-    [totalCount],
-  );
-  const goToPage = (page: number) =>
-    setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  () => Math.ceil(totalCount / pageSize),
+  [totalCount, pageSize],
+);
+  const goToPage = (page: number) => {
+  setCurrentPage(Math.min(Math.max(1, page), totalPages));
+};
+useEffect(() => {
+  // safety: prevent invalid page after pageSize change
+  if (currentPage > totalPages) {
+    setCurrentPage(1);
+  }
+}, [totalPages]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -106,7 +119,7 @@ export default function Orders() {
   const SkeletonRow = () => (
     <tr className="animate-pulse">
       {[...Array(7)].map((_, i) => (
-        <td key={i} className="px-6 py-4">
+        <td key={i} className="px-2 py-2">
           <div className="h-4 bg-gray-200 rounded w-20" />
         </td>
       ))}
@@ -116,39 +129,60 @@ export default function Orders() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-      <OrderFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        onClear={clearFilters}
-        showMobile={showFilters}
-        onToggleMobile={() => setShowFilters(!showFilters)}
-      />
+     <TableControls
+  pageSize={pageSize}
+  onPageSizeChange={setPageSize}
+>
+  {/* LEFT SIDE: SEARCH + STATUS + CLEAR */}
+  <div className="flex flex-1 gap-2 w-full items-center">
 
+    {/* SEARCH */}
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Search orders..."
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+    />
+
+    {/* STATUS FILTER */}
+    <select
+      value={statusFilter}
+      onChange={(e) => setStatusFilter(e.target.value)}
+      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+    >
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="paid">Paid</option>
+      <option value="completed">Completed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+
+  </div>
+</TableControls>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Order ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Customer
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Total
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Fulfillment
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
                 Date
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">
+              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                 Actions
               </th>
             </tr>
@@ -180,26 +214,26 @@ export default function Orders() {
             ) : (
               orders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     #{order.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
                     {order.recipient_name || (
                       <span className="text-gray-400 italic">Pickup</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm font-semibold text-gray-900">
                     {Number(order.total_amount).toLocaleString()} ETB
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}
                     >
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
+                  <td className="px-2 py-2whitespace-nowrap text-sm text-gray-600">
+                    <div className="flex items-center gap-0.5">
                       {order.fulfillment_type === "delivery" ? (
                         <Truck size={14} />
                       ) : (
@@ -210,17 +244,18 @@ export default function Orders() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
                     {formatDateTime(order.created_at)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </td>
+               <td className="px-2 py-2 whitespace-nowrap text-right">
+  <button
+    onClick={() => setSelectedOrder(order)}
+    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+  >
+    <Eye className="h-4 w-4" />
+    <span>View Detail</span>
+  </button>
+</td>
                 </tr>
               ))
             )}
@@ -228,34 +263,11 @@ export default function Orders() {
         </table>
       </div>
 
-      {!loading && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t mt-4">
-          <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
-            {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount}{" "}
-            orders
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-md border disabled:opacity-50"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="px-3 py-1 text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-md border disabled:opacity-50"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={goToPage}
+/>
 
       <OrderDetailModal
         order={selectedOrder}

@@ -20,10 +20,12 @@ import { ErrorView } from "../ui/ErrorView";
 import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
+import { Pagination } from "../ui/Pagination";
 import { useSorting } from "../../hooks/useSorting";
 import { useAuth } from "../../hooks/useAuth";
+import { TableControls } from "../ui/TableControls";
 
-const ITEMS_PER_PAGE = 10;
+
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -31,6 +33,7 @@ type PaginatedResponse<T> = {
 };
 
 export default function CompanyManagement() {
+  const [pageSize, setPageSize] = useState(10);
   const { user } = useAuth();
   const isCompanyAdmin = user?.memberships && user.memberships.length > 0;
   // const userCompanySlug = isCompanyAdmin ? user.memberships[0].company_slug : null;
@@ -92,7 +95,7 @@ export default function CompanyManagement() {
     goToPage,
     resetPage,
     itemsPerPage,
-  } = usePagination(sortedItems, ITEMS_PER_PAGE);
+  } = usePagination(sortedItems, pageSize);
 
   const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
@@ -101,9 +104,9 @@ export default function CompanyManagement() {
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
 
-  useEffect(() => {
-    resetPage();
-  }, [searchTerm, resetPage]);
+ useEffect(() => {
+  resetPage();
+}, [searchTerm, pageSize, resetPage]);
 
   // Fetch data based on role
   const fetchData = async () => {
@@ -336,7 +339,7 @@ export default function CompanyManagement() {
               className="w-full border border-gray-300 rounded-lg p-2"
             />
           </div>
-          <div>
+          <div className="md:col-span-2">
             <input
               type="text"
               placeholder="Slug (unique, optional)"
@@ -524,8 +527,9 @@ export default function CompanyManagement() {
 
       {/* Search & Sort – super admin only; company admin sees no filters because only one company */}
       {!isCompanyAdmin && (
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="flex-1">
+       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+  <div className="flex-1">
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
@@ -556,6 +560,7 @@ export default function CompanyManagement() {
             <option value="is_featured|desc">Featured First</option>
           </select>
         </div>
+</TableControls>
       )}
 
       <DataTable
@@ -565,15 +570,20 @@ export default function CompanyManagement() {
         emptyMessage="No companies found"
         onEdit={openEdit}  // Both roles can edit (company admin edits own company)
         onDelete={!isCompanyAdmin ? setDeleteTarget : undefined}  // Only super admin can delete
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={goToPage}
-        totalItems={sortedItems.length}
-        itemsPerPage={itemsPerPage}
+        // currentPage={currentPage}
+        // totalPages={totalPages}
+        // onPageChange={goToPage}
+        // totalItems={sortedItems.length}
+        // itemsPerPage={itemsPerPage}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={!isCompanyAdmin ? handleSort : undefined} // Sorting only for super admin
       />
+      <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={goToPage}
+/>
 
       <MultiStepFormModal
         isOpen={modalOpen}
@@ -581,7 +591,7 @@ export default function CompanyManagement() {
         steps={steps}
         onSubmit={handleSubmit}
         submitting={submitting}
-        maxWidth="lg"
+        maxWidth="2xl"
       />
 
       <DeleteConfirmModal
