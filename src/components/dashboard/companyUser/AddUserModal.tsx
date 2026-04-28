@@ -47,8 +47,8 @@ interface AddUserModalProps {
   onSearchChange: (val: string) => void;
   selectedUser: User | null;
   onSelectUser: (user: User | null) => void;
-  selectedRole: "admin" | "staff" | "delivery" | "viewer";
-  onRoleChange: (role: "admin" | "staff" | "delivery" | "viewer") => void;
+  selectedRole: "admin" | "staff" |  "viewer";
+  onRoleChange: (role: "admin" | "staff"  | "viewer") => void;
   adding: boolean; // renamed from `loading` to avoid confusion
   onAdd: () => void;
 }
@@ -286,7 +286,7 @@ export function AddUserModal({
                 Admin – Full access to company management
               </option>
               <option value="staff">Staff – Manage products and orders</option>
-              <option value="delivery">Delivery – Manage deliveries</option>
+              {/* <option value="delivery">Delivery – Manage deliveries</option> */}
               <option value="viewer">Viewer – Read‑only access</option>
             </select>
             <p className="text-xs text-gray-400 mt-1.5">
