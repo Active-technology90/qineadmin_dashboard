@@ -21,7 +21,7 @@ import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 
-const ITEMS_PER_PAGE = 10;
+
 export default function SubCategoryManagement() {
   const [pageSize, setPageSize] = useState(10);
   const [subs, setSubs] = useState<SubCategory[]>([]);

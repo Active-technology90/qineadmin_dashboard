@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { Eye, ChevronLeft, ChevronRight, Truck, Package } from "lucide-react";
+import { Eye, Truck, Package } from "lucide-react";
 import { getAdminMasterOrders } from "../../../services/api";
 import type { MasterOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
-import { OrderFilters } from "./OrderFilters";
 import { TableControls } from "../../ui/TableControls";
 import { OrderDetailModal } from "./OrderDetailModal";
 import { Pagination } from "../../ui/Pagination";
@@ -20,10 +19,9 @@ export default function Orders() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
- const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<MasterOrder | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
   const { toast, showToast } = useToast();
 
   // Debounce search
@@ -34,9 +32,10 @@ export default function Orders() {
     }, DEBOUNCE_DELAY);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
   useEffect(() => {
-  setCurrentPage(1);
-}, [pageSize]);
+    setCurrentPage(1);
+  }, [pageSize]);
 
   // Fetch orders
   const fetchOrders = async (page: number, search: string, status: string) => {
@@ -51,7 +50,7 @@ export default function Orders() {
       setError(null);
       const res = await getAdminMasterOrders({
         page,
-       page_size: pageSize,
+        page_size: pageSize,
         search: search || undefined,
         status: status || undefined,
         ordering: "-created_at",
@@ -76,27 +75,22 @@ export default function Orders() {
     if (localStorage.getItem("access")) {
       fetchOrders(currentPage, debouncedSearch, statusFilter);
     }
- }, [currentPage, debouncedSearch, statusFilter, pageSize]);
+  }, [currentPage, debouncedSearch, statusFilter, pageSize]);
 
   const totalPages = useMemo(
-  () => Math.ceil(totalCount / pageSize),
-  [totalCount, pageSize],
-);
-  const goToPage = (page: number) => {
-  setCurrentPage(Math.min(Math.max(1, page), totalPages));
-};
-useEffect(() => {
-  // safety: prevent invalid page after pageSize change
-  if (currentPage > totalPages) {
-    setCurrentPage(1);
-  }
-}, [totalPages]);
+    () => Math.ceil(totalCount / pageSize),
+    [totalCount, pageSize],
+  );
 
-  const clearFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("");
-    setCurrentPage(1);
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages]);
 
   const formatDateTime = (dateString: string) =>
     new Date(dateString).toLocaleString("en-US", {
@@ -129,37 +123,33 @@ useEffect(() => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-     <TableControls
-  pageSize={pageSize}
-  onPageSizeChange={setPageSize}
->
-  {/* LEFT SIDE: SEARCH + STATUS + CLEAR */}
-  <div className="flex flex-1 gap-2 w-full items-center">
+      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+        {/* LEFT SIDE: SEARCH + STATUS + CLEAR */}
+        <div className="flex flex-1 gap-2 w-full items-center">
+          {/* SEARCH */}
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search orders..."
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
 
-    {/* SEARCH */}
-    <input
-      type="text"
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      placeholder="Search orders..."
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-    />
+          {/* STATUS FILTER */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </TableControls>
 
-    {/* STATUS FILTER */}
-    <select
-      value={statusFilter}
-      onChange={(e) => setStatusFilter(e.target.value)}
-      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-    >
-      <option value="">All Status</option>
-      <option value="pending">Pending</option>
-      <option value="paid">Paid</option>
-      <option value="completed">Completed</option>
-      <option value="cancelled">Cancelled</option>
-    </select>
-
-  </div>
-</TableControls>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -232,7 +222,7 @@ useEffect(() => {
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-2 py-2whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
                     <div className="flex items-center gap-0.5">
                       {order.fulfillment_type === "delivery" ? (
                         <Truck size={14} />
@@ -247,15 +237,15 @@ useEffect(() => {
                   <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
                     {formatDateTime(order.created_at)}
                   </td>
-               <td className="px-2 py-2 whitespace-nowrap text-right">
-  <button
-    onClick={() => setSelectedOrder(order)}
-    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
-  >
-    <Eye className="h-4 w-4" />
-    <span>View Detail</span>
-  </button>
-</td>
+                  <td className="px-2 py-2 whitespace-nowrap text-right">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View Detail</span>
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -264,10 +254,10 @@ useEffect(() => {
       </div>
 
       <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={goToPage}
-/>
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
 
       <OrderDetailModal
         order={selectedOrder}
