@@ -492,4 +492,21 @@ export const searchUsers = async (query: string) =>
 // NEW: Get company staff filtered by role (e.g., delivery)
 export const getCompanyStaffByRole = async (companySlug: string, role: string) =>
   api.get(`/companies/${companySlug}/staff/`, { params: { role } });
+// ========== RECEIPTS ==========
+
+// Get company receipts
+export const getCompanyReceipts = async (companySlug: string, params?: {
+  page?: number;
+  page_size?: number;
+}) =>
+  api.get(`/payments/company/${companySlug}/receipts/`, { params });
+  // Review / approve / reject receipt
+export const reviewReceipt = async (
+  receiptId: number,
+  data: {
+    status: "approved" | "rejected" | "pending";
+    admin_notes?: string;
+  }
+) =>
+  api.patch(`/payments/receipts/${receiptId}/review/`, data);
 export default api;

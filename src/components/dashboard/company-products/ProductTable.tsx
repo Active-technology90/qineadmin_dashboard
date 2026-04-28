@@ -73,7 +73,7 @@ export function ProductTable({ products, totalItems, loading, onEdit, onDelete }
               <tr>
                 <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Image</th>
                 <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">SKU</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
+                <th className="px-2 py-2 text-left whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
                 <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price (ETB)</th>
                 <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stock</th>
                 <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Unit</th>
@@ -127,7 +127,7 @@ export function ProductTable({ products, totalItems, loading, onEdit, onDelete }
                     <ProductImage src={imageUrl} alt={product.title} />
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap font-mono text-sm text-gray-900">{product.sku}</td>
-                  <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900">{product.title}</td>
+                  <td className="px-2 py-2 whitespace-nowrap font-medium  text-gray-900">{product.title}</td>
                   <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">{product.price.toLocaleString()}</td>
                   <td className="px-2 py-2 whitespace-nowrap">
                     <StockBadge stock={product.stock} />

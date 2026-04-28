@@ -472,8 +472,8 @@ export default function CompanyManagement() {
           </div>
         ),
     },
-    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900" },
-    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500" },
+    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900 max-w-[100px] break-words" },
+    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500 max-w-[100px] break-words" },
     { key: "category_name", header: "Category", sortable: true },
     { key: "sub_category_name", header: "Subcategory", sortable: true },
     {

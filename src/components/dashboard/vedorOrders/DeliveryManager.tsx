@@ -33,7 +33,25 @@ interface DeliveryManagerProps {
   companySlug: string;
   onUpdate: () => void;
 }
+const StatusBadge = ({ status }: { status?: string }) => {
+  if (status === "available") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+        <CheckCircle className="h-3 w-3" /> Available
+      </span>
+    );
+  }
 
+  if (status === "busy") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+        <Clock className="h-3 w-3" /> Busy
+      </span>
+    );
+  }
+
+  return null;
+};
 export function DeliveryManager({
   orderId,
   currentDelivery,
@@ -49,6 +67,8 @@ export function DeliveryManager({
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+// ---------- StatusBadge (move here) ----------
 
   // Fetch delivery staff filtered by role "delivery" for this company
   const fetchDeliveryPersons = async () => {
@@ -138,23 +158,6 @@ export function DeliveryManager({
     }
   };
 
-  const StatusBadge = ({ status }: { status?: string }) => {
-    if (status === "available") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-          <CheckCircle className="h-3 w-3" /> Available
-        </span>
-      );
-    }
-    if (status === "busy") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
-          <Clock className="h-3 w-3" /> Busy
-        </span>
-      );
-    }
-    return null;
-  };
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.8, y: 20 },
@@ -199,7 +202,7 @@ export function DeliveryManager({
           <RefreshCw className="h-4 w-4" />
         )}
       </button>
-
+  
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -215,11 +218,11 @@ export function DeliveryManager({
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-white px-8 pt-6 pb-4 border-b border-gray-100 rounded-t-2xl">
+              <div className="flex-shrink-0 px-8 pt-6 pb-4  bg-white">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">
@@ -235,7 +238,7 @@ export function DeliveryManager({
                   </div>
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-1.5 hover:bg-gray-100 -mt-1 -mr-2"
+                    className="text-gray-400  hover:text-gray-600 transition-colors rounded-full border border-gray-400 p-1.5 hover:bg-gray-100 -mt-1 -mr-2"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -243,7 +246,7 @@ export function DeliveryManager({
               </div>
 
               {/* Body */}
-              <div className="px-8 py-6 space-y-6">
+             <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                 {currentDelivery && (
                   <div className="bg-blue-50 rounded-xl p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -367,13 +370,13 @@ export function DeliveryManager({
                         </p>
                       )}
                     </div>
-                    <StatusBadge status={selectedPerson.status} />
+                     <StatusBadge status={selectedPerson?.status} />
                   </div>
                 )}
               </div>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-white px-8 py-5 border-t border-gray-100 rounded-b-2xl flex justify-end gap-3">
+              <div className="flex-shrink-0 px-8 py-5 border-t bg-white flex justify-end gap-3">
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-5 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"

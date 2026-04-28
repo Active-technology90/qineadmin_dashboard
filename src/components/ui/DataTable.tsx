@@ -9,8 +9,8 @@ export interface Column<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   className?: string;
-  sortable?: boolean;      // new
-  sortKey?: string;        // optional, for nested fields like "category_name"
+  sortable?: boolean;
+  sortKey?: string;
 }
 
 interface DataTableProps<T> {
@@ -25,7 +25,6 @@ interface DataTableProps<T> {
   onPageChange?: (page: number) => void;
   totalItems?: number;
   itemsPerPage?: number;
-  // Sorting props
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   onSort?: (field: string) => void;
@@ -81,7 +80,8 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                 return (
                   <th
                     key={idx}
-                   className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide ${col.className || ''}`}
+                    // Fixed missing space before track; keep headers nowrap (they are short)
+                    className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap ${col.className || ''}`}
                   >
                     {col.header}
                   </th>
@@ -112,7 +112,8 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
               data.map((item, idx) => (
                 <tr key={item.id ?? idx} className="hover:bg-gray-50 transition-colors">
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`px-2 py-2 text-sm whitespace-nowrap ${col.className || ''}`}>
+                    // REMOVED 'whitespace-nowrap' – allows text to wrap
+                    <td key={colIdx} className={`px-2 py-2 text-sm break-words ${col.className || ''}`}>
                       {renderCell(item, col)}
                     </td>
                   ))}
@@ -145,7 +146,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination unchanged */}
       {!loading && totalPages && totalPages > 1 && onPageChange && (
         <div className="px-6 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50">
           <div className="text-sm text-gray-500">

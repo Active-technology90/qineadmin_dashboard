@@ -4,112 +4,393 @@ import {
   X,
   Package,
   Truck,
-  CreditCard,
   Receipt,
-  Building2,
   Calendar,
   MapPin,
   Download,
-  TrendingUp,
-  Clock,
-  CheckCircle,
   Copy,
   Check,
   User,
   Hash,
   ImageIcon,
+  Banknote,
+  Loader2,
+  Mail,
+  Phone,
 } from "lucide-react";
 import type { VendorOrder } from "../../../types";
+import {
+  getCompanyStaffByRole,
+  reviewReceipt,
+  assignDelivery,
+} from "../../../services/api";
 
-// -----------------------------------------------------------------------------
-// Subcomponents (matching OrderDetailModal style)
-// -----------------------------------------------------------------------------
+import { useToast } from "../../../hooks/useToast";
 
-const VendorOrderHeader = ({ orderId, onClose }: { orderId: number; onClose: () => void }) => {
-  const [copied, setCopied] = useState(false);
+// ---------- Helpers ----------
+const formatDateTime = (dateString: string) =>
+  new Date(dateString).toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(`#${orderId}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+const getInitials = (name: string) =>
+  name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase() || "?";
+
+const getStatusBadge = (status: string) => {
+  const s = status?.toLowerCase();
+  if (s === "completed" || s === "delivered")
+    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  if (s === "paid" || s === "out_for_delivery")
+    return "bg-purple-100 text-purple-800 border-purple-200";
+  if (s === "pending") return "bg-amber-100 text-amber-800 border-amber-200";
+  if (s === "processing" || s === "shipped")
+    return "bg-blue-100 text-blue-800 border-blue-200";
+  if (s === "cancelled") return "bg-red-100 text-red-800 border-red-200";
+  return "bg-gray-100 text-gray-600 border-gray-200";
+};
+
+// ---------- Types ----------
+interface PaymentReceipt {
+  id: number;
+  master_order: number;
+  customer_name: string;
+  order_total: number;
+  bank_info: string | null;
+  bank_name: string;
+  receipt_image: string;
+  amount: string;
+  status: string;
+  admin_notes: string;
+  uploaded_at: string;
+}
+
+interface StaffMember {
+  id: number;
+  user: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  };
+  role: string;
+}
+
+// ---------- Sub‑components ----------
+
+// 1. Customer Card (with copyable fields)
+const CustomerCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+      <User className="h-4 w-4 text-[#6750A4]" /> Customer Information
+    </h4>
+    <div className="flex items-start gap-4">
+      <div className="w-14 h-14 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl flex-shrink-0">
+        {getInitials(order.recipient_name || "?")}
+      </div>
+      <div className="space-y-1 text-sm">
+        <p className="font-bold text-gray-900 text-lg">
+          {order.recipient_name || "N/A"}
+        </p>
+        <div className="flex items-center gap-2 text-gray-500">
+          <Phone className="h-3.5 w-3.5" />
+          <span>{order.shipping_phone || "No phone"}</span>
+          <CopyButton text={order.shipping_phone} />
+        </div>
+        {/* {order.email && (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Mail className="h-3.5 w-3.5" />
+            <span>{order.email}</span>
+            <CopyButton text={order.email} />
+          </div>
+        )} */}
+      </div>
+    </div>
+  </div>
+);
+
+// 2. Shipping Card
+const ShippingCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-white rounded-xl border border-blue-100 p-6 shadow-sm">
+    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+      <MapPin className="h-4 w-4 text-[#6750A4]" /> Shipping Address
+    </h4>
+    <div className="space-y-3 text-sm">
+      <div>
+        <span className="text-xs text-gray-500">Recipient</span>
+        <p className="font-medium text-gray-900">
+          {order.recipient_name || "N/A"}
+        </p>
+      </div>
+      <div>
+        <span className="text-xs text-gray-500">Phone</span>
+        <p className="font-medium text-gray-900">
+          {order.shipping_phone || "N/A"}
+        </p>
+      </div>
+      <div>
+        <span className="text-xs text-gray-500">Address</span>
+        <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+          {order.shipping_address_text?.replace(/, /g, "\n") || "N/A"}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+// 3. Delivery Card (enhanced with avatar, tracking, assignment)
+const DeliveryCard = ({
+  order,
+  onUpdate,
+}: {
+  order: VendorOrder;
+  onUpdate: () => void;
+}) => {
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!order.company?.slug) return;
+    const fetchStaff = async () => {
+      setLoadingStaff(true);
+      try {
+        const res = await getCompanyStaffByRole(
+          order.company.slug!,
+          "delivery",
+        );
+        setStaffList(res.data.results || res.data);
+      } finally {
+        setLoadingStaff(false);
+      }
+    };
+    fetchStaff();
+  }, [order.company?.slug]);
+
+  const handleAssign = async () => {
+    if (!selectedStaffId) return;
+    setAssigning(true);
+    try {
+      await assignDelivery({
+        vendor_order: order.id,
+        delivery_person: Number(selectedStaffId),
+      });
+      showToast("success", "Delivery person assigned");
+      setSelectedStaffId("");
+      onUpdate();
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Assignment failed");
+    } finally {
+      setAssigning(false);
+    }
   };
 
+  const delivery = order.delivery;
   return (
-    <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-      <div className="flex items-center gap-3">
-        <h3 className="text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent">
-          Vendor Order #{orderId}
-        </h3>
-        <button
-          onClick={handleCopy}
-          className="p-1.5 text-gray-400 hover:text-[#6750A4] transition-colors rounded-lg hover:bg-gray-100"
-          aria-label="Copy order ID"
-        >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </button>
-        <span className="text-xs text-green-600 ml-1">{copied && "Copied!"}</span>
+    <div className="bg-white rounded-xl border border-purple-100 p-6 shadow-sm">
+      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+        <Truck className="h-4 w-4 text-[#6750A4]" /> Delivery Details
+      </h4>
+
+      {delivery ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl">
+              {getInitials(delivery.delivery_person_name || "?")}
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-gray-900 text-lg">
+                {delivery.delivery_person_name || "N/A"}
+              </p>
+              {delivery.tracking_id && (
+                <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                  <Hash className="h-3.5 w-3.5" />
+                  <span>{delivery.tracking_id.split("-")[0]}</span>
+                  <CopyButton text={delivery.tracking_id.split("-")[0]} />
+                </div>
+              )}
+              {delivery.status && (
+                <span
+                  className={`inline-block mt-2 px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(delivery.status)}`}
+                >
+                  {delivery.status}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 mb-4">
+          No delivery person assigned yet
+        </p>
+      )}
+
+      {/* Assignment control */}
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <p className="text-xs font-medium text-gray-600 mb-2">
+          Assign Delivery Person
+        </p>
+        {loadingStaff ? (
+          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+        ) : (
+          <div className="flex gap-2">
+            <select
+              value={selectedStaffId}
+              onChange={(e) =>
+                setSelectedStaffId(parseInt(e.target.value) || "")
+              }
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#6750A4]"
+            >
+              <option value="">Select Delivery Person…</option>
+              {staffList.map((staff) => (
+                <option key={staff.id} value={staff.id}>
+                  {staff.user.first_name} {staff.user.last_name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAssign}
+              disabled={!selectedStaffId || assigning}
+              className="px-5 py-2 bg-[#6750A4] text-white text-sm font-semibold rounded-lg hover:bg-[#59409A] disabled:opacity-60 transition flex items-center gap-2"
+            >
+              {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
+              Assign
+            </button>
+          </div>
+        )}
       </div>
-      <button
-        onClick={onClose}
-        className="text-gray-400 hover:text-[#6750A4] transition-colors p-1 rounded-full hover:bg-gray-100"
-        aria-label="Close modal"
-      >
-        <X className="h-5 w-5" />
-      </button>
     </div>
   );
 };
 
-const VendorSummaryCard = ({
-  icon: Icon,
-  label,
-  value,
-  badge,
-  accentColor = "#6750A4",
-}: {
-  icon: React.ElementType;
-  label: string;
-  value?: string | number;
-  badge?: { text: string; color: string };
-  accentColor?: string;
-}) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-md hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
-      <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentColor}10` }}>
-        <Icon className="h-5 w-5" style={{ color: accentColor }} />
-      </div>
-      {badge && (
-        <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${badge.color}`}>
-          {badge.text}
-        </span>
-      )}
+// 4. Order Items Table (full width)
+const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+      <Package className="h-4 w-4 text-[#6750A4]" /> Order Items (
+      {order.items.length})
+    </h4>
+    <div className="overflow-auto">
+      <table className="w-full text-sm">
+        <thead className="text-xs text-gray-500 uppercase border-b border-gray-100">
+          <tr>
+            <th className="text-left py-3 pr-4">Product</th>
+            <th className="text-left py-3 px-2">SKU</th>
+            <th className="text-right py-3 px-2">Qty</th>
+            <th className="text-right py-3 px-2">Unit Price</th>
+            <th className="text-right py-3 pl-2">Total</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {order.items.map((item) => (
+            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+              <td className="py-3 pr-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
+                    {item.product_image ? (
+                      <img
+                        src={item.product_image}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-5 w-5 text-gray-400 m-auto" />
+                    )}
+                  </div>
+                  <span className="font-medium text-gray-800 truncate">
+                    {item.title}
+                  </span>
+                </div>
+              </td>
+              <td className="py-3 px-2 text-gray-500 font-mono text-xs">
+                {item.sku || "—"}
+              </td>
+              <td className="py-3 px-2 text-right text-gray-700">{item.qty}</td>
+              <td className="py-3 px-2 text-right text-gray-700">
+                {Number(item.unit_price).toLocaleString()} ETB
+              </td>
+              <td className="py-3 pl-2 text-right font-semibold text-[#6750A4]">
+                {Number(item.line_total).toLocaleString()} ETB
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-    <p className="text-2xl font-bold mt-3 text-gray-900">{value ?? "—"}</p>
-    <p className="text-xs text-gray-500 mt-1">{label}</p>
   </div>
 );
 
-const VendorFinancialCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-[#6750A4] text-white rounded-xl border border-gray-100 p-5 shadow-sm">
-    <p className="text-sm font-semibold text-gray-50 flex items-center gap-2 mb-4">
-      <Receipt className="h-4 w-4 text-white" /> Financial Breakdown
-    </p>
-    <div className="space-y-3">
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-50">Subtotal</span>
-        <span className="font-medium text-gray-50">
-          {Number(order.subtotal).toLocaleString()} ETB
+// 5. Order Summary Card (right column)
+const OrderSummaryCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+      <Receipt className="h-4 w-4 text-[#6750A4]" /> Order Summary
+    </h4>
+    <div className="space-y-4 text-sm">
+      <div className="flex justify-between items-center">
+        <span className="text-gray-500">Order Status</span>
+        <span
+          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
+        >
+          {order.status}
         </span>
       </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-50">Tax</span>
-        <span className="font-medium text-gray-50">
-          {Number(order.tax_amount).toLocaleString()} ETB
+      <div className="flex justify-between items-center">
+        <span className="text-gray-500">Delivery Status</span>
+        <span
+          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.delivery_status || "pending")}`}
+        >
+          {order.delivery_status || "pending"}
         </span>
       </div>
-      <div className="border-t border-gray-100 pt-2 flex justify-between text-base font-bold">
-        <span className="text-gray-50">Total</span>
-        <span className="text-white font-bold">
+      {order.tax_invoice?.invoice_number && (
+        <div className="flex justify-between items-center">
+          <span className="text-gray-500">Invoice #</span>
+          <span className="font-mono text-gray-700">
+            {order.tax_invoice.invoice_number}
+          </span>
+        </div>
+      )}
+      <div className="pt-4 border-t border-gray-100">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-500 font-medium">Total Amount</span>
+          <span className="text-xl font-bold text-[#6750A4]">
+            {Number(order.amount).toLocaleString()} ETB
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// 6. Financial Card (right column)
+const FinancialCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-[#6750A4] text-white rounded-xl p-6 shadow-sm">
+    <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
+      <Receipt className="h-4 w-4" /> Financial Breakdown
+    </h4>
+    <div className="space-y-3 text-sm">
+      <div className="flex justify-between">
+        <span className="text-white/70">Subtotal</span>
+        <span>{Number(order.subtotal).toLocaleString()} ETB</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-white/70">Tax</span>
+        <span>{Number(order.tax_amount).toLocaleString()} ETB</span>
+      </div>
+      <div className="border-t border-white/20 pt-3 flex justify-between text-base font-bold">
+        <span>Total</span>
+        <span className="text-lg">
           {Number(order.amount).toLocaleString()} ETB
         </span>
       </div>
@@ -117,182 +398,326 @@ const VendorFinancialCard = ({ order }: { order: VendorOrder }) => (
   </div>
 );
 
-const VendorTimelineCard = ({ order }: { order: VendorOrder }) => {
-  const formatDateTime = (dateString: string) =>
-    new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  return (
-    <div className="bg-[#6750A4] rounded-xl border border-gray-100 p-5 shadow-sm">
-      <p className="text-sm font-semibold text-gray-50 flex items-center gap-2 mb-4">
-        <Calendar className="h-4 w-4 text-white" /> Timeline
-      </p>
-      <div className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-50">Created</span>
-          <span className="font-medium text-gray-50">
+// 7. Timeline Card (right column)
+const TimelineCard = ({ order }: { order: VendorOrder }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+      <Calendar className="h-4 w-4 text-[#6750A4]" /> Timeline
+    </h4>
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        <div className="flex flex-col items-center">
+          <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1" />
+          <div className="w-px h-full bg-gray-200" />
+        </div>
+        <div className="pb-4">
+          <p className="text-xs text-gray-500">Order Created</p>
+          <p className="text-sm font-medium text-gray-800">
             {formatDateTime(order.created_at)}
-          </span>
+          </p>
         </div>
       </div>
-    </div>
-  );
-};
-
-const VendorShippingCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-blue-100 p-5 shadow-sm">
-    <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <MapPin className="h-4 w-4 text-[#6750A4]" /> Shipping Information
-    </p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-      <div>
-        <p className="text-xs text-gray-500">Recipient</p>
-        <p className="font-medium text-gray-900">{order.recipient_name || "N/A"}</p>
-      </div>
-      <div>
-        <p className="text-xs text-gray-500">Phone</p>
-        <p className="font-medium text-gray-900">{order.shipping_phone || "N/A"}</p>
-      </div>
-      <div className="md:col-span-2">
-        <p className="text-xs text-gray-500">Full Address</p>
-        <p className="text-gray-700">{order.shipping_address_text || "N/A"}</p>
-      </div>
-    </div>
-  </div>
-);
-
-const VendorItemRow = ({ item }: { item: VendorOrder["items"][0] }) => (
-  <div className="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-    <div className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200">
-      {item.product_image ? (
-        <img
-          src={item.product_image}
-          alt={item.title}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <ImageIcon className="h-6 w-6 text-gray-400" />
+      {order.tax_invoice && (
+        <div className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Invoice Issued</p>
+            <p className="text-sm font-medium text-gray-800">
+              {formatDateTime(order.tax_invoice.issued_at)}
+            </p>
+          </div>
+        </div>
       )}
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-        <span>SKU: {item.sku || "—"}</span>
-        <span>Qty: {item.qty}</span>
-        <span>Unit: {Number(item.unit_price).toLocaleString()} ETB</span>
-      </div>
-    </div>
-    <div className="flex-shrink-0 text-right">
-      <p className="text-sm font-bold text-[#6750A4]">
-        {Number(item.line_total).toLocaleString()} ETB
-      </p>
-    </div>
   </div>
 );
 
-const VendorDeliveryTracking = ({ delivery }: { delivery: VendorOrder["delivery"] }) => {
-  if (!delivery) return null;
+// 8. Receipt Review Card (right column, with image preview modal)
+const ReceiptReviewCard = ({
+  receipt,
+  onUpdate,
+}: {
+  receipt?: PaymentReceipt | null;
+  onUpdate: () => void;
+}) => {
+  const [reviewStatus, setReviewStatus] = useState<
+    "approved" | "rejected" | ""
+  >("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [showImage, setShowImage] = useState(false);
 
-  const getDeliveryStatusBadge = (status: string) => {
-    const s = status?.toLowerCase();
-    if (s === "delivered")
-      return { label: "Delivered", color: "bg-green-100 text-green-800", icon: CheckCircle };
-    if (s === "out_for_delivery")
-      return { label: "Out for Delivery", color: "bg-purple-100 text-purple-800", icon: Truck };
-    if (s === "shipped")
-      return { label: "Shipped", color: "bg-blue-100 text-blue-800", icon: Package };
-    if (s === "processing")
-      return { label: "Processing", color: "bg-amber-100 text-amber-800", icon: Clock };
-    return { label: status || "Pending", color: "bg-gray-100 text-gray-800", icon: Clock };
+  const { showToast } = useToast();
+
+  if (!receipt) return null;
+
+  const handleSubmit = async () => {
+    if (!reviewStatus) return;
+
+    setSubmitting(true);
+    try {
+      await reviewReceipt(receipt.id, {
+        status: reviewStatus,
+        admin_notes: notes || undefined,
+      });
+
+      showToast("success", `Receipt ${reviewStatus}`);
+      setReviewStatus("");
+      setNotes("");
+      onUpdate();
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Review failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="bg-purple-50/30 px-5 py-3 border-b border-dashed border-purple-100">
-      <p className="text-xs font-semibold text-[#6750A4] flex items-center gap-2 mb-2">
-        <Truck className="h-3.5 w-3.5" /> Delivery Tracking
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-        {delivery.delivery_person_name && (
-          <div className="flex items-center gap-2">
-            <User className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-gray-700">
-              <span className="text-gray-500">Driver:</span> {delivery.delivery_person_name}
-            </span>
-          </div>
-        )}
-        {delivery.tracking_id && (
-          <div className="flex items-center gap-2">
-            <Hash className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-gray-700">
-              <span className="text-gray-500">Tracking:</span> {delivery.tracking_id.split("-")[0]}
-            </span>
-          </div>
-        )}
-        {delivery.status && (
-          <div className="flex items-center gap-2">
-            {(() => {
-              const badge = getDeliveryStatusBadge(delivery.status);
-              const Icon = badge.icon;
-              return (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${badge.color}`}>
-                  <Icon className="h-3 w-3" /> {badge.label}
-                </span>
-              );
-            })()}
-          </div>
-        )}
+    <div className="bg-white flex-col  rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
+      {/* Header */}
+        <div className="flex items-center gap-2">
+          <Banknote className="h-5 w-5 text-indigo-600" />
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+            Payment Receipt
+          </h4>
+        </div>
+      <div className="flex-col items-center justify-between m-5">
+      
+
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-gray-500">Status</p>
+          <span
+            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(
+              receipt.status,
+            )}`}
+          >
+            {receipt.status}
+          </span>
+        </div>
+        <div className="flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-gray-500">Bank</p>
+          <p className="font-semibold text-gray-900">{receipt.bank_name}</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-gray-500">Amount</p>
+          <p className="text-lg font-bold text-gray-900">
+            {Number(receipt.amount).toLocaleString()} ETB
+          </p>
+        </div>
       </div>
+      </div>
+
+     
+      
+
+      {/* IMAGE */}
+      {receipt.receipt_image && (
+        <div className="m-5">
+          <p className="text-xs text-gray-500 mb-2">Receipt Image</p>
+
+          <div
+            onClick={() => setShowImage(true)}
+            className="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden border cursor-zoom-in group"
+          >
+            <img
+              src={receipt.receipt_image}
+              alt="Receipt"
+              className="w-full h-full object-cover group-hover:scale-105 transition"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
+          </div>
+        </div>
+      )}
+
+      {/* ACTIONS */}
+      <div className=" pt-4 space-y-3">
+        {/* Buttons instead of select */}
+        {/* <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setReviewStatus("approved")}
+            className={`px-3 py-1.5 text-xs rounded-lg border ${
+              reviewStatus === "approved"
+                ? "bg-green-600 text-white"
+                : "text-green-600 border-green-200 hover:bg-green-50"
+            }`}
+          >
+            Approve
+          </button>
+
+          <button
+            onClick={() => setReviewStatus("rejected")}
+            className={`px-3 py-1.5 text-xs rounded-lg border ${
+              reviewStatus === "rejected"
+                ? "bg-red-600 text-white"
+                : "text-red-600 border-red-200 hover:bg-red-50"
+            }`}
+          >
+            Reject
+          </button>
+        </div> */}
+
+        {/* Notes */}
+        {/* <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Add admin notes (optional)"
+          rows={2}
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+        /> */}
+
+        {/* Submit */}
+        {/* <button
+          onClick={handleSubmit}
+          disabled={!reviewStatus || submitting}
+          className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+          Submit Review
+        </button> */}
+      </div>
+
+      {/* IMAGE MODAL */}
+      {showImage && receipt.receipt_image && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowImage(false)}
+        >
+          <div
+            className="relative w-full max-w-6xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowImage(false)}
+              className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
+            >
+              <X className="h-5 w-5 text-gray-700" />
+            </button>
+
+            <img
+              src={receipt.receipt_image}
+              alt="Receipt Full"
+              className="w-full max-h-[90vh] object-contain rounded-xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// -----------------------------------------------------------------------------
-// Main Component
-// -----------------------------------------------------------------------------
+// 9. Status Update Section (top bar)
+// const StatusUpdateSection = ({
+//   orderId,
+//   currentStatus,
+//   onUpdate,
+// }: {
+//   orderId: number;
+//   currentStatus: string;
+//   onUpdate: () => void;
+// }) => {
+//   const [selected, setSelected] = useState(currentStatus);
+//   const [updating, setUpdating] = useState(false);
+//   const { showToast } = useToast();
+
+//   useEffect(() => setSelected(currentStatus), [currentStatus]);
+
+//   const handleChange = async (newStatus: string) => {
+//     setUpdating(true);
+//     try {
+//       await api.patch(`/orders/vendor/${orderId}/`, { status: newStatus });
+//       showToast("success", `Status updated to ${newStatus.replace(/_/g, " ")}`);
+//       onUpdate();
+//     } catch (err: any) {
+//       showToast("error", err.response?.data?.detail || "Update failed");
+//     } finally {
+//       setUpdating(false);
+//     }
+//   };
+
+//   return (
+//     <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
+//       <span className="text-sm font-semibold text-gray-700">Order Status:</span>
+//       <select
+//         value={selected}
+//         onChange={(e) => handleChange(e.target.value)}
+//         disabled={updating}
+//         className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#6750A4]"
+//       >
+//         {["pending", "accepted", "processing", "completed", "cancelled"].map((s) => (
+//           <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+//         ))}
+//       </select>
+//       {updating && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+//     </div>
+//   );
+// };
+
+// Reusable Copy Button
+const CopyButton = ({ text }: { text?: string | null }) => {
+  const [copied, setCopied] = useState(false);
+  if (!text) return null;
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-gray-400 hover:text-[#6750A4] transition-colors"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+};
+
+// ════════════════════════════════════════
+// MAIN MODAL
+// ════════════════════════════════════════
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.2, ease: "easeOut" as const },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: { duration: 0.15, ease: "easeIn" as const },
-  },
+  hidden: { opacity: 0, scale: 0.96 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
+  exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15 } },
 };
 
 const backdropVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, transition: { duration: 0.15 } },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 export function VendorOrderDetailModal({
   order,
+  receipt,
   onClose,
+  onUpdate,
 }: {
   order: VendorOrder | null;
+  receipt?: PaymentReceipt | null;
   onClose: () => void;
+  onUpdate?: () => void;
 }) {
   const [showTopShadow, setShowTopShadow] = useState(false);
   const [showBottomShadow, setShowBottomShadow] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (!scrollRef.current) return;
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      setShowTopShadow(scrollTop > 5);
-      setShowBottomShadow(scrollTop + clientHeight < scrollHeight - 5);
-    };
     const el = scrollRef.current;
+    const handleScroll = () => {
+      if (!el) return;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      setShowTopShadow(scrollTop > 8);
+      setShowBottomShadow(scrollTop + clientHeight < scrollHeight - 8);
+    };
     el?.addEventListener("scroll", handleScroll);
     handleScroll();
     return () => el?.removeEventListener("scroll", handleScroll);
@@ -308,23 +733,7 @@ export function VendorOrderDetailModal({
 
   if (!order) return null;
 
-  const getStatusColor = (status: string) => {
-    const s = status.toLowerCase();
-    if (s === "completed") return "bg-green-100 text-green-800 border-green-200";
-    if (s === "paid") return "bg-blue-100 text-blue-800 border-blue-200";
-    if (s === "pending") return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    if (s === "cancelled") return "bg-red-100 text-red-800 border-red-200";
-    return "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
-  const getDeliveryStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "delivered": return "bg-green-100 text-green-800 border-green-200";
-      case "shipped": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "processing": return "bg-blue-100 text-blue-800 border-blue-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  const handleLocalUpdate = () => onUpdate?.();
 
   return (
     <AnimatePresence>
@@ -333,7 +742,7 @@ export function VendorOrderDetailModal({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6"
         onClick={onClose}
       >
         <motion.div
@@ -341,129 +750,93 @@ export function VendorOrderDetailModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
+          className="bg-white rounded-3xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="vendor-order-modal-title"
         >
-          <VendorOrderHeader orderId={order.id} onClose={onClose} />
+          {/* Header */}
+          <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-8 py-5 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent">
+                Vendor Order #{order.id}
+              </h2>
+              <CopyButton text={String(order.id)} />
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-[#6750A4] p-2 rounded-full hover:bg-gray-100 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-auto relative scroll-smooth">
+          {/* Scrollable Body */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto overflow-x-hidden"
+          >
             {showTopShadow && (
-              <div className="sticky top-0 h-4 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
+              <div className="sticky top-0 h-5 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
             )}
 
-            <div className="p-6 space-y-6">
-              {/* Company Header with Logo */}
-              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                <div className="w-12 h-12 bg-[#6750A4]/10 rounded-xl flex items-center justify-center overflow-hidden">
-                  {order.company?.logo ? (
-                    <img
-                      src={order.company.logo}
-                      alt={order.company.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Building2 className="h-6 w-6 text-[#6750A4]" />
+            <div className="p-8 space-y-6">
+              {/* Status Update Bar */}
+              {/* <StatusUpdateSection
+                orderId={order.id}
+                currentStatus={order.status}
+                onUpdate={handleLocalUpdate}
+              /> */}
+
+              {/* Two‑column layout */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Left column (wider) */}
+                <div className="xl:col-span-2 space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <CustomerCard order={order} />
+                    <ShippingCard order={order} />
+                  </div>
+                  <DeliveryCard order={order} onUpdate={handleLocalUpdate} />
+                  <OrderItemsCard order={order} />
+                </div>
+
+                {/* Right column */}
+                <div className="space-y-6">
+                   <ReceiptReviewCard
+                    receipt={receipt}
+                    onUpdate={handleLocalUpdate}
+                  />
+                    <TimelineCard order={order} />
+                  <FinancialCard order={order} />
+                
+                 <OrderSummaryCard order={order} />
+
+                  {/* Tax Invoice quick link */}
+                  {order.tax_invoice && (
+                    <div className="bg-gray-50 rounded-xl p-5">
+                      <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                        <Receipt className="h-4 w-4 text-[#6750A4]" /> Tax
+                        Invoice
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {order.tax_invoice.invoice_number}
+                      </p>
+                      {order.tax_invoice.pdf_url && (
+                        <a
+                          href={order.tax_invoice.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[#6750A4] hover:underline text-sm font-medium"
+                        >
+                          <Download size={14} /> Download PDF
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Company</p>
-                  <p className="font-semibold text-gray-900">
-                    {order.company?.name || "Unknown Company"}
-                  </p>
-                </div>
               </div>
 
-              {/* Summary Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <VendorSummaryCard
-                  icon={Package}
-                  label="Order Status"
-                  badge={{ text: order.status, color: getStatusColor(order.status) }}
-                />
-                <VendorSummaryCard
-                  icon={Truck}
-                  label="Delivery Status"
-                  badge={{
-                    text: order.delivery_status || "pending",
-                    color: getDeliveryStatusColor(order.delivery_status ?? "pending"),
-                  }} />
-                <VendorSummaryCard
-                  icon={CreditCard}
-                  label="Payment Method"
-                  value={order?.payment_method || "N/A"}
-                />
-                <VendorSummaryCard
-                  icon={TrendingUp}
-                  label="Total Amount"
-                  value={`${Number(order.amount).toLocaleString()} ETB`}
-                  accentColor="#6750A4"
-                />
-              </div>
-
-
-
-              {/* Delivery Tracking (if present) */}
-              {order.delivery && <VendorDeliveryTracking delivery={order.delivery} />}
-
-              {/* Shipping Details (if delivery) */}
-              {order.recipient_name && <VendorShippingCard order={order} />}
-
-              {/* Order Items */}
-              {order.items && order.items.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Package className="h-5 w-5 text-[#6750A4]" />
-                    <h4 className="text-base font-semibold text-gray-800">
-                      Order Items ({order.items.length})
-                    </h4>
-                  </div>
-                  <div className="border rounded-xl overflow-hidden">
-                    <div className="divide-y divide-gray-100">
-                      {order.items.map((item) => (
-                        <VendorItemRow key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* Financial & Timeline */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <VendorFinancialCard order={order} />
-                <VendorTimelineCard order={order} />
-              </div>
-
-              {/* Tax Invoice */}
-              {order.tax_invoice && (
-                <div className="bg-gray-50 rounded-xl p-5">
-                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
-                    <Receipt className="h-4 w-4 text-[#6750A4]" /> Tax Invoice
-                  </p>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="text-gray-500">Invoice #:</span> {order.tax_invoice.invoice_number}
-                    </p>
-                    <p>
-                      <span className="text-gray-500">Issued:</span> {formatDateTime(order.tax_invoice.issued_at)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      order.tax_invoice?.pdf_url &&
-                      window.open(order.tax_invoice.pdf_url, "_blank")
-                    }
-                    className="mt-3 text-[#6750A4] hover:text-[#544088] text-sm flex items-center gap-1 transition-colors"
-                  >
-                    <Download size={14} /> Download PDF
-                  </button>
-                </div>
-              )}
-
-              {/* Empty state for items (should not happen, but fallback) */}
+              {/* Empty fallback */}
               {(!order.items || order.items.length === 0) && (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-16 text-gray-500">
                   <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No items found in this order</p>
                 </div>
@@ -471,7 +844,7 @@ export function VendorOrderDetailModal({
             </div>
 
             {showBottomShadow && (
-              <div className="sticky bottom-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
+              <div className="sticky bottom-0 h-5 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
             )}
           </div>
         </motion.div>
@@ -479,13 +852,3 @@ export function VendorOrderDetailModal({
     </AnimatePresence>
   );
 }
-
-// Helper formatting function (used inside)
-const formatDateTime = (dateString: string) =>
-  new Date(dateString).toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });

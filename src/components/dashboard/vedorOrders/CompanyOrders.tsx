@@ -12,10 +12,9 @@ import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
   getCompanies,
-  // getDeliveries,            // no longer needed
-  // getCompanyStaffByRole,    // no longer needed
+  getCompanyReceipts,
 } from "../../../services/api";
-import type { VendorOrder, CompanyListItem /*, Delivery */ } from "../../../types";
+import type { VendorOrder, CompanyListItem } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { useAuth } from "../../../hooks/useAuth";
 import { Toast } from "../../ui/Toast";
@@ -159,6 +158,21 @@ const Pagination = ({
   );
 };
 
+// ---------- Payment Receipt Type ----------
+interface PaymentReceipt {
+  id: number;
+  master_order: number;
+  customer_name: string;
+  order_total: number;
+  bank_info: string | null;
+  bank_name: string;
+  receipt_image: string;
+  amount: string;
+  status: string;
+  admin_notes: string;
+  uploaded_at: string;
+}
+
 // ---------- main component ----------
 export default function CompanyOrders() {
   const { user } = useAuth();
@@ -168,6 +182,7 @@ export default function CompanyOrders() {
     : null;
 
   const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,12 +192,16 @@ export default function CompanyOrders() {
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
+  const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { toast, showToast } = useToast();
 
-  const fetchingRef = useRef(false);
+  // Refs for abort and debounce
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch companies for super admin (no page_size needed)
+  // Fetch companies for super admin
   useEffect(() => {
     if (!isCompanyAdmin) {
       const fetchCompanies = async () => {
@@ -197,44 +216,62 @@ export default function CompanyOrders() {
     }
   }, [isCompanyAdmin]);
 
+  // Core fetch function with abort support
   const fetchOrders = useCallback(
-    async (page: number, search: string, status: string, companyId: string) => {
+    async (
+      page: number,
+      search: string,
+      status: string,
+      companyId: string,
+      _deliveryStatus?: string,
+    ) => {
       const token = localStorage.getItem("access");
       if (!token) {
         setError("Please log in to view orders");
         setLoading(false);
         return;
       }
-      if (fetchingRef.current) return;
-      fetchingRef.current = true;
+
+      // Cancel previous in‑flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setLoading(true);
+      setError(null);
 
       try {
-        setLoading(true);
-        setError(null);
-
         let res;
+        const params = {
+          page,
+          page_size: ITEMS_PER_PAGE,
+          search: search || undefined,
+          status: status || undefined,
+          ordering: "-created_at" as const,
+        };
+
         if (isCompanyAdmin && userCompanySlug) {
           res = await getCompanyVendorOrders(userCompanySlug, {
-            page,
-            page_size: ITEMS_PER_PAGE,
-            search: search || undefined,
-            status: status || undefined,
-            ordering: "-created_at",
+            ...params,
+            signal: controller.signal,
           });
         } else {
           res = await getAdminVendorOrders({
-            page,
-            page_size: ITEMS_PER_PAGE,
-            search: search || undefined,
-            status: status || undefined,
+            ...params,
             company: companyId || undefined,
-            ordering: "-created_at",
+            signal: controller.signal,
           });
         }
 
+        // If request was cancelled, ignore result
+        if (controller.signal.aborted) return;
+
         setOrders(res.data.results);
-        // totalCount is not used, so we don't need to store it
+        setTotalCount(res.data.count);
       } catch (err: any) {
+        if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         const message =
           err.message === "SESSION_EXPIRED"
             ? "Your session has expired. Please log in again."
@@ -244,22 +281,72 @@ export default function CompanyOrders() {
         setError(message);
         showToast("error", message);
       } finally {
-        setLoading(false);
-        fetchingRef.current = false;
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     },
     [showToast, isCompanyAdmin, userCompanySlug],
   );
 
+  // Debounced search trigger
+  const debouncedFetch = useCallback(
+    (page: number, search: string, status: string, companyId: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        fetchOrders(page, search, status, companyId);
+      }, 300);
+    },
+    [fetchOrders],
+  );
+
+  // When filter/page changes, fetch (with debounce for search)
   useEffect(() => {
     if (!localStorage.getItem("access")) {
       setError("Please log in to view orders");
       setLoading(false);
       return;
     }
-    fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId);
-  }, [currentPage, searchTerm, statusFilter, selectedCompanyId, fetchOrders]);
+    debouncedFetch(currentPage, searchTerm, statusFilter, selectedCompanyId);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    selectedCompanyId,
+    debouncedFetch,
+  ]);
 
+  // Fetch payment receipt when selected order changes
+  useEffect(() => {
+    if (!selectedOrder) {
+      setReceipt(null);
+      return;
+    }
+    const companySlug = selectedOrder.company?.slug;
+    if (!companySlug) return;
+
+    const fetchReceipt = async () => {
+      setReceiptLoading(true);
+      try {
+        const res = await getCompanyReceipts(companySlug);
+        const firstReceipt: PaymentReceipt | undefined = res.data.results?.[0];
+        setReceipt(firstReceipt || null);
+      } catch (err) {
+        console.error("Failed to load payment receipt", err);
+        setReceipt(null);
+      } finally {
+        setReceiptLoading(false);
+      }
+    };
+    fetchReceipt();
+  }, [selectedOrder]);
+
+  // Client‑side delivery status filter (if API doesn't support it)
   const filteredOrders = useMemo(() => {
     if (!deliveryStatusFilter) return orders;
     return orders.filter(
@@ -269,15 +356,15 @@ export default function CompanyOrders() {
     );
   }, [orders, deliveryStatusFilter]);
 
-  const filteredCount = filteredOrders.length;
-  const totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
-  const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredOrders.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredOrders, currentPage]);
+  // Pagination calculation using server totalCount
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const showingFrom =
+    totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
 
-  const goToPage = (page: number) =>
+  const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  };
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -287,28 +374,30 @@ export default function CompanyOrders() {
     setCurrentPage(1);
   };
 
-  // Unused; commented out to avoid TS error
-  // const formatDateTime = (dateString: string) =>
-  //   new Date(dateString).toLocaleString("en-US", {
-  //     year: "numeric",
-  //     month: "short",
-  //     day: "numeric",
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //   });
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
       <VendorOrderFilters
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(value) => {
+          setSearchTerm(value);
+          setCurrentPage(1);
+        }}
         statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
+        onStatusChange={(value) => {
+          setStatusFilter(value);
+          setCurrentPage(1);
+        }}
         deliveryStatusFilter={deliveryStatusFilter}
-        onDeliveryStatusChange={setDeliveryStatusFilter}
+        onDeliveryStatusChange={(value) => {
+          setDeliveryStatusFilter(value);
+          setCurrentPage(1);
+        }}
         selectedCompanyId={selectedCompanyId}
-        onCompanyChange={setSelectedCompanyId}
+        onCompanyChange={(value) => {
+          setSelectedCompanyId(value);
+          setCurrentPage(1);
+        }}
         companies={companies}
         onClear={clearFilters}
         showMobile={showFilters}
@@ -355,10 +444,10 @@ export default function CompanyOrders() {
                   )
                 }
               />
-            ) : paginatedOrders.length === 0 ? (
+            ) : filteredOrders.length === 0 ? (
               <EmptyState />
             ) : (
-              paginatedOrders.map((order) => (
+              filteredOrders.map((order) => (
                 <tr
                   key={order.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
@@ -367,12 +456,12 @@ export default function CompanyOrders() {
                     #{order.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
                       <CompanyAvatar
                         logo={order.company?.logo}
                         name={order.company?.name || "Unknown"}
                       />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 break-words whitespace-normal">
                         {order.company?.name || "Unknown"}
                       </span>
                     </div>
@@ -390,40 +479,55 @@ export default function CompanyOrders() {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {order.delivery?.delivery_person_name ? (
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="h-3.5 w-3.5 text-gray-400" />
-                        <span className="text-sm text-gray-700">
-                          {order.delivery.delivery_person_name}
+                    <div className="flex flex-col gap-2">
+                      {/* Delivery Person Info */}
+                      {order.delivery?.delivery_person_name ? (
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-medium text-gray-800">
+                            {order.delivery.delivery_person_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">
+                          Not assigned
                         </span>
+                      )}
+
+                      {/* Action Button */}
+                      <div>
+                        <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10 transition">
+                          <DeliveryManager
+                            orderId={order.id}
+                            currentDelivery={order.delivery || null}
+                            companySlug={order.company?.slug || ""}
+                            onUpdate={() =>
+                              fetchOrders(
+                                currentPage,
+                                searchTerm,
+                                statusFilter,
+                                selectedCompanyId,
+                              )
+                            }
+                          />
+                          {order.delivery?.delivery_person_name
+                            ? "Change"
+                            : "Assign"}
+                        </button>
                       </div>
-                    ) : (
-                      <span className="text-gray-400 italic">—</span>
-                    )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <DeliveryManager
-                        orderId={order.id}
-                        currentDelivery={
-                          order.delivery || null
-                        }
-                        companySlug={order.company?.slug || ""}
-                        onUpdate={() =>
-                          fetchOrders(
-                            currentPage,
-                            searchTerm,
-                            statusFilter,
-                            selectedCompanyId,
-                          )
-                        }
-                      />
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         title="View details"
                       >
-                        <Eye className="h-4 w-4" />
+                        <div className="flex items-center gap-1 text-xs font-medium">
+                          <Eye className="h-4 w-4" />
+                          View details
+                        </div>
                       </button>
                     </div>
                   </td>
@@ -437,9 +541,7 @@ export default function CompanyOrders() {
       {!loading && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
           <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
-            {Math.min(currentPage * ITEMS_PER_PAGE, filteredCount)} of{" "}
-            {filteredCount} orders
+            Showing {showingFrom} to {showingTo} of {totalCount} orders
           </div>
           <Pagination
             currentPage={currentPage}
@@ -451,7 +553,14 @@ export default function CompanyOrders() {
 
       <VendorOrderDetailModal
         order={selectedOrder}
-        onClose={() => setSelectedOrder(null)}
+        receipt={receiptLoading ? null : receipt}
+        onClose={() => {
+          setSelectedOrder(null);
+          setReceipt(null);
+        }}
+        onUpdate={() =>
+          fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId)
+        }
       />
     </div>
   );
