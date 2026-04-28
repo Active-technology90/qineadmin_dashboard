@@ -1,6 +1,6 @@
 import { X, Mail, Shield, Loader2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import type { User } from '../../../types';
+
 
 // Reusable Avatar component – kept consistent with AddUserModal
 const UserAvatar = ({ user, size = 'md' }: { user: any; size?: 'sm' | 'md' | 'lg' }) => {

@@ -1,5 +1,5 @@
 // src/components/admin/Payments.tsx
-import { useEffect, useState, useMemo } from "react";
+import {  useState, useMemo } from "react";
 import {
   Search,
   Download,
@@ -15,15 +15,15 @@ import { useRejectPayout } from "../../hooks/useRejectPayout";
 
 const ITEMS_PER_PAGE = 10;
 
-interface PaymentDisplay {
-  id: number;
-  order_number: string;
-  amount: number;
-  method: string;
-  status: "completed" | "pending" | "failed";
-  date: string;
-  receipt_url?: string;
-}
+// interface PaymentDisplay {
+//   id: number;
+//   order_number: string;
+//   amount: number;
+//   method: string;
+//   status: "completed" | "pending" | "failed";
+//   date: string;
+//   receipt_url?: string;
+// }
 
 export default function Payments() {
   const { payouts, loading, error, refetch } = useAdminPayouts();

@@ -1,13 +1,26 @@
-// src/components/admin/vedorOrders/DeliveryManager.tsx
+// src/components/dashboard/vedorOrders/DeliveryManager.tsx
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Truck, RefreshCw, X, User, Loader2, ChevronDown, CheckCircle, Clock } from "lucide-react";
-import { assignDelivery, updateDeliveryPerson, getCompanyStaffByRole } from "../../../services/api";
+import {
+  Truck,
+  RefreshCw,
+  X,
+  User,
+  Loader2,
+  ChevronDown,
+  CheckCircle,
+  Clock,
+} from "lucide-react";
+import {
+  assignDelivery,
+  updateDeliveryPerson,
+  getCompanyStaffByRole,
+} from "../../../services/api";
 import type { Delivery } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 
 interface DeliveryPerson {
-  id: number;           // This is the User ID (for assignment)
+  id: number; // This is the User ID (for assignment)
   name: string;
   phone?: string;
   avatar?: string | null;
@@ -21,7 +34,12 @@ interface DeliveryManagerProps {
   onUpdate: () => void;
 }
 
-export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdate }: DeliveryManagerProps) {
+export function DeliveryManager({
+  orderId,
+  currentDelivery,
+  companySlug,
+  onUpdate,
+}: DeliveryManagerProps) {
   const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deliveryPersons, setDeliveryPersons] = useState<DeliveryPerson[]>([]);
@@ -36,19 +54,20 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
   const fetchDeliveryPersons = async () => {
     try {
       const res = await getCompanyStaffByRole(companySlug, "delivery");
-      // The response is paginated: { count, next, previous, results }
       const results = res.data.results || res.data || [];
 
-      const mapped: DeliveryPerson[] = results.map((staff: any) => ({
-        // Use the actual user ID for assignment (not the CompanyUser ID)
-        id: staff.user?.id,
-        // Construct full name from first_name and last_name
-        name: `${staff.user?.first_name || ''} ${staff.user?.last_name || ''}`.trim() || staff.user?.username || staff.user?.email,
-        phone: staff.user?.phone_number,
-        avatar: staff.user?.profile_image,
-        // Backend may not provide status yet; default to "available"
-        status: "available",
-      })).filter((p) => p.id); // remove any without an ID
+      const mapped: DeliveryPerson[] = results
+        .map((staff: any) => ({
+          id: staff.user?.id,
+          name:
+            `${staff.user?.first_name || ""} ${staff.user?.last_name || ""}`.trim() ||
+            staff.user?.username ||
+            staff.user?.email,
+          phone: staff.user?.phone_number,
+          avatar: staff.user?.profile_image,
+          status: "available",
+        }))
+        .filter((p: DeliveryPerson) => p.id); // explicit type
 
       setDeliveryPersons(mapped);
     } catch (err) {
@@ -61,7 +80,9 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
     if (!searchTerm.trim()) return deliveryPersons;
     const term = searchTerm.toLowerCase();
     return deliveryPersons.filter(
-      (p) => p.name.toLowerCase().includes(term) || (p.phone && p.phone.includes(term))
+      (p) =>
+        p.name.toLowerCase().includes(term) ||
+        (p.phone && p.phone.includes(term)),
     );
   }, [deliveryPersons, searchTerm]);
 
@@ -69,7 +90,10 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     };
@@ -79,7 +103,7 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
 
   const openModal = async () => {
     await fetchDeliveryPersons();
-    // currentDelivery.delivery_person is the user ID (since it was assigned that way)
+    // `delivery_person` and `id` must be added to the `Delivery` interface (see note below)
     setSelectedPersonId(currentDelivery?.delivery_person ?? null);
     setSearchTerm("");
     setIsModalOpen(true);
@@ -94,10 +118,14 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
     setLoading(true);
     try {
       if (currentDelivery) {
+        // updateDeliveryPerson expects (deliveryId, userId)
         await updateDeliveryPerson(currentDelivery.id, selectedPersonId);
         showToast("success", "Delivery person updated");
       } else {
-        await assignDelivery({ vendor_order: orderId, delivery_person: selectedPersonId });
+        await assignDelivery({
+          vendor_order: orderId,
+          delivery_person: selectedPersonId,
+        });
         showToast("success", "Delivery assigned");
       }
       setIsModalOpen(false);
@@ -129,10 +157,20 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
   };
 
   const modalVariants = {
-    hidden: { opacity: 0, scale: 0.96, y: 8 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
-    exit: { opacity: 0, scale: 0.96, y: 8, transition: { duration: 0.15, ease: "easeIn" } },
-  };
+    hidden: { opacity: 0, scale: 0.8, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { duration: 0.3, ease: "easeOut" },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: 20,
+      transition: { duration: 0.2, ease: "easeIn" },
+    },
+  } as const; // as const fixes the ease type
 
   const backdropVariants = {
     hidden: { opacity: 0 },
@@ -149,9 +187,17 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
             ? "text-green-600 hover:text-green-700 hover:bg-green-50 focus:ring-green-500"
             : "text-blue-600 hover:text-blue-700 hover:bg-blue-50 focus:ring-blue-500"
         }`}
-        title={!currentDelivery ? "Assign delivery person" : "Change delivery person"}
+        title={
+          !currentDelivery
+            ? "Assign delivery person"
+            : "Change delivery person"
+        }
       >
-        {!currentDelivery ? <Truck className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+        {!currentDelivery ? (
+          <Truck className="h-4 w-4" />
+        ) : (
+          <RefreshCw className="h-4 w-4" />
+        )}
       </button>
 
       <AnimatePresence>
@@ -177,7 +223,9 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">
-                      {currentDelivery ? "Change delivery person" : "Assign delivery"}
+                      {currentDelivery
+                        ? "Change delivery person"
+                        : "Assign delivery"}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {currentDelivery
@@ -202,10 +250,11 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                       <User className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Current driver</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">
+                        Current driver
+                      </p>
                       <p className="text-base font-medium text-gray-900 mt-0.5">
-                        {deliveryPersons.find((p) => p.id === currentDelivery.delivery_person)?.name ||
-                          `ID ${currentDelivery.delivery_person}`}
+                        {currentDelivery.delivery_person_name || "Unassigned"}
                       </p>
                     </div>
                   </div>
@@ -229,7 +278,9 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none text-base"
                     />
                     <ChevronDown
-                      className={`absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}
+                      className={`absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none transition-transform duration-200 ${
+                        showDropdown ? "rotate-180" : ""
+                      }`}
                     />
                   </div>
 
@@ -238,8 +289,12 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                       {filteredPersons.length === 0 ? (
                         <div className="p-8 text-center">
                           <User className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                          <p className="text-base text-gray-500">No delivery persons found</p>
-                          <p className="text-sm text-gray-400 mt-1">Try a different search term</p>
+                          <p className="text-base text-gray-500">
+                            No delivery persons found
+                          </p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Try a different search term
+                          </p>
                         </div>
                       ) : (
                         filteredPersons.map((person) => (
@@ -251,12 +306,18 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                               setShowDropdown(false);
                             }}
                             className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-0 ${
-                              selectedPersonId === person.id ? "bg-indigo-50" : ""
+                              selectedPersonId === person.id
+                                ? "bg-indigo-50"
+                                : ""
                             }`}
                           >
                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                               {person.avatar ? (
-                                <img src={person.avatar} alt="" className="w-full h-full object-cover" />
+                                <img
+                                  src={person.avatar}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
                                 <span className="text-gray-600 font-medium text-base">
                                   {person.name[0]?.toUpperCase() || "?"}
@@ -264,8 +325,14 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-base font-medium text-gray-900 truncate">{person.name}</p>
-                              {person.phone && <p className="text-sm text-gray-500">{person.phone}</p>}
+                              <p className="text-base font-medium text-gray-900 truncate">
+                                {person.name}
+                              </p>
+                              {person.phone && (
+                                <p className="text-sm text-gray-500">
+                                  {person.phone}
+                                </p>
+                              )}
                             </div>
                             <StatusBadge status={person.status} />
                           </button>
@@ -279,7 +346,11 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                   <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-3 shadow-sm border border-indigo-100">
                     <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
                       {selectedPerson.avatar ? (
-                        <img src={selectedPerson.avatar} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={selectedPerson.avatar}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <span className="text-indigo-600 font-bold text-lg">
                           {selectedPerson.name[0]?.toUpperCase() || "?"}
@@ -287,8 +358,14 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{selectedPerson.name}</p>
-                      {selectedPerson.phone && <p className="text-sm text-gray-500">{selectedPerson.phone}</p>}
+                      <p className="font-semibold text-gray-900">
+                        {selectedPerson.name}
+                      </p>
+                      {selectedPerson.phone && (
+                        <p className="text-sm text-gray-500">
+                          {selectedPerson.phone}
+                        </p>
+                      )}
                     </div>
                     <StatusBadge status={selectedPerson.status} />
                   </div>
@@ -309,7 +386,13 @@ export function DeliveryManager({ orderId, currentDelivery, companySlug, onUpdat
                   className="px-5 py-2.5 bg-secondary text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center gap-2"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {loading ? (currentDelivery ? "Updating..." : "Assigning...") : currentDelivery ? "Update" : "Assign"}
+                  {loading
+                    ? currentDelivery
+                      ? "Updating..."
+                      : "Assigning..."
+                    : currentDelivery
+                    ? "Update"
+                    : "Assign"}
                 </button>
               </div>
             </motion.div>

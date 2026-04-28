@@ -31,11 +31,7 @@ export default function AdminProfile() {
     "profile",
   );
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ProfileForm>({
+  const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
       first_name: user?.first_name || "",
       last_name: user?.last_name || "",
@@ -48,7 +44,6 @@ export default function AdminProfile() {
     control: passwordControl,
     handleSubmit: handlePasswordSubmit,
     reset,
-    formState: { errors: passwordErrors },
   } = useForm<PasswordForm>({
     defaultValues: {
       currentPassword: "",
@@ -78,7 +73,7 @@ export default function AdminProfile() {
       setUser(updatedUser);
 
       if (updatedUser.profile_image) {
-        setAvatar(updatedUser.profile_image);
+        setAvatar(updatedUser.profile_image ?? null);
       }
 
       alert("Profile updated successfully");
@@ -105,7 +100,6 @@ export default function AdminProfile() {
       await changePassword({
         current_password: data.currentPassword,
         new_password: data.newPassword,
-        re_new_password: data.confirmPassword,
       });
 
       alert("Password changed successfully");
@@ -147,7 +141,7 @@ export default function AdminProfile() {
       const updatedUser = res.data;
 
       setUser(updatedUser);
-      setAvatar(updatedUser.profile_image);
+      setAvatar(updatedUser.profile_image ?? null);
 
       URL.revokeObjectURL(url);
     } catch (err) {

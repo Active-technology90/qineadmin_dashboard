@@ -1,4 +1,4 @@
-// src/components/dashboard/vedorOrders/CompanyOrders.tsx (full version)
+// src/components/dashboard/vedorOrders/CompanyOrders.tsx
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Eye,
@@ -12,10 +12,10 @@ import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
   getCompanies,
-  getDeliveries,
-  getCompanyStaffByRole,
+  // getDeliveries,            // no longer needed
+  // getCompanyStaffByRole,    // no longer needed
 } from "../../../services/api";
-import type { VendorOrder, CompanyListItem, Delivery } from "../../../types";
+import type { VendorOrder, CompanyListItem /*, Delivery */ } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { useAuth } from "../../../hooks/useAuth";
 import { Toast } from "../../ui/Toast";
@@ -25,7 +25,7 @@ import { DeliveryManager } from "./DeliveryManager";
 
 const ITEMS_PER_PAGE = 10;
 
-// ---------- reusable subcomponents (same as before) ----------
+// ---------- reusable subcomponents ----------
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
     completed: "bg-emerald-100 text-emerald-700",
@@ -63,17 +63,6 @@ const CompanyAvatar = ({
     ) : (
       <Building2 className="h-4 w-4 text-gray-500" />
     )}
-  </div>
-);
-
-const DeliveryPersonDisplay = ({
-  deliveryPersonId,
-}: {
-  deliveryPersonId?: number;
-}) => (
-  <div className="flex items-center gap-2">
-    <UserIcon className="h-3.5 w-3.5 text-gray-400" />
-    <span className="text-sm text-gray-700">ID: {deliveryPersonId ?? "—"}</span>
   </div>
 );
 
@@ -175,7 +164,7 @@ export default function CompanyOrders() {
   const { user } = useAuth();
   const isCompanyAdmin = user?.memberships?.length === 1;
   const userCompanySlug = isCompanyAdmin
-    ? user.memberships[0].company_slug
+    ? user.memberships?.[0]?.company_slug
     : null;
 
   const [orders, setOrders] = useState<VendorOrder[]>([]);
@@ -183,74 +172,22 @@ export default function CompanyOrders() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState(""); // NEW
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const { toast, showToast } = useToast();
-  const [deliveryPersonMap, setDeliveryPersonMap] = useState<
-    Map<number, string>
-  >(new Map());
-  const [deliveriesMap, setDeliveriesMap] = useState<Map<number, Delivery>>(
-    new Map(),
-  );
+
   const fetchingRef = useRef(false);
 
-  const fetchDeliveries = async () => {
-    try {
-      const res = await getDeliveries({ page_size: 1000 });
-      const deliveries = res.data.results;
-      const map = new Map<number, Delivery>();
-      deliveries.forEach((d) => map.set(d.vendor_order, d));
-      setDeliveriesMap(map);
-    } catch (err) {
-      console.error("Failed to fetch deliveries", err);
-    }
-  };
-  const fetchDeliveryStaffMap = async (slug: string) => {
-    try {
-      const res = await getCompanyStaffByRole(slug, "delivery");
-      const results = res.data.results || res.data || [];
-      const map = new Map<number, string>();
-      results.forEach((staff: any) => {
-        const userId = staff.user?.id;
-        if (userId) {
-          const firstName = staff.user?.first_name || "";
-          const lastName = staff.user?.last_name || "";
-          const name =
-            `${firstName} ${lastName}`.trim() ||
-            staff.user?.username ||
-            staff.user?.email;
-          map.set(userId, name);
-        }
-      });
-      setDeliveryPersonMap(map);
-    } catch (err) {
-      console.error("Failed to fetch delivery staff names", err);
-    }
-  };
-  useEffect(() => {
-    let slug = null;
-    if (isCompanyAdmin && userCompanySlug) {
-      slug = userCompanySlug;
-    } else if (selectedCompanyId) {
-      // For super admin: find the company slug from the selected company id
-      const company = companies.find((c) => c.id === Number(selectedCompanyId));
-      slug = company?.slug;
-    }
-    if (slug) {
-      fetchDeliveryStaffMap(slug);
-    }
-  }, [isCompanyAdmin, userCompanySlug, selectedCompanyId, companies]);
-
+  // Fetch companies for super admin (no page_size needed)
   useEffect(() => {
     if (!isCompanyAdmin) {
       const fetchCompanies = async () => {
         try {
-          const res = await getCompanies({ page_size: 100 });
+          const res = await getCompanies();
           setCompanies(res.data.results);
         } catch (err) {
           console.error("Failed to load companies", err);
@@ -296,8 +233,7 @@ export default function CompanyOrders() {
         }
 
         setOrders(res.data.results);
-        setTotalCount(res.data.count);
-        await fetchDeliveries();
+        // totalCount is not used, so we don't need to store it
       } catch (err: any) {
         const message =
           err.message === "SESSION_EXPIRED"
@@ -323,16 +259,6 @@ export default function CompanyOrders() {
     }
     fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId);
   }, [currentPage, searchTerm, statusFilter, selectedCompanyId, fetchOrders]);
-
-  // Apply delivery status filter to orders
-  // const filteredOrders = useMemo(() => {
-  //   if (!deliveryStatusFilter) return orders;
-  //   return orders.filter(order =>
-  //     order.delivery?.status?.toLowerCase() === deliveryStatusFilter.toLowerCase()
-  //   );
-  // }, [orders, deliveryStatusFilter]);
-  // Remove deliveriesMap and fetchDeliveries entirely (optional)
-  // Then use order.delivery_status directly:
 
   const filteredOrders = useMemo(() => {
     if (!deliveryStatusFilter) return orders;
@@ -361,14 +287,15 @@ export default function CompanyOrders() {
     setCurrentPage(1);
   };
 
-  const formatDateTime = (dateString: string) =>
-    new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Unused; commented out to avoid TS error
+  // const formatDateTime = (dateString: string) =>
+  //   new Date(dateString).toLocaleString("en-US", {
+  //     year: "numeric",
+  //     month: "short",
+  //     day: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
@@ -431,82 +358,77 @@ export default function CompanyOrders() {
             ) : paginatedOrders.length === 0 ? (
               <EmptyState />
             ) : (
-              paginatedOrders.map((order) => {
-                const delivery = deliveriesMap.get(order.id);
-                return (
-                  <tr
-                    key={order.id}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      #{order.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <CompanyAvatar
-                          logo={order.company?.logo}
-                          name={order.company?.name || "Unknown"}
-                        />
-                        <span className="text-sm font-medium text-gray-700">
-                          {order.company?.name || "Unknown"}
+              paginatedOrders.map((order) => (
+                <tr
+                  key={order.id}
+                  className="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    #{order.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <CompanyAvatar
+                        logo={order.company?.logo}
+                        name={order.company?.name || "Unknown"}
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {order.company?.name || "Unknown"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    {Number(order.amount).toLocaleString()}{" "}
+                    <span className="text-xs text-gray-500">ETB</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge status={order.status} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge
+                      status={order.delivery?.status || "not assigned"}
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.delivery?.delivery_person_name ? (
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="text-sm text-gray-700">
+                          {order.delivery.delivery_person_name}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      {Number(order.amount).toLocaleString()}{" "}
-                      <span className="text-xs text-gray-500">ETB</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge
-                        status={order.delivery?.status || "not assigned"}
+                    ) : (
+                      <span className="text-gray-400 italic">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <DeliveryManager
+                        orderId={order.id}
+                        currentDelivery={
+                          order.delivery || null
+                        }
+                        companySlug={order.company?.slug || ""}
+                        onUpdate={() =>
+                          fetchOrders(
+                            currentPage,
+                            searchTerm,
+                            statusFilter,
+                            selectedCompanyId,
+                          )
+                        }
                       />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {delivery ? (
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="text-sm text-gray-700">
-                            {deliveryPersonMap.get(delivery.delivery_person) ||
-                              `ID: ${delivery.delivery_person}`}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic">—</span>
-                      )}
-                    </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDateTime(order.created_at)}
-                    </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <DeliveryManager
-                          orderId={order.id}
-                          currentDelivery={delivery || null}
-                          companySlug={order.company?.slug || ""}
-                          onUpdate={() =>
-                            fetchOrders(
-                              currentPage,
-                              searchTerm,
-                              statusFilter,
-                              selectedCompanyId,
-                            )
-                          }
-                        />
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          title="View details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        title="View details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

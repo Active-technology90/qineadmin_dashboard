@@ -239,6 +239,14 @@ export interface TaxInvoice {
   pdf_url?: string;
 }
 export interface Delivery {
+   id: number;                          // unique ID of the delivery
+  vendor_order: number;                // ID of the vendor order
+  delivery_person?: number;            // ID of the assigned delivery person
+ 
+  delivery_date?: string;
+  delivery_time?: string;
+  delivery_person_id?: number;
+  delivery_person_phone?: string;
   delivery_person_name?: string;
   tracking_id?: string;
   status?: string;

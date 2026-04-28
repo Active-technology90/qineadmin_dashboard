@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';   // removed useMemo
 import { useAuth } from '../../../context/authContext';
 import { useCompanySelection } from '../../../hooks/useCompanySelection';
 import { useCompanyUsers } from '../../../hooks/useCompanyUsers';
@@ -22,7 +22,7 @@ export default function CompanyUsers() {
   const memberships = currentUser?.memberships || [];
   const isSuperAdmin = memberships.length === 0;
   const isCompanyAdmin = memberships.some((m: any) => m.role === 'admin');
-  const isCompanyStaff = memberships.some((m: any) => m.role === 'staff') && !isCompanyAdmin;
+  // Removed unused isCompanyStaff
 
   const {
     selectedCompany,
@@ -47,7 +47,8 @@ export default function CompanyUsers() {
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [adding, setAdding] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | "viewer">("staff");
+  // Include "delivery" in the union to match AddUserModal's expected type
+  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | "viewer" | "delivery">("staff");
   const [showAddModal, setShowAddModal] = useState(false);
   const debouncedQuery = useDebounce(searchTerm, 500);
 

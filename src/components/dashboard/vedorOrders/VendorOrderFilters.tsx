@@ -21,7 +21,6 @@ export function VendorOrderFilters({
   searchTerm,
   onSearchChange,
   statusFilter,
-  onStatusChange,
   selectedCompanyId,
   onCompanyChange,
   companies,
