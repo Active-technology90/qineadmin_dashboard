@@ -61,7 +61,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
   return (
     <div className="bg-white rounded-xl shadow overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((col, idx) => {
@@ -81,14 +81,14 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                 return (
                   <th
                     key={idx}
-                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.className || ''}`}
+                   className={`px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide ${col.className || ''}`}
                   >
                     {col.header}
                   </th>
                 );
               })}
               {(onEdit || onDelete) && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
               )}
@@ -112,12 +112,12 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
               data.map((item, idx) => (
                 <tr key={item.id ?? idx} className="hover:bg-gray-50 transition-colors">
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`px-6 py-4 text-sm ${col.className || ''}`}>
+                    <td key={colIdx} className={`px-2 py-2 text-sm whitespace-nowrap ${col.className || ''}`}>
                       {renderCell(item, col)}
                     </td>
                   ))}
                   {(onEdit || onDelete) && (
-                    <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                    <td className="px-2 py-2 text-right space-x-1 whitespace-nowrap">
                       {onEdit && (
                         <button
                           onClick={() => onEdit(item)}

@@ -8,7 +8,7 @@ import { ProductTable } from './ProductTable';
 import { ProductModal } from './ProductModal';
 import { DeleteConfirmModal } from '../../ui/DeleteConfirmModal';
 import { Toast } from '../../ui/Toast';
-import { Pagination } from './Pagination';
+import { Pagination } from '../../ui/Pagination';
 import { ErrorView } from '../../ui/ErrorView';
 import { NoCompanyView } from './NoCompanyView';
 

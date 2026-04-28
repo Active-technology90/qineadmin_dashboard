@@ -10,7 +10,9 @@ import {
 } from "../../services/api";
 import type { SubCategory, Category } from "../../types";
 import { SearchInput } from "../ui/SearchInput";
+import { TableControls } from "../ui/TableControls";
 import { DataTable, type Column } from "../ui/DataTable";
+import { Pagination } from "../ui/Pagination";
 import { FormModal } from "../ui/FormModal";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 import { ErrorView } from "../ui/ErrorView";
@@ -20,8 +22,8 @@ import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 
 const ITEMS_PER_PAGE = 10;
-
 export default function SubCategoryManagement() {
+  const [pageSize, setPageSize] = useState(10);
   const [subs, setSubs] = useState<SubCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +102,7 @@ export default function SubCategoryManagement() {
     goToPage,
     resetPage,
     itemsPerPage,
-  } = usePagination(sortedItems, ITEMS_PER_PAGE);
+  } = usePagination(sortedItems, pageSize);
 const paginatedItemsWithRowNumber = useMemo(() => {
   return paginatedItems.map((item, index) => ({
     ...item,
@@ -299,28 +301,29 @@ const paginatedItemsWithRowNumber = useMemo(() => {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="flex-1">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search by name, Amharic name, slug, item code, or category..."
-          />
-        </div>
-        <select
-          value={`${sortField}|${sortOrder}`}
-          onChange={(e) => {
-            const [field, desiredOrder] = e.target.value.split('|');
-            // Apply sort using handleSort
-            if (field === sortField) {
-              if (desiredOrder !== sortOrder) handleSort(field);
-            } else {
-              handleSort(field);
-              if (desiredOrder === 'desc') handleSort(field); // second call toggles to desc
-            }
-          }}
-          className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
-        >
+    <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+  <div className="flex flex-col sm:flex-row gap-3 w-full">
+    <div className="flex-1">
+      <SearchInput
+        value={searchTerm}
+        onChange={setSearchTerm}
+        placeholder="Search by name, Amharic name, slug, item code, or category..."
+      />
+    </div>
+
+    <select
+      value={`${sortField}|${sortOrder}`}
+      onChange={(e) => {
+        const [field, desiredOrder] = e.target.value.split('|');
+        if (field === sortField) {
+          if (desiredOrder !== sortOrder) handleSort(field);
+        } else {
+          handleSort(field);
+          if (desiredOrder === 'desc') handleSort(field);
+        }
+      }}
+      className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm sm:w-48"
+    >
           <option value="name|asc">Name (A-Z)</option>
           <option value="name|desc">Name (Z-A)</option>
           <option value="id|asc">Oldest (ID ↑)</option>
@@ -332,8 +335,9 @@ const paginatedItemsWithRowNumber = useMemo(() => {
           <option value="company_count|asc">Fewest Companies</option>
           <option value="is_active|desc">Active First</option>
           <option value="is_active|asc">Inactive First</option>
-        </select>
-      </div>
+       </select>
+</div>
+</TableControls>
 
       <DataTable
          data={paginatedItemsWithRowNumber} 
@@ -342,16 +346,20 @@ const paginatedItemsWithRowNumber = useMemo(() => {
         emptyMessage="No subcategories found"
         onEdit={openEdit}
         onDelete={setDeleteTarget}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={goToPage}
-        totalItems={sortedItems.length}
-        itemsPerPage={itemsPerPage}
+        // currentPage={currentPage}
+        // totalPages={totalPages}
+        // onPageChange={goToPage}
+        // totalItems={sortedItems.length}
+        // itemsPerPage={itemsPerPage}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
       />
-
+<Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={goToPage}
+/>
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

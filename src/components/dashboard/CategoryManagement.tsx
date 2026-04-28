@@ -17,12 +17,15 @@ import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
+import { Pagination } from "../ui/Pagination";
+import { TableControls } from "../ui/TableControls";
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -67,7 +70,7 @@ export default function CategoryManagement() {
     goToPage,
     resetPage,
     itemsPerPage,
-  } = usePagination(sortedItems, 10);
+  } = usePagination(sortedItems, pageSize);
   // Inside CategoryManagement, after usePagination
   const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
@@ -75,9 +78,9 @@ export default function CategoryManagement() {
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
-  useEffect(() => {
-    resetPage();
-  }, [searchTerm, resetPage]);
+ useEffect(() => {
+  resetPage();
+}, [searchTerm, pageSize, resetPage]);
 
   const fetchCategories = async () => {
     try {
@@ -275,40 +278,45 @@ export default function CategoryManagement() {
         </button>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="flex-1">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search by name, Amharic name, slug, or code..."
-          />
-        </div>
-        <select
-          value={`${sortField}|${sortOrder}`}
-          onChange={(e) => {
-            const [field, order] = e.target.value.split("|");
-            // Use the same field/order logic
-            if (field === sortField) {
-              if (order !== sortOrder) handleSort(field); // toggle
-            } else {
-              handleSort(field);
-              if (order === "desc") handleSort(field); // second call toggles to desc
-            }
-          }}
-          className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="name|asc">Name (A-Z)</option>
-          <option value="name|desc">Name (Z-A)</option>
-          <option value="id|asc">ID (Low to High)</option>
-          <option value="id|desc">ID (High to Low)</option>
-          <option value="id|desc">Newest (ID ↓)</option>
-          <option value="id|asc">Oldest (ID ↑)</option>
-          <option value="order|asc">Order (Ascending)</option>
-          <option value="order|desc">Order (Descending)</option>
-          <option value="company_count|desc">Most Companies</option>
-          <option value="company_count|asc">Fewest Companies</option>
-        </select>
-      </div>
+ <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+
+    {/* SEARCH */}
+    <div className="flex-1">
+      <SearchInput
+        value={searchTerm}
+        onChange={setSearchTerm}
+        placeholder="Search by name, Amharic name, slug, or code..."
+      />
+    </div>
+
+    {/* SORT ONLY */}
+    <select
+      value={`${sortField}|${sortOrder}`}
+      onChange={(e) => {
+        const [field, order] = e.target.value.split("|");
+
+        if (field === sortField) {
+          if (order !== sortOrder) handleSort(field);
+        } else {
+          handleSort(field);
+          if (order === "desc") handleSort(field);
+        }
+      }}
+      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm sm:w-56"
+    >
+      <option value="name|asc">Name (A-Z)</option>
+      <option value="name|desc">Name (Z-A)</option>
+      <option value="id|asc">ID (Low to High)</option>
+      <option value="id|desc">ID (High to Low)</option>
+      <option value="order|asc">Order (Ascending)</option>
+      <option value="order|desc">Order (Descending)</option>
+      <option value="company_count|desc">Most Companies</option>
+      <option value="company_count|asc">Fewest Companies</option>
+    </select>
+
+  </div>
+</TableControls>
       <DataTable
         data={paginatedItemsWithRowNumber} // use the new array
         columns={columns}
@@ -316,15 +324,20 @@ export default function CategoryManagement() {
         emptyMessage="No categories found"
         onEdit={openEdit}
         onDelete={setDeleteTarget}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={goToPage}
-        totalItems={sortedItems.length}
-        itemsPerPage={itemsPerPage}
+        // currentPage={currentPage}
+        // totalPages={totalPages}
+        // onPageChange={goToPage}
+        // totalItems={sortedItems.length}
+        // itemsPerPage={itemsPerPage}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
       />
+      <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={goToPage}
+/>
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

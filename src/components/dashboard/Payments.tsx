@@ -12,6 +12,8 @@ import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
 import { useApprovePayout } from "../../hooks/useApprovePayout";
 import { useRejectPayout } from "../../hooks/useRejectPayout";
+import { Pagination } from "../ui/Pagination";
+import { TableControls } from "../ui/TableControls";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -32,6 +34,7 @@ export default function Payments() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const { toast, showToast } = useToast();
 
   const filteredPayments = useMemo(() => {
@@ -48,16 +51,19 @@ export default function Payments() {
   }, [payouts, searchTerm]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
-  const paginatedPayments = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredPayments.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredPayments, currentPage]);
+ const totalPages = Math.ceil(filteredPayments.length / pageSize);
+
+const paginatedPayments = useMemo(() => {
+  const start = (currentPage - 1) * pageSize;
+  return filteredPayments.slice(start, start + pageSize);
+}, [filteredPayments, currentPage, pageSize]);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
-
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, pageSize]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -78,7 +84,7 @@ export default function Payments() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 md:p-4">
         <div className="text-center py-12">
           <p className="text-red-600">{error}</p>
           <button
@@ -100,8 +106,13 @@ export default function Payments() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+
+    {/* SEARCH */}
+    <div className="flex-1">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           type="text"
           placeholder="Search by order number, method, or status..."
@@ -110,31 +121,35 @@ export default function Payments() {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
         />
       </div>
+    </div>
+
+  </div>
+</TableControls>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Order #
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount (ETB)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Method
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -156,19 +171,19 @@ export default function Payments() {
             ) : (
               paginatedPayments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     {payment.order_number}
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {Number(payment.amount).toLocaleString()}
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {payment.method}
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}
                     >
@@ -176,11 +191,11 @@ export default function Payments() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {new Date(payment.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="inline-flex gap-3 justify-end items-center">
+                  <td className="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="inline-flex gap-2 justify-end items-center">
                       {/* Download */}
                       <button
                         type="button"
@@ -190,8 +205,9 @@ export default function Payments() {
                         <Download className="h-4 w-4" />
                       </button>
 
-                      {/* Approve */}
-                      <button
+                     {/* Approve */}
+
+                      {/* <button
                         type="button"
                         onClick={async () => {
                           await approvePayout(payment.id);
@@ -200,10 +216,10 @@ export default function Payments() {
                         className="text-green-600 hover:text-green-800 cursor-pointer"
                       >
                         Approve
-                      </button>
+                      </button> */}
 
                       {/* Reject */}
-                      <button
+                      {/* <button
                         type="button"
                         onClick={async () => {
                           await rejectPayout(payment.id);
@@ -212,7 +228,7 @@ export default function Payments() {
                         className="text-red-600 hover:text-red-800 cursor-pointer"
                       >
                         Reject
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -222,35 +238,13 @@ export default function Payments() {
         </table>
       </div>
 
-      {/* Pagination */}
-      {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-3 border-t mt-4">
-          <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
-            {Math.min(currentPage * ITEMS_PER_PAGE, filteredPayments.length)} of{" "}
-            {filteredPayments.length} payments
-          </div>
-          <div className="flex gap-1">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="px-3 py-1 text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+{!loading && totalPages > 1 && (
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={goToPage}
+  />
+)}
     </div>
   );
 }
