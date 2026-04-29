@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Package, Edit, Trash2 } from 'lucide-react';
+import { useState } from "react";
+import { Package, Edit, Trash2 } from "lucide-react";
 
 interface Product {
   id: number;
@@ -8,24 +8,26 @@ interface Product {
   price: number;
   stock: number;
   unit: string;
-  image?: string;      // adjust based on your API field name
-  image_url?: string;  // alternative field
+  image?: string; // adjust based on your API field name
+  image_url?: string; // alternative field
 }
 
 interface ProductTableProps {
   products: Product[];
   totalItems: number;
   loading: boolean;
-  onEdit: (product: Product) => void;
-  onDelete: (id: number, title: string) => void;
+  onEdit?: (product: Product) => void; // ✅ optional
+  onDelete?: (id: number, title: string) => void; // ✅ optional
 }
 
 function StockBadge({ stock }: { stock: number }) {
-  let color = 'bg-green-100 text-green-800';
-  if (stock === 0) color = 'bg-red-100 text-red-800';
-  else if (stock < 10) color = 'bg-yellow-100 text-yellow-800';
+  let color = "bg-green-100 text-green-800";
+  if (stock === 0) color = "bg-red-100 text-red-800";
+  else if (stock < 10) color = "bg-yellow-100 text-yellow-800";
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${color}`}
+    >
       {stock}
     </span>
   );
@@ -62,7 +64,13 @@ function SkeletonRow({ cols }: { cols: number }) {
   );
 }
 
-export function ProductTable({ products, totalItems, loading, onEdit, onDelete }: ProductTableProps) {
+export function ProductTable({
+  products,
+  totalItems,
+  loading,
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
   if (loading) {
     return (
       <>
@@ -71,13 +79,27 @@ export function ProductTable({ products, totalItems, loading, onEdit, onDelete }
           <table className="min-w-full table-fixed divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Image</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">SKU</th>
-                <th className="px-2 py-2 text-left whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price (ETB)</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stock</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Unit</th>
-                <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Image
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  SKU
+                </th>
+                <th className="px-2 py-2 text-left whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Title
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Price (ETB)
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Stock
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Unit
+                </th>
+                <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -109,45 +131,68 @@ export function ProductTable({ products, totalItems, loading, onEdit, onDelete }
         <table className="min-w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Image</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">SKU</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price (ETB)</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stock</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Unit</th>
-              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Image
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                SKU
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Title
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Price (ETB)
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Stock
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Unit
+              </th>
+              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {products.map((product) => {
               const imageUrl = product.image || product.image_url;
               return (
-                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={product.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-2 py-2 whitespace-nowrap">
                     <ProductImage src={imageUrl} alt={product.title} />
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap font-mono text-sm text-gray-900">{product.sku}</td>
-                  <td className="px-2 py-2 whitespace-nowrap font-medium  text-gray-900">{product.title}</td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">{product.price.toLocaleString()}</td>
+                  <td className="px-2 py-2 whitespace-nowrap font-mono text-sm text-gray-900">
+                    {product.sku}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap font-medium  text-gray-900">
+                    {product.title}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
+                    {product.price.toLocaleString()}
+                  </td>
                   <td className="px-2 py-2 whitespace-nowrap">
                     <StockBadge stock={product.stock} />
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">{product.unit}</td>
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
+                    {product.unit}
+                  </td>
                   <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-1 transition-colors"
-                      aria-label="Edit product"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(product.id, product.title)}
-                      className="text-red-600 hover:text-red-900 transition-colors"
-                      aria-label="Delete product"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {onEdit && (
+                      <button onClick={() => onEdit(product)}>
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(product.id, product.title)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

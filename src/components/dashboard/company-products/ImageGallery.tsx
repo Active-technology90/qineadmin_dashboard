@@ -26,6 +26,7 @@ interface ImageGalleryProps {
   companySlug: string;
   onImagesChange: () => void;
   onError?: (message: string) => void;
+  readOnly?: boolean;
 }
 
 // ------------------------------------------------------------------
