@@ -27,9 +27,9 @@ export default function AdminProfile() {
 
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [activeForm, setActiveForm] = useState<"profile" | "password">(
-    "profile",
-  );
+  const [activeForm, setActiveForm] = useState<
+    "profile" | "password" | "membership"
+  >("profile");
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -161,12 +161,17 @@ export default function AdminProfile() {
     <div className="w-full min-h-screen bg-gray-50 p-6">
       {/* HEADER */}
       <div
-        className="rounded-2xl p-6 text-white flex items-center justify-between shadow-lg"
-        style={{ backgroundColor: BRAND_COLOR }}
+        className="rounded-2xl p-6 text-white flex items-center justify-between shadow-xl backdrop-blur-md"
+        style={{
+          backgroundColor: BRAND_COLOR,
+          backgroundImage:
+            "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.15))",
+        }}
       >
         <div className="flex items-center gap-4">
           {/* AVATAR */}
-          <div className="relative">
+          <div className="relative group w-16 h-16">
+            {/* AVATAR IMAGE */}
             {avatar ? (
               <img
                 src={avatar}
@@ -178,6 +183,12 @@ export default function AdminProfile() {
               </div>
             )}
 
+            {/* CAMERA ICON OVERLAY */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition">
+              <span className="text-white text-lg">📷</span>
+            </div>
+
+            {/* FILE INPUT */}
             <input
               type="file"
               onChange={handleAvatarChange}
@@ -186,14 +197,22 @@ export default function AdminProfile() {
           </div>
 
           {/* USER INFO */}
-          <div>
+          {/* USER INFO + MEMBERSHIP */}
+          <div className="space-y-1">
+            {/* NAME */}
             <h2 className="text-lg font-bold">
               {user?.first_name} {user?.last_name}
             </h2>
+
+            {/* EMAIL */}
             <p className="text-sm opacity-80">{user?.email}</p>
-            <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-              {user?.role}
-            </span>
+
+            {/* GLOBAL ROLE */}
+            {/* <span className="text-xs bg-white/20 px-2 py-1 rounded-full inline-block">
+    Role: {user?.role} 
+  </span> */}
+
+            {/* MEMBERSHIPS SECTION (NEW FEATURE) */}
           </div>
         </div>
 
@@ -206,13 +225,13 @@ export default function AdminProfile() {
       </div>
 
       {/* TABS */}
-      <div className="flex gap-3 mt-6">
+      <div className="flex gap-2 mt-6 bg-white p-2 rounded-full w-fit shadow-sm">
         <button
           onClick={() => setActiveForm("profile")}
-          className={`px-4 py-2 rounded-full transition ${
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
             activeForm === "profile"
-              ? "text-white"
-              : "bg-white text-gray-700 hover:bg-gray-100"
+              ? "text-white shadow-md"
+              : "text-gray-600 hover:bg-gray-100"
           }`}
           style={
             activeForm === "profile" ? { backgroundColor: BRAND_COLOR } : {}
@@ -223,16 +242,29 @@ export default function AdminProfile() {
 
         <button
           onClick={() => setActiveForm("password")}
-          className={`px-4 py-2 rounded-full transition ${
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
             activeForm === "password"
-              ? "text-white"
-              : "bg-white text-gray-700 hover:bg-gray-100"
+              ? "text-white shadow-md"
+              : "text-gray-600 hover:bg-gray-100"
           }`}
           style={
             activeForm === "password" ? { backgroundColor: BRAND_COLOR } : {}
           }
         >
           Change Password
+        </button>
+        <button
+          onClick={() => setActiveForm("membership")}
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+            activeForm === "membership"
+              ? "text-white shadow-md"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          style={
+            activeForm === "membership" ? { backgroundColor: BRAND_COLOR } : {}
+          }
+        >
+          Membership
         </button>
       </div>
 
@@ -352,6 +384,86 @@ export default function AdminProfile() {
           >
             {passwordLoading ? "Saving..." : "Change Password"}
           </button>
+        </div>
+      )}
+
+      {/* MEMBERSHIP FORM */}
+      {activeForm === "membership" && (
+        <div className="bg-white p-6 rounded-2xl mt-6 shadow-lg border border-gray-100">
+          {/* HEADER */}
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-bold text-gray-800">
+              Company Memberships
+            </h3>
+
+            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+              {user?.memberships?.length || 0} companies
+            </span>
+          </div>
+
+          {/* TABLE */}
+          {user?.memberships?.length ? (
+            <div className="overflow-hidden rounded-xl border border-gray-200">
+              <table className="w-full">
+                {/* HEADER */}
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Role
+                    </th>
+                  </tr>
+                </thead>
+
+                {/* BODY */}
+                <tbody className="divide-y divide-gray-100">
+                  {user.memberships.map((m: any, index: number) => (
+                    <tr key={index} className="hover:bg-gray-50 transition">
+                      {/* COMPANY NAME */}
+                      <td className="p-4 flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-sm font-bold">
+                          🏢
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">
+                            {m.company_name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Member organization
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* ROLE */}
+                      <td className="p-4">
+                        <span
+                          className={`text-xs px-3 py-1 rounded-full font-medium ${
+                            m.role === "admin"
+                              ? "bg-green-100 text-green-700"
+                              : m.role === "viewer"
+                                ? "bg-gray-100 text-gray-600"
+                                : "bg-purple-100 text-purple-700"
+                          }`}
+                        >
+                          {m.role}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <div className="text-gray-400 text-4xl mb-2">🏢</div>
+              <p className="text-gray-500 text-sm">
+                No company memberships found
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

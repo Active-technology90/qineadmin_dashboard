@@ -1,16 +1,17 @@
-import { useState } from 'react';
-import { Plus, RefreshCw, Search } from 'lucide-react';
-import { useAuth } from '../../../context/authContext';
-import { useCompanySelection } from '../../../hooks/useCompanySelection';
-import { useCompanyProducts } from '../../../hooks/useCompanyProducts';
-import { CompanySelector } from './CompanySelector';
-import { ProductTable } from './ProductTable';
-import { ProductModal } from './ProductModal';
-import { DeleteConfirmModal } from '../../ui/DeleteConfirmModal';
-import { Toast } from '../../ui/Toast';
-import { Pagination } from '../../ui/Pagination';
-import { ErrorView } from '../../ui/ErrorView';
-import { NoCompanyView } from './NoCompanyView';
+import { useState } from "react";
+import { Plus, RefreshCw, Search } from "lucide-react";
+import { useAuth } from "../../../context/authContext";
+import { useCompanySelection } from "../../../hooks/useCompanySelection";
+import { useCompanyProducts } from "../../../hooks/useCompanyProducts";
+import { CompanySelector } from "./CompanySelector";
+import { ProductTable } from "./ProductTable";
+import { ProductModal } from "./ProductModal";
+import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
+import { Toast } from "../../ui/Toast";
+import { TableControls } from "../../ui/TableControls";
+import { Pagination } from "../../ui/Pagination";
+import { ErrorView } from "../../ui/ErrorView";
+import { NoCompanyView } from "./NoCompanyView";
 
 export default function CompanyProducts() {
   const { user } = useAuth();
@@ -28,7 +29,8 @@ export default function CompanyProducts() {
   } = useCompanySelection(user);
 
   const companySlug = selectedCompany?.slug ?? null;
-  const companyName = selectedCompany?.name ?? '';
+  const companyName = selectedCompany?.name ?? "";
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     products,
@@ -44,14 +46,22 @@ export default function CompanyProducts() {
     updateProduct,
     deleteProduct,
     refetch,
-  } = useCompanyProducts({ companySlug, pageSize: 10 });
+  } = useCompanyProducts({
+    companySlug,
+  });
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
-  const showToast = (type: 'success' | 'error', message: string) => {
+  const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
@@ -74,9 +84,9 @@ export default function CompanyProducts() {
     if (!deleteTarget) return;
     try {
       await deleteProduct(deleteTarget.id);
-      showToast('success', 'Product deleted');
+      showToast("success", "Product deleted");
     } catch {
-      showToast('error', 'Delete failed');
+      showToast("error", "Delete failed");
     } finally {
       setDeleteTarget(null);
     }
@@ -86,15 +96,15 @@ export default function CompanyProducts() {
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, data);
-        showToast('success', 'Product updated');
+        showToast("success", "Product updated");
         return { id: editingProduct.id };
       } else {
         const created = await createProduct(data);
-        showToast('success', 'Product created');
+        showToast("success", "Product created");
         return created; // must have .id
       }
     } catch (err: any) {
-      showToast('error', err?.response?.data?.detail || 'Save failed');
+      showToast("error", err?.response?.data?.detail || "Save failed");
       throw err;
     }
   };
@@ -124,14 +134,13 @@ export default function CompanyProducts() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-
       {/* TOAST */}
       <Toast toast={toast} />
 
       {/* MODALS */}
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
-        title={deleteTarget?.title || ''}
+        title={deleteTarget?.title || ""}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -139,26 +148,23 @@ export default function CompanyProducts() {
       <ProductModal
         isOpen={isModalOpen}
         editingProduct={editingProduct}
-        companySlug={companySlug || ''}
+        companySlug={companySlug || ""}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         onProductUpdated={refetch}
       />
 
       {/* HEADER */}
-      <div className="p-6 border-b">
+      <div className="p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
           {/* Title */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-bold  text-[#6750A4]">
               Company Products
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Manage catalog for{' '}
-              <span className="text-indigo-600 font-medium">
-                {companyName}
-              </span>
+              Manage catalog for{" "}
+              <span className="text-indigo-600 font-medium">{companyName}</span>
             </p>
           </div>
 
@@ -184,22 +190,37 @@ export default function CompanyProducts() {
             </button>
           </div>
         </div>
-
-        {/* SEARCH */}
-        <div className="mt-5 relative">
+      </div>
+      {/* GLOBAL TABLE TOOLBAR (SEARCH + TABLE CONTROLS) */}
+      <div className="flex items-center justify-between gap-3 mt-5 p-3 border-b border-gray-200">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1); // reset page on search
+            }}
             placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2 border rounded-full focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl 
+      focus:outline-none 
+      focus:ring-2 focus:ring-[#6750A4] 
+      focus:border-[#6750A4]"
           />
         </div>
+
+        {/* TABLE CONTROLS (GLOBAL SAME AS USERS) */}
+        <TableControls
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1); // reset page like CompanyUsers
+          }}
+        />
       </div>
 
       {/* CONTENT */}
       <div className="p-6">
-
         <ProductTable
           products={products}
           totalItems={totalItems}
@@ -217,7 +238,6 @@ export default function CompanyProducts() {
             />
           </div>
         )}
-
       </div>
     </div>
   );

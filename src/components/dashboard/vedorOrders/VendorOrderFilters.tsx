@@ -38,39 +38,38 @@ export function VendorOrderFilters({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-          Vendor Orders
-        </h2>
-        <button
-          onClick={onToggleMobile}
-          className="md:hidden flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg"
-        >
-          <Filter size={16} /> Filters
-          {hasFilters && (
-            <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-full">
-              Active
-            </span>
-          )}
-        </button>
-      </div>
-      <div className={`${showMobile ? "block" : "hidden md:block"} mb-6`}>
+    <div className="flex justify-end mb-2">
+  <button
+    onClick={onToggleMobile}
+    className="md:hidden flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg"
+  >
+    <Filter size={16} /> Filters
+    {hasFilters && (
+      <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-xl">
+        Active
+      </span>
+    )}
+  </button>
+</div>
+    <div className={`${showMobile ? "block" : "hidden md:block"} h-full`}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by order ID, company name..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
+           <input
+  type="text"
+  placeholder="Search by order ID, company name..."
+  value={searchTerm}
+  onChange={(e) => onSearchChange(e.target.value)}
+  className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
+/>
           </div>
           
            <select
           value={deliveryStatusFilter}
           onChange={(e) => onDeliveryStatusChange(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+className="px-4 py-2 border border-gray-200 rounded-xl text-sm bg-white
+focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
         >
           <option value="">All Delivery Statuses</option>
           <option value="accepted">Accepted</option>
@@ -83,11 +82,12 @@ export function VendorOrderFilters({
           <option value="cancelled">Cancelled</option>
         </select>
           {!hideCompanyFilter && (
-            <select
-              value={selectedCompanyId}
-              onChange={(e) => onCompanyChange(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-            >
+           <select
+  value={selectedCompanyId}
+  onChange={(e) => onCompanyChange(e.target.value)}
+  className="px-4 py-2 border border-gray-200 rounded-xl text-sm bg-white
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
+>
               <option value="">All Companies</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>

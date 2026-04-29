@@ -21,8 +21,8 @@ import { Toast } from "../../ui/Toast";
 import { VendorOrderFilters } from "./VendorOrderFilters";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
 import { DeliveryManager } from "./DeliveryManager";
-
-const ITEMS_PER_PAGE = 10;
+import { TableControls } from "../../ui/TableControls";
+import { Pagination } from "../../ui/Pagination";
 
 // ---------- reusable subcomponents ----------
 const StatusBadge = ({ status }: { status: string }) => {
@@ -105,59 +105,6 @@ const ErrorState = ({
   </tr>
 );
 
-const Pagination = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) => {
-  if (totalPages <= 1) return null;
-
-  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-    let pageNum: number;
-    if (totalPages <= 5) pageNum = i + 1;
-    else if (currentPage <= 3) pageNum = i + 1;
-    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-    else pageNum = currentPage - 2 + i;
-    return pageNum;
-  }).filter((p) => p >= 1 && p <= totalPages);
-
-  return (
-    <div className="flex gap-1">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <ChevronLeft size={16} />
-      </button>
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-lg text-sm transition ${
-            page === currentPage
-              ? "bg-indigo-600 text-white"
-              : "border border-gray-200 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <ChevronRight size={16} />
-      </button>
-    </div>
-  );
-};
-
 // ---------- Payment Receipt Type ----------
 interface PaymentReceipt {
   id: number;
@@ -175,6 +122,8 @@ interface PaymentReceipt {
 
 // ---------- main component ----------
 export default function CompanyOrders() {
+  const DEFAULT_PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { user } = useAuth();
   const isCompanyAdmin = user?.memberships?.length === 1;
   const userCompanySlug = isCompanyAdmin
@@ -246,7 +195,7 @@ export default function CompanyOrders() {
         let res;
         const params = {
           page,
-          page_size: ITEMS_PER_PAGE,
+          page_size: pageSize,
           search: search || undefined,
           status: status || undefined,
           ordering: "-created_at" as const,
@@ -286,7 +235,7 @@ export default function CompanyOrders() {
         }
       }
     },
-    [showToast, isCompanyAdmin, userCompanySlug],
+    [showToast, isCompanyAdmin, userCompanySlug, pageSize],
   );
 
   // Debounced search trigger
@@ -318,6 +267,7 @@ export default function CompanyOrders() {
     searchTerm,
     statusFilter,
     selectedCompanyId,
+    pageSize,
     debouncedFetch,
   ]);
 
@@ -356,12 +306,16 @@ export default function CompanyOrders() {
     );
   }, [orders, deliveryStatusFilter]);
 
-  // Pagination calculation using server totalCount
-  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-  const showingFrom =
-    totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
+  // ✅ NEW: enforce page size on frontend
+  const paginatedOrders = useMemo(() => {
+    return filteredOrders.slice(0, pageSize);
+  }, [filteredOrders, pageSize]);
 
+  // Pagination calculation using server totalCount
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const showingFrom = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+
+  const showingTo = Math.min(currentPage * pageSize, totalCount);
   const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
@@ -377,33 +331,54 @@ export default function CompanyOrders() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-      <VendorOrderFilters
-        searchTerm={searchTerm}
-        onSearchChange={(value) => {
-          setSearchTerm(value);
-          setCurrentPage(1);
-        }}
-        statusFilter={statusFilter}
-        onStatusChange={(value) => {
-          setStatusFilter(value);
-          setCurrentPage(1);
-        }}
-        deliveryStatusFilter={deliveryStatusFilter}
-        onDeliveryStatusChange={(value) => {
-          setDeliveryStatusFilter(value);
-          setCurrentPage(1);
-        }}
-        selectedCompanyId={selectedCompanyId}
-        onCompanyChange={(value) => {
-          setSelectedCompanyId(value);
-          setCurrentPage(1);
-        }}
-        companies={companies}
-        onClear={clearFilters}
-        showMobile={showFilters}
-        onToggleMobile={() => setShowFilters(!showFilters)}
-        hideCompanyFilter={isCompanyAdmin}
-      />
+      <div className="mb-3">
+        <h2 className="text-2xl font-bold text-[#6750A4]">Vendor Orders</h2>
+      </div>
+      <div className="w-full flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-3 mb-4">
+        {/* LEFT SIDE: Filters */}
+        <div className="flex-shrink-0 flex items-start h-full">
+          <VendorOrderFilters
+            searchTerm={searchTerm}
+            onSearchChange={(value) => {
+              setSearchTerm(value);
+              setCurrentPage(1);
+            }}
+            statusFilter={statusFilter}
+            onStatusChange={(value) => {
+              setStatusFilter(value);
+              setCurrentPage(1);
+            }}
+            deliveryStatusFilter={deliveryStatusFilter}
+            onDeliveryStatusChange={(value) => {
+              setDeliveryStatusFilter(value);
+              setCurrentPage(1);
+            }}
+            selectedCompanyId={selectedCompanyId}
+            onCompanyChange={(value) => {
+              setSelectedCompanyId(value);
+              setCurrentPage(1);
+            }}
+            companies={companies}
+            onClear={clearFilters}
+            showMobile={showFilters}
+            onToggleMobile={() => setShowFilters(!showFilters)}
+            hideCompanyFilter={isCompanyAdmin}
+          />
+        </div>
+
+        {/* RIGHT SIDE: Table Controls */}
+        <div className="flex-shrink-0 self-start">
+          <TableControls
+            pageSize={pageSize}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+
+              fetchOrders(1, searchTerm, statusFilter, selectedCompanyId);
+            }}
+          />
+        </div>
+      </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
@@ -444,10 +419,10 @@ export default function CompanyOrders() {
                   )
                 }
               />
-            ) : filteredOrders.length === 0 ? (
+            ) : paginatedOrders.length === 0 ? (
               <EmptyState />
             ) : (
-              filteredOrders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr
                   key={order.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
@@ -539,10 +514,7 @@ export default function CompanyOrders() {
       </div>
 
       {!loading && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-          <div className="text-sm text-gray-500">
-            Showing {showingFrom} to {showingTo} of {totalCount} orders
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mt-6">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

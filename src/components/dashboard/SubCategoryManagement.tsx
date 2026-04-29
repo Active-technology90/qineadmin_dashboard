@@ -21,7 +21,6 @@ import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 
-
 export default function SubCategoryManagement() {
   const [pageSize, setPageSize] = useState(10);
   const [subs, setSubs] = useState<SubCategory[]>([]);
@@ -91,7 +90,7 @@ export default function SubCategoryManagement() {
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredSubs,
     "name",
-    "asc"
+    "asc",
   );
 
   // Paginate sorted items
@@ -103,12 +102,12 @@ export default function SubCategoryManagement() {
     resetPage,
     itemsPerPage,
   } = usePagination(sortedItems, pageSize);
-const paginatedItemsWithRowNumber = useMemo(() => {
-  return paginatedItems.map((item, index) => ({
-    ...item,
-    rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
-  }));
-}, [paginatedItems, currentPage, itemsPerPage]);
+  const paginatedItemsWithRowNumber = useMemo(() => {
+    return paginatedItems.map((item, index) => ({
+      ...item,
+      rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
+    }));
+  }, [paginatedItems, currentPage, itemsPerPage]);
   useEffect(() => {
     resetPage();
   }, [searchTerm, resetPage]);
@@ -216,13 +215,13 @@ const paginatedItemsWithRowNumber = useMemo(() => {
 
   // Table columns with sortable definitions
   const columns: Column<SubCategory>[] = [
-    { 
-    key: 'rowNumber', 
-    header: 'No.', 
-    sortable: false,
-    render: (cat: SubCategory & { rowNumber?: number }) => cat.rowNumber 
-      },
-     {
+    {
+      key: "rowNumber",
+      header: "No.",
+      sortable: false,
+      render: (cat: SubCategory & { rowNumber?: number }) => cat.rowNumber,
+    },
+    {
       key: "icon",
       header: "Icon",
       sortable: false,
@@ -239,7 +238,12 @@ const paginatedItemsWithRowNumber = useMemo(() => {
           </div>
         ),
     },
-    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900" },
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      className: "font-medium text-gray-900",
+    },
     {
       key: "name_am",
       header: "Name (Am)",
@@ -260,9 +264,19 @@ const paginatedItemsWithRowNumber = useMemo(() => {
       sortable: true,
       render: (sub) => sub.item_code || "-",
     },
-    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500" },
- 
-    { key: "order", header: "Order", sortable: true, render: (sub) => sub.order ?? "-" },
+    {
+      key: "slug",
+      header: "Slug",
+      sortable: true,
+      className: "font-mono text-gray-500",
+    },
+
+    {
+      key: "order",
+      header: "Order",
+      sortable: true,
+      render: (sub) => sub.order ?? "-",
+    },
     {
       key: "is_active",
       header: "Active",
@@ -289,7 +303,7 @@ const paginatedItemsWithRowNumber = useMemo(() => {
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">SubCategories</h2>
+        <h2 className="text-2xl font-bold text-[#6750A4]">SubCategories</h2>
         <button
           onClick={() => {
             resetForm();
@@ -301,46 +315,64 @@ const paginatedItemsWithRowNumber = useMemo(() => {
         </button>
       </div>
 
-    <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-  <div className="flex flex-col sm:flex-row gap-3 w-full">
-    <div className="flex-1">
-      <SearchInput
-        value={searchTerm}
-        onChange={setSearchTerm}
-        placeholder="Search by name, Amharic name, slug, item code, or category..."
-      />
-    </div>
+      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          {/* SEARCH */}
+          <div className="flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by name, Amharic name, slug, item code, or category..."
+              className="focus:ring-[#6750A4] focus:border-[#6750A4]"
+            />
+          </div>
 
-    <select
-      value={`${sortField}|${sortOrder}`}
-      onChange={(e) => {
-        const [field, desiredOrder] = e.target.value.split('|');
-        if (field === sortField) {
-          if (desiredOrder !== sortOrder) handleSort(field);
-        } else {
-          handleSort(field);
-          if (desiredOrder === 'desc') handleSort(field);
-        }
-      }}
-      className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm sm:w-48"
-    >
-          <option value="name|asc">Name (A-Z)</option>
-          <option value="name|desc">Name (Z-A)</option>
-          <option value="id|asc">Oldest (ID ↑)</option>
-          <option value="id|desc">Newest (ID ↓)</option>
-          <option value="order|asc">Order (Ascending)</option>
-          <option value="order|desc">Order (Descending)</option>
-          <option value="item_code|asc">Item Code (A-Z)</option>
-          <option value="company_count|desc">Most Companies</option>
-          <option value="company_count|asc">Fewest Companies</option>
-          <option value="is_active|desc">Active First</option>
-          <option value="is_active|asc">Inactive First</option>
-       </select>
-</div>
-</TableControls>
+          {/* SORT */}
+          <select
+            value={`${sortField}|${sortOrder}`}
+            onChange={(e) => {
+              const [field, desiredOrder] = e.target.value.split("|");
+              if (field === sortField) {
+                if (desiredOrder !== sortOrder) handleSort(field);
+              } else {
+                handleSort(field);
+                if (desiredOrder === "desc") handleSort(field);
+              }
+            }}
+            className="
+        bg-white
+        border border-gray-200
+        rounded-xl
+        px-4 py-2
+        text-sm
+        cursor-pointer
+        transition
+
+        focus:outline-none
+        focus:ring-2
+        focus:ring-[#6750A4]
+        focus:border-[#6750A4]
+
+        hover:border-gray-400
+      "
+          >
+            <option value="name|asc">Name (A-Z)</option>
+            <option value="name|desc">Name (Z-A)</option>
+            <option value="id|asc">Oldest (ID ↑)</option>
+            <option value="id|desc">Newest (ID ↓)</option>
+            <option value="order|asc">Order (Ascending)</option>
+            <option value="order|desc">Order (Descending)</option>
+            <option value="item_code|asc">Item Code (A-Z)</option>
+            <option value="company_count|desc">Most Companies</option>
+            <option value="company_count|asc">Fewest Companies</option>
+            <option value="is_active|desc">Active First</option>
+            <option value="is_active|asc">Inactive First</option>
+          </select>
+        </div>
+      </TableControls>
 
       <DataTable
-         data={paginatedItemsWithRowNumber} 
+        data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No subcategories found"
@@ -355,11 +387,11 @@ const paginatedItemsWithRowNumber = useMemo(() => {
         sortOrder={sortOrder}
         onSort={handleSort}
       />
-<Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={goToPage}
-/>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

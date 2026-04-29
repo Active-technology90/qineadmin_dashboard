@@ -1,10 +1,6 @@
 // src/components/admin/Payments.tsx
-import { useState, useMemo, useEffect } from "react";  // added useEffect
-import {
-  Search,
-  Download,
-  Loader2,
-} from "lucide-react";
+import { useState, useMemo, useEffect } from "react"; // added useEffect
+import { Search, Download, Loader2 } from "lucide-react";
 import { useAdminPayouts } from "../../hooks/useAdminPayouts";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
@@ -91,7 +87,7 @@ export default function Payments() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <Toast toast={toast} />
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Payments</h2>
+        <h2 className="text-xl font-bold text-[#6750A4]">Payments</h2>
       </div>
 
       {/* Search */}
@@ -108,7 +104,8 @@ export default function Payments() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
               />
             </div>
           </div>
@@ -185,7 +182,7 @@ export default function Payments() {
                       >
                         <Download className="h-4 w-4" />
                       </button>
-                          {/* Approve */}
+                      {/* Approve */}
 
                       {/* <button
                         type="button"

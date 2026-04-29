@@ -40,11 +40,9 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       loading = false,
       onSubmit,
     },
-    ref
+    ref,
   ) => {
-    const [internalValue, setInternalValue] = useState(
-      externalValue || ""
-    );
+    const [internalValue, setInternalValue] = useState(externalValue || "");
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -54,7 +52,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     const setRefs = (node: HTMLInputElement) => {
       inputRef.current = node;
       if (typeof ref === "function") ref(node);
-      else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+      else if (ref)
+        (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
     };
 
     // Sync controlled value
@@ -79,7 +78,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           onChange?.(newValue);
         }, debounceMs);
       },
-      [onChange, debounceMs, isControlled]
+      [onChange, debounceMs, isControlled],
     );
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,25 +138,26 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           aria-label={placeholder}
           aria-busy={loading}
           className={`
-            w-full pl-10 pr-10 py-2.5
-            border border-gray-300
-            rounded-xl
-            bg-white
-            text-sm
-            transition-all duration-200
+  w-full pl-10 pr-10 py-2.5
+  border border-gray-200
+  rounded-xl
+ bg-white
+text-sm
+transition-all duration-200
+cursor-text
 
-            focus:outline-none
-            focus:ring-2 focus:ring-purple-500
-            focus:border-purple-500
-            focus:shadow-sm
+  focus:outline-none
+  focus:ring-2 focus:ring-[#6750A4]
+  focus:border-[#6750A4]
+  focus:shadow-sm
 
-            group-hover:border-gray-400
+  hover:border-gray-400
 
-            disabled:bg-gray-100
-            disabled:cursor-not-allowed
+  disabled:bg-gray-100
+  disabled:cursor-not-allowed
 
-            ${loading ? "pr-10" : ""}
-          `}
+  ${loading ? "pr-10" : ""}
+`}
         />
 
         {/* CLEAR BUTTON */}
@@ -179,7 +179,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 SearchInput.displayName = "SearchInput";

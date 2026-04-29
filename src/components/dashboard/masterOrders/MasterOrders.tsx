@@ -82,6 +82,10 @@ export default function Orders() {
     [totalCount, pageSize],
   );
 
+  const paginatedOrders = useMemo(() => {
+    return orders.slice(0, pageSize);
+  }, [orders, pageSize]);
+
   const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
@@ -123,7 +127,16 @@ export default function Orders() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+      <TableControls
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+
+          // ✅ NEW: force immediate fetch
+          fetchOrders(1, debouncedSearch, statusFilter);
+        }}
+      >
         {/* LEFT SIDE: SEARCH + STATUS + CLEAR */}
         <div className="flex flex-1 gap-2 w-full items-center">
           {/* SEARCH */}
@@ -132,14 +145,18 @@ export default function Orders() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search orders..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
+  transition"
           />
 
           {/* STATUS FILTER */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
+  transition cursor-pointer"
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -194,7 +211,7 @@ export default function Orders() {
                   </button>
                 </td>
               </tr>
-            ) : orders.length === 0 ? (
+            ) : paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-12 text-gray-500">
                   <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
@@ -202,7 +219,7 @@ export default function Orders() {
                 </td>
               </tr>
             ) : (
-              orders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     #{order.id}

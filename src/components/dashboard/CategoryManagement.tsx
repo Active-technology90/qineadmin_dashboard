@@ -78,9 +78,9 @@ export default function CategoryManagement() {
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
- useEffect(() => {
-  resetPage();
-}, [searchTerm, pageSize, resetPage]);
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, pageSize, resetPage]);
 
   const fetchCategories = async () => {
     try {
@@ -98,7 +98,7 @@ export default function CategoryManagement() {
   useEffect(() => {
     fetchCategories();
   }, []);
-  
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = "Name is required";
@@ -201,8 +201,8 @@ export default function CategoryManagement() {
       header: "No.",
       sortable: false,
       render: (cat) => cat.rowNumber,
-      },
-     {
+    },
+    {
       key: "icon",
       header: "Icon",
       sortable: false,
@@ -239,7 +239,7 @@ export default function CategoryManagement() {
       sortable: true,
       render: (cat) => cat.order ?? "-",
     },
-   
+
     {
       key: "is_active",
       header: "Active",
@@ -266,7 +266,7 @@ export default function CategoryManagement() {
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Categories</h2>
+        <h2 className="text-2xl font-bold text-[#6750A4]">Categories</h2>
         <button
           onClick={() => {
             resetForm();
@@ -277,46 +277,45 @@ export default function CategoryManagement() {
           <Plus size={18} /> Add Category
         </button>
       </div>
-      
- <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
 
-    {/* SEARCH */}
-    <div className="flex-1">
-      <SearchInput
-        value={searchTerm}
-        onChange={setSearchTerm}
-        placeholder="Search by name, Amharic name, slug, or code..."
-      />
-    </div>
+      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+          {/* SEARCH */}
+          <div className="flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by name, Amharic name, slug, or code..."
+            />
+          </div>
 
-    {/* SORT ONLY */}
-    <select
-      value={`${sortField}|${sortOrder}`}
-      onChange={(e) => {
-        const [field, order] = e.target.value.split("|");
+          {/* SORT ONLY */}
+          <select
+            value={`${sortField}|${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split("|");
 
-        if (field === sortField) {
-          if (order !== sortOrder) handleSort(field);
-        } else {
-          handleSort(field);
-          if (order === "desc") handleSort(field);
-        }
-      }}
-      className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm sm:w-56"
-    >
-      <option value="name|asc">Name (A-Z)</option>
-      <option value="name|desc">Name (Z-A)</option>
-      <option value="id|asc">ID (Low to High)</option>
-      <option value="id|desc">ID (High to Low)</option>
-      <option value="order|asc">Order (Ascending)</option>
-      <option value="order|desc">Order (Descending)</option>
-      <option value="company_count|desc">Most Companies</option>
-      <option value="company_count|asc">Fewest Companies</option>
-    </select>
-
-  </div>
-</TableControls>
+              if (field === sortField) {
+                if (order !== sortOrder) handleSort(field);
+              } else {
+                handleSort(field);
+                if (order === "desc") handleSort(field);
+              }
+            }}
+            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm sm:w-56
+focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
+          >
+            <option value="name|asc">Name (A-Z)</option>
+            <option value="name|desc">Name (Z-A)</option>
+            <option value="id|asc">ID (Low to High)</option>
+            <option value="id|desc">ID (High to Low)</option>
+            <option value="order|asc">Order (Ascending)</option>
+            <option value="order|desc">Order (Descending)</option>
+            <option value="company_count|desc">Most Companies</option>
+            <option value="company_count|asc">Fewest Companies</option>
+          </select>
+        </div>
+      </TableControls>
       <DataTable
         data={paginatedItemsWithRowNumber} // use the new array
         columns={columns}
@@ -334,10 +333,10 @@ export default function CategoryManagement() {
         onSort={handleSort}
       />
       <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={goToPage}
-/>
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
