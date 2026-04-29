@@ -1,3 +1,4 @@
+// src/components/dashboard/vendorOrders/VendorOrderFilters.tsx
 import { Search, X, Filter } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
 
@@ -14,7 +15,9 @@ interface VendorOrderFiltersProps {
   onToggleMobile: () => void;
   deliveryStatusFilter: string;
   onDeliveryStatusChange: (val: string) => void;
-  hideCompanyFilter?: boolean; // new prop – hides company dropdown when true
+  paymentMethodFilter: string;                 // new
+  onPaymentMethodChange: (val: string) => void; // new
+  hideCompanyFilter?: boolean;
 }
 
 export function VendorOrderFilters({
@@ -29,12 +32,14 @@ export function VendorOrderFilters({
   onToggleMobile,
   deliveryStatusFilter,
   onDeliveryStatusChange,
+  paymentMethodFilter,            // new
+  onPaymentMethodChange,          // new
   hideCompanyFilter = false,
 }: VendorOrderFiltersProps) {
-  // Only consider search and status for active filter badge when company filter is hidden
+  // Include payment method in active badge check
   const hasFilters = hideCompanyFilter
-    ? !!searchTerm || !!statusFilter
-    : !!searchTerm || !!statusFilter || !!selectedCompanyId;
+    ? !!searchTerm || !!statusFilter || !!deliveryStatusFilter || !!paymentMethodFilter
+    : !!searchTerm || !!statusFilter || !!selectedCompanyId || !!deliveryStatusFilter || !!paymentMethodFilter;
 
   return (
     <>
@@ -55,8 +60,8 @@ export function VendorOrderFilters({
         </button>
       </div>
       <div className={`${showMobile ? "block" : "hidden md:block"} mb-6`}>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -66,22 +71,36 @@ export function VendorOrderFilters({
               className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          
-           <select
-          value={deliveryStatusFilter}
-          onChange={(e) => onDeliveryStatusChange(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-        >
-          <option value="">All Delivery Statuses</option>
-          <option value="accepted">Accepted</option>
-          <option value="processing">Processing</option>
+
+          <select
+            value={deliveryStatusFilter}
+            onChange={(e) => onDeliveryStatusChange(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+          >
+            <option value="">All Delivery Statuses</option>
+            <option value="accepted">Accepted</option>
+            <option value="processing">Processing</option>
             <option value="shipped">Shipped</option>
             <option value="pending">Pending</option>
-          <option value="out_for_delivery">Out for Delivery</option>
+            <option value="out_for_delivery">Out for Delivery</option>
             <option value="delivered">Delivered</option>
-            
-          <option value="cancelled">Cancelled</option>
-        </select>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          {/* NEW: Payment Method dropdown */}
+          <select
+            value={paymentMethodFilter}
+            onChange={(e) => onPaymentMethodChange(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+          >
+            <option value="">All Payment Methods</option>
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="chapa">Chapa</option>
+            <option value="other">Other</option>
+          </select>
+
           {!hideCompanyFilter && (
             <select
               value={selectedCompanyId}
@@ -96,6 +115,7 @@ export function VendorOrderFilters({
               ))}
             </select>
           )}
+
           {hasFilters && (
             <button
               onClick={onClear}

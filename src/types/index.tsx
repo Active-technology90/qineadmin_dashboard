@@ -254,6 +254,15 @@ export interface Delivery {
 export interface VendorOrder {
   id: number;
   company: CompanyListItem;
+  payment_method: "chapa" | "bank_transfer" | string;
+  receipt: {
+    id: number;
+    status: string;
+    receipt_image: string;
+    bank_name: string;
+    amount: string;
+    uploaded_at: string;
+  } | null;
   subtotal: string;
   tax_amount: string;
   amount: string;
@@ -267,7 +276,7 @@ export interface VendorOrder {
   shipping_phone?: string;
   shipping_address_text?: string;
   delivery?: Delivery;
-  payment_method: string;
+
 }
 
 export interface MasterOrder {

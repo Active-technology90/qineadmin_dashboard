@@ -411,8 +411,18 @@ export const deleteShippingAddress = async (id: number) =>
   api.delete(`/orders/shipping-addresses/${id}/`);
 
 // ========== PAYMENTS ==========
-export const getPayouts = async (companySlug: string) =>
-  api.get(`/payments/payouts/${companySlug}/`);
+// ========== PAYMENTS ==========
+export const getPayouts = async (
+  companySlug: string,
+  params?: { page?: number; page_size?: number; status?: string }
+) => api.get(`/payments/payouts/${companySlug}/`, { params });
+
+export const getAdminPayouts = async (params?: {
+  page?: number;
+  page_size?: number;
+  status?: string;
+}) => api.get('/payments/admin/payouts/', { params });
+
 export const getBankInfo = async () => api.get("/payments/bank-info/");
 
 export const uploadPaymentReceipt = async (
@@ -513,7 +523,8 @@ export const getCompanyReceipts = async (companySlug: string, params?: {
   page_size?: number;
 }) =>
   api.get(`/payments/company/${companySlug}/receipts/`, { params });
-  // Review / approve / reject receipt
+// Review / approve / reject receipt
+
 export const reviewReceipt = async (
   receiptId: number,
   data: {

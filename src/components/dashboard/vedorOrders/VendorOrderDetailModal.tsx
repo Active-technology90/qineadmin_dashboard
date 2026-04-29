@@ -20,11 +20,12 @@ import {
 import type { VendorOrder } from "../../../types";
 import {
   getCompanyStaffByRole,
-  // reviewReceipt,
+  reviewReceipt,
   assignDelivery,
 } from "../../../services/api";
 
 import { useToast } from "../../../hooks/useToast";
+import { ConfirmationModal } from "../../ui/confimationModal";
 
 // ---------- Helpers ----------
 const formatDateTime = (dateString: string) =>
@@ -52,24 +53,35 @@ const getStatusBadge = (status: string) => {
   if (s === "pending") return "bg-amber-100 text-amber-800 border-amber-200";
   if (s === "processing" || s === "shipped")
     return "bg-blue-100 text-blue-800 border-blue-200";
+  if (s === "approved" || s === "accepted")
+    return "bg-green-100 text-green-800 border-green-200";
+  if (s === "rejected" || s === "cancelled")
+    return "bg-red-100 text-red-800 border-red-200";
   if (s === "cancelled") return "bg-red-100 text-red-800 border-red-200";
   return "bg-gray-100 text-gray-600 border-gray-200";
 };
-
-// ---------- Types ----------
-interface PaymentReceipt {
+interface OrderReceipt {
   id: number;
-  master_order: number;
-  customer_name: string;
-  order_total: number;
-  bank_info: string | null;
-  bank_name: string;
-  receipt_image: string;
-  amount: string;
   status: string;
-  admin_notes: string;
+  receipt_image: string;
+  bank_name: string;
+  amount: string;
   uploaded_at: string;
 }
+// ---------- Types ----------
+// interface PaymentReceipt {
+//   id: number;
+//   master_order: number;
+//   customer_name: string;
+//   order_total: number;
+//   bank_info: string | null;
+//   bank_name: string;
+//   receipt_image: string;
+//   amount: string;
+//   status: string;
+//   admin_notes: string;
+//   uploaded_at: string;
+// }
 
 interface StaffMember {
   id: number;
@@ -434,168 +446,176 @@ const TimelineCard = ({ order }: { order: VendorOrder }) => (
 );
 
 // 8. Receipt Review Card (right column, with image preview modal)
+// inside VendorOrderDetailModal.tsx
+
 const ReceiptReviewCard = ({
   receipt,
+  paymentMethod,
   onUpdate,
 }: {
-  receipt?: PaymentReceipt | null;
+  receipt?: OrderReceipt | null;
+  paymentMethod?: string;
   onUpdate: () => void;
 }) => {
-  // const [reviewStatus, setReviewStatus] = useState<
-  //   "approved" | "rejected" | ""
-  // >("");
-  // const [notes, setNotes] = useState("");
-  // const [submitting, setSubmitting] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [showImage, setShowImage] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"approved" | "rejected" | null>(null);
+  const { showToast } = useToast();
 
-  // const { showToast } = useToast();
-
-  if (!receipt) return null;
-console.log("onUpdate",onUpdate)
-  
-  // const handleSubmit = async () => {
-  //   if (!reviewStatus) return;
-
-  //   setSubmitting(true);
-  //   try {
-  //     await reviewReceipt(receipt.id, {
-  //       status: reviewStatus,
-  //       admin_notes: notes || undefined,
-  //     });
-
-  //     showToast("success", `Receipt ${reviewStatus}`);
-  //     setReviewStatus("");
-  //     setNotes("");
-  //     onUpdate();
-  //   } catch (err: any) {
-  //     showToast("error", err.response?.data?.detail || "Review failed");
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
-  return (
-    <div className="bg-white flex-col  rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
-      {/* Header */}
-        <div className="flex items-center gap-2">
+  // Case 1: Chapa
+  if (paymentMethod === "chapa") {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
           <Banknote className="h-5 w-5 text-indigo-600" />
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
-            Payment Receipt
-          </h4>
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Information</h4>
         </div>
-      <div className="flex-col items-center justify-between m-5">
-      
+        <div className="text-center py-6">
+          <p className="text-gray-700 text-sm">Paid via <span className="font-semibold">Chapa</span></p>
+          <p className="text-gray-500 text-xs mt-1">No receipt required for this payment method.</p>
+        </div>
+      </div>
+    );
+  }
 
+  // Case 2: Bank transfer but no receipt uploaded yet
+  if (!receipt) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Banknote className="h-5 w-5 text-gray-400" />
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Receipt</h4>
+        </div>
+        <div className="text-center py-6">
+          <p className="text-gray-500 text-sm">No receipt uploaded for this order.</p>
+          <p className="text-gray-400 text-xs mt-1">Payment method: Bank Transfer</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 3: Bank transfer with receipt
+  const isAlreadyReviewed = receipt.status === "approved" || receipt.status === "rejected";
+
+  const handleActionClick = (action: "approved" | "rejected") => {
+    setPendingAction(action);
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!pendingAction) return;
+    setSubmitting(true);
+    try {
+      await reviewReceipt(receipt.id, {
+        status: pendingAction,
+        admin_notes: notes || undefined,
+      });
+      showToast("success", `Receipt ${pendingAction}`);
+      setNotes("");
+      setPendingAction(null);
+      onUpdate(); // will refresh orders and update selectedOrder
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Review failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center gap-2 mb-4">
+        <Banknote className="h-5 w-5 text-indigo-600" />
+        <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Receipt</h4>
+      </div>
+
+      <div className="space-y-4">
         <div className="flex items-center gap-3">
           <p className="text-xs text-gray-500">Status</p>
-          <span
-            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(
-              receipt.status,
-            )}`}
-          >
+          <span className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(receipt.status)}`}>
             {receipt.status}
           </span>
         </div>
-        <div className="flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-500">Bank</p>
-          <p className="font-semibold text-gray-900">{receipt.bank_name}</p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-500">Amount</p>
-          <p className="text-lg font-bold text-gray-900">
-            {Number(receipt.amount).toLocaleString()} ETB
-          </p>
-        </div>
-      </div>
-      </div>
-
-     
-      
-
-      {/* IMAGE */}
-      {receipt.receipt_image && (
-        <div className="m-5">
-          <p className="text-xs text-gray-500 mb-2">Receipt Image</p>
-
-          <div
-            onClick={() => setShowImage(true)}
-            className="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden border cursor-zoom-in group"
-          >
-            <img
-              src={receipt.receipt_image}
-              alt="Receipt"
-              className="w-full h-full object-cover group-hover:scale-105 transition"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-500">Bank</p>
+            <p className="font-semibold text-gray-900">{receipt.bank_name}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-500">Amount</p>
+            <p className="text-lg font-bold text-gray-900">
+              {Number(receipt.amount).toLocaleString()} ETB
+            </p>
           </div>
         </div>
-      )}
 
-      {/* ACTIONS */}
-      <div className=" pt-4 space-y-3">
-        {/* Buttons instead of select */}
-        {/* <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setReviewStatus("approved")}
-            className={`px-3 py-1.5 text-xs rounded-lg border ${
-              reviewStatus === "approved"
-                ? "bg-green-600 text-white"
-                : "text-green-600 border-green-200 hover:bg-green-50"
-            }`}
-          >
-            Approve
-          </button>
+        {receipt.receipt_image && (
+          <div>
+            <p className="text-xs text-gray-500 mb-2">Receipt Image</p>
+            <div
+              onClick={() => setShowImage(true)}
+              className="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden border cursor-zoom-in group"
+            >
+              <img
+                src={receipt.receipt_image}
+                alt="Receipt"
+                className="w-full h-full object-cover group-hover:scale-105 transition"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
+            </div>
+          </div>
+        )}
 
-          <button
-            onClick={() => setReviewStatus("rejected")}
-            className={`px-3 py-1.5 text-xs rounded-lg border ${
-              reviewStatus === "rejected"
-                ? "bg-red-600 text-white"
-                : "text-red-600 border-red-200 hover:bg-red-50"
-            }`}
-          >
-            Reject
-          </button>
-        </div> */}
+        {!isAlreadyReviewed && (
+          <div className="pt-2 space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => handleActionClick("approved")}
+                disabled={submitting}
+                className="px-3 py-1.5 text-xs rounded-lg border border-green-200 text-green-600 hover:bg-green-50 disabled:opacity-50"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleActionClick("rejected")}
+                disabled={submitting}
+                className="px-3 py-1.5 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add admin notes (optional)"
+              rows={2}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4] transition"
+            />
+          </div>
+        )}
 
-        {/* Notes */}
-        {/* <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add admin notes (optional)"
-          rows={2}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-        /> */}
-
-        {/* Submit */}
-        {/* <button
-          onClick={handleSubmit}
-          disabled={!reviewStatus || submitting}
-          className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-60 flex items-center justify-center gap-2"
-        >
-          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          Submit Review
-        </button> */}
+        {isAlreadyReviewed && (
+          <div className="mt-2 text-xs text-gray-500 italic">
+            This receipt has already been {receipt.status}.
+          </div>
+        )}
       </div>
 
-      {/* IMAGE MODAL */}
+      {/* Image modal */}
       {showImage && receipt.receipt_image && (
         <div
           className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowImage(false)}
         >
-          <div
-            className="relative w-full max-w-6xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative max-w-6xl" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowImage(false)}
               className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
             >
               <X className="h-5 w-5 text-gray-700" />
             </button>
-
             <img
               src={receipt.receipt_image}
               alt="Receipt Full"
@@ -604,6 +624,23 @@ console.log("onUpdate",onUpdate)
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onClose={() => {
+          setShowConfirm(false);
+          setPendingAction(null);
+        }}
+        onConfirm={handleConfirm}
+        title={pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"}
+        description={
+          pendingAction === "approved"
+            ? "Are you sure you want to approve this payment receipt? This will mark the payment as verified."
+            : "Are you sure you want to reject this payment receipt? The customer will be notified and may need to upload another receipt."
+        }
+        confirmText={pendingAction === "approved" ? "Approve" : "Reject"}
+        confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
+      />
     </div>
   );
 };
@@ -701,9 +738,10 @@ export function VendorOrderDetailModal({
   onUpdate,
 }: {
   order: VendorOrder | null;
-  receipt?: PaymentReceipt | null;
+  receipt?: OrderReceipt | null;   // use the simplified type
   onClose: () => void;
   onUpdate?: () => void;
+
 }) {
   const [showTopShadow, setShowTopShadow] = useState(false);
   const [showBottomShadow, setShowBottomShadow] = useState(false);
@@ -799,14 +837,15 @@ export function VendorOrderDetailModal({
 
                 {/* Right column */}
                 <div className="space-y-6">
-                   <ReceiptReviewCard
+                  <ReceiptReviewCard
                     receipt={receipt}
+                    paymentMethod={order.payment_method }
                     onUpdate={handleLocalUpdate}
                   />
-                    <TimelineCard order={order} />
+                  <TimelineCard order={order} />
                   <FinancialCard order={order} />
-                
-                 <OrderSummaryCard order={order} />
+
+                  <OrderSummaryCard order={order} />
 
                   {/* Tax Invoice quick link */}
                   {order.tax_invoice && (

@@ -1,18 +1,10 @@
-// src/components/dashboard/vedorOrders/CompanyOrders.tsx
+// src/components/dashboard/vendorOrders/CompanyOrders.tsx
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import {
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  Package,
-  Building2,
-  User as UserIcon,
-} from "lucide-react";
+import { Eye, Package, Building2, User as UserIcon } from "lucide-react";
 import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
   getCompanies,
-  getCompanyReceipts,
 } from "../../../services/api";
 import type { VendorOrder, CompanyListItem } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
@@ -24,7 +16,7 @@ import { DeliveryManager } from "./DeliveryManager";
 
 const ITEMS_PER_PAGE = 10;
 
-// ---------- reusable subcomponents ----------
+// ---------- reusable subcomponents (same as before) ----------
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
     completed: "bg-emerald-100 text-emerald-700",
@@ -49,13 +41,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const CompanyAvatar = ({
-  logo,
-  name,
-}: {
-  logo?: string | null;
-  name: string;
-}) => (
+const CompanyAvatar = ({ logo, name }: { logo?: string | null; name: string }) => (
   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
     {logo ? (
       <img src={logo} alt={name} className="w-full h-full object-cover" />
@@ -85,13 +71,7 @@ const EmptyState = () => (
   </tr>
 );
 
-const ErrorState = ({
-  error,
-  onRetry,
-}: {
-  error: string;
-  onRetry: () => void;
-}) => (
+const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
   <tr>
     <td colSpan={8} className="text-center py-12">
       <div className="text-red-600 mb-4">{error}</div>
@@ -115,7 +95,6 @@ const Pagination = ({
   onPageChange: (page: number) => void;
 }) => {
   if (totalPages <= 1) return null;
-
   const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
     let pageNum: number;
     if (totalPages <= 5) pageNum = i + 1;
@@ -124,21 +103,20 @@ const Pagination = ({
     else pageNum = currentPage - 2 + i;
     return pageNum;
   }).filter((p) => p >= 1 && p <= totalPages);
-
   return (
     <div className="flex gap-1">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
       >
-        <ChevronLeft size={16} />
+        ‹
       </button>
       {pages.map((page) => (
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-lg text-sm transition ${
+          className={`px-3 py-1 rounded-lg text-sm ${
             page === currentPage
               ? "bg-indigo-600 text-white"
               : "border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -150,36 +128,20 @@ const Pagination = ({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
       >
-        <ChevronRight size={16} />
+        ›
       </button>
     </div>
   );
 };
 
-// ---------- Payment Receipt Type ----------
-interface PaymentReceipt {
-  id: number;
-  master_order: number;
-  customer_name: string;
-  order_total: number;
-  bank_info: string | null;
-  bank_name: string;
-  receipt_image: string;
-  amount: string;
-  status: string;
-  admin_notes: string;
-  uploaded_at: string;
-}
-
 // ---------- main component ----------
 export default function CompanyOrders() {
   const { user } = useAuth();
-  const isCompanyAdmin = user?.memberships?.length === 1;
-  const userCompanySlug = isCompanyAdmin
-    ? user.memberships?.[0]?.company_slug
-    : null;
+const isSuperAdmin = !user?.memberships?.length;
+  const isCompanyUser = !isSuperAdmin && user?.memberships && user.memberships.length > 0;
+  const userCompanySlug = isCompanyUser ? user.memberships?.[0]?.company_slug : null;
 
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -189,21 +151,19 @@ export default function CompanyOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState(""); // NEW
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
-  const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
-  const [receiptLoading, setReceiptLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { toast, showToast } = useToast();
 
-  // Refs for abort and debounce
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch companies for super admin
   useEffect(() => {
-    if (!isCompanyAdmin) {
+    if (!isCompanyUser) {
       const fetchCompanies = async () => {
         try {
           const res = await getCompanies();
@@ -214,34 +174,23 @@ export default function CompanyOrders() {
       };
       fetchCompanies();
     }
-  }, [isCompanyAdmin]);
-
-  // Core fetch function with abort support
+  }, [isCompanyUser]);
+console.log(totalCount)
+  // Core fetch function (server‑side filters)
   const fetchOrders = useCallback(
-    async (
-      page: number,
-      search: string,
-      status: string,
-      companyId: string,
-      _deliveryStatus?: string,
-    ) => {
+    async (page: number, search: string, status: string, companyId: string) => {
       const token = localStorage.getItem("access");
       if (!token) {
         setError("Please log in to view orders");
         setLoading(false);
         return;
       }
-
-      // Cancel previous in‑flight request
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
       setLoading(true);
       setError(null);
-
       try {
         let res;
         const params = {
@@ -251,58 +200,50 @@ export default function CompanyOrders() {
           status: status || undefined,
           ordering: "-created_at" as const,
         };
-
-        if (isCompanyAdmin && userCompanySlug) {
+        if (isCompanyUser && userCompanySlug) {
           res = await getCompanyVendorOrders(userCompanySlug, {
             ...params,
-            signal: controller.signal,
+          
           });
         } else {
           res = await getAdminVendorOrders({
             ...params,
             company: companyId || undefined,
-            signal: controller.signal,
+          
           });
         }
-
-        // If request was cancelled, ignore result
         if (controller.signal.aborted) return;
-
         setOrders(res.data.results);
         setTotalCount(res.data.count);
       } catch (err: any) {
         if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         const message =
           err.message === "SESSION_EXPIRED"
-            ? "Your session has expired. Please log in again."
+            ? "Your session has expired."
             : err.response?.data?.detail ||
               err.message ||
               "Failed to load orders";
         setError(message);
         showToast("error", message);
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       }
     },
-    [showToast, isCompanyAdmin, userCompanySlug],
+    [showToast, isCompanyUser, userCompanySlug]
   );
 
-  // Debounced search trigger
   const debouncedFetch = useCallback(
     (page: number, search: string, status: string, companyId: string) => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-      debounceTimerRef.current = setTimeout(() => {
-        fetchOrders(page, search, status, companyId);
-      }, 300);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(
+        () => fetchOrders(page, search, status, companyId),
+        300
+      );
     },
-    [fetchOrders],
+    [fetchOrders]
   );
 
-  // When filter/page changes, fetch (with debounce for search)
+  // Trigger server fetch when server‑side filters change
   useEffect(() => {
     if (!localStorage.getItem("access")) {
       setError("Please log in to view orders");
@@ -313,63 +254,55 @@ export default function CompanyOrders() {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [
-    currentPage,
-    searchTerm,
-    statusFilter,
-    selectedCompanyId,
-    debouncedFetch,
-  ]);
+  }, [currentPage, searchTerm, statusFilter, selectedCompanyId, debouncedFetch]);
 
-  // Fetch payment receipt when selected order changes
+  // Reset page when any client‑side filter changes
   useEffect(() => {
-    if (!selectedOrder) {
-      setReceipt(null);
-      return;
-    }
-    const companySlug = selectedOrder.company?.slug;
-    if (!companySlug) return;
+    setCurrentPage(1);
+  }, [deliveryStatusFilter, paymentMethodFilter]);
 
-    const fetchReceipt = async () => {
-      setReceiptLoading(true);
-      try {
-        const res = await getCompanyReceipts(companySlug);
-        const firstReceipt: PaymentReceipt | undefined = res.data.results?.[0];
-        setReceipt(firstReceipt || null);
-      } catch (err) {
-        console.error("Failed to load payment receipt", err);
-        setReceipt(null);
-      } finally {
-        setReceiptLoading(false);
-      }
-    };
-    fetchReceipt();
-  }, [selectedOrder]);
-
-  // Client‑side delivery status filter (if API doesn't support it)
+  // Client‑side filtering (delivery status + payment method)
   const filteredOrders = useMemo(() => {
-    if (!deliveryStatusFilter) return orders;
-    return orders.filter(
-      (order) =>
-        order.delivery_status?.toLowerCase() ===
-        deliveryStatusFilter.toLowerCase(),
-    );
-  }, [orders, deliveryStatusFilter]);
+    let result = orders;
+    if (deliveryStatusFilter) {
+      result = result.filter(
+        (order) =>
+          order.delivery?.status?.toLowerCase() === deliveryStatusFilter.toLowerCase()
+      );
+    }
+    if (paymentMethodFilter) {
+      result = result.filter(
+        (order) => order.payment_method?.toLowerCase() === paymentMethodFilter.toLowerCase()
+      );
+    }
+    return result;
+  }, [orders, deliveryStatusFilter, paymentMethodFilter]);
 
-  // Pagination calculation using server totalCount
-  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-  const showingFrom =
-    totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
+  // Pagination based on client‑side filtered results
+  const totalFilteredCount = filteredOrders.length;
+  const totalPages = Math.ceil(totalFilteredCount / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
-  const goToPage = (page: number) => {
-    setCurrentPage(Math.min(Math.max(1, page), totalPages));
-  };
+  const showingFrom = totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount);
+  const goToPage = (page: number) => setCurrentPage(Math.min(Math.max(1, page), totalPages));
+
+  const refreshOrdersAndSelected = useCallback(async () => {
+    await fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId);
+    if (selectedOrder) {
+      const updatedOrder = orders.find((o) => o.id === selectedOrder.id);
+      if (updatedOrder) setSelectedOrder(updatedOrder);
+    }
+  }, [fetchOrders, currentPage, searchTerm, statusFilter, selectedCompanyId, selectedOrder, orders]);
 
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("");
     setDeliveryStatusFilter("");
+    setPaymentMethodFilter("");
     setSelectedCompanyId("");
     setCurrentPage(1);
   };
@@ -379,30 +312,35 @@ export default function CompanyOrders() {
       <Toast toast={toast} />
       <VendorOrderFilters
         searchTerm={searchTerm}
-        onSearchChange={(value) => {
-          setSearchTerm(value);
+        onSearchChange={(v) => {
+          setSearchTerm(v);
           setCurrentPage(1);
         }}
         statusFilter={statusFilter}
-        onStatusChange={(value) => {
-          setStatusFilter(value);
+        onStatusChange={(v) => {
+          setStatusFilter(v);
           setCurrentPage(1);
         }}
         deliveryStatusFilter={deliveryStatusFilter}
-        onDeliveryStatusChange={(value) => {
-          setDeliveryStatusFilter(value);
-          setCurrentPage(1);
+        onDeliveryStatusChange={(v) => {
+          setDeliveryStatusFilter(v);
+          // page reset handled by useEffect above
+        }}
+        paymentMethodFilter={paymentMethodFilter}
+        onPaymentMethodChange={(v) => {
+          setPaymentMethodFilter(v);
+          // page reset handled by useEffect above
         }}
         selectedCompanyId={selectedCompanyId}
-        onCompanyChange={(value) => {
-          setSelectedCompanyId(value);
+        onCompanyChange={(v) => {
+          setSelectedCompanyId(v);
           setCurrentPage(1);
         }}
         companies={companies}
         onClear={clearFilters}
         showMobile={showFilters}
         onToggleMobile={() => setShowFilters(!showFilters)}
-        hideCompanyFilter={isCompanyAdmin}
+        hideCompanyFilter={isCompanyUser}
       />
 
       <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
@@ -416,6 +354,7 @@ export default function CompanyOrders() {
                 "Status",
                 "Delivery",
                 "Delivery Person",
+                "Payment Method", // NEW column
                 "Actions",
               ].map((head) => (
                 <th
@@ -436,51 +375,40 @@ export default function CompanyOrders() {
               <ErrorState
                 error={error}
                 onRetry={() =>
-                  fetchOrders(
-                    currentPage,
-                    searchTerm,
-                    statusFilter,
-                    selectedCompanyId,
-                  )
+                  fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId)
                 }
               />
-            ) : filteredOrders.length === 0 ? (
+            ) : paginatedOrders.length === 0 ? (
               <EmptyState />
             ) : (
-              filteredOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+              paginatedOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                     #{order.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2 min-w-0">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
                       <CompanyAvatar
                         logo={order.company?.logo}
                         name={order.company?.name || "Unknown"}
                       />
-                      <span className="text-sm font-medium text-gray-700 break-words whitespace-normal">
+                      <span className="text-sm font-medium text-gray-700">
                         {order.company?.name || "Unknown"}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                     {Number(order.amount).toLocaleString()}{" "}
                     <span className="text-xs text-gray-500">ETB</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge
-                      status={order.delivery?.status || "not assigned"}
-                    />
+                  <td className="px-6 py-4">
+                    <StatusBadge status={order.delivery?.status || "not assigned"} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <div className="flex flex-col gap-2">
-                      {/* Delivery Person Info */}
                       {order.delivery?.delivery_person_name ? (
                         <div className="flex items-center gap-2">
                           <UserIcon className="h-4 w-4 text-gray-400" />
@@ -489,14 +417,10 @@ export default function CompanyOrders() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">
-                          Not assigned
-                        </span>
+                        <span className="text-xs text-gray-400 italic">Not assigned</span>
                       )}
-
-                      {/* Action Button */}
                       <div>
-                        <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10 transition">
+                        <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10">
                           <DeliveryManager
                             orderId={order.id}
                             currentDelivery={order.delivery || null}
@@ -506,30 +430,29 @@ export default function CompanyOrders() {
                                 currentPage,
                                 searchTerm,
                                 statusFilter,
-                                selectedCompanyId,
+                                selectedCompanyId
                               )
                             }
                           />
-                          {order.delivery?.delivery_person_name
-                            ? "Change"
-                            : "Assign"}
+                          {order.delivery?.delivery_person_name ? "Change" : "Assign"}
                         </button>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        title="View details"
-                      >
-                        <div className="flex items-center gap-1 text-xs font-medium">
-                          <Eye className="h-4 w-4" />
-                          View details
-                        </div>
-                      </button>
-                    </div>
+                  {/* NEW: Payment Method column */}
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    {order.payment_method
+                      ? order.payment_method.replace(/_/g, " ")
+                      : "—"}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap text-right">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View Detail</span>
+                    </button>
                   </td>
                 </tr>
               ))
@@ -538,10 +461,10 @@ export default function CompanyOrders() {
         </table>
       </div>
 
-      {!loading && (
+      {!loading && totalFilteredCount > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
           <div className="text-sm text-gray-500">
-            Showing {showingFrom} to {showingTo} of {totalCount} orders
+            Showing {showingFrom} to {showingTo} of {totalFilteredCount} orders
           </div>
           <Pagination
             currentPage={currentPage}
@@ -553,14 +476,9 @@ export default function CompanyOrders() {
 
       <VendorOrderDetailModal
         order={selectedOrder}
-        receipt={receiptLoading ? null : receipt}
-        onClose={() => {
-          setSelectedOrder(null);
-          setReceipt(null);
-        }}
-        onUpdate={() =>
-          fetchOrders(currentPage, searchTerm, statusFilter, selectedCompanyId)
-        }
+        receipt={selectedOrder?.receipt || null}
+        onClose={() => setSelectedOrder(null)}
+        onUpdate={refreshOrdersAndSelected}
       />
     </div>
   );

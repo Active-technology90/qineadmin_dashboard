@@ -25,19 +25,45 @@ import { useSorting } from "../../hooks/useSorting";
 import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
 
-
-
 type PaginatedResponse<T> = {
   results: T[];
   next: string | null;
 };
 
+// Helper to get the highest‑privilege membership (admin > staff > delivery > viewer)
+const getPrimaryMembership = (memberships: any[] | undefined) => {
+  if (!memberships?.length) return null;
+  const priority: Record<string, number> = { admin: 4, staff: 3, delivery: 2, viewer: 1 };
+  let best = memberships[0];
+  let bestScore = priority[best.role] || 0;
+  for (const m of memberships) {
+    const score = priority[m.role] || 0;
+    if (score > bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+  return best;
+};
+
 export default function CompanyManagement() {
   const [pageSize, setPageSize] = useState(10);
   const { user } = useAuth();
-  const isCompanyAdmin = user?.memberships && user.memberships.length > 0;
-  // const userCompanySlug = isCompanyAdmin ? user.memberships[0].company_slug : null;
-  const userCompanySlug = user?.memberships?.[0]?.company_slug ?? null;
+
+  // Permission flags
+const isSuperAdmin = !user?.memberships?.length;
+  const memberships = user?.memberships ?? [];
+  const primaryMembership = !isSuperAdmin ? getPrimaryMembership(memberships) : null;
+  const userCompanySlug = primaryMembership?.company_slug ?? null;
+  const userCompanyRole = primaryMembership?.role ?? null;
+
+  const canAddCompany = isSuperAdmin;
+  const canDeleteCompany = isSuperAdmin;
+  const canEditCompany = (companySlug: string) => {
+    if (isSuperAdmin) return true;
+    return userCompanyRole === "admin" && userCompanySlug === companySlug;
+  };
+
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
@@ -66,24 +92,24 @@ export default function CompanyManagement() {
   const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
   const { toast, showToast } = useToast();
 
-  // Filter companies by search term (only used for super admin)
+  // --- Data filtering (only for super admin) ---
   const filteredCompanies = useMemo(() => {
-    if (!searchTerm.trim()) return companies;
+    if (!searchTerm.trim() || !isSuperAdmin) return companies;
     const term = searchTerm.toLowerCase();
     return companies.filter(
       (comp) =>
         comp.name.toLowerCase().includes(term) ||
-        comp.name_am?.toLowerCase().includes(term) ||
+        (comp.name_am && comp.name_am.toLowerCase().includes(term)) ||
         comp.slug.toLowerCase().includes(term) ||
-        comp.business_type?.toLowerCase().includes(term) ||
+        (comp.business_type && comp.business_type.toLowerCase().includes(term)) ||
         comp.category_name.toLowerCase().includes(term) ||
-        comp.sub_category_name.toLowerCase().includes(term),
+        comp.sub_category_name.toLowerCase().includes(term)
     );
-  }, [companies, searchTerm]);
+  }, [companies, searchTerm, isSuperAdmin]);
 
-  // For company admin, we have only one company → skip sorting/pagination
+  // Sorting & pagination (super admin sees all, others see single company)
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
-    isCompanyAdmin ? companies : filteredCompanies,
+    isSuperAdmin ? filteredCompanies : companies,
     "name",
     "asc"
   );
@@ -97,28 +123,29 @@ export default function CompanyManagement() {
     itemsPerPage,
   } = usePagination(sortedItems, pageSize);
 
-  const paginatedItemsWithRowNumber = useMemo(() => {
-    return paginatedItems.map((item, index) => ({
-      ...item,
-      rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
-    }));
-  }, [paginatedItems, currentPage, itemsPerPage]);
+  const paginatedItemsWithRowNumber = useMemo(
+    () =>
+      paginatedItems.map((item, index) => ({
+        ...item,
+        rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
+      })),
+    [paginatedItems, currentPage, itemsPerPage]
+  );
 
- useEffect(() => {
-  resetPage();
-}, [searchTerm, pageSize, resetPage]);
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, pageSize, resetPage]);
 
-  // Fetch data based on role
+  // --- API fetching ---
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      if (isCompanyAdmin && userCompanySlug) {
-        // Company admin: fetch only their own company
+      if (!isSuperAdmin && userCompanySlug) {
+        // Single company for company admin/staff
         const companyRes = await getCompanyDetail(userCompanySlug);
         const company = companyRes.data as Company;
-        // Convert to CompanyListItem shape for consistent table display
         const companyListItem: CompanyListItem = {
           id: company.id,
           name: company.name,
@@ -136,11 +163,10 @@ export default function CompanyManagement() {
           description: company.description || "",
         };
         setCompanies([companyListItem]);
-      } else {
+      } else if (isSuperAdmin) {
         // Super admin: fetch all companies (paginated)
         let allCompanies: CompanyListItem[] = [];
         let nextUrl: string | null = "/companies/?page=1&ordering=name";
-
         while (nextUrl) {
           const res = await api.get(nextUrl);
           const data = res.data as PaginatedResponse<CompanyListItem>;
@@ -148,9 +174,11 @@ export default function CompanyManagement() {
           nextUrl = data.next;
         }
         setCompanies(allCompanies);
+      } else {
+        setCompanies([]);
       }
 
-      // Fetch categories and subcategories (common to both roles)
+      // Always fetch categories & subcategories for the modal
       const [categoriesRes, subcategoriesRes] = await Promise.all([
         getCategories(),
         getSubCategories(),
@@ -168,31 +196,24 @@ export default function CompanyManagement() {
     fetchData();
   }, []);
 
-  // Filter subcategories based on selected category
-  const filteredSubcategories = useMemo(() => {
-    if (!formData.category) return [];
-    return subcategories.filter((sub) => sub.category === formData.category);
-  }, [subcategories, formData.category]);
+  // --- Form helpers ---
+  const filteredSubcategories = useMemo(
+    () => subcategories.filter((sub) => sub.category === formData.category),
+    [subcategories, formData.category]
+  );
 
-  // Validation
   const validateBasicInfo = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = "Company name is required";
     if (formData.category === 0) errors.category = "Please select a category";
-    if (formData.sub_category === 0)
-      errors.sub_category = "Please select a subcategory";
-    if (!formData.business_type)
-      errors.business_type = "Please select a business type";
+    if (formData.sub_category === 0) errors.sub_category = "Please select a subcategory";
+    if (!formData.business_type) errors.business_type = "Please select a business type";
     if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug))
-      errors.slug =
-        "Slug must contain only lowercase letters, numbers, and hyphens";
+      errors.slug = "Slug must contain only lowercase letters, numbers, and hyphens";
     setFormErrors(errors);
-    const isValid = Object.keys(errors).length === 0;
-    if (!isValid) alert("Please fix the errors before proceeding");
-    return isValid;
+    return Object.keys(errors).length === 0;
   };
 
-  // Create / Update handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateBasicInfo()) return;
@@ -210,7 +231,7 @@ export default function CompanyManagement() {
         is_featured: formData.is_featured,
       };
 
-      const hasFiles = formData.logo || formData.cover_image;
+      const hasFiles = !!(formData.logo || formData.cover_image);
 
       if (hasFiles) {
         const formPayload = new FormData();
@@ -220,14 +241,11 @@ export default function CompanyManagement() {
         formPayload.append("category", String(formData.category));
         formPayload.append("sub_category", String(formData.sub_category));
         formPayload.append("business_type", formData.business_type);
-        if (formData.description)
-          formPayload.append("description", formData.description);
+        if (formData.description) formPayload.append("description", formData.description);
         formPayload.append("is_active", String(formData.is_active));
         formPayload.append("is_featured", String(formData.is_featured));
-        if (formData.logo instanceof File)
-          formPayload.append("logo", formData.logo);
-        if (formData.cover_image instanceof File)
-          formPayload.append("cover_image", formData.cover_image);
+        if (formData.logo) formPayload.append("logo", formData.logo);
+        if (formData.cover_image) formPayload.append("cover_image", formData.cover_image);
 
         if (editingSlug) {
           await updateCompany(editingSlug, formPayload);
@@ -251,11 +269,8 @@ export default function CompanyManagement() {
       fetchData();
     } catch (err: any) {
       const msg =
-        err.response?.data?.message ||
-        err.response?.data?.detail ||
-        "Operation failed";
+        err.response?.data?.message || err.response?.data?.detail || "Operation failed";
       showToast("error", msg);
-      console.error("API Error:", err.response?.data);
     } finally {
       setSubmitting(false);
     }
@@ -294,6 +309,10 @@ export default function CompanyManagement() {
   };
 
   const openEdit = (company: CompanyListItem) => {
+    if (!canEditCompany(company.slug)) {
+      showToast("error", "You don't have permission to edit this company");
+      return;
+    }
     setEditingSlug(company.slug);
     setFormData({
       name: company.name,
@@ -313,7 +332,7 @@ export default function CompanyManagement() {
     setModalOpen(true);
   };
 
-  // Multi-step form steps (unchanged)
+  // --- Multi‑step form steps (full JSX) ---
   const steps: FormStep[] = [
     {
       id: "basic",
@@ -411,7 +430,7 @@ export default function CompanyManagement() {
       title: "Images & Status",
       content: (
         <div className="space-y-6">
-          <div className="md:w-1/2">
+          <div className="flex items-center space-x-6">
             <DragDropImageUpload
               label="Logo"
               value={formData.logo}
@@ -451,19 +470,19 @@ export default function CompanyManagement() {
     },
   ];
 
-  // Table columns (same for both roles)
+  // --- Table columns ---
   const columns: Column<CompanyListItem>[] = [
     {
       key: "rowNumber",
       header: "No.",
       sortable: false,
-      render: (cat: CompanyListItem & { rowNumber?: number }) => cat.rowNumber,
+      render: (item: CompanyListItem & { rowNumber?: number }) => item.rowNumber,
     },
     {
       key: "logo",
       header: "Logo",
       sortable: false,
-      render: (comp: CompanyListItem) =>
+      render: (comp) =>
         comp.logo ? (
           <img src={comp.logo} alt={comp.name} className="h-10 w-10 rounded-full object-cover" />
         ) : (
@@ -511,8 +530,7 @@ export default function CompanyManagement() {
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Companies</h2>
-        {/* Only super admin can add new companies */}
-        {!isCompanyAdmin && (
+        {canAddCompany && (
           <button
             onClick={() => {
               resetForm();
@@ -525,42 +543,42 @@ export default function CompanyManagement() {
         )}
       </div>
 
-      {/* Search & Sort – super admin only; company admin sees no filters because only one company */}
-      {!isCompanyAdmin && (
-       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+      {/* Only super admin sees search & sort controls */}
+      {isSuperAdmin && (
+        <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
           <div className="flex flex-col sm:flex-row gap-3 w-full">
-  <div className="flex-1">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search by name, slug, category, subcategory, or type..."
-            />
+            <div className="flex-1">
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search by name, slug, category, subcategory, or type..."
+              />
+            </div>
+            <select
+              value={`${sortField}|${sortOrder}`}
+              onChange={(e) => {
+                const [field, desiredOrder] = e.target.value.split('|');
+                if (field === sortField) {
+                  if (desiredOrder !== sortOrder) handleSort(field);
+                } else {
+                  handleSort(field);
+                  if (desiredOrder === 'desc') handleSort(field);
+                }
+              }}
+              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
+            >
+              <option value="name|asc">Name (A-Z)</option>
+              <option value="name|desc">Name (Z-A)</option>
+              <option value="id|asc">Oldest (ID ↑)</option>
+              <option value="id|desc">Newest (ID ↓)</option>
+              <option value="business_type|asc">Business Type (A-Z)</option>
+              <option value="category_name|asc">Category (A-Z)</option>
+              <option value="sub_category_name|asc">Subcategory (A-Z)</option>
+              <option value="is_active|desc">Active First</option>
+              <option value="is_featured|desc">Featured First</option>
+            </select>
           </div>
-          <select
-            value={`${sortField}|${sortOrder}`}
-            onChange={(e) => {
-              const [field, desiredOrder] = e.target.value.split('|');
-              if (field === sortField) {
-                if (desiredOrder !== sortOrder) handleSort(field);
-              } else {
-                handleSort(field);
-                if (desiredOrder === 'desc') handleSort(field);
-              }
-            }}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
-          >
-            <option value="name|asc">Name (A-Z)</option>
-            <option value="name|desc">Name (Z-A)</option>
-            <option value="id|asc">Oldest (ID ↑)</option>
-            <option value="id|desc">Newest (ID ↓)</option>
-            <option value="business_type|asc">Business Type (A-Z)</option>
-            <option value="category_name|asc">Category (A-Z)</option>
-            <option value="sub_category_name|asc">Subcategory (A-Z)</option>
-            <option value="is_active|desc">Active First</option>
-            <option value="is_featured|desc">Featured First</option>
-          </select>
-        </div>
-</TableControls>
+        </TableControls>
       )}
 
       <DataTable
@@ -568,22 +586,18 @@ export default function CompanyManagement() {
         columns={columns}
         loading={loading}
         emptyMessage="No companies found"
-        onEdit={openEdit}  // Both roles can edit (company admin edits own company)
-        onDelete={!isCompanyAdmin ? setDeleteTarget : undefined}  // Only super admin can delete
-        // currentPage={currentPage}
-        // totalPages={totalPages}
-        // onPageChange={goToPage}
-        // totalItems={sortedItems.length}
-        // itemsPerPage={itemsPerPage}
+        onEdit={openEdit}
+        onDelete={canDeleteCompany ? setDeleteTarget : undefined}
         sortField={sortField}
         sortOrder={sortOrder}
-        onSort={!isCompanyAdmin ? handleSort : undefined} // Sorting only for super admin
+        onSort={isSuperAdmin ? handleSort : undefined}
       />
+
       <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={goToPage}
-/>
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
 
       <MultiStepFormModal
         isOpen={modalOpen}

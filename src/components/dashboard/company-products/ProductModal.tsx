@@ -37,6 +37,10 @@ interface ProductModalProps {
   onClose: () => void;
   onSave: (data: ProductFormData) => Promise<any>;
   onProductUpdated?: () => void;
+  /** If false, disables SKU, title, unit, and image management */
+  canEditBasic?: boolean;
+  /** If false, disables price and stock fields */
+  canEditPricing?: boolean;
 }
 
 export function ProductModal({
@@ -46,6 +50,8 @@ export function ProductModal({
   onClose,
   onSave,
   onProductUpdated,
+  canEditBasic = true,
+  canEditPricing = true,
 }: ProductModalProps) {
   const [step, setStep] = useState<'details' | 'gallery'>('details');
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -110,19 +116,11 @@ export function ProductModal({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  const handleImagesChange = async () => {
-    if (savedProductId && companySlug) {
-      try {
-        const res = await getCompanyProductDetail(companySlug, savedProductId);
-        setImages(res.data.images || []);
-        if (onProductUpdated) onProductUpdated();
-      } catch (err) {
-        console.error('Failed to refresh images:', err);
-      }
-    }
-  };
+  const handleBackToDetails = () => setStep('details');
 
   const onSubmitDetails = async (data: ProductFormData) => {
+    // Allow submission only if basic editing is allowed (creates/updates product)
+    if (!canEditBasic) return;
     try {
       const saved = await onSave(data);
       const productId = saved?.id || editingProduct?.id;
@@ -134,11 +132,11 @@ export function ProductModal({
     }
   };
 
-  const handleBackToDetails = () => setStep('details');
-
   if (!isOpen) return null;
 
   const stepProgress = step === 'details' ? 50 : 100;
+  const isReadOnlyBasic = !canEditBasic;
+  const isReadOnlyPricing = !canEditPricing;
 
   return (
     <div
@@ -146,15 +144,21 @@ export function ProductModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-white rounded-2xl shadow-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-        {/* Sticky Header */}
+        {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
-                {editingProduct ? 'Edit Product' : 'New Product'}
+                {editingProduct ? 'Product Details' : 'New Product'}
+                {isReadOnlyBasic && <span className="ml-2 text-sm font-normal text-amber-600">(View only)</span>}
+                {!isReadOnlyBasic && isReadOnlyPricing && (
+                  <span className="ml-2 text-sm font-normal text-blue-600">(Price/Stock read only)</span>
+                )}
               </h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                {step === 'details' ? 'Enter product details' : 'Manage product images'}
+                {step === 'details' 
+                  ? (isReadOnlyBasic ? 'Product information' : 'Enter product details') 
+                  : 'Manage product images'}
               </p>
             </div>
             <button
@@ -166,58 +170,60 @@ export function ProductModal({
             </button>
           </div>
 
-          {/* Progress Stepper */}
-          <div className="mt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                  step === 'details' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'
-                }`}>
-                  {step === 'details' ? '1' : <CheckCircle className="h-4 w-4" />}
+          {/* Progress Stepper – hide if completely read-only */}
+          {!isReadOnlyBasic && (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    step === 'details' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'
+                  }`}>
+                    {step === 'details' ? '1' : <CheckCircle className="h-4 w-4" />}
+                  </div>
+                  <span className={`text-sm font-medium ${step === 'details' ? 'text-indigo-600' : 'text-gray-500'}`}>
+                    Details
+                  </span>
                 </div>
-                <span className={`text-sm font-medium ${step === 'details' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                  Details
-                </span>
-              </div>
-              <div className="flex-1 h-0.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-600 transition-all duration-300 ease-out"
-                  style={{ width: `${stepProgress}%` }}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                  step === 'gallery' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'
-                }`}>
-                  {step === 'gallery' ? '2' : <CheckCircle className="h-4 w-4" />}
+                <div className="flex-1 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-600 transition-all duration-300 ease-out"
+                    style={{ width: `${stepProgress}%` }}
+                  />
                 </div>
-                <span className={`text-sm font-medium ${step === 'gallery' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                  Images
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    step === 'gallery' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    {step === 'gallery' ? '2' : <CheckCircle className="h-4 w-4" />}
+                  </div>
+                  <span className={`text-sm font-medium ${step === 'gallery' ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    Images
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Scrollable Content */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="transition-all duration-300 ease-out">
             {step === 'details' ? (
               <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-5">
-                {/* SKU – disabled when editing */}
+                {/* SKU – disabled when editing or basic read-only */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     SKU <span className="text-red-500">*</span>
                   </label>
                   <input
                     {...register('sku')}
-                    disabled={isSubmitting || !!editingProduct}
+                    disabled={isSubmitting || !!editingProduct || isReadOnlyBasic}
                     className={`w-full px-4 py-2 rounded-lg border ${
                       errors.sku
                         ? 'border-red-500 focus:ring-red-100'
                         : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
                     } transition-all outline-none ${
-                      !!editingProduct ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                      (!!editingProduct || isReadOnlyBasic) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                     }`}
                     placeholder="e.g., FLR-001"
                   />
@@ -236,9 +242,13 @@ export function ProductModal({
                   </label>
                   <input
                     {...register('title')}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                    className={`w-full px-4 py-2 rounded-lg border ${
+                      errors.title
+                        ? 'border-red-500 focus:ring-red-100'
+                        : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                    } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                     placeholder="Product name"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isReadOnlyBasic}
                   />
                   {errors.title && (
                     <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
@@ -255,9 +265,13 @@ export function ProductModal({
                       type="number"
                       step="0.01"
                       {...register('price', { valueAsNumber: true })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                      className={`w-full px-4 py-2 rounded-lg border ${
+                        errors.price
+                          ? 'border-red-500 focus:ring-red-100'
+                          : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                      } transition-all outline-none ${isReadOnlyPricing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                       placeholder="0.00"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isReadOnlyPricing}
                     />
                     {errors.price && (
                       <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
@@ -270,9 +284,13 @@ export function ProductModal({
                     <input
                       type="number"
                       {...register('stock', { valueAsNumber: true })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                      className={`w-full px-4 py-2 rounded-lg border ${
+                        errors.stock
+                          ? 'border-red-500 focus:ring-red-100'
+                          : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                      } transition-all outline-none ${isReadOnlyPricing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                       placeholder="0"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isReadOnlyPricing}
                     />
                     {errors.stock && (
                       <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>
@@ -287,8 +305,10 @@ export function ProductModal({
                   </label>
                   <select
                     {...register('unit')}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
-                    disabled={isSubmitting}
+                    className={`w-full px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none ${
+                      isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                    }`}
+                    disabled={isSubmitting || isReadOnlyBasic}
                   >
                     <option value="pc">Piece (pc)</option>
                     <option value="kg">Kilogram (kg)</option>
@@ -310,7 +330,18 @@ export function ProductModal({
                     images={images}
                     productId={savedProductId!}
                     companySlug={companySlug}
-                    onImagesChange={handleImagesChange}
+                    onImagesChange={async () => {
+                      if (savedProductId && companySlug) {
+                        try {
+                          const res = await getCompanyProductDetail(companySlug, savedProductId);
+                          setImages(res.data.images || []);
+                          if (onProductUpdated) onProductUpdated();
+                        } catch (err) {
+                          console.error('Failed to refresh images:', err);
+                        }
+                      }
+                    }}
+                    readOnly={isReadOnlyBasic}
                   />
                 )}
               </div>
@@ -318,33 +349,46 @@ export function ProductModal({
           </div>
         </div>
 
-        {/* Sticky Footer */}
+        {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4">
           {step === 'details' ? (
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="product-details-form"
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
-              >
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Continue to Images <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            isReadOnlyBasic ? (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="product-details-form"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Continue to Images <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )
           ) : (
             <div className="flex justify-between gap-3">
               <button
                 type="button"
                 onClick={handleBackToDetails}
                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                disabled={isReadOnlyBasic}
               >
                 <ChevronLeft className="h-4 w-4" /> Back to Details
               </button>

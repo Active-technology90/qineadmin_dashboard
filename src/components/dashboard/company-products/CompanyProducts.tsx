@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '../../../context/authContext';
 import { useCompanySelection } from '../../../hooks/useCompanySelection';
@@ -15,9 +15,6 @@ import { NoCompanyView } from './NoCompanyView';
 export default function CompanyProducts() {
   const { user } = useAuth();
 
-  // Determine if user is a company admin (exactly one membership)
-  const isCompanyAdmin = user?.memberships?.length === 1;
-
   const {
     selectedCompany,
     showSelector,
@@ -29,6 +26,28 @@ export default function CompanyProducts() {
 
   const companySlug = selectedCompany?.slug ?? null;
   const companyName = selectedCompany?.name ?? '';
+
+  // ----------------------------------------------------------------------
+  // Role-based permissions for the selected company
+  // ----------------------------------------------------------------------
+  const userRoleForCompany = useMemo(() => {
+    if (!user || !companySlug) return null;
+    // Super admin has no memberships -> treat as admin
+    if (!user.memberships?.length) return 'admin';
+    const membership = user.memberships.find(
+      (m: any) => m.company_slug === companySlug
+    );
+    return membership?.role || null;
+  }, [user, companySlug]);
+
+  const isSuperAdmin = !user?.memberships?.length;
+  const isAdmin = userRoleForCompany === 'admin' || isSuperAdmin;
+  const isStaff = userRoleForCompany === 'staff';
+
+  // Staff can edit everything except price/stock
+  const canEditBasic = isAdmin || isStaff;      // SKU, title, unit, images
+  const canEditPricing = isAdmin;               // price and stock
+  const canDelete = isAdmin;                    // delete whole product
 
   const {
     products,
@@ -56,22 +75,33 @@ export default function CompanyProducts() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ─────────────────────────────
-  // Actions
-  // ─────────────────────────────
-
+  // Actions with permission guards
   const handleAdd = () => {
+    if (!canEditBasic) {
+      showToast('error', 'You do not have permission to add products');
+      return;
+    }
     setEditingProduct(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (product: any) => {
+    // Editing requires at least basic edit permission
+    if (!canEditBasic) {
+      showToast('error', 'You do not have permission to edit products');
+      return;
+    }
     setEditingProduct(product);
     setIsModalOpen(true);
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    if (!canDelete) {
+      showToast('error', 'You do not have permission to delete products');
+      setDeleteTarget(null);
+      return;
+    }
     try {
       await deleteProduct(deleteTarget.id);
       showToast('success', 'Product deleted');
@@ -83,6 +113,14 @@ export default function CompanyProducts() {
   };
 
   const handleSave = async (data: any) => {
+    if (!canEditBasic && editingProduct === null) {
+      showToast('error', 'You do not have permission to create products');
+      throw new Error('Permission denied');
+    }
+    if (!canEditBasic && editingProduct !== null) {
+      showToast('error', 'You do not have permission to edit products');
+      throw new Error('Permission denied');
+    }
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, data);
@@ -91,7 +129,7 @@ export default function CompanyProducts() {
       } else {
         const created = await createProduct(data);
         showToast('success', 'Product created');
-        return created; // must have .id
+        return created;
       }
     } catch (err: any) {
       showToast('error', err?.response?.data?.detail || 'Save failed');
@@ -99,10 +137,7 @@ export default function CompanyProducts() {
     }
   };
 
-  // ─────────────────────────────
-  // Render guards (clean order)
-  // ─────────────────────────────
-
+  // Render guards
   if (showSelector) {
     return (
       <CompanySelector
@@ -124,11 +159,8 @@ export default function CompanyProducts() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-
-      {/* TOAST */}
       <Toast toast={toast} />
 
-      {/* MODALS */}
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.title || ''}
@@ -139,17 +171,16 @@ export default function CompanyProducts() {
       <ProductModal
         isOpen={isModalOpen}
         editingProduct={editingProduct}
-        companySlug={companySlug || ''}
+        companySlug={companySlug}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         onProductUpdated={refetch}
+        canEditBasic={canEditBasic}
+        canEditPricing={canEditPricing}
       />
 
-      {/* HEADER */}
       <div className="p-6 border-b">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-          {/* Title */}
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
               Company Products
@@ -160,12 +191,20 @@ export default function CompanyProducts() {
                 {companyName}
               </span>
             </p>
+            {!canEditBasic && (
+              <p className="text-xs text-amber-600 mt-1">
+                View only – you don't have edit permissions for this company.
+              </p>
+            )}
+            {canEditBasic && !canEditPricing && (
+              <p className="text-xs text-blue-600 mt-1">
+                You can edit product details but not price or stock.
+              </p>
+            )}
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3">
-            {/* Switch button – hidden for company admins */}
-            {!isCompanyAdmin && (
+            {isSuperAdmin && (
               <button
                 onClick={resetCompany}
                 className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -175,17 +214,18 @@ export default function CompanyProducts() {
               </button>
             )}
 
-            <button
-              onClick={handleAdd}
-              className="px-4 py-2 rounded-full bg-secondary text-white hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add
-            </button>
+            {canEditBasic && (
+              <button
+                onClick={handleAdd}
+                className="px-4 py-2 rounded-full bg-secondary text-white hover:bg-secondary flex items-center gap-2 shadow-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </button>
+            )}
           </div>
         </div>
 
-        {/* SEARCH */}
         <div className="mt-5 relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           <input
@@ -197,17 +237,14 @@ export default function CompanyProducts() {
         </div>
       </div>
 
-      {/* CONTENT */}
       <div className="p-6">
-
         <ProductTable
           products={products}
           totalItems={totalItems}
           loading={loading}
-          onEdit={handleEdit}
-          onDelete={(id, title) => setDeleteTarget({ id, title })}
+          onEdit={canEditBasic ? handleEdit : undefined}
+          onDelete={canDelete ? (id, title) => setDeleteTarget({ id, title }) : undefined}
         />
-
         {totalPages > 1 && (
           <div className="mt-6">
             <Pagination
@@ -217,7 +254,6 @@ export default function CompanyProducts() {
             />
           </div>
         )}
-
       </div>
     </div>
   );
