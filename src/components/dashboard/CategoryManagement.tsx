@@ -69,15 +69,14 @@ export default function CategoryManagement() {
     totalPages,
     goToPage,
     resetPage,
-    itemsPerPage,
   } = usePagination(sortedItems, pageSize);
   // Inside CategoryManagement, after usePagination
-  const paginatedItemsWithRowNumber = useMemo(() => {
-    return paginatedItems.map((item, index) => ({
-      ...item,
-      rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
-    }));
-  }, [paginatedItems, currentPage, itemsPerPage]);
+ const paginatedItemsWithRowNumber = useMemo(() => {
+  return paginatedItems.map((item, index) => ({
+    ...item,
+    rowNumber: (currentPage - 1) * pageSize + index + 1,
+  }));
+}, [paginatedItems, currentPage, pageSize]);
  useEffect(() => {
   resetPage();
 }, [searchTerm, pageSize, resetPage]);

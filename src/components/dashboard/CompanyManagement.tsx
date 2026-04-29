@@ -94,15 +94,15 @@ export default function CompanyManagement() {
     totalPages,
     goToPage,
     resetPage,
-    itemsPerPage,
+    
   } = usePagination(sortedItems, pageSize);
 
   const paginatedItemsWithRowNumber = useMemo(() => {
-    return paginatedItems.map((item, index) => ({
-      ...item,
-      rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
-    }));
-  }, [paginatedItems, currentPage, itemsPerPage]);
+  return paginatedItems.map((item, index) => ({
+    ...item,
+    rowNumber: (currentPage - 1) * pageSize + index + 1,
+  }));
+}, [paginatedItems, currentPage, pageSize]);
 
  useEffect(() => {
   resetPage();
@@ -472,8 +472,18 @@ export default function CompanyManagement() {
           </div>
         ),
     },
-    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900" },
-    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500" },
+    {
+  key: "name",
+  header: "Name",
+  sortable: true,
+  className: "font-medium text-gray-900 max-w-[180px] whitespace-normal break-words",
+},
+   {
+  key: "slug",
+  header: "Slug",
+  sortable: true,
+  className: "font-mono text-gray-500 max-w-[200px] whitespace-normal break-all",
+},
     { key: "category_name", header: "Category", sortable: true },
     { key: "sub_category_name", header: "Subcategory", sortable: true },
     {

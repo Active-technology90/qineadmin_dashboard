@@ -17,16 +17,19 @@ export const TableControls: React.FC<Props> = ({
       <div className="flex-1 w-full">{children}</div>
 
       {/* Middle (Page Size) */}
-      <select
-        value={pageSize}
-        onChange={(e) => onPageSizeChange(Number(e.target.value))}
-        className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm"
-      >
-        <option value={5}>5 / page</option>
-        <option value={15}>15 / page</option>
-        <option value={30}>30 / page</option>
-        <option value={60}>60 / page</option>
-      </select>
+    <div className="w-auto">
+  <select
+    value={pageSize}
+    onChange={(e) => onPageSizeChange(Number(e.target.value))}
+    className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm"
+  >
+    <option value={5}>5 / page</option>
+    <option value={10}>10 / page</option>
+    <option value={15}>15 / page</option>
+    <option value={30}>30 / page</option>
+    <option value={60}>60 / page</option>
+  </select>
+</div>
     </div>
   );
 };

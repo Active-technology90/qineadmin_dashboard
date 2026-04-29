@@ -95,23 +95,22 @@ export default function SubCategoryManagement() {
   );
 
   // Paginate sorted items
-  const {
-    paginatedItems,
-    currentPage,
-    totalPages,
-    goToPage,
-    resetPage,
-    itemsPerPage,
-  } = usePagination(sortedItems, pageSize);
+const {
+  paginatedItems,
+  currentPage,
+  totalPages,
+  goToPage,
+  resetPage,
+} = usePagination(sortedItems, pageSize);
 const paginatedItemsWithRowNumber = useMemo(() => {
   return paginatedItems.map((item, index) => ({
     ...item,
-    rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
+    rowNumber: (currentPage - 1) * pageSize + index + 1,
   }));
-}, [paginatedItems, currentPage, itemsPerPage]);
+}, [paginatedItems, currentPage, pageSize]);
   useEffect(() => {
-    resetPage();
-  }, [searchTerm, resetPage]);
+  goToPage(1);
+}, [searchTerm, goToPage]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -286,7 +285,7 @@ const paginatedItemsWithRowNumber = useMemo(() => {
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
   return (
-    <div>
+  <div className="h-[calc(100vh-80px)] flex flex-col">
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">SubCategories</h2>
@@ -300,8 +299,15 @@ const paginatedItemsWithRowNumber = useMemo(() => {
           <Plus size={18} /> Add SubCategory
         </button>
       </div>
-
-    <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+<div className="shrink-0">
+    <TableControls
+  pageSize={pageSize}
+  onPageSizeChange={(size) => {
+    setPageSize(size);
+    goToPage(1); // RESET PAGE ON SIZE CHANGE (CRITICAL)
+  }}
+>
+  
   <div className="flex flex-col sm:flex-row gap-3 w-full">
     <div className="flex-1">
       <SearchInput
@@ -338,7 +344,8 @@ const paginatedItemsWithRowNumber = useMemo(() => {
        </select>
 </div>
 </TableControls>
-
+</div>
+<div className="flex-1 overflow-y-auto">
       <DataTable
          data={paginatedItemsWithRowNumber} 
         columns={columns}
@@ -355,11 +362,14 @@ const paginatedItemsWithRowNumber = useMemo(() => {
         sortOrder={sortOrder}
         onSort={handleSort}
       />
+      </div>
+      <div className="shrink-0 border-t bg-white py-3">
 <Pagination
   currentPage={currentPage}
   totalPages={totalPages}
   onPageChange={goToPage}
 />
+   </div>
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

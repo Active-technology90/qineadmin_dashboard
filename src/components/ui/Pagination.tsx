@@ -51,12 +51,14 @@ export function Pagination({
         if (currentPage > 1) onPageChange(currentPage - 1);
       }
       if (e.key === "ArrowRight") {
-        if (currentPage < totalPages) onPageChange(currentPage + 1);
+        if (currentPage < totalPages)
+          onPageChange(currentPage + 1);
       }
     };
 
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () =>
+      window.removeEventListener("keydown", handler);
   }, [currentPage, totalPages, onPageChange]);
 
   // ===============================
@@ -75,12 +77,16 @@ export function Pagination({
     const delta = 1;
 
     for (let i = 1; i <= totalPages; i++) {
-      const isEdge = i === 1 || i === totalPages;
-      const isNear = Math.abs(i - currentPage) <= delta;
+      const isEdge =
+        i === 1 || i === totalPages;
+      const isNear =
+        Math.abs(i - currentPage) <= delta;
 
       if (isEdge || isNear) {
         items.push(i);
-      } else if (items[items.length - 1] !== "...") {
+      } else if (
+        items[items.length - 1] !== "..."
+      ) {
         items.push("...");
       }
     }
@@ -99,101 +105,197 @@ export function Pagination({
     setJumpPage("");
   };
 
- return (
-  <div
-    className={`flex flex-col lg:flex-row items-center justify-between gap-4 px-4 py-3 border-t bg-white ${className}`}
-  >
-    {/* LEFT: INFO + PAGE SIZE */}
-    <div className="flex items-center gap-3 text-sm text-gray-600">
-      <span>
-        Page{" "}
-        <span className="font-semibold text-gray-800">{currentPage}</span> /{" "}
-        {totalPages}
-      </span>
+  return (
+    <div
+      className={`
+        w-full
+        flex flex-col xl:flex-row
+        items-center justify-between
+        gap-4
+        px-5 py-4
+        border-t  border-gray-200
+        bg-gray-50
+        ${className}
+      `}
+    >
+      {/* LEFT */}
+      <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="px-2 py-1 bg-white rounded-full  text-sm text-gray-700 shadow-sm">
+          Page{" "}
+          <span className="font-semibold text-gray-900">
+            {currentPage}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium">
+            {totalPages}
+          </span>
+        </div>
 
-      {onPageSizeChange && (
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="border rounded-md px-2 py-1 text-sm cursor-pointer hover:border-gray-400 transition"
+        {onPageSizeChange && (
+          <select
+            value={pageSize}
+            onChange={(e) =>
+              onPageSizeChange(
+                Number(e.target.value)
+              )
+            }
+            className="
+              px-3 py-1.5
+              rounded-full
+              border
+              bg-white
+              text-sm
+              shadow-sm
+              hover:border-gray-400
+              focus:outline-none
+              focus:ring-2
+              focus:ring-gray-300
+              transition
+              cursor-pointer
+            "
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* CENTER */}
+      <div className="flex items-center gap-2 bg-white  rounded-full px-2 py-1 shadow-sm">
+
+        {/* Prev */}
+        <button
+          onClick={() =>
+            goToPage(currentPage - 1)
+          }
+          disabled={currentPage === 1}
+          className="
+            h-9 w-9
+            flex items-center justify-center
+            rounded-full
+            hover:bg-gray-100
+            active:scale-95
+            disabled:opacity-40
+            disabled:cursor-not-allowed
+            transition
+          "
         >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>
-              {size} / page
-            </option>
-          ))}
-        </select>
-      )}
-    </div>
+          <ChevronLeft size={18} />
+        </button>
 
-    {/* CENTER: PAGINATION */}
-    <div className="flex items-center gap-1">
-      {/* Prev */}
-      <button
-        onClick={() => goToPage(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="h-9 w-9 flex items-center justify-center border rounded-md
-                   cursor-pointer hover:bg-gray-100 active:scale-95
-                   disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <ChevronLeft size={16} />
-      </button>
-
-      {/* Pages */}
-      <div className="flex items-center gap-1">
+        {/* Pages */}
         {pages.map((p, i) =>
           p === "..." ? (
-            <span key={i} className="px-2 text-gray-400 select-none">
+            <span
+              key={i}
+              className="px-2 text-gray-400"
+            >
               ...
             </span>
           ) : (
             <button
               key={i}
-              onClick={() => goToPage(p)}
-              className={`h-9 min-w-9 px-2 rounded-md text-sm border transition
-                cursor-pointer active:scale-95
+              onClick={() =>
+                goToPage(p)
+              }
+              className={`
+                min-w-[36px]
+                h-9
+                px-3
+                text-sm
+                rounded-full
+                font-medium
+                transition
+                active:scale-95
+
                 ${
                   currentPage === p
-                    ? "bg-black text-white border-black shadow-sm"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                }`}
+                    ? `
+                       bg-black/75
+                      text-white
+                      shadow
+                    `
+                    : `
+                      text-gray-700
+                      hover:bg-gray-100
+                    `
+                }
+              `}
             >
               {p}
             </button>
-          ),
+          )
         )}
+
+        {/* Next */}
+        <button
+          onClick={() =>
+            goToPage(currentPage + 1)
+          }
+          disabled={
+            currentPage === totalPages
+          }
+          className="
+            h-9 w-9
+            flex items-center justify-center
+            rounded-full
+            hover:bg-gray-100
+            active:scale-95
+            disabled:opacity-40
+            disabled:cursor-not-allowed
+            transition
+          "
+        >
+          <ChevronRight size={18} />
+        </button>
+
       </div>
 
-      {/* Next */}
-      <button
-        onClick={() => goToPage(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="h-9 w-9 flex items-center justify-center border rounded-md
-                   cursor-pointer hover:bg-gray-100 active:scale-95
-                   disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <ChevronRight size={16} />
-      </button>
-    </div>
+    {/* RIGHT */}
+      {/* <div className="flex items-center gap-2 text-sm">
+        <input
+  value={jumpPage}
+  onChange={(e) =>
+    setJumpPage(e.target.value)
+  }
+  placeholder="page no"
+  className="
+    w-18
+    px-2 py-1
+    rounded-full
+    border border-gray-400
+    bg-white
+    text-sm
+    shadow-sm
+    focus:outline-none
+    focus:ring-1
+    focus:ring-gray-300
+    hover:border-gray-300
+    transition
+  "
+/> */}
 
-    {/* RIGHT: JUMP TO PAGE */}
-    <div className="flex items-center gap-2 text-sm">
-      <input
-        value={jumpPage}
-        onChange={(e) => setJumpPage(e.target.value)}
-        placeholder="Go to page"
-        className="w-28 border rounded-md px-2 py-1 text-sm
-                   focus:outline-none focus:ring-2 focus:ring-black/20
-                   hover:border-gray-400 transition"
-      />
-      <button
-        onClick={handleJump}
-        className="px-3 py-1 bg-black text-white rounded-md text-sm
-                   cursor-pointer hover:bg-gray-900 active:scale-95 transition"
-      >
-        Go
-      </button>
+        {/* <button
+          onClick={handleJump}
+          className="
+            px-4 py-1.5
+            rounded-full
+            bg-black
+            text-white
+            text-sm
+            font-medium
+            shadow-sm
+            hover:bg-gray-900
+            active:scale-95
+            transition
+          "
+        >
+          Go
+        </button>
+      </div> */}
     </div>
-  </div>
-);
+  );
 }

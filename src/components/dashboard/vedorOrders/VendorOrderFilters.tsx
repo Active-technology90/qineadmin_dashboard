@@ -55,8 +55,8 @@ export function VendorOrderFilters({
         </button>
       </div>
       <div className={`${showMobile ? "block" : "hidden md:block"} mb-6`}>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+         <div className="relative w-[260px] md:w-[320px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -70,7 +70,7 @@ export function VendorOrderFilters({
            <select
           value={deliveryStatusFilter}
           onChange={(e) => onDeliveryStatusChange(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+          className="w-[190px] px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
         >
           <option value="">All Delivery Statuses</option>
           <option value="accepted">Accepted</option>
@@ -86,7 +86,7 @@ export function VendorOrderFilters({
             <select
               value={selectedCompanyId}
               onChange={(e) => onCompanyChange(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+            className="w-[190px] px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
             >
               <option value="">All Companies</option>
               {companies.map((c) => (

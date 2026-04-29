@@ -112,7 +112,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
               data.map((item, idx) => (
                 <tr key={item.id ?? idx} className="hover:bg-gray-50 transition-colors">
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`px-2 py-2 text-sm whitespace-nowrap ${col.className || ''}`}>
+                    <td key={colIdx} className={`px-2 py-2 text-sm align-top ${col.className || ''}`}>
                       {renderCell(item, col)}
                     </td>
                   ))}
