@@ -204,7 +204,7 @@ export default function CompanyProducts() {
           </div>
 
           <div className="flex gap-3">
-            {!isSuperAdmin && userRoleForCompany === null && (
+            {isSuperAdmin && (
               <button
                 onClick={resetCompany}
                 className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
