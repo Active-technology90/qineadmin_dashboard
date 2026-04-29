@@ -15,13 +15,12 @@ import {
   ImageIcon,
   Banknote,
   Loader2,
-  Mail,
   Phone,
 } from "lucide-react";
 import type { VendorOrder } from "../../../types";
 import {
   getCompanyStaffByRole,
-  reviewReceipt,
+  // reviewReceipt,
   assignDelivery,
 } from "../../../services/api";
 
@@ -442,38 +441,38 @@ const ReceiptReviewCard = ({
   receipt?: PaymentReceipt | null;
   onUpdate: () => void;
 }) => {
-  const [reviewStatus, setReviewStatus] = useState<
-    "approved" | "rejected" | ""
-  >("");
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  // const [reviewStatus, setReviewStatus] = useState<
+  //   "approved" | "rejected" | ""
+  // >("");
+  // const [notes, setNotes] = useState("");
+  // const [submitting, setSubmitting] = useState(false);
   const [showImage, setShowImage] = useState(false);
 
-  const { showToast } = useToast();
+  // const { showToast } = useToast();
 
   if (!receipt) return null;
+console.log("onUpdate",onUpdate)
+  
+  // const handleSubmit = async () => {
+  //   if (!reviewStatus) return;
 
-  const handleSubmit = async () => {
-    if (!reviewStatus) return;
+  //   setSubmitting(true);
+  //   try {
+  //     await reviewReceipt(receipt.id, {
+  //       status: reviewStatus,
+  //       admin_notes: notes || undefined,
+  //     });
 
-    setSubmitting(true);
-    try {
-      await reviewReceipt(receipt.id, {
-        status: reviewStatus,
-        admin_notes: notes || undefined,
-      });
-
-      showToast("success", `Receipt ${reviewStatus}`);
-      setReviewStatus("");
-      setNotes("");
-      onUpdate();
-    } catch (err: any) {
-      showToast("error", err.response?.data?.detail || "Review failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  //     showToast("success", `Receipt ${reviewStatus}`);
+  //     setReviewStatus("");
+  //     setNotes("");
+  //     onUpdate();
+  //   } catch (err: any) {
+  //     showToast("error", err.response?.data?.detail || "Review failed");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
   return (
     <div className="bg-white flex-col  rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
       {/* Header */}

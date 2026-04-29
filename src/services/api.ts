@@ -442,10 +442,14 @@ export const getAdminMasterOrders = async (params?: {
   search?: string;
   status?: string;
   ordering?: string;
-}) =>
-  api.get<PaginatedResponse<MasterOrder>>("/orders/admin/master-orders", {
-    params,
+  signal?: AbortSignal;
+}) => {
+  const { signal, ...queryParameters } = params || {};
+  return api.get<PaginatedResponse<MasterOrder>>("/orders/admin/master-orders", {
+    params: queryParameters,
+    signal,
   });
+};
 
 export const getAdminVendorOrders = async (params?: {
   page?: number;
@@ -455,11 +459,16 @@ export const getAdminVendorOrders = async (params?: {
   status?: string;
   master_order?: number;
   ordering?: string;
-}) =>
-  api.get<PaginatedResponse<VendorOrder>>("orders/admin/vendor-orders/", {
-    params,
+  signal?: AbortSignal;
+}) => {
+  const { signal, ...queryParameters } = params || {};
+  return api.get<PaginatedResponse<VendorOrder>>("orders/admin/vendor-orders/", {
+    params: queryParameters,
+    signal,
   });
-  // ========== COMPANY ORDERS (for company admin) ==========
+};
+
+// ========== COMPANY ORDERS (for company admin) ==========
 export const getCompanyVendorOrders = async (
   companySlug: string,
   params?: {
@@ -468,11 +477,15 @@ export const getCompanyVendorOrders = async (
     search?: string;
     status?: string;
     ordering?: string;
+    signal?: AbortSignal;
   }
-) =>
-  api.get<PaginatedResponse<VendorOrder>>(`/orders/company/${companySlug}/`, {
-    params,
+) => {
+  const { signal, ...queryParameters } = params || {};
+  return api.get<PaginatedResponse<VendorOrder>>(`/orders/company/${companySlug}/`, {
+    params: queryParameters,
+    signal,
   });
+};
   // ========== DELIVERIES ==========
 export const assignDelivery = async (data: { vendor_order: number; delivery_person: number }) =>
   api.post("/deliveries/", data);
