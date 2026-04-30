@@ -22,6 +22,7 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
+  updateDeliveryPerson,
 } from "../../../services/api";
 
 import { useToast } from "../../../hooks/useToast";
@@ -158,6 +159,7 @@ const ShippingCard = ({ order }: { order: VendorOrder }) => (
 );
 
 // 3. Delivery Card (enhanced with avatar, tracking, assignment)
+// Inside VendorOrderDetailModal.tsx – replacement for DeliveryCard with update support
 const DeliveryCard = ({
   order,
   onUpdate,
@@ -166,21 +168,31 @@ const DeliveryCard = ({
   onUpdate: () => void;
 }) => {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
-  const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
+  const [selectedUserId, setSelectedUserId] = useState<number | "">("");
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [showAssignForm, setShowAssignForm] = useState(false);
   const { showToast } = useToast();
+
+  const delivery = order.delivery;
+
+  useEffect(() => {
+    if (delivery) console.log("Delivery object:", delivery);
+  }, [delivery]);
 
   useEffect(() => {
     if (!order.company?.slug) return;
+
     const fetchStaff = async () => {
       setLoadingStaff(true);
       try {
-        const res = await getCompanyStaffByRole(
-          order.company.slug!,
-          "delivery",
-        );
-        setStaffList(res.data.results || res.data);
+        const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
+        const mappedStaff = (res.data.results || res.data).map((staff: any) => ({
+          id: staff.user.id,
+          name: `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() || staff.user.username || staff.user.email,
+          phone: staff.user.phone_number,
+        }));
+        setStaffList(mappedStaff);
       } finally {
         setLoadingStaff(false);
       }
@@ -189,24 +201,49 @@ const DeliveryCard = ({
   }, [order.company?.slug]);
 
   const handleAssign = async () => {
-    if (!selectedStaffId) return;
+    if (!selectedUserId) return;
     setAssigning(true);
     try {
-      await assignDelivery({
-        vendor_order: order.id,
-        delivery_person: Number(selectedStaffId),
-      });
-      showToast("success", "Delivery person assigned");
-      setSelectedStaffId("");
+      if (delivery) {
+        const deliveryId = delivery.tracking_id;
+        if (!deliveryId) {
+          throw new Error("Delivery record has no ID. Please check the API response.");
+        }
+        await updateDeliveryPerson(deliveryId, selectedUserId);
+        showToast("success", "Delivery person updated");
+      } else {
+        await assignDelivery({
+          vendor_order: order.id,
+          delivery_person: selectedUserId,
+        });
+        showToast("success", "Delivery person assigned");
+      }
+      setSelectedUserId("");
+      setShowAssignForm(false);
       onUpdate();
     } catch (err: any) {
-      showToast("error", err.response?.data?.detail || "Assignment failed");
+      const msg = err.response?.data?.detail || err.message || "Operation failed";
+      showToast("error", msg);
     } finally {
       setAssigning(false);
     }
   };
 
-  const delivery = order.delivery;
+  const handleOpenForm = () => {
+    if (assigning) return;
+    if (delivery?.delivery_person) {
+      setSelectedUserId(delivery.delivery_person);
+    } else {
+      setSelectedUserId("");
+    }
+    setShowAssignForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowAssignForm(false);
+    setSelectedUserId("");
+  };
+const canChage=delivery?.status==="pending"?true:false
   return (
     <div className="bg-white rounded-xl border border-purple-100 p-6 shadow-sm">
       <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -238,52 +275,81 @@ const DeliveryCard = ({
                 </span>
               )}
             </div>
+            {canChage&& (
+              <button
+                onClick={handleOpenForm}
+                disabled={assigning}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {assigning && <Loader2 className="h-3 w-3 animate-spin inline mr-1" />}
+                Change
+              </button>
+            )}
           </div>
         </div>
       ) : (
-        <p className="text-sm text-gray-500 mb-4">
-          No delivery person assigned yet
-        </p>
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-500 mb-3">No delivery person assigned yet</p>
+          {!showAssignForm && (
+            <button
+              onClick={handleOpenForm}
+              disabled={assigning}
+              className="px-4 py-2 bg-[#6750A4] text-white text-sm font-medium rounded-lg hover:bg-[#59409A] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {assigning && <Loader2 className="h-4 w-4 animate-spin inline mr-1" />}
+              Assign Delivery Person
+            </button>
+          )}
+        </div>
       )}
 
-      {/* Assignment control */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
-        <p className="text-xs font-medium text-gray-600 mb-2">
-          Assign Delivery Person
-        </p>
-        {loadingStaff ? (
-          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-        ) : (
-          <div className="flex gap-2">
-            <select
-              value={selectedStaffId}
-              onChange={(e) =>
-                setSelectedStaffId(parseInt(e.target.value) || "")
-              }
-              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#6750A4]"
-            >
-              <option value="">Select Delivery Person…</option>
-              {staffList.map((staff) => (
-                <option key={staff.id} value={staff.id}>
-                  {staff.user.first_name} {staff.user.last_name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleAssign}
-              disabled={!selectedStaffId || assigning}
-              className="px-5 py-2 bg-[#6750A4] text-white text-sm font-semibold rounded-lg hover:bg-[#59409A] disabled:opacity-60 transition flex items-center gap-2"
-            >
-              {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
-              Assign
-            </button>
-          </div>
-        )}
-      </div>
+      {showAssignForm && (
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <p className="text-xs font-medium text-gray-600 mb-3">
+            {delivery ? "Select new delivery person" : "Select delivery person"}
+          </p>
+          {loadingStaff ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(parseInt(e.target.value) || "")}
+                className="w-full text-sm border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent"
+              >
+                <option value="">-- Select a delivery person --</option>
+                {staffList.map((staff) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.name} {staff.phone ? `(${staff.phone})` : ""}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAssign}
+                  disabled={!selectedUserId || assigning}
+                  className="flex-1 py-2.5 bg-[#6750A4] text-white text-sm font-semibold rounded-lg hover:bg-[#59409A] disabled:opacity-60 transition flex items-center justify-center gap-2"
+                >
+                  {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {assigning ? "Assigning..." : (delivery ? "Update" : "Assign")}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={assigning}
+                  className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
-
 // 4. Order Items Table (full width)
 const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
@@ -461,7 +527,9 @@ const ReceiptReviewCard = ({
   const [submitting, setSubmitting] = useState(false);
   const [showImage, setShowImage] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"approved" | "rejected" | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "approved" | "rejected" | null
+  >(null);
   const { showToast } = useToast();
 
   // Case 1: Chapa
@@ -470,11 +538,17 @@ const ReceiptReviewCard = ({
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Banknote className="h-5 w-5 text-indigo-600" />
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Information</h4>
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+            Payment Information
+          </h4>
         </div>
         <div className="text-center py-6">
-          <p className="text-gray-700 text-sm">Paid via <span className="font-semibold">Chapa</span></p>
-          <p className="text-gray-500 text-xs mt-1">No receipt required for this payment method.</p>
+          <p className="text-gray-700 text-sm">
+            Paid via <span className="font-semibold">Chapa</span>
+          </p>
+          <p className="text-gray-500 text-xs mt-1">
+            No receipt required for this payment method.
+          </p>
         </div>
       </div>
     );
@@ -486,18 +560,25 @@ const ReceiptReviewCard = ({
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Banknote className="h-5 w-5 text-gray-400" />
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Receipt</h4>
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+            Payment Receipt
+          </h4>
         </div>
         <div className="text-center py-6">
-          <p className="text-gray-500 text-sm">No receipt uploaded for this order.</p>
-          <p className="text-gray-400 text-xs mt-1">Payment method: Bank Transfer</p>
+          <p className="text-gray-500 text-sm">
+            No receipt uploaded for this order.
+          </p>
+          <p className="text-gray-400 text-xs mt-1">
+            Payment method: Bank Transfer
+          </p>
         </div>
       </div>
     );
   }
 
   // Case 3: Bank transfer with receipt
-  const isAlreadyReviewed = receipt.status === "approved" || receipt.status === "rejected";
+  const isAlreadyReviewed =
+    receipt.status === "approved" || receipt.status === "rejected";
 
   const handleActionClick = (action: "approved" | "rejected") => {
     setPendingAction(action);
@@ -527,13 +608,17 @@ const ReceiptReviewCard = ({
     <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
       <div className="flex items-center gap-2 mb-4">
         <Banknote className="h-5 w-5 text-indigo-600" />
-        <h4 className="text-sm sm:text-base font-semibold text-gray-800">Payment Receipt</h4>
+        <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+          Payment Receipt
+        </h4>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <p className="text-xs text-gray-500">Status</p>
-          <span className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(receipt.status)}`}>
+          <span
+            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(receipt.status)}`}
+          >
             {receipt.status}
           </span>
         </div>
@@ -609,7 +694,10 @@ const ReceiptReviewCard = ({
           className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowImage(false)}
         >
-          <div className="relative max-w-6xl" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-6xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setShowImage(false)}
               className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
@@ -632,7 +720,9 @@ const ReceiptReviewCard = ({
           setPendingAction(null);
         }}
         onConfirm={handleConfirm}
-        title={pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"}
+        title={
+          pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"
+        }
         description={
           pendingAction === "approved"
             ? "Are you sure you want to approve this payment receipt? This will mark the payment as verified."
@@ -738,10 +828,9 @@ export function VendorOrderDetailModal({
   onUpdate,
 }: {
   order: VendorOrder | null;
-  receipt?: OrderReceipt | null;   // use the simplified type
+  receipt?: OrderReceipt | null; // use the simplified type
   onClose: () => void;
   onUpdate?: () => void;
-
 }) {
   const [showTopShadow, setShowTopShadow] = useState(false);
   const [showBottomShadow, setShowBottomShadow] = useState(false);
@@ -839,7 +928,7 @@ export function VendorOrderDetailModal({
                 <div className="space-y-6">
                   <ReceiptReviewCard
                     receipt={receipt}
-                    paymentMethod={order.payment_method }
+                    paymentMethod={order.payment_method}
                     onUpdate={handleLocalUpdate}
                   />
                   <TimelineCard order={order} />

@@ -1,16 +1,12 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  forwardRef,
-} from "react";
+// src/components/ui/SearchInput.tsx
+import React, { forwardRef, useState, useEffect, useRef, useCallback } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 
 export interface SearchInputProps {
   value?: string;
   onChange?: (value: string) => void;
   placeholder?: string;
+  /** Debounce delay in ms (default 150) – set 0 for instant */
   debounceMs?: number;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -18,8 +14,6 @@ export interface SearchInputProps {
   showClearButton?: boolean;
   name?: string;
   id?: string;
-
-  /** NEW */
   loading?: boolean;
   onSubmit?: (value: string) => void;
 }
@@ -30,7 +24,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       value: externalValue,
       onChange,
       placeholder = "Search...",
-      debounceMs = 300,
+      debounceMs = 150,
       disabled = false,
       autoFocus = false,
       className = "",
@@ -42,42 +36,34 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     },
     ref
   ) => {
-    const [internalValue, setInternalValue] = useState(
-      externalValue || ""
-    );
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const inputRef = useRef<HTMLInputElement | null>(null);
-
+    const [internalValue, setInternalValue] = useState(externalValue || "");
+    const timerRef = useRef<ReturnType<typeof setTimeout>>();
     const isControlled = externalValue !== undefined;
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // Merge refs
     const setRefs = (node: HTMLInputElement) => {
       inputRef.current = node;
       if (typeof ref === "function") ref(node);
       else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
     };
 
-    // Sync controlled value
+    // Sync external value changes
     useEffect(() => {
       if (isControlled && externalValue !== undefined) {
         setInternalValue(externalValue);
       }
     }, [externalValue, isControlled]);
 
-    // Debounce handler
+    // Debounced change handler
     const handleChange = useCallback(
       (newValue: string) => {
-        if (!isControlled) {
-          setInternalValue(newValue);
-        }
-
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-
-        debounceTimerRef.current = setTimeout(() => {
+        if (!isControlled) setInternalValue(newValue);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        if (debounceMs > 0) {
+          timerRef.current = setTimeout(() => onChange?.(newValue), debounceMs);
+        } else {
           onChange?.(newValue);
-        }, debounceMs);
+        }
       },
       [onChange, debounceMs, isControlled]
     );
@@ -91,53 +77,34 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       inputRef.current?.focus();
     };
 
-    // Keyboard UX
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Escape") {
-        clearSearch();
-      }
-
-      if (e.key === "Enter") {
-        onSubmit?.(internalValue);
-      }
+    const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") clearSearch();
+      if (e.key === "Enter") onSubmit?.(internalValue);
     };
 
-    // Cleanup
     useEffect(() => {
       return () => {
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
+        if (timerRef.current) clearTimeout(timerRef.current);
       };
     }, []);
 
-    const inputId = id || "search-input";
-
     return (
-      <div className={`relative w-full group ${className}`}>
-        {/* LEFT ICON */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
+      <div className={`relative w-full ${className}`}>
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </div>
 
-        {/* INPUT */}
         <input
           ref={setRefs}
           type="search"
-          id={inputId}
           name={name}
+          id={id}
           value={internalValue}
           onChange={onInputChange}
-          onKeyDown={handleKeyDown}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
           disabled={disabled}
           autoFocus={autoFocus}
-          aria-label={placeholder}
-          aria-busy={loading}
           className={`
             w-full pl-10 pr-10 py-2.5
             border border-gray-300
@@ -146,32 +113,16 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             text-sm
             transition-all duration-200
 
-            focus:outline-none
-            focus:ring-2 focus:ring-purple-500
-            focus:border-purple-500
-            focus:shadow-sm
-
-            group-hover:border-gray-400
-
-            disabled:bg-gray-100
-            disabled:cursor-not-allowed
-
-            ${loading ? "pr-10" : ""}
+            focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
+            disabled:bg-gray-100 disabled:cursor-not-allowed
           `}
         />
 
-        {/* CLEAR BUTTON */}
         {showClearButton && internalValue && !disabled && (
           <button
             type="button"
             onClick={clearSearch}
-            className="
-              absolute right-3 top-1/2 -translate-y-1/2
-              text-gray-400 hover:text-gray-600
-              transition
-              rounded-full p-1
-              focus:outline-none focus:ring-2 focus:ring-indigo-500
-            "
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />

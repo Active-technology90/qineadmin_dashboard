@@ -19,16 +19,19 @@ const ITEMS_PER_PAGE = 10;
 // ---------- reusable subcomponents (same as before) ----------
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
-    completed: "bg-emerald-100 text-emerald-700",
-    paid: "bg-blue-100 text-blue-700",
-    pending: "bg-amber-100 text-amber-700",
-    cancelled: "bg-red-100 text-red-700",
-    delivered: "bg-emerald-100 text-emerald-700",
-    out_for_delivery: "bg-purple-100 text-purple-700",
-    shipped: "bg-indigo-100 text-indigo-700",
-    accepted: "bg-cyan-100 text-cyan-700",
-    processing: "bg-amber-100 text-amber-700",
-  };
+   completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  delivered: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  approved: "bg-green-50 text-green-700 border border-green-200",
+  paid: "bg-blue-50 text-blue-700 border border-blue-200",
+  pending: "bg-amber-50 text-amber-700 border border-amber-200",
+  processing: "bg-orange-50 text-orange-700 border border-orange-200",
+  confirmed: "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  shipped: "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  out_for_delivery: "bg-violet-50 text-violet-700 border border-violet-200",
+  accepted: "bg-cyan-50 text-cyan-700 border border-cyan-200",
+  cancelled: "bg-red-50 text-red-700 border border-red-200",
+  rejected: "bg-rose-50 text-rose-700 border border-rose-200",
+};
   const fallback = "bg-gray-100 text-gray-600";
   const color = colors[status.toLowerCase()] || fallback;
   return (
@@ -77,7 +80,7 @@ const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) 
       <div className="text-red-600 mb-4">{error}</div>
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+        className="px-4 py-2 bg-secodary text-white rounded-lg hover:bg-secondary transition"
       >
         Retry
       </button>

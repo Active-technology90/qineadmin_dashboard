@@ -1,5 +1,11 @@
 // src/components/admin/SubCategoryManagement.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import {
   getSubCategories,
@@ -20,6 +26,11 @@ import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
+import { DragDropImageUpload } from "../ui/DragDropImageUpload";
+
+// Memoised components to prevent unnecessary re‑renders
+const MemoizedDataTable = React.memo(DataTable);
+const MemoizedPagination = React.memo(Pagination);
 
 export default function SubCategoryManagement() {
   const [pageSize, setPageSize] = useState(10);
@@ -27,7 +38,12 @@ export default function SubCategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Separate local input (instant) from debounced search term (triggers heavy work)
+  const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -69,7 +85,7 @@ export default function SubCategoryManagement() {
     fetchData();
   }, []);
 
-  // Filter subcategories based on search
+  // Filter subcategories based on debounced searchTerm
   const filteredSubs = useMemo(() => {
     if (!searchTerm.trim()) return subs;
     const term = searchTerm.toLowerCase();
@@ -102,15 +118,34 @@ export default function SubCategoryManagement() {
     resetPage,
     itemsPerPage,
   } = usePagination(sortedItems, pageSize);
+
   const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
       ...item,
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
+
+  // Reset page when search term or page size changes
   useEffect(() => {
     resetPage();
-  }, [searchTerm, resetPage]);
+  }, [searchTerm, pageSize, resetPage]);
+
+  // Debounced search handler
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchTerm(value);
+    }, 200);
+  };
+
+  // Cleanup debounce
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -127,36 +162,27 @@ export default function SubCategoryManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setSubmitting(true);
-
     try {
-      const form = new FormData();
-
-      form.append("name", formData.name);
-      if (formData.name_am) form.append("name_am", formData.name_am);
-      if (formData.slug) form.append("slug", formData.slug);
-      form.append("category", String(formData.category));
-      if (formData.item_code) form.append("item_code", formData.item_code);
-      if (formData.description)
-        form.append("description", formData.description);
-      form.append("order", String(formData.order));
-      form.append("is_active", String(formData.is_active));
-
-      // Upload file if present
-      if (formData.icon instanceof File) {
-        form.append("icon", formData.icon);
-      }
+      const fd = new FormData();
+      fd.append("name", formData.name);
+      if (formData.name_am) fd.append("name_am", formData.name_am);
+      if (formData.slug) fd.append("slug", formData.slug);
+      fd.append("category", String(formData.category));
+      if (formData.item_code) fd.append("item_code", formData.item_code);
+      if (formData.description) fd.append("description", formData.description);
+      fd.append("order", String(formData.order));
+      fd.append("is_active", String(formData.is_active));
+      if (formData.icon instanceof File) fd.append("icon", formData.icon);
 
       if (editingId) {
         const existing = subs.find((s) => s.id === editingId);
-        if (existing) await updateSubCategory(existing.slug, form);
+        if (existing) await updateSubCategory(existing.slug, fd);
         showToast("success", "Updated successfully");
       } else {
-        await createSubCategory(form);
+        await createSubCategory(fd);
         showToast("success", "Created successfully");
       }
-
       setModalOpen(false);
       resetForm();
       fetchData();
@@ -196,7 +222,7 @@ export default function SubCategoryManagement() {
     setFormErrors({});
   };
 
-  const openEdit = (sub: SubCategory) => {
+  const openEdit = useCallback((sub: SubCategory) => {
     setEditingId(sub.id);
     setFormData({
       name: sub.name,
@@ -211,91 +237,101 @@ export default function SubCategoryManagement() {
       is_active: sub.is_active ?? true,
     });
     setModalOpen(true);
-  };
+  }, []);
 
-  // Table columns with sortable definitions
-  const columns: Column<SubCategory>[] = [
-    {
-      key: "rowNumber",
-      header: "No.",
-      sortable: false,
-      render: (cat: SubCategory & { rowNumber?: number }) => cat.rowNumber,
-    },
-    {
-      key: "icon",
-      header: "Icon",
-      sortable: false,
-      render: (sub) =>
-        sub.icon ? (
-          <img
-            src={sub.icon}
-            alt={sub.name}
-            className="h-8 w-8 rounded object-cover"
-          />
-        ) : (
-          <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
-            <ImageIcon size={14} className="text-gray-400" />
-          </div>
+  const handleDeleteClick = useCallback((sub: SubCategory) => {
+    setDeleteTarget(sub);
+  }, []);
+
+  // Memoised columns – stable reference
+  const columns: Column<SubCategory>[] = useMemo(
+    () => [
+      {
+        key: "rowNumber",
+        header: "No.",
+        sortable: false,
+        render: (cat: SubCategory & { rowNumber?: number }) => cat.rowNumber,
+      },
+      {
+        key: "icon",
+        header: "Icon",
+        sortable: false,
+        render: (sub) =>
+          sub.icon ? (
+            <img
+              src={sub.icon}
+              alt={sub.name}
+              className="h-8 w-8 rounded object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
+              <ImageIcon size={14} className="text-gray-400" />
+            </div>
+          ),
+      },
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        className: "font-medium text-gray-900",
+      },
+      {
+        key: "name_am",
+        header: "Name (Am)",
+        sortable: true,
+        render: (sub) => sub.name_am || "-",
+      },
+      {
+        key: "category",
+        header: "Category",
+        sortable: true,
+        sortKey: "category_name",
+        render: (sub) =>
+          categories.find((c) => c.id === sub.category)?.name || sub.category,
+      },
+      {
+        key: "item_code",
+        header: "Item Code",
+        sortable: true,
+        render: (sub) => sub.item_code || "-",
+      },
+      {
+        key: "slug",
+        header: "Slug",
+        sortable: true,
+        className: "font-mono text-gray-500",
+      },
+      {
+        key: "order",
+        header: "Order",
+        sortable: true,
+        render: (sub) => sub.order ?? "-",
+      },
+      {
+        key: "is_active",
+        header: "Active",
+        sortable: true,
+        render: (sub) => (
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              sub.is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {sub.is_active ? "Yes" : "No"}
+          </span>
         ),
-    },
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      className: "font-medium text-gray-900",
-    },
-    {
-      key: "name_am",
-      header: "Name (Am)",
-      sortable: true,
-      render: (sub) => sub.name_am || "-",
-    },
-    {
-      key: "category",
-      header: "Category",
-      sortable: true,
-      sortKey: "category_name", // will sort by category name via custom logic in useSorting
-      render: (sub) =>
-        categories.find((c) => c.id === sub.category)?.name || sub.category,
-    },
-    {
-      key: "item_code",
-      header: "Item Code",
-      sortable: true,
-      render: (sub) => sub.item_code || "-",
-    },
-    {
-      key: "slug",
-      header: "Slug",
-      sortable: true,
-      className: "font-mono text-gray-500",
-    },
-
-    {
-      key: "order",
-      header: "Order",
-      sortable: true,
-      render: (sub) => sub.order ?? "-",
-    },
-    {
-      key: "is_active",
-      header: "Active",
-      sortable: true,
-      render: (sub) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${sub.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-        >
-          {sub.is_active ? "Yes" : "No"}
-        </span>
-      ),
-    },
-    {
-      key: "company_count",
-      header: "Companies",
-      sortable: true,
-      render: (sub) => sub.company_count ?? 0,
-    },
-  ];
+      },
+      {
+        key: "company_count",
+        header: "Companies",
+        sortable: true,
+        render: (sub) => sub.company_count ?? 0,
+      },
+    ],
+    [categories],
+  );
 
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
@@ -317,17 +353,15 @@ export default function SubCategoryManagement() {
 
       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
         <div className="flex flex-col sm:flex-row gap-3 w-full">
-          {/* SEARCH */}
           <div className="flex-1">
             <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
+              value={inputValue}
+              onChange={handleInputChange}
+              debounceMs={0} // we manage debounce manually
               placeholder="Search by name, Amharic name, slug, item code, or category..."
-              className="focus:ring-[#6750A4] focus:border-[#6750A4]"
+              loading={loading}
             />
           </div>
-
-          {/* SORT */}
           <select
             value={`${sortField}|${sortOrder}`}
             onChange={(e) => {
@@ -340,21 +374,10 @@ export default function SubCategoryManagement() {
               }
             }}
             className="
-        bg-white
-        border border-gray-200
-        rounded-xl
-        px-4 py-2
-        text-sm
-        cursor-pointer
-        transition
-
-        focus:outline-none
-        focus:ring-2
-        focus:ring-[#6750A4]
-        focus:border-[#6750A4]
-
-        hover:border-gray-400
-      "
+              bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm
+              cursor-pointer transition focus:outline-none focus:ring-2
+              focus:ring-[#6750A4] focus:border-[#6750A4] hover:border-gray-400
+            "
           >
             <option value="name|asc">Name (A-Z)</option>
             <option value="name|desc">Name (Z-A)</option>
@@ -371,27 +394,24 @@ export default function SubCategoryManagement() {
         </div>
       </TableControls>
 
-      <DataTable
+      <MemoizedDataTable
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No subcategories found"
         onEdit={openEdit}
-        onDelete={setDeleteTarget}
-        // currentPage={currentPage}
-        // totalPages={totalPages}
-        // onPageChange={goToPage}
-        // totalItems={sortedItems.length}
-        // itemsPerPage={itemsPerPage}
+        onDelete={handleDeleteClick}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
       />
-      <Pagination
+
+      <MemoizedPagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
       />
+
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -411,7 +431,9 @@ export default function SubCategoryManagement() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full border rounded-lg p-2 ${
+                formErrors.name ? "border-red-500" : "border-gray-300"
+              }`}
               required
             />
             {formErrors.name && (
@@ -444,7 +466,9 @@ export default function SubCategoryManagement() {
               onChange={(e) =>
                 setFormData({ ...formData, slug: e.target.value })
               }
-              className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full border rounded-lg p-2 font-mono ${
+                formErrors.slug ? "border-red-500" : "border-gray-300"
+              }`}
             />
             {formErrors.slug && (
               <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
@@ -460,7 +484,9 @@ export default function SubCategoryManagement() {
               onChange={(e) =>
                 setFormData({ ...formData, category: Number(e.target.value) })
               }
-              className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full border rounded-lg p-2 ${
+                formErrors.category ? "border-red-500" : "border-gray-300"
+              }`}
               required
             >
               <option value={0}>Select Category</option>
@@ -510,38 +536,20 @@ export default function SubCategoryManagement() {
             )}
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Icon
-            </label>
-            <div className="flex items-center gap-4">
-              {(formData.iconPreview || formData.icon) && (
-                <img
-                  src={
-                    formData.icon
-                      ? URL.createObjectURL(formData.icon)
-                      : formData.iconPreview
-                  }
-                  className="h-12 w-12 rounded object-cover border"
-                  alt="Preview"
-                />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData({
-                    ...formData,
-                    icon: file,
-                    iconPreview: URL.createObjectURL(file),
-                  });
-                }}
-                className="text-sm"
-              />
-            </div>
-          </div>
+          <DragDropImageUpload
+            label="Icon"
+            value={formData.icon}
+            previewUrl={formData.iconPreview}
+            onChange={(file) =>
+              setFormData({
+                ...formData,
+                icon: file,
+                iconPreview: file ? URL.createObjectURL(file) : "",
+              })
+            }
+            accept="image/*"
+            maxSizeMB={5}
+          />
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
