@@ -20,6 +20,7 @@ const BRAND_COLOR = "#6750A4";
 
 export default function AdminProfile() {
   const { user, setUser, logout } = useAuth();
+  const isSuperAdmin = !user?.memberships?.length;
 
   const [avatar, setAvatar] = useState<string | null>(
     user?.profile_image || user?.image || null,
@@ -253,19 +254,23 @@ export default function AdminProfile() {
         >
           Change Password
         </button>
-        <button
-          onClick={() => setActiveForm("membership")}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeForm === "membership"
-              ? "text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          style={
-            activeForm === "membership" ? { backgroundColor: BRAND_COLOR } : {}
-          }
-        >
-          Membership
-        </button>
+        {!isSuperAdmin && (
+          <button
+            onClick={() => setActiveForm("membership")}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              activeForm === "membership"
+                ? "text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            style={
+              activeForm === "membership"
+                ? { backgroundColor: BRAND_COLOR }
+                : {}
+            }
+          >
+            Membership
+          </button>
+        )}
       </div>
 
       {/* PROFILE FORM */}
@@ -388,7 +393,7 @@ export default function AdminProfile() {
       )}
 
       {/* MEMBERSHIP FORM */}
-      {activeForm === "membership" && (
+      {!isSuperAdmin && activeForm === "membership" && (
         <div className="bg-white p-6 rounded-2xl mt-6 shadow-lg border border-gray-100">
           {/* HEADER */}
           <div className="flex items-center justify-between mb-5">

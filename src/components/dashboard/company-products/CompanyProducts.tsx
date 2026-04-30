@@ -238,33 +238,36 @@ export default function CompanyProducts() {
         </div>
 
       </div>
-      {/* GLOBAL TABLE TOOLBAR (SEARCH + TABLE CONTROLS) */}
-      <div className="flex items-center justify-between gap-3 mt-5 p-3 border-b border-gray-200">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1); // reset page on search
-            }}
-            placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl 
-      focus:outline-none 
-      focus:ring-2 focus:ring-[#6750A4] 
-      focus:border-[#6750A4]"
-          />
-        </div>
+<div className="mt-5">
+  <TableControls
+    pageSize={pageSize}
+    onPageSizeChange={(size) => {
+      setPageSize(size);
+      setCurrentPage(1);
+    }}
+  >
+    <div className="relative">
+      <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
 
-        {/* TABLE CONTROLS (GLOBAL SAME AS USERS) */}
-        <TableControls
-          pageSize={pageSize}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setCurrentPage(1); // reset page like CompanyUsers
-          }}
-        />
-      </div>
+      <input
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setCurrentPage(1);
+        }}
+        placeholder="Search products..."
+        className="
+          w-full pl-10 pr-4 py-2.5
+          border border-gray-200
+          rounded-xl
+          focus:outline-none
+          focus:ring-2 focus:ring-[#6750A4]
+          focus:border-[#6750A4]
+        "
+      />
+    </div>
+  </TableControls>
+</div>
 
       <div className="p-6">
         <ProductTable

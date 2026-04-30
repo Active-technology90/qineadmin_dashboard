@@ -40,30 +40,32 @@ export function CompanyUsersTable({
 
   return (
     <>
-      {/* TOP TOOLBAR (inside border) */}
-      <div className="flex items-center justify-between gap-3 p-3">
-        {/* SEARCH — stretched */}
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 pr-4 py-2.5 w-full border border-gray-200 rounded-xl 
-focus:outline-none 
-focus:ring-2 focus:ring-[#6750A4] 
-focus:border-[#6750A4]"
-          />
-        </div>
+     <div className="mt-5">
+  <TableControls
+    pageSize={pageSize}
+    onPageSizeChange={onPageSizeChange}
+  >
+    {/* SEARCH INSIDE CHILDREN */}
+    <div className="relative">
+      <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
 
-        {/* TABLE CONTROLS */}
-        <TableControls
-          pageSize={pageSize}
-          onPageSizeChange={onPageSizeChange}
-        />
-      </div>
-
+      <input
+        type="text"
+        placeholder="Search users..."
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="
+          w-full pl-10 pr-4 py-2.5
+          border border-gray-200
+          rounded-xl
+          focus:outline-none
+          focus:ring-2 focus:ring-[#6750A4]
+          focus:border-[#6750A4]
+        "
+      />
+    </div>
+  </TableControls>
+</div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

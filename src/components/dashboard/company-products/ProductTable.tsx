@@ -16,8 +16,8 @@ interface ProductTableProps {
   products: Product[];
   totalItems: number;
   loading: boolean;
-  onEdit?: (product: Product) => void; // ✅ optional
-  onDelete?: (id: number, title: string) => void; // ✅ optional
+  onEdit?: (product: Product) => void; 
+  onDelete?: (id: number, title: string) => void; 
 }
 
 function StockBadge({ stock }: { stock: number }) {

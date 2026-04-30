@@ -23,8 +23,9 @@ import { TableControls } from "../ui/TableControls";
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+const [error, setError] = useState<string | null>(null);
+const [searchTerm, setSearchTerm] = useState(""); 
+const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -43,11 +44,17 @@ export default function CategoryManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const { toast, showToast } = useToast();
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+  }, 300); // 300ms delay
 
+  return () => clearTimeout(timeout);
+}, [searchTerm]);
   // Filtered data (search by name, Amharic name, slug, code)
   const filteredCategories = useMemo(() => {
-    if (!searchTerm.trim()) return categories;
-    const term = searchTerm.toLowerCase();
+  const term = (debouncedSearch || "").toLowerCase().trim();
+if (!term) return categories;
     return categories.filter(
       (cat) =>
         cat.name.toLowerCase().includes(term) ||
@@ -55,7 +62,7 @@ export default function CategoryManagement() {
         cat.slug.toLowerCase().includes(term) ||
         cat.code?.toLowerCase().includes(term),
     );
-  }, [categories, searchTerm]);
+ }, [categories, debouncedSearch]);
 
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredCategories,
@@ -78,9 +85,9 @@ export default function CategoryManagement() {
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
-  useEffect(() => {
-    resetPage();
-  }, [searchTerm, pageSize, resetPage]);
+ useEffect(() => {
+  resetPage();
+}, [debouncedSearch, pageSize, resetPage]);
 
   const fetchCategories = async () => {
     try {
