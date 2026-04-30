@@ -10,7 +10,12 @@ import {
   getSubCategories,
   getCompanyDetail,
 } from "../../services/api";
-import type { CompanyListItem, Category, SubCategory, Company } from "../../types";
+import type {
+  CompanyListItem,
+  Category,
+  SubCategory,
+  Company,
+} from "../../types";
 import { SearchInput } from "../ui/SearchInput";
 import { DataTable, type Column } from "../ui/DataTable";
 import { MultiStepFormModal, type FormStep } from "../ui/MultiStepFormModal";
@@ -89,7 +94,9 @@ const isSuperAdmin = !user?.memberships?.length;
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(
+    null,
+  );
   const { toast, showToast } = useToast();
 
   // --- Data filtering (only for super admin) ---
@@ -111,7 +118,7 @@ const isSuperAdmin = !user?.memberships?.length;
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     isSuperAdmin ? filteredCompanies : companies,
     "name",
-    "asc"
+    "asc",
   );
 
   const {
@@ -262,7 +269,9 @@ const isSuperAdmin = !user?.memberships?.length;
 
       showToast(
         "success",
-        editingSlug ? "Company updated successfully" : "Company created successfully"
+        editingSlug
+          ? "Company updated successfully"
+          : "Company created successfully",
       );
       setModalOpen(false);
       resetForm();
@@ -344,17 +353,23 @@ const isSuperAdmin = !user?.memberships?.length;
               type="text"
               placeholder="Company Name (English) *"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
             />
-            {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+            {formErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+            )}
           </div>
           <div>
             <input
               type="text"
               placeholder="Name (Amharic)"
               value={formData.name_am}
-              onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name_am: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-lg p-2"
             />
           </div>
@@ -363,10 +378,14 @@ const isSuperAdmin = !user?.memberships?.length;
               type="text"
               placeholder="Slug (unique, optional)"
               value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, slug: e.target.value })
+              }
               className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
             />
-            {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+            {formErrors.slug && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+            )}
           </div>
           <div>
             <select
@@ -379,29 +398,46 @@ const isSuperAdmin = !user?.memberships?.length;
             >
               <option value={0}>Select Category *</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
               ))}
             </select>
-            {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+            {formErrors.category && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+            )}
           </div>
           <div>
             <select
               value={formData.sub_category}
-              onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  sub_category: Number(e.target.value),
+                })
+              }
               className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
               disabled={!formData.category}
             >
               <option value={0}>Select Subcategory *</option>
               {filteredSubcategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
               ))}
             </select>
-            {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+            {formErrors.sub_category && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.sub_category}
+              </p>
+            )}
           </div>
           <div>
             <select
               value={formData.business_type}
-              onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, business_type: e.target.value })
+              }
               className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
             >
               <option value="">Select Business Type *</option>
@@ -410,13 +446,19 @@ const isSuperAdmin = !user?.memberships?.length;
               <option value="service">Service</option>
               <option value="factory">Factory</option>
             </select>
-            {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+            {formErrors.business_type && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.business_type}
+              </p>
+            )}
           </div>
           <div className="md:col-span-2">
             <textarea
               placeholder="Description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-lg p-2"
               rows={3}
             />
@@ -434,7 +476,9 @@ const isSuperAdmin = !user?.memberships?.length;
             <DragDropImageUpload
               label="Logo"
               value={formData.logo}
-              onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
+              onChange={(file) =>
+                setFormData((prev) => ({ ...prev, logo: file }))
+              }
               previewUrl={logoPreview}
               required={false}
             />
@@ -442,7 +486,9 @@ const isSuperAdmin = !user?.memberships?.length;
           <DragDropImageUpload
             label="Cover Image"
             value={formData.cover_image}
-            onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
+            onChange={(file) =>
+              setFormData((prev) => ({ ...prev, cover_image: file }))
+            }
             previewUrl={coverPreview}
           />
           <div className="flex items-center space-x-6">
@@ -450,7 +496,9 @@ const isSuperAdmin = !user?.memberships?.length;
               <input
                 type="checkbox"
                 checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
                 className="h-4 w-4 text-indigo-600 rounded"
               />
               <span className="text-sm text-gray-700">Active</span>
@@ -459,7 +507,9 @@ const isSuperAdmin = !user?.memberships?.length;
               <input
                 type="checkbox"
                 checked={formData.is_featured}
-                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_featured: e.target.checked })
+                }
                 className="h-4 w-4 text-indigo-600 rounded"
               />
               <span className="text-sm text-gray-700">Featured</span>
@@ -484,15 +534,29 @@ const isSuperAdmin = !user?.memberships?.length;
       sortable: false,
       render: (comp) =>
         comp.logo ? (
-          <img src={comp.logo} alt={comp.name} className="h-10 w-10 rounded-full object-cover" />
+          <img
+            src={comp.logo}
+            alt={comp.name}
+            className="h-10 w-10 rounded-full object-cover"
+          />
         ) : (
           <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
             <ImageIcon size={16} className="text-gray-400" />
           </div>
         ),
     },
-    { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900 max-w-[100px] break-words" },
-    { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500 max-w-[100px] break-words" },
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      className: "font-medium text-gray-900 max-w-[100px] break-words",
+    },
+    {
+      key: "slug",
+      header: "Slug",
+      sortable: true,
+      className: "font-mono text-gray-500 max-w-[100px] break-words",
+    },
     { key: "category_name", header: "Category", sortable: true },
     { key: "sub_category_name", header: "Subcategory", sortable: true },
     {
@@ -506,7 +570,9 @@ const isSuperAdmin = !user?.memberships?.length;
       header: "Active",
       sortable: true,
       render: (comp) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+        >
           {comp.is_active ? "Yes" : "No"}
         </span>
       ),
@@ -516,7 +582,9 @@ const isSuperAdmin = !user?.memberships?.length;
       header: "Featured",
       sortable: true,
       render: (comp) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}>
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}
+        >
           {comp.is_featured ? "Yes" : "No"}
         </span>
       ),
@@ -529,7 +597,7 @@ const isSuperAdmin = !user?.memberships?.length;
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Companies</h2>
+        <h2 className="text-2xl font-bold text-[#6750A4]">Companies</h2>
         {canAddCompany && (
           <button
             onClick={() => {
@@ -546,12 +614,15 @@ const isSuperAdmin = !user?.memberships?.length;
       {/* Only super admin sees search & sort controls */}
       {isSuperAdmin && (
         <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 w-full items-stretch">
+
             <div className="flex-1">
               <SearchInput
                 value={searchTerm}
                 onChange={setSearchTerm}
                 placeholder="Search by name, slug, category, subcategory, or type..."
+                className="focus:ring-[#6750A4] focus:border-[#6750A4]"
+
               />
             </div>
             <select
@@ -562,10 +633,26 @@ const isSuperAdmin = !user?.memberships?.length;
                   if (desiredOrder !== sortOrder) handleSort(field);
                 } else {
                   handleSort(field);
-                  if (desiredOrder === 'desc') handleSort(field);
+                  if (desiredOrder === "desc") handleSort(field);
                 }
               }}
-              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
+              className="
+  bg-white
+  border border-gray-200
+  rounded-xl
+  px-4 py-2
+  text-sm
+  cursor-pointer
+  transition
+
+  focus:outline-none
+  focus:ring-2
+  focus:ring-[#6750A4]
+  focus:border-[#6750A4]
+
+  hover:border-gray-400
+  sm:w-48
+"
             >
               <option value="name|asc">Name (A-Z)</option>
               <option value="name|desc">Name (Z-A)</option>

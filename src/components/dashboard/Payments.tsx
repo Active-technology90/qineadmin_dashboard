@@ -1,5 +1,7 @@
 // src/components/admin/Payments.tsx
-import { useState, useEffect } from "react";
+
+
+import { useState, useEffect } from "react"; // added useEffect
 import { Search, Download, Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
@@ -37,7 +39,7 @@ export default function Payments() {
   const [pageSize, setPageSize] = useState(10);
   const { toast, showToast } = useToast();
 
- const isSuperAdmin = !user?.memberships?.length;
+  const isSuperAdmin = !user?.memberships?.length;
   const companySlug = user?.memberships?.[0]?.company_slug;
 
   const fetchPayouts = async () => {
@@ -60,7 +62,7 @@ export default function Payments() {
       setLoading(false);
     }
   };
-console.log(totalCount);
+  console.log(totalCount);
   // Refetch when page, pageSize, or role changes
   useEffect(() => {
     fetchPayouts();
@@ -136,7 +138,7 @@ console.log(totalCount);
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <Toast toast={toast} />
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">
+        <h2 className="text-xl font-bold text-[#6750A4]">
           {isSuperAdmin ? "All Payouts" : "Company Payouts"}
         </h2>
       </div>
@@ -151,8 +153,12 @@ console.log(totalCount);
                 type="text"
                 placeholder="Search by vendor order, company, or status..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl
+  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
               />
             </div>
           </div>
