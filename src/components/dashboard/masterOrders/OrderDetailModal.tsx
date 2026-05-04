@@ -1,5 +1,5 @@
 // src/components/dashboard/orders/OrderDetailModal.tsx (upgraded)
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState,  memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -15,7 +15,7 @@ import {
   Copy,
   Check,
   Phone,
-  Clock,
+  
   TrendingUp,
 } from "lucide-react";
 import type { MasterOrder, VendorOrder } from "../../../types";

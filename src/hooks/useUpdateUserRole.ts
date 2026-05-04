@@ -4,7 +4,7 @@ export function useUpdateUserRole() {
   const updateUserRole = async (
     companySlug: string,
     userId: number,
-    role: "admin" | "staff" | "viewer"
+    role: "admin" | "staff" | "viewer"| "delivery"
   ) => {
     try {
 

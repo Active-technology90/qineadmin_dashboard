@@ -25,8 +25,8 @@ const UserAvatar = ({ user, size = 'md' }: { user: any; size?: 'sm' | 'md' | 'lg
 interface EditUserModalProps {
   isOpen: boolean;
   user: any;
-  newRole: "admin" | "staff" | "viewer";
-  onRoleChange: (role: "admin" | "staff" | "viewer") => void;
+  newRole: "admin" | "staff" | "viewer"|"delivery";
+  onRoleChange: (role: "admin" | "staff" | "viewer"|"delivery") => void;
   updating: boolean;
   onClose: () => void;
   onSave: () => void;
@@ -122,6 +122,7 @@ export function EditUserModal({
               <option value="admin">Admin – Full access to company management</option>
               <option value="staff">Staff – Manage products and orders</option>
               <option value="viewer">Viewer – Read‑only access</option>
+                <option value="delivery">Delivery</option>
             </select>
             <p className="text-xs text-gray-400 mt-1.5">The user will immediately get the new permissions.</p>
           </div>

@@ -1,5 +1,11 @@
 // src/components/admin/CategoryManagement.tsx
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import {
   getCategories,
@@ -22,8 +28,8 @@ import { TableControls } from "../ui/TableControls";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
 
 // ----- Memoised sub‑components to prevent re‑renders -----
-const MemoizedDataTable = React.memo(DataTable);
-const MemoizedPagination = React.memo(Pagination);
+// const MemoizedDataTable = React.memo(DataTable);
+// const MemoizedPagination = React.memo(Pagination);
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -73,14 +79,14 @@ export default function CategoryManagement() {
         cat.name.toLowerCase().includes(term) ||
         cat.name_am?.toLowerCase().includes(term) ||
         cat.slug.toLowerCase().includes(term) ||
-        cat.code?.toLowerCase().includes(term)
+        cat.code?.toLowerCase().includes(term),
     );
   }, [categories, searchTerm]);
 
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredCategories,
     "name",
-    "asc"
+    "asc",
   );
 
   const {
@@ -124,12 +130,12 @@ export default function CategoryManagement() {
   // Columns are stable – memoised once
   const columns: Column<Category>[] = useMemo(
     () => [
-      {
-        key: "rowNumber",
-        header: "No.",
-        sortable: false,
-        render: (cat) => cat.rowNumber,
-      },
+    {
+  key: "rowNumber",
+  header: "No.",
+  sortable: false,
+  render: (cat) => (cat as any).rowNumber,
+},
       {
         key: "icon",
         header: "Icon",
@@ -190,7 +196,7 @@ export default function CategoryManagement() {
         render: (cat) => cat.company_count ?? 0,
       },
     ],
-    []
+    [],
   );
 
   const handleEdit = useCallback((cat: Category) => {
@@ -338,7 +344,7 @@ export default function CategoryManagement() {
         </div>
       </TableControls>
 
-      <MemoizedDataTable<Category>
+      <DataTable<Category>
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
@@ -350,7 +356,7 @@ export default function CategoryManagement() {
         onSort={handleSort}
       />
 
-      <MemoizedPagination
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
@@ -449,20 +455,20 @@ export default function CategoryManagement() {
               <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
             )}
           </div>
-            <DragDropImageUpload
-                      label="Icon"
-                      value={formData.icon}
-                      previewUrl={formData.iconPreview}
-                      onChange={(file) =>
-                        setFormData({
-                          ...formData,
-                          icon: file,
-                          iconPreview: file ? URL.createObjectURL(file) : "",
-                        })
-                      }
-                      accept="image/*"
-                      maxSizeMB={5}
-                    />
+          <DragDropImageUpload
+            label="Icon"
+            value={formData.icon}
+            previewUrl={formData.iconPreview}
+            onChange={(file) =>
+              setFormData({
+                ...formData,
+                icon: file,
+                iconPreview: file ? URL.createObjectURL(file) : "",
+              })
+            }
+            accept="image/*"
+            maxSizeMB={5}
+          />
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description

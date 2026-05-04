@@ -4,7 +4,7 @@ export function useAddCompanyUser() {
   const addUser = async (
     companySlug: string,
     email: string,
-    role: "admin" | "staff" | "viewer"
+    role: "admin" | "staff" | "viewer"| "delivery"
   ) => {
     try {
       const res = await api.post(

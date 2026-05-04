@@ -4,7 +4,7 @@ import {
   Package,
   Users,
   ShoppingBag,
-  CreditCard,
+  // CreditCard,            ← removed (unused)
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
@@ -12,7 +12,7 @@ import {
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
-  Clock,
+  // Clock,                 ← removed (unused)
 } from "lucide-react";
 import {
   BarChart,
@@ -27,23 +27,22 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
+  // Legend,                ← removed (unused)
 } from "recharts";
 
-// ---------- Dummy Data ----------
+// ---------- Dummy Data (unchanged) ----------
 const summaryData = {
   products: 1247,
   users: 342,
   orders: 856,
   payments: { total: 2847500, change: 12.5, prevTotal: 2530000 },
-  avgOrderValue: 3326, // total / orders
-  conversionRate: 3.8, // %
+  avgOrderValue: 3326,
+  conversionRate: 3.8,
 };
 
 const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
 const PIE_COLORS = ["#10B981", "#F59E0B", "#EF4444", "#3B82F6"];
 
-// Revenue data (current vs previous period)
 const revenueWeek = [
   { label: "Mon", revenue: 420000, prevRevenue: 380000 },
   { label: "Tue", revenue: 380000, prevRevenue: 350000 },
@@ -203,7 +202,7 @@ const SkeletonChart = ({ height = "h-64" }: { height?: string }) => (
   </div>
 );
 
-// ---------- Summary Card Component ----------
+// ---------- Summary Card ----------
 const SummaryCard = ({
   title,
   value,
@@ -212,15 +211,7 @@ const SummaryCard = ({
   textColor,
   trend,
   trendLabel,
-}: {
-  title: string;
-  value: string;
-  icon: any;
-  bgLight: string;
-  textColor: string;
-  trend?: number;
-  trendLabel?: string;
-}) => (
+}: any) => (
   <div className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
     <div className="flex items-start justify-between">
       <div
@@ -251,12 +242,11 @@ const SummaryCard = ({
   </div>
 );
 
-// ---------- Main Overview Component ----------
+// ---------- Main Component ----------
 export default function Overview() {
   const [period, setPeriod] = useState<Period>("week");
   const [loading, setLoading] = useState(true);
 
-  // Simulate API loading
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
@@ -270,8 +260,6 @@ export default function Overview() {
 
   const currentData = revenueMap[period];
   const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
-
-  // Orders disabled period selection effect on other charts (optional)
 
   return (
     <div className="space-y-8">
@@ -401,11 +389,7 @@ export default function Overview() {
                       <button
                         key={p}
                         onClick={() => setPeriod(p)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                          period === p
-                            ? "bg-white shadow text-[#6750A4]"
-                            : "text-gray-500 hover:text-gray-700"
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? "bg-white shadow text-[#6750A4]" : "text-gray-500 hover:text-gray-700"}`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
                       </button>
@@ -440,7 +424,7 @@ export default function Overview() {
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(value: number | string, name: string) => [
+                      formatter={(value: any, name: string) => [
                         typeof value === "number"
                           ? formatCurrency(value)
                           : value,
@@ -501,9 +485,7 @@ export default function Overview() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number | string) => [
-                        `${value} orders`,
-                      ]}
+                      formatter={(value: any) => [`${value} orders`]}
                       contentStyle={{
                         borderRadius: "12px",
                         border: "1px solid #e5e7eb",
@@ -585,7 +567,7 @@ export default function Overview() {
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(value: number | string) => [
+                      formatter={(value: any) => [
                         typeof value === "number"
                           ? formatCurrency(value)
                           : value,
@@ -679,9 +661,9 @@ export default function Overview() {
               <h3 className="text-sm font-semibold text-gray-700">
                 Recent Orders
               </h3>
-              <p className="text-xs font-medium text-[#6750A4] hover:underline">
+              <button className="text-xs font-medium text-[#6750A4] hover:underline">
                 View all →
-              </p>
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full">

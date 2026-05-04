@@ -26,8 +26,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
 
 // Memoised sub‑components to prevent re‑renders
-const MemoizedDataTable = React.memo(DataTable);
-const MemoizedPagination = React.memo(Pagination);
+// const MemoizedDataTable = React.memo(DataTable);
+// const MemoizedPagination = React.memo(Pagination);
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -77,7 +77,7 @@ export default function CompanyManagement() {
   // ----- DEBOUNCED SEARCH -----
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+ const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -155,7 +155,7 @@ export default function CompanyManagement() {
       })),
     [paginatedItems, currentPage, itemsPerPage]
   );
-
+console.log(paginatedItemsWithRowNumber)
   useEffect(() => {
     resetPage();
   }, [searchTerm, pageSize, resetPage]);
@@ -613,7 +613,7 @@ export default function CompanyManagement() {
         </TableControls>
       )}
 
-      <MemoizedDataTable<Company>
+      <DataTable<Company>
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
@@ -625,7 +625,7 @@ export default function CompanyManagement() {
         onSort={isSuperAdmin ? handleSort : undefined}
       />
 
-      <MemoizedPagination
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
