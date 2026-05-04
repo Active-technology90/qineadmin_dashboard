@@ -307,7 +307,7 @@ const handleModalUpdate = useCallback(async () => {
     if (deliveryStatusFilter) {
       result = result.filter(
         (o) =>
-          o.delivery_status?.toLowerCase() ===
+          o.delivery?.status?.toLowerCase() ===
           deliveryStatusFilter.toLowerCase(),
       );
     }
@@ -462,7 +462,7 @@ const getDisabledReason = (order: VendorOrder): string => {
                   </td>
                   <td className="px-6 py-4">
                     <StatusBadge
-                      status={order.delivery_status || "not assigned"}
+                      status={order.delivery?.status || "not assigned"}
                     />
                   </td>
                   <td className="px-6 py-4">

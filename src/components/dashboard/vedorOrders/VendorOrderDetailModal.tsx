@@ -184,6 +184,13 @@ const DeliveryCard = ({
   const { showToast } = useToast();
 
   const delivery = order.delivery;
+  const formatStatus = (status?: string) => {
+  if (!status) return "";
+
+  return status
+    .replace(/_/g, " ")                 // out_for_delivery → out for delivery
+    .replace(/\b\w/g, (c) => c.toUpperCase()); // capitalize each word
+};
 
   // ----- New rule: paid + confirmed -----
   // const paymentPaid = order.payment_status?.toLowerCase() === "paid";
@@ -312,7 +319,7 @@ const DeliveryCard = ({
                 <span
                   className={`inline-block mt-2 px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(delivery.status)}`}
                 >
-                  {delivery.status}
+                  {formatStatus(delivery.status)}
                 </span>
               )}
             </div>
