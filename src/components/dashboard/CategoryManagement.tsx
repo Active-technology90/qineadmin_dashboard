@@ -34,7 +34,7 @@ export default function CategoryManagement() {
   const [inputValue, setInputValue] = useState("");
   // Debounced search term – triggers heavy operations
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce logic: after user stops typing, update searchTerm
   const handleInputChange = (value: string) => {
@@ -338,7 +338,7 @@ export default function CategoryManagement() {
         </div>
       </TableControls>
 
-      <MemoizedDataTable
+      <MemoizedDataTable<Category>
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}

@@ -613,7 +613,7 @@ export default function CompanyManagement() {
         </TableControls>
       )}
 
-      <MemoizedDataTable
+      <MemoizedDataTable<Company>
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}

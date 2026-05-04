@@ -42,7 +42,7 @@ export default function SubCategoryManagement() {
   // Separate local input (instant) from debounced search term (triggers heavy work)
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer =  useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -394,7 +394,7 @@ export default function SubCategoryManagement() {
         </div>
       </TableControls>
 
-      <MemoizedDataTable
+      <MemoizedDataTable<SubCategory>
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}

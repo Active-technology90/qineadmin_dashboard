@@ -1,5 +1,5 @@
 // src/hooks/useSearch.ts
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef} from "react";
 
 export function useSearch<T>(
   fetchFn: (search: string, signal: AbortSignal) => Promise<T[]>,

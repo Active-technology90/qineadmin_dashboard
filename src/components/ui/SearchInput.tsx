@@ -37,7 +37,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     ref
   ) => {
     const [internalValue, setInternalValue] = useState(externalValue || "");
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isControlled = externalValue !== undefined;
     const inputRef = useRef<HTMLInputElement>(null);
 

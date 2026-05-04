@@ -36,8 +36,8 @@ const summaryData = {
   users: 342,
   orders: 856,
   payments: { total: 2847500, change: 12.5, prevTotal: 2530000 },
-  avgOrderValue: 3326,       // total / orders
-  conversionRate: 3.8,       // %
+  avgOrderValue: 3326, // total / orders
+  conversionRate: 3.8, // %
 };
 
 const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
@@ -99,11 +99,51 @@ const categoryTrendData = [
 ];
 
 const recentOrders = [
-  { id: "#138", customer: "One", amount: 7700, status: "paid", paymentStatus: "Paid", date: "2026-04-30T15:18:31", vendors: 3 },
-  { id: "#137", customer: "One", amount: 8545, status: "paid", paymentStatus: "Paid", date: "2026-04-27T22:48:40", vendors: 4 },
-  { id: "#136", customer: "One", amount: 4435, status: "pending", paymentStatus: "Checkout Initiated", date: "2026-04-27T21:45:45", vendors: 3 },
-  { id: "#135", customer: "One", amount: 425, status: "pending", paymentStatus: "Awaiting Bank Transfer", date: "2026-04-27T21:34:15", vendors: 1 },
-  { id: "#134", customer: "One", amount: 330, status: "pending", paymentStatus: "Checkout Initiated", date: "2026-04-25T16:15:06", vendors: 2 },
+  {
+    id: "#138",
+    customer: "One",
+    amount: 7700,
+    status: "paid",
+    paymentStatus: "Paid",
+    date: "2026-04-30T15:18:31",
+    vendors: 3,
+  },
+  {
+    id: "#137",
+    customer: "One",
+    amount: 8545,
+    status: "paid",
+    paymentStatus: "Paid",
+    date: "2026-04-27T22:48:40",
+    vendors: 4,
+  },
+  {
+    id: "#136",
+    customer: "One",
+    amount: 4435,
+    status: "pending",
+    paymentStatus: "Checkout Initiated",
+    date: "2026-04-27T21:45:45",
+    vendors: 3,
+  },
+  {
+    id: "#135",
+    customer: "One",
+    amount: 425,
+    status: "pending",
+    paymentStatus: "Awaiting Bank Transfer",
+    date: "2026-04-27T21:34:15",
+    vendors: 1,
+  },
+  {
+    id: "#134",
+    customer: "One",
+    amount: 330,
+    status: "pending",
+    paymentStatus: "Checkout Initiated",
+    date: "2026-04-25T16:15:06",
+    vendors: 2,
+  },
 ];
 
 type Period = "week" | "month" | "year";
@@ -126,7 +166,8 @@ const formatDate = (dateString: string) =>
 
 const statusClass = (status: string) => {
   const s = status.toLowerCase();
-  if (s === "completed" || s === "paid") return "bg-emerald-100 text-emerald-800";
+  if (s === "completed" || s === "paid")
+    return "bg-emerald-100 text-emerald-800";
   if (s === "pending") return "bg-amber-100 text-amber-800";
   if (s === "cancelled") return "bg-red-100 text-red-800";
   return "bg-gray-100 text-gray-800";
@@ -154,7 +195,9 @@ const SkeletonCard = () => (
 );
 
 const SkeletonChart = ({ height = "h-64" }: { height?: string }) => (
-  <div className={`bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-pulse ${height}`}>
+  <div
+    className={`bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-pulse ${height}`}
+  >
     <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
     <div className="flex-1 bg-gray-100 rounded-xl" />
   </div>
@@ -180,18 +223,30 @@ const SummaryCard = ({
 }) => (
   <div className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
     <div className="flex items-start justify-between">
-      <div className={`${bgLight} w-11 h-11 rounded-xl flex items-center justify-center transition-colors group-hover:bg-opacity-80`}>
+      <div
+        className={`${bgLight} w-11 h-11 rounded-xl flex items-center justify-center transition-colors group-hover:bg-opacity-80`}
+      >
         <Icon className={`h-6 w-6 ${textColor}`} />
       </div>
       {trend !== undefined && (
-        <span className={`flex items-center text-xs font-semibold ${trend >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-          {trend >= 0 ? <ArrowUpRight className="h-3.5 w-3.5 mr-1" /> : <ArrowDownRight className="h-3.5 w-3.5 mr-1" />}
+        <span
+          className={`flex items-center text-xs font-semibold ${trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
+        >
+          {trend >= 0 ? (
+            <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+          ) : (
+            <ArrowDownRight className="h-3.5 w-3.5 mr-1" />
+          )}
           {Math.abs(trend)}%
-          {trendLabel && <span className="ml-1 text-gray-400 font-normal">{trendLabel}</span>}
+          {trendLabel && (
+            <span className="ml-1 text-gray-400 font-normal">{trendLabel}</span>
+          )}
         </span>
       )}
     </div>
-    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-3">{title}</h3>
+    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-3">
+      {title}
+    </h3>
     <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
   </div>
 );
@@ -222,16 +277,42 @@ export default function Overview() {
     <div className="space-y-8">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-          : (
-            <>
-              <SummaryCard title="Total Products" value={summaryData.products.toLocaleString()} icon={Package} bgLight="bg-blue-50" textColor="text-blue-600" />
-              <SummaryCard title="Company Users" value={summaryData.users.toLocaleString()} icon={Users} bgLight="bg-emerald-50" textColor="text-emerald-600" />
-              <SummaryCard title="Total Orders" value={summaryData.orders.toLocaleString()} icon={ShoppingBag} bgLight="bg-purple-50" textColor="text-purple-600" />
-              <SummaryCard title="Total Payments" value={formatCurrency(summaryData.payments.total)} icon={DollarSign} bgLight="bg-amber-50" textColor="text-amber-600" trend={summaryData.payments.change} trendLabel="vs last period" />
-            </>
-          )}
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : (
+          <>
+            <SummaryCard
+              title="Total Products"
+              value={summaryData.products.toLocaleString()}
+              icon={Package}
+              bgLight="bg-blue-50"
+              textColor="text-blue-600"
+            />
+            <SummaryCard
+              title="Company Users"
+              value={summaryData.users.toLocaleString()}
+              icon={Users}
+              bgLight="bg-emerald-50"
+              textColor="text-emerald-600"
+            />
+            <SummaryCard
+              title="Total Orders"
+              value={summaryData.orders.toLocaleString()}
+              icon={ShoppingBag}
+              bgLight="bg-purple-50"
+              textColor="text-purple-600"
+            />
+            <SummaryCard
+              title="Total Payments"
+              value={formatCurrency(summaryData.payments.total)}
+              icon={DollarSign}
+              bgLight="bg-amber-50"
+              textColor="text-amber-600"
+              trend={summaryData.payments.change}
+              trendLabel="vs last period"
+            />
+          </>
+        )}
       </div>
 
       {/* Quick Stats Row */}
@@ -249,8 +330,12 @@ export default function Overview() {
                 <Activity className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Avg. Order Value</p>
-                <p className="text-lg font-bold text-gray-900">{formatCurrency(summaryData.avgOrderValue)}</p>
+                <p className="text-xs text-gray-500 font-medium">
+                  Avg. Order Value
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatCurrency(summaryData.avgOrderValue)}
+                </p>
               </div>
             </div>
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
@@ -258,8 +343,12 @@ export default function Overview() {
                 <BarChart3 className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Conversion Rate</p>
-                <p className="text-lg font-bold text-gray-900">{summaryData.conversionRate}%</p>
+                <p className="text-xs text-gray-500 font-medium">
+                  Conversion Rate
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {summaryData.conversionRate}%
+                </p>
               </div>
             </div>
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
@@ -267,8 +356,12 @@ export default function Overview() {
                 <PieChartIcon className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">Active Categories</p>
-                <p className="text-lg font-bold text-gray-900">{categorySalesData.length}</p>
+                <p className="text-xs text-gray-500 font-medium">
+                  Active Categories
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {categorySalesData.length}
+                </p>
               </div>
             </div>
           </>
@@ -285,8 +378,12 @@ export default function Overview() {
             <>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700">Revenue</h3>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalRevenue)}</p>
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Revenue
+                  </h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {formatCurrency(totalRevenue)}
+                  </p>
                   <div className="flex items-center gap-3 mt-1">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#6750A4]" />
@@ -305,7 +402,9 @@ export default function Overview() {
                         key={p}
                         onClick={() => setPeriod(p)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                          period === p ? "bg-white shadow text-[#6750A4]" : "text-gray-500 hover:text-gray-700"
+                          period === p
+                            ? "bg-white shadow text-[#6750A4]"
+                            : "text-gray-500 hover:text-gray-700"
                         }`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -319,16 +418,53 @@ export default function Overview() {
               </div>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={currentData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                    <Tooltip
-                      formatter={(value: number, name: string) => [formatCurrency(value), name === "revenue" ? "Revenue" : "Prev. Revenue"]}
-                      contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }}
+                  <BarChart
+                    data={currentData}
+                    margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f0f0f0"
+                      vertical={false}
                     />
-                    <Bar dataKey="prevRevenue" fill="#D6BCFA" radius={[6, 6, 0, 0]} barSize={28} opacity={0.6} />
-                    <Bar dataKey="revenue" fill="#6750A4" radius={[6, 6, 0, 0]} barSize={28} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: number | string, name: string) => [
+                        typeof value === "number"
+                          ? formatCurrency(value)
+                          : value,
+                        name === "revenue" ? "Revenue" : "Prev. Revenue",
+                      ]}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Bar
+                      dataKey="prevRevenue"
+                      fill="#D6BCFA"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                      opacity={0.6}
+                    />
+                    <Bar
+                      dataKey="revenue"
+                      fill="#6750A4"
+                      radius={[6, 6, 0, 0]}
+                      barSize={28}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -342,24 +478,50 @@ export default function Overview() {
             <SkeletonChart height="h-[300px]" />
           ) : (
             <>
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Orders by Status</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                Orders by Status
+              </h3>
               <div className="h-48 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={orderStatusData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
+                    <Pie
+                      data={orderStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
                       {orderStatusData.map((_, idx) => (
-                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                        <Cell
+                          key={idx}
+                          fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => [`${value} orders`]} contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb" }} />
+                    <Tooltip
+                      formatter={(value: number | string) => [
+                        `${value} orders`,
+                      ]}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex flex-wrap gap-3 mt-2">
                 {orderStatusData.map((s, i) => (
                   <div key={s.name} className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
-                    <span className="text-xs text-gray-600">{s.name} ({s.value})</span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: PIE_COLORS[i] }}
+                    />
+                    <span className="text-xs text-gray-600">
+                      {s.name} ({s.value})
+                    </span>
                   </div>
                 ))}
               </div>
@@ -377,25 +539,87 @@ export default function Overview() {
             <>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700">Category Sales Trend</h3>
-                  <p className="text-xs text-gray-500 mt-1">Monthly comparison</p>
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Category Sales Trend
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Monthly comparison
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#6750A4]" /><span className="text-xs text-gray-600">Flour</span></div>
-                  <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#9B7DD4]" /><span className="text-xs text-gray-600">Grain</span></div>
-                  <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#B794F4]" /><span className="text-xs text-gray-600">Furniture</span></div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#6750A4]" />
+                    <span className="text-xs text-gray-600">Flour</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#9B7DD4]" />
+                    <span className="text-xs text-gray-600">Grain</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#B794F4]" />
+                    <span className="text-xs text-gray-600">Furniture</span>
+                  </div>
                 </div>
               </div>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={categoryTrendData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value: number) => [formatCurrency(value), ""]} contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb" }} />
-                    <Line type="monotone" dataKey="Flour" stroke="#6750A4" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="Grain" stroke="#9B7DD4" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="Furniture" stroke="#B794F4" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
+                  <LineChart
+                    data={categoryTrendData}
+                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f0f0f0"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: number | string) => [
+                        typeof value === "number"
+                          ? formatCurrency(value)
+                          : value,
+                        "",
+                      ]}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Flour"
+                      stroke="#6750A4"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Grain"
+                      stroke="#9B7DD4"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Furniture"
+                      stroke="#B794F4"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 5 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -408,18 +632,33 @@ export default function Overview() {
             <SkeletonChart height="h-[300px]" />
           ) : (
             <>
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Categories</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                Top Categories
+              </h3>
               <div className="space-y-4">
                 {categorySalesData.map((cat) => (
                   <div key={cat.name} className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline">
-                        <p className="text-sm font-medium text-gray-700 truncate">{cat.name}</p>
-                        <span className="text-sm font-semibold text-gray-900">{formatCurrency(cat.sales)}</span>
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          {cat.name}
+                        </p>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(cat.sales)}
+                        </span>
                       </div>
                       <div className="mt-1 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${(cat.sales / categorySalesData[0].sales) * 100}%`, backgroundColor: cat.color }} />
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${(cat.sales / categorySalesData[0].sales) * 100}%`,
+                            backgroundColor: cat.color,
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -437,35 +676,84 @@ export default function Overview() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-700">Recent Orders</h3>
-              <p className="text-xs font-medium text-[#6750A4] hover:underline">View all →</p>
+              <h3 className="text-sm font-semibold text-gray-700">
+                Recent Orders
+              </h3>
+              <p className="text-xs font-medium text-[#6750A4] hover:underline">
+                View all →
+              </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left py-2.5 pr-3 text-xs font-medium text-gray-500 uppercase">Order</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">Customer</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">Payment</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">Vendors</th>
-                    <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">Action</th>
+                    <th className="text-left py-2.5 pr-3 text-xs font-medium text-gray-500 uppercase">
+                      Order
+                    </th>
+                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
+                      Customer
+                    </th>
+                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
+                      Amount
+                    </th>
+                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
+                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
+                      Payment
+                    </th>
+                    <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
+                      Vendors
+                    </th>
+                    <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">
+                      Date
+                    </th>
+                    <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-2.5 pr-3"><span className="text-sm font-semibold text-indigo-600">{order.id}</span></td>
-                      <td className="py-2.5 px-3 text-sm text-gray-700">{order.customer}</td>
-                      <td className="py-2.5 px-3 text-sm font-semibold text-gray-900">{formatCurrency(order.amount)}</td>
-                      <td className="py-2.5 px-3"><span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${statusClass(order.status)}`}>{order.status}</span></td>
-                      <td className="py-2.5 px-3"><span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${paymentStatusClass(order.paymentStatus)}`}>{order.paymentStatus}</span></td>
-                      <td className="py-2.5 px-3 text-sm text-gray-600">{order.vendors}</td>
-                      <td className="py-2.5 pl-3 text-right text-sm text-gray-500">{formatDate(order.date)}</td>
+                    <tr
+                      key={order.id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="py-2.5 pr-3">
+                        <span className="text-sm font-semibold text-indigo-600">
+                          {order.id}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-sm text-gray-700">
+                        {order.customer}
+                      </td>
+                      <td className="py-2.5 px-3 text-sm font-semibold text-gray-900">
+                        {formatCurrency(order.amount)}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${statusClass(order.status)}`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${paymentStatusClass(order.paymentStatus)}`}
+                        >
+                          {order.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-sm text-gray-600">
+                        {order.vendors}
+                      </td>
+                      <td className="py-2.5 pl-3 text-right text-sm text-gray-500">
+                        {formatDate(order.date)}
+                      </td>
                       <td className="py-2.5 pl-3 text-right">
-                        <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View</button>
+                        <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))}
