@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { updateProfile, changePassword, getMe } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
 type ProfileForm = {
   first_name: string;
@@ -20,17 +21,16 @@ const BRAND_COLOR = "#6750A4";
 
 export default function AdminProfile() {
   const { user, setUser, logout } = useAuth();
+  const { switchCompany } = useCurrentCompany();
   const isSuperAdmin = !user?.memberships?.length;
 
   const [avatar, setAvatar] = useState<string | null>(
-    user?.profile_image || user?.image || null,
+    user?.profile_image || user?.image || null
   );
 
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [activeForm, setActiveForm] = useState<
-    "profile" | "password" | "membership"
-  >("profile");
+  const [activeForm, setActiveForm] = useState<"profile" | "password" | "membership">("profile");
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -53,30 +53,21 @@ export default function AdminProfile() {
     },
   });
 
-  // =========================
-  // PROFILE UPDATE
-  // =========================
   const onSubmitProfile = async (data: ProfileForm) => {
     setProfileLoading(true);
-
     try {
       const formData = new FormData();
       formData.append("first_name", data.first_name);
       formData.append("last_name", data.last_name);
       formData.append("email", data.email);
       formData.append("phone_number", data.phone_number);
-
       await updateProfile(formData);
-
       const res = await getMe();
       const updatedUser = res.data;
-
       setUser(updatedUser);
-
       if (updatedUser.profile_image) {
         setAvatar(updatedUser.profile_image ?? null);
       }
-
       alert("Profile updated successfully");
     } catch (err) {
       console.error(err);
@@ -86,23 +77,17 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // PASSWORD CHANGE
-  // =========================
   const onSubmitPassword = async (data: PasswordForm) => {
     if (data.newPassword !== data.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-
     setPasswordLoading(true);
-
     try {
       await changePassword({
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
-
       alert("Password changed successfully");
       reset();
     } catch (err) {
@@ -113,37 +98,23 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // AVATAR CHANGE (WEB)
-  // =========================
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // (optional but recommended)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image must be less than 5MB");
       return;
     }
-
-    // preview only
     const url = URL.createObjectURL(file);
     setAvatar(url);
-
     try {
       const formData = new FormData();
-
-      // ⚠️ MUST MATCH BACKEND
       formData.append("profile_image", file);
-
       await updateProfile(formData);
-
       const res = await getMe();
       const updatedUser = res.data;
-
       setUser(updatedUser);
       setAvatar(updatedUser.profile_image ?? null);
-
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
@@ -151,16 +122,21 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // LOGOUT
-  // =========================
   const handleLogout = async () => {
     await logout();
   };
 
+  const handleSwitchCompany = (membership: any) => {
+    switchCompany({
+      slug: membership.company_slug || membership.company_id,
+      name: membership.company_name,
+      role: membership.role,
+    });
+  };
+
   return (
     <div className="w-full min-h-screen bg-gray-50 p-6">
-      {/* HEADER */}
+      {/* Header */}
       <div
         className="rounded-2xl p-6 text-white flex items-center justify-between shadow-xl backdrop-blur-md"
         style={{
@@ -170,87 +146,52 @@ export default function AdminProfile() {
         }}
       >
         <div className="flex items-center gap-4">
-          {/* AVATAR */}
           <div className="relative group w-16 h-16">
-            {/* AVATAR IMAGE */}
             {avatar ? (
-              <img
-                src={avatar}
-                className="w-16 h-16 rounded-full object-cover"
-              />
+              <img src={avatar} className="w-16 h-16 rounded-full object-cover" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
                 👤
               </div>
             )}
-
-            {/* CAMERA ICON OVERLAY */}
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition">
               <span className="text-white text-lg">📷</span>
             </div>
-
-            {/* FILE INPUT */}
             <input
               type="file"
               onChange={handleAvatarChange}
               className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
             />
           </div>
-
-          {/* USER INFO */}
-          {/* USER INFO + MEMBERSHIP */}
           <div className="space-y-1">
-            {/* NAME */}
             <h2 className="text-lg font-bold">
               {user?.first_name} {user?.last_name}
             </h2>
-
-            {/* EMAIL */}
             <p className="text-sm opacity-80">{user?.email}</p>
-
-            {/* GLOBAL ROLE */}
-            {/* <span className="text-xs bg-white/20 px-2 py-1 rounded-full inline-block">
-    Role: {user?.role} 
-  </span> */}
-
-            {/* MEMBERSHIPS SECTION (NEW FEATURE) */}
           </div>
         </div>
-
-        <button
-          onClick={handleLogout}
-          className="bg-white text-black px-4 py-2 rounded-lg"
-        >
+        <button onClick={handleLogout} className="bg-white text-black px-4 py-2 rounded-lg">
           Logout
         </button>
       </div>
 
-      {/* TABS */}
+      {/* Tabs */}
       <div className="flex gap-2 mt-6 bg-white p-2 rounded-full w-fit shadow-sm">
         <button
           onClick={() => setActiveForm("profile")}
           className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeForm === "profile"
-              ? "text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-100"
+            activeForm === "profile" ? "text-white shadow-md" : "text-gray-600 hover:bg-gray-100"
           }`}
-          style={
-            activeForm === "profile" ? { backgroundColor: BRAND_COLOR } : {}
-          }
+          style={activeForm === "profile" ? { backgroundColor: BRAND_COLOR } : {}}
         >
           Edit Profile
         </button>
-
         <button
           onClick={() => setActiveForm("password")}
           className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeForm === "password"
-              ? "text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-100"
+            activeForm === "password" ? "text-white shadow-md" : "text-gray-600 hover:bg-gray-100"
           }`}
-          style={
-            activeForm === "password" ? { backgroundColor: BRAND_COLOR } : {}
-          }
+          style={activeForm === "password" ? { backgroundColor: BRAND_COLOR } : {}}
         >
           Change Password
         </button>
@@ -258,78 +199,35 @@ export default function AdminProfile() {
           <button
             onClick={() => setActiveForm("membership")}
             className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              activeForm === "membership"
-                ? "text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-100"
+              activeForm === "membership" ? "text-white shadow-md" : "text-gray-600 hover:bg-gray-100"
             }`}
-            style={
-              activeForm === "membership"
-                ? { backgroundColor: BRAND_COLOR }
-                : {}
-            }
+            style={activeForm === "membership" ? { backgroundColor: BRAND_COLOR } : {}}
           >
             Membership
           </button>
         )}
       </div>
 
-      {/* PROFILE FORM */}
+      {/* Profile Form */}
       {activeForm === "profile" && (
         <div className="bg-white p-6 rounded-2xl mt-6 space-y-4 shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold">Personal Info</h3>
-
-          <Controller
-            control={control}
-            name="first_name"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="First Name"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="last_name"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Last Name"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Email"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="phone_number"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Phone Number"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
+          <Controller control={control} name="first_name" render={({ field }) => (
+            <input {...field} placeholder="First Name" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
+          <Controller control={control} name="last_name" render={({ field }) => (
+            <input {...field} placeholder="Last Name" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
+          <Controller control={control} name="email" render={({ field }) => (
+            <input {...field} placeholder="Email" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
+          <Controller control={control} name="phone_number" render={({ field }) => (
+            <input {...field} placeholder="Phone Number" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
           <button
             onClick={handleSubmit(onSubmitProfile)}
             disabled={profileLoading}
-            className="w-full sm:w-auto px-6 py-2 rounded-full text-white font-medium transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-95"
+            className="w-full sm:w-auto px-6 py-2 rounded-xl text-white font-medium transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-95"
             style={{ backgroundColor: BRAND_COLOR }}
           >
             {profileLoading ? "Updating..." : "Update Profile"}
@@ -337,54 +235,23 @@ export default function AdminProfile() {
         </div>
       )}
 
-      {/* PASSWORD FORM */}
+      {/* Password Form */}
       {activeForm === "password" && (
         <div className="bg-white p-6 rounded-2xl mt-6 space-y-4 shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold">Change Password</h3>
-
-          <Controller
-            control={passwordControl}
-            name="currentPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="Current Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={passwordControl}
-            name="newPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="New Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={passwordControl}
-            name="confirmPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="Confirm Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
+          <Controller control={passwordControl} name="currentPassword" render={({ field }) => (
+            <input {...field} type="password" placeholder="Current Password" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
+          <Controller control={passwordControl} name="newPassword" render={({ field }) => (
+            <input {...field} type="password" placeholder="New Password" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
+          <Controller control={passwordControl} name="confirmPassword" render={({ field }) => (
+            <input {...field} type="password" placeholder="Confirm Password" className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" />
+          )} />
           <button
             onClick={handlePasswordSubmit(onSubmitPassword)}
             disabled={passwordLoading}
-            className="w-full sm:w-auto px-6 py-2 rounded-full text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
+            className="w-full sm:w-auto px-6 py-2 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
             style={{ backgroundColor: BRAND_COLOR }}
           >
             {passwordLoading ? "Saving..." : "Change Password"}
@@ -392,68 +259,63 @@ export default function AdminProfile() {
         </div>
       )}
 
-      {/* MEMBERSHIP FORM */}
+      {/* Membership Form */}
       {!isSuperAdmin && activeForm === "membership" && (
         <div className="bg-white p-6 rounded-2xl mt-6 shadow-lg border border-gray-100">
-          {/* HEADER */}
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-bold text-gray-800">
-              Company Memberships
-            </h3>
-
+            <h3 className="text-lg font-bold text-gray-800">Company Memberships</h3>
             <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
               {user?.memberships?.length || 0} companies
             </span>
           </div>
 
-          {/* TABLE */}
           {user?.memberships?.length ? (
             <div className="overflow-hidden rounded-xl border border-gray-200">
               <table className="w-full">
-                {/* HEADER */}
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Company
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Role
-                    </th>
+                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Company</th>
+                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                    <th className="w-12"></th>
                   </tr>
                 </thead>
-
-                {/* BODY */}
                 <tbody className="divide-y divide-gray-100">
                   {user.memberships.map((m: any, index: number) => (
-                    <tr key={index} className="hover:bg-gray-50 transition">
-                      {/* COMPANY NAME */}
-                      <td className="p-4 flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-sm font-bold">
-                          🏢
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">
-                            {m.company_name}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Member organization
-                          </p>
+                    <tr
+                      key={index}
+                      onClick={() => handleSwitchCompany(m)}
+                      className="hover:bg-purple-50/50 cursor-pointer transition-colors group"
+                      title={`Switch to ${m.company_name} as ${m.role}`}
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700 font-bold shadow-sm group-hover:shadow-md transition-shadow">
+                            🏢
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800 group-hover:text-[#6750A4] transition-colors">
+                              {m.company_name}
+                            </p>
+                            <p className="text-xs text-gray-400">Member organization</p>
+                          </div>
                         </div>
                       </td>
-
-                      {/* ROLE */}
                       <td className="p-4">
                         <span
                           className={`text-xs px-3 py-1 rounded-full font-medium ${
                             m.role === "admin"
                               ? "bg-green-100 text-green-700"
                               : m.role === "viewer"
-                                ? "bg-gray-100 text-gray-600"
-                                : "bg-purple-100 text-purple-700"
+                              ? "bg-gray-100 text-gray-600"
+                              : "bg-purple-100 text-purple-700"
                           }`}
                         >
                           {m.role}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <span className="text-gray-400 group-hover:text-[#6750A4] transition-colors text-lg opacity-0 group-hover:opacity-100">
+                          →
                         </span>
                       </td>
                     </tr>
@@ -464,9 +326,7 @@ export default function AdminProfile() {
           ) : (
             <div className="text-center py-10">
               <div className="text-gray-400 text-4xl mb-2">🏢</div>
-              <p className="text-gray-500 text-sm">
-                No company memberships found
-              </p>
+              <p className="text-gray-500 text-sm">No company memberships found</p>
             </div>
           )}
         </div>

@@ -1,4 +1,3 @@
-// src/pages/admin/AdminDashboard.tsx
 import { useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard,
@@ -18,6 +17,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { CurrentCompanyContext } from "../../context/CurrentCompanyContext";
+import type { CurrentCompany } from "../../context/CurrentCompanyContext";
 import Overview from "./Overview";
 import CompanyUsers from "./companyUser/CompanyUsers";
 import CompanyOrders from "./vedorOrders/CompanyOrders";
@@ -42,7 +43,7 @@ type Tab =
   | "profile";
 
 // ════════════════════════════════════════════════════════
-// Extracted OrdersMenu component (no longer created during render)
+// OrdersMenu (unchanged)
 // ════════════════════════════════════════════════════════
 function OrdersMenu({
   collapsed,
@@ -59,11 +60,9 @@ function OrdersMenu({
   ordersMenuOpen: boolean;
   onToggleOrdersMenu: () => void;
 }) {
-  // Collapsed dropdown state (internal)
   const [collapsedOrdersOpen, setCollapsedOrdersOpen] = useState(false);
   const ordersRef = useRef<HTMLDivElement>(null);
 
-  // Close collapsed dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ordersRef.current && !ordersRef.current.contains(event.target as Node)) {
@@ -76,11 +75,8 @@ function OrdersMenu({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [collapsedOrdersOpen]);
 
-  // ── Expanded mode ──
   if (!collapsed) {
-    const isActive =
-      activeTab === "masterOrders" || activeTab === "companyOrders";
-
+    const isActive = activeTab === "masterOrders" || activeTab === "companyOrders";
     return (
       <div>
         <button
@@ -95,11 +91,7 @@ function OrdersMenu({
             <ShoppingBag className="h-5 w-5" />
             <span>Orders</span>
           </div>
-          {ordersMenuOpen ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
+          {ordersMenuOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
 
         {ordersMenuOpen && (
@@ -134,7 +126,6 @@ function OrdersMenu({
     );
   }
 
-  // ── Collapsed mode (icon + popover) ──
   return (
     <div className="relative" ref={ordersRef}>
       <button
@@ -187,26 +178,63 @@ function OrdersMenu({
 }
 
 // ════════════════════════════════════════════════════════
-// Main Dashboard Component
+// Main Dashboard
 // ════════════════════════════════════════════════════════
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);       // mobile drawer
-  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);     // expanded submenu
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedMembership, setSelectedMembership] = useState<any | null>(null);
+
+  // On mount, load from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("selectedMembership");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setSelectedMembership(parsed);
+      } catch (e) {
+        console.error("Failed to parse stored membership", e);
+      }
+    }
+  }, []);
 
   const memberships = user?.memberships || [];
-  const hasMembership = memberships.length > 0;
-  const isCompanyAdmin = memberships.some((m: any) => m.role === "admin");
-  const isCompanyStaff = memberships.some((m: any) => m.role === "staff") && !isCompanyAdmin;
-  const isCompanyUser = hasMembership;
-  const showMasterOrders = !isCompanyUser;   // only super admin sees Master Orders
+  const effectiveMembership = selectedMembership || memberships[0] || null;
 
-  // Helper to navigate to a tab and close mobile sidebar
+  // Derive current company object for context
+  const currentCompany: CurrentCompany | null = effectiveMembership
+    ? {
+        slug: effectiveMembership.company_slug || effectiveMembership.company_id || "",
+        name: effectiveMembership.company_name,
+        role: effectiveMembership.role,
+      }
+    : null;
+
+  const isSuperAdmin = !user?.memberships || user.memberships.length === 0;
+  const isCompanyUser = !isSuperAdmin && !!effectiveMembership;
+  const isCompanyAdmin = isCompanyUser && effectiveMembership?.role === "admin";
+  const isCompanyStaff = isCompanyUser && effectiveMembership?.role === "staff";
+  const showMasterOrders = isSuperAdmin && !selectedMembership;
+
   const navigate = (tab: Tab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
+  };
+
+  // Context functions
+  const switchCompany = (membership: CurrentCompany) => {
+    localStorage.setItem("selectedMembership", JSON.stringify(membership));
+    setSelectedMembership(membership);
+    setActiveTab("overview"); // go to overview after switch
+  };
+
+  const clearCompany = () => {
+    localStorage.removeItem("selectedMembership");
+    setSelectedMembership(null);
+    setActiveTab("overview");
   };
 
   const renderContent = () => {
@@ -246,11 +274,7 @@ export default function AdminDashboard() {
         {/* Logo & title */}
         <div className={`p-8 border-b border-gray-800 flex items-center gap-3 ${sidebarCollapsed ? "justify-center p-4" : ""}`}>
           <div className="bg-white/10 p-1 w-12 h-12 rounded-lg backdrop-blur-sm flex-shrink-0">
-            <img
-              src="/qinemartethio.jpeg"
-              alt="Qine Logo"
-              className="w-full h-full object-cover rounded-full"
-            />
+            <img src="/qinemartethio.jpeg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1">
@@ -264,16 +288,12 @@ export default function AdminDashboard() {
               <span className="block text-xs text-indigo-300 mt-0.5">Dashboard</span>
             </div>
           )}
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden ml-auto text-gray-400"
-          >
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden ml-auto text-gray-400">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto scrollbar-thin custom-scrollbar">
-          {/* Dashboard */}
+        <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto">
           <SidebarItem
             icon={<LayoutDashboard className="h-5 w-5" />}
             label="Dashboard"
@@ -282,63 +302,28 @@ export default function AdminDashboard() {
             onClick={() => navigate("overview")}
           />
 
-          {/* Platform Admin (super admin only) */}
           {!isCompanyUser && (
             <>
               <div className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""}`}>
                 Platform Admin
               </div>
-              <SidebarItem
-                icon={<Layout className="h-5 w-5" />}
-                label="Categories"
-                active={activeTab === "categories"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("categories")}
-              />
-              <SidebarItem
-                icon={<Layout className="h-5 w-5" />}
-                label="SubCategories"
-                active={activeTab === "subcategories"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("subcategories")}
-              />
+              <SidebarItem icon={<Layout className="h-5 w-5" />} label="Categories" active={activeTab === "categories"} collapsed={sidebarCollapsed} onClick={() => navigate("categories")} />
+              <SidebarItem icon={<Layout className="h-5 w-5" />} label="SubCategories" active={activeTab === "subcategories"} collapsed={sidebarCollapsed} onClick={() => navigate("subcategories")} />
             </>
           )}
 
-          {/* Companies */}
-          <SidebarItem
-            icon={<Users className="h-5 w-5" />}
-            label="Companies"
-            active={activeTab === "companies"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("companies")}
-          />
+          <SidebarItem icon={<Users className="h-5 w-5" />} label="Companies" active={activeTab === "companies"} collapsed={sidebarCollapsed} onClick={() => navigate("companies")} />
 
           <div className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""}`}>
             Management
           </div>
 
-          {/* Company Products */}
-          <SidebarItem
-            icon={<Package className="h-5 w-5" />}
-            label="Company Products"
-            active={activeTab === "products"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("products")}
-          />
+          <SidebarItem icon={<Package className="h-5 w-5" />} label="Company Products" active={activeTab === "products"} collapsed={sidebarCollapsed} onClick={() => navigate("products")} />
 
-          {/* Company Users – super admin and company admin */}
           {!isCompanyStaff && (
-            <SidebarItem
-              icon={<Users className="h-5 w-5" />}
-              label="Company Users"
-              active={activeTab === "users"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("users")}
-            />
+            <SidebarItem icon={<Users className="h-5 w-5" />} label="Company Users" active={activeTab === "users"} collapsed={sidebarCollapsed} onClick={() => navigate("users")} />
           )}
 
-          {/* Orders Dropdown – now a stable external component */}
           <OrdersMenu
             collapsed={sidebarCollapsed}
             activeTab={activeTab}
@@ -348,39 +333,23 @@ export default function AdminDashboard() {
             onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
           />
 
-          {/* Payments & Profile */}
-          <SidebarItem
-            icon={<CreditCard className="h-5 w-5" />}
-            label="Payments"
-            active={activeTab === "payments"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("payments")}
-          />
+          <SidebarItem icon={<CreditCard className="h-5 w-5" />} label="Payments" active={activeTab === "payments"} collapsed={sidebarCollapsed} onClick={() => navigate("payments")} />
+          <SidebarItem icon={<>👤</>} label="Profile" active={activeTab === "profile"} collapsed={sidebarCollapsed} onClick={() => navigate("profile")} />
 
-          <SidebarItem
-            icon={<>👤</>}
-            label="Profile"
-            active={activeTab === "profile"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("profile")}
-          />
-
-          {/* Account (Divider & Logout) */}
           <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account</p>
           </div>
           <button
             onClick={logout}
-            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200
-              ${sidebarCollapsed ? "justify-center px-2" : ""}
-            `}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200 ${
+              sidebarCollapsed ? "justify-center px-2" : ""
+            }`}
           >
             <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
             {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </nav>
 
-        {/* Collapse toggle at the bottom right */}
         <div className="p-2 border-t border-gray-800 flex justify-end">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -394,7 +363,7 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-white">
-        <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
+        <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen((prev) => !prev)}
@@ -403,18 +372,28 @@ export default function AdminDashboard() {
               <Menu className="h-6 w-6" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+              <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                 {user?.first_name?.[0] || "A"}
               </div>
-              <div className="overflow-hidden">
+              <div>
                 <p className="text-sm font-bold text-gray-900 truncate">
                   {user?.first_name || "Admin"} {user?.last_name}
                 </p>
                 <p className="text-xs text-gray-700 truncate">{user?.email}</p>
-                {isCompanyUser && memberships[0] && (
-                  <p className="text-xs text-indigo-600 truncate">
-                    {memberships[0].company_name} ({memberships[0].role})
-                  </p>
+                {isCompanyUser && currentCompany && (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-indigo-600 font-medium">
+                      {currentCompany.name} ({currentCompany.role})
+                    </span>
+                    {selectedMembership && (
+                      <button
+                        onClick={clearCompany}
+                        className="text-xs text-red-500 hover:text-red-700 underline"
+                      >
+                        (switch back)
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -429,15 +408,17 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {renderContent()}
-        </div>
+        <CurrentCompanyContext.Provider value={{ company: currentCompany, switchCompany, clearCompany }}>
+          <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {renderContent()}
+          </div>
+        </CurrentCompanyContext.Provider>
       </main>
     </div>
   );
 }
 
-// Reusable SidebarItem – respects collapse state
+// Reusable SidebarItem
 function SidebarItem({
   icon,
   label,
@@ -454,10 +435,9 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-        ${active ? "bg-white/40 text-white shadow-lg" : "text-gray-300 hover:bg-white/5 hover:text-white"}
-        ${collapsed ? "justify-center px-2" : ""}
-      `}
+      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+        active ? "bg-white/40 text-white shadow-lg" : "text-gray-300 hover:bg-white/5 hover:text-white"
+      } ${collapsed ? "justify-center px-2" : ""}`}
     >
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && <span>{label}</span>}
