@@ -26,7 +26,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
 
 // Memoised sub‑components to prevent re‑renders
-const MemoizedDataTable = React.memo(DataTable);
+const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
 
 type PaginatedResponse<T> = {
@@ -77,7 +77,7 @@ export default function CompanyManagement() {
   // ----- DEBOUNCED SEARCH -----
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);

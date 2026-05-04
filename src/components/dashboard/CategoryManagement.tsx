@@ -22,7 +22,7 @@ import { TableControls } from "../ui/TableControls";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
 
 // ----- Memoised sub‑components to prevent re‑renders -----
-const MemoizedDataTable = React.memo(DataTable);
+const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
 
 export default function CategoryManagement() {

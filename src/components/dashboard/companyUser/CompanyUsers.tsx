@@ -69,7 +69,7 @@ export default function CompanyUsers() {
   const [adding, setAdding] = useState(false);
   // Include "delivery" in the union to match AddUserModal's expected type
   const [selectedRole, setSelectedRole] = useState<
-    "admin" | "staff" | "viewer"
+    "admin" | "staff" | "viewer" | "delivery"
   >("staff");
   const [showAddModal, setShowAddModal] = useState(false);
   const debouncedQuery = useDebounce(searchTerm, 500);

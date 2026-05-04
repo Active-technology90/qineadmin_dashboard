@@ -10,7 +10,7 @@ import { OrderDetailModal } from "./OrderDetailModal";
 import { OrderFilters } from "./OrderFilters";
 
 const DEFAULT_PAGE_SIZE = 10;
-const DEBOUNCE_DELAY = 500;
+
 
 export default function Orders() {
   const [orders, setOrders] = useState<MasterOrder[]>([]);

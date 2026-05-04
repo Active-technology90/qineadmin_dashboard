@@ -1,5 +1,5 @@
 // src/components/dashboard/orders/OrderDetailModal.tsx (upgraded)
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -15,7 +15,6 @@ import {
   Copy,
   Check,
   Phone,
-  Clock,
   TrendingUp,
 } from "lucide-react";
 import type { MasterOrder, VendorOrder } from "../../../types";
@@ -367,7 +366,7 @@ SummaryCard.displayName = "SummaryCard";
 // -----------------------------------------------------------------------------
 // Focus trap helper
 // -----------------------------------------------------------------------------
-const useFocusTrap = (ref: React.RefObject<HTMLElement>, active: boolean) => {
+const useFocusTrap = (ref: React.RefObject<HTMLElement | null>, active: boolean) => {
   useEffect(() => {
     if (!active || !ref.current) return;
     const focusable = ref.current.querySelectorAll(
@@ -404,7 +403,7 @@ const modalVariants = {
   hidden: { opacity: 0, scale: 0.96 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
   exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15, ease: "easeIn" } },
-};
+} as const;
 
 const backdropVariants = {
   hidden: { opacity: 0 },

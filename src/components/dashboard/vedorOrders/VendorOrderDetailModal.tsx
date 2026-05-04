@@ -93,14 +93,16 @@ interface OrderReceipt {
 
 interface StaffMember {
   id: number;
-  user: {
+  name: string;
+  phone?: string;
+  user?: {
     id: number;
     first_name: string;
     last_name: string;
     email: string;
     phone: string;
   };
-  role: string;
+  role?: string;
 }
 
 // ---------- Sub‑components ----------
@@ -244,7 +246,7 @@ const DeliveryCard = ({
       if (delivery) {
         const deliveryId = delivery.tracking_id;
         if (!deliveryId) throw new Error("Delivery record has no ID.");
-        await updateDeliveryPerson(deliveryId, selectedUserId);
+        await updateDeliveryPerson(Number(deliveryId), selectedUserId);
         showToast("success", "Delivery person updated");
       } else {
         await assignDelivery({

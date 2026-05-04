@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
@@ -27,7 +27,7 @@ export function Pagination({
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const [jumpPage, setJumpPage] = useState("");
+
 
   // ===============================
   // URL SYNC (page + pageSize)
@@ -88,16 +88,7 @@ export function Pagination({
     return items;
   }, [currentPage, totalPages]);
 
-  // ===============================
-  // JUMP TO PAGE
-  // ===============================
-  const handleJump = () => {
-    const page = Number(jumpPage);
-    if (!page || isNaN(page)) return;
 
-    goToPage(page);
-    setJumpPage("");
-  };
 
   return (
     <div

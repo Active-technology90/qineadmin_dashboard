@@ -29,7 +29,7 @@ import { useSorting } from "../../hooks/useSorting";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
 
 // Memoised components to prevent unnecessary re‑renders
-const MemoizedDataTable = React.memo(DataTable);
+const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
 
 export default function SubCategoryManagement() {

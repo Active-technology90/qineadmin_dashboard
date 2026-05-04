@@ -25,7 +25,7 @@ const maxWidthClasses = {
 };
 
 // Focus trap helper
-const useFocusTrap = (containerRef: React.RefObject<HTMLElement>, active: boolean) => {
+const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active: boolean) => {
   useEffect(() => {
     if (!active || !containerRef.current) return;
     const focusableElements = containerRef.current.querySelectorAll(
@@ -66,7 +66,7 @@ const modalVariants = {
   hidden: { opacity: 0, scale: 0.96, y: 10 },
   visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } },
   exit: { opacity: 0, scale: 0.96, y: 10, transition: { duration: 0.15, ease: 'easeIn' } },
-};
+} as const;
 
 export const FormModal: React.FC<FormModalProps> = ({
   isOpen,

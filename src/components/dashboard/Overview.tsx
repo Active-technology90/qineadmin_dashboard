@@ -4,7 +4,6 @@ import {
   Package,
   Users,
   ShoppingBag,
-  CreditCard,
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
@@ -12,7 +11,6 @@ import {
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
-  Clock,
 } from "lucide-react";
 import {
   BarChart,
@@ -27,7 +25,6 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
 } from "recharts";
 
 // ---------- Dummy Data ----------
@@ -440,7 +437,7 @@ export default function Overview() {
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(value: number | string, name: string) => [
+                      formatter={(value: any, name: any) => [
                         typeof value === "number"
                           ? formatCurrency(value)
                           : value,
@@ -501,7 +498,7 @@ export default function Overview() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number | string) => [
+                      formatter={(value: any) => [
                         `${value} orders`,
                       ]}
                       contentStyle={{
@@ -585,7 +582,7 @@ export default function Overview() {
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(value: number | string) => [
+                      formatter={(value: any) => [
                         typeof value === "number"
                           ? formatCurrency(value)
                           : value,
