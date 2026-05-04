@@ -10,6 +10,7 @@ interface DragDropImageUploadProps {
   required?: boolean;
   accept?: string;
   maxSizeMB?: number;
+  disabled?: boolean;
 }
 
 export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
@@ -19,6 +20,7 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
   required = false,
   accept = 'image/jpeg,image/png,image/webp,image/gif',
   maxSizeMB = 5,
+  disabled = false,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [internalPreview, setInternalPreview] = useState<string | null>(null);
@@ -86,11 +88,12 @@ if (!isValidType) {
         </label>
       )}
       <div
-        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${
-          dragActive ? 'border-[#6750A4] bg-indigo-50' : 'border-gray-300 bg-gray-50'
+        className={`border-2 border-dashed rounded-lg p-4 text-center transition ${
+          disabled ? 'border-gray-200 bg-gray-100 cursor-not-allowed' :
+          dragActive ? 'border-[#6750A4] bg-indigo-50 cursor-pointer' : 'border-gray-300 bg-gray-50 cursor-pointer'
         }`}
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+        onClick={() => !disabled && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragActive(true); }}
         onDragLeave={() => setDragActive(false)}
         onDrop={handleDrop}
       >
@@ -108,13 +111,15 @@ if (!isValidType) {
               alt="Preview"
               className="max-h-32 mx-auto object-contain rounded"
             />
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); clearImage(); }}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-            >
-              <X size={16} />
-            </button>
+            {!disabled && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         ) : (
           <>

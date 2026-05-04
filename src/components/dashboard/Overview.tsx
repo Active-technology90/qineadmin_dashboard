@@ -341,7 +341,7 @@ export default function Overview() {
               </div>
               <div>
                 <p className="text-xs text-gray-500 font-medium">
-                  Conversion Rate
+                  Success Rate
                 </p>
                 <p className="text-lg font-bold text-gray-900">
                   {summaryData.conversionRate}%
