@@ -37,12 +37,25 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
     }
 
     // Validate file type
-    const acceptedTypes = accept.split(',');
-    if (!acceptedTypes.some(type => file.type === type.trim())) {
-      alert(`Invalid file type. Please upload: ${accept}`);
-      return;
-    }
+   const acceptedTypes = accept.split(',');
 
+const isValidType = acceptedTypes.some((type) => {
+  const trimmed = type.trim();
+
+  // Handle wildcard (image/*)
+  if (trimmed.endsWith('/*')) {
+    const baseType = trimmed.split('/')[0];
+    return file.type.startsWith(baseType + '/');
+  }
+
+  // Exact match
+  return file.type === trimmed;
+});
+
+if (!isValidType) {
+  alert(`Invalid file type. Allowed types: ${acceptedTypes.join(', ')}`);
+  return;
+}
     // Validate file size
     if (file.size > maxSizeMB * 1024 * 1024) {
       alert(`File too large. Max size: ${maxSizeMB}MB`);

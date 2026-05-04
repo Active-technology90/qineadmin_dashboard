@@ -1,5 +1,5 @@
 // src/components/admin/CompanyManagement.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import api from "../../services/api";
 import {
@@ -10,12 +10,7 @@ import {
   getSubCategories,
   getCompanyDetail,
 } from "../../services/api";
-import type {
-  CompanyListItem,
-  Category,
-  SubCategory,
-  Company,
-} from "../../types";
+import type { CompanyListItem, Category, SubCategory, Company } from "../../types";
 import { SearchInput } from "../ui/SearchInput";
 import { DataTable, type Column } from "../ui/DataTable";
 import { MultiStepFormModal, type FormStep } from "../ui/MultiStepFormModal";
@@ -29,6 +24,10 @@ import { Pagination } from "../ui/Pagination";
 import { useSorting } from "../../hooks/useSorting";
 import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
+
+// Memoised sub‑components to prevent re‑renders
+const MemoizedDataTable = React.memo(DataTable);
+const MemoizedPagination = React.memo(Pagination);
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -56,7 +55,7 @@ export default function CompanyManagement() {
   const { user } = useAuth();
 
   // Permission flags
-const isSuperAdmin = !user?.memberships?.length;
+  const isSuperAdmin = !user?.memberships?.length;
   const memberships = user?.memberships ?? [];
   const primaryMembership = !isSuperAdmin ? getPrimaryMembership(memberships) : null;
   const userCompanySlug = primaryMembership?.company_slug ?? null;
@@ -74,7 +73,27 @@ const isSuperAdmin = !user?.memberships?.length;
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ----- DEBOUNCED SEARCH -----
+  const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchTerm(value);
+    }, 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  // ----- MODAL STATE -----
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -94,12 +113,10 @@ const isSuperAdmin = !user?.memberships?.length;
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(
-    null,
-  );
+  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
   const { toast, showToast } = useToast();
 
-  // --- Data filtering (only for super admin) ---
+  // --- Data filtering (only for super admin) – runs only when searchTerm changes
   const filteredCompanies = useMemo(() => {
     if (!searchTerm.trim() || !isSuperAdmin) return companies;
     const term = searchTerm.toLowerCase();
@@ -118,7 +135,7 @@ const isSuperAdmin = !user?.memberships?.length;
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     isSuperAdmin ? filteredCompanies : companies,
     "name",
-    "asc",
+    "asc"
   );
 
   const {
@@ -150,7 +167,6 @@ const isSuperAdmin = !user?.memberships?.length;
       setError(null);
 
       if (!isSuperAdmin && userCompanySlug) {
-        // Single company for company admin/staff
         const companyRes = await getCompanyDetail(userCompanySlug);
         const company = companyRes.data as Company;
         const companyListItem: CompanyListItem = {
@@ -171,7 +187,6 @@ const isSuperAdmin = !user?.memberships?.length;
         };
         setCompanies([companyListItem]);
       } else if (isSuperAdmin) {
-        // Super admin: fetch all companies (paginated)
         let allCompanies: CompanyListItem[] = [];
         let nextUrl: string | null = "/companies/?page=1&ordering=name";
         while (nextUrl) {
@@ -185,7 +200,6 @@ const isSuperAdmin = !user?.memberships?.length;
         setCompanies([]);
       }
 
-      // Always fetch categories & subcategories for the modal
       const [categoriesRes, subcategoriesRes] = await Promise.all([
         getCategories(),
         getSubCategories(),
@@ -269,9 +283,7 @@ const isSuperAdmin = !user?.memberships?.length;
 
       showToast(
         "success",
-        editingSlug
-          ? "Company updated successfully"
-          : "Company created successfully",
+        editingSlug ? "Company updated successfully" : "Company created successfully"
       );
       setModalOpen(false);
       resetForm();
@@ -317,7 +329,7 @@ const isSuperAdmin = !user?.memberships?.length;
     setFormErrors({});
   };
 
-  const openEdit = (company: CompanyListItem) => {
+  const openEdit = useCallback((company: CompanyListItem) => {
     if (!canEditCompany(company.slug)) {
       showToast("error", "You don't have permission to edit this company");
       return;
@@ -339,257 +351,207 @@ const isSuperAdmin = !user?.memberships?.length;
     if (company.logo) setLogoPreview(company.logo);
     if (company.cover_image) setCoverPreview(company.cover_image);
     setModalOpen(true);
-  };
+  }, [canEditCompany]);
 
-  // --- Multi‑step form steps (full JSX) ---
-  const steps: FormStep[] = [
-    {
-      id: "basic",
-      title: "Basic Information",
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Company Name (English) *"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
-            />
-            {formErrors.name && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-            )}
+  const handleDeleteClick = useCallback((company: CompanyListItem) => {
+    setDeleteTarget(company);
+  }, []);
+
+  // --- Memoised columns (stable) ---
+  const columns: Column<CompanyListItem>[] = useMemo(
+    () => [
+      {
+        key: "rowNumber",
+        header: "No.",
+        sortable: false,
+        render: (item: CompanyListItem & { rowNumber?: number }) => item.rowNumber,
+      },
+      {
+        key: "logo",
+        header: "Logo",
+        sortable: false,
+        render: (comp) =>
+          comp.logo ? (
+            <img src={comp.logo} alt={comp.name} className="h-10 w-10 rounded-full object-cover" />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <ImageIcon size={16} className="text-gray-400" />
+            </div>
+          ),
+      },
+      { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900 max-w-[100px] break-words" },
+      { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500 max-w-[100px] break-words" },
+      { key: "category_name", header: "Category", sortable: true },
+      { key: "sub_category_name", header: "Subcategory", sortable: true },
+      {
+        key: "business_type",
+        header: "Type",
+        sortable: true,
+        render: (comp) => comp.business_type?.toUpperCase() || "-",
+      },
+      {
+        key: "is_active",
+        header: "Active",
+        sortable: true,
+        render: (comp) => (
+          <span className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+            {comp.is_active ? "Yes" : "No"}
+          </span>
+        ),
+      },
+      {
+        key: "is_featured",
+        header: "Featured",
+        sortable: true,
+        render: (comp) => (
+          <span className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}>
+            {comp.is_featured ? "Yes" : "No"}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  // --- Multi‑step form steps (unchanged, but defined inside render) ---
+  const steps: FormStep[] = useMemo(
+    () => [
+      {
+        id: "basic",
+        title: "Basic Information",
+        content: (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ... same as before ... */}
+            <div>
+              <input
+                type="text"
+                placeholder="Company Name (English) *"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+              />
+              {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="Name (Amharic)"
+                value={formData.name_am}
+                onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <input
+                type="text"
+                placeholder="Slug (unique, optional)"
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+              />
+              {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+            </div>
+            <div>
+              <select
+                value={formData.category}
+                onChange={(e) => {
+                  const catId = Number(e.target.value);
+                  setFormData({ ...formData, category: catId, sub_category: 0 });
+                }}
+                className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value={0}>Select Category *</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+            </div>
+            <div>
+              <select
+                value={formData.sub_category}
+                onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+                className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                disabled={!formData.category}
+              >
+                <option value={0}>Select Subcategory *</option>
+                {filteredSubcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
+                ))}
+              </select>
+              {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+            </div>
+            <div>
+              <select
+                value={formData.business_type}
+                onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+                className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value="">Select Business Type *</option>
+                <option value="brand">Brand</option>
+                <option value="store">Store</option>
+                <option value="service">Service</option>
+                <option value="factory">Factory</option>
+              </select>
+              {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+            </div>
+            <div className="md:col-span-2">
+              <textarea
+                placeholder="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg p-2"
+                rows={3}
+              />
+            </div>
           </div>
-          <div>
-            <input
-              type="text"
-              placeholder="Name (Amharic)"
-              value={formData.name_am}
-              onChange={(e) =>
-                setFormData({ ...formData, name_am: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <input
-              type="text"
-              placeholder="Slug (unique, optional)"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
-            />
-            {formErrors.slug && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
-            )}
-          </div>
-          <div>
-            <select
-              value={formData.category}
-              onChange={(e) => {
-                const catId = Number(e.target.value);
-                setFormData({ ...formData, category: catId, sub_category: 0 });
-              }}
-              className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
-            >
-              <option value={0}>Select Category *</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            {formErrors.category && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
-            )}
-          </div>
-          <div>
-            <select
-              value={formData.sub_category}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  sub_category: Number(e.target.value),
-                })
-              }
-              className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
-              disabled={!formData.category}
-            >
-              <option value={0}>Select Subcategory *</option>
-              {filteredSubcategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name}
-                </option>
-              ))}
-            </select>
-            {formErrors.sub_category && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors.sub_category}
-              </p>
-            )}
-          </div>
-          <div>
-            <select
-              value={formData.business_type}
-              onChange={(e) =>
-                setFormData({ ...formData, business_type: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
-            >
-              <option value="">Select Business Type *</option>
-              <option value="brand">Brand</option>
-              <option value="store">Store</option>
-              <option value="service">Service</option>
-              <option value="factory">Factory</option>
-            </select>
-            {formErrors.business_type && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors.business_type}
-              </p>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <textarea
-              placeholder="Description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-              rows={3}
-            />
-          </div>
-        </div>
-      ),
-      validate: validateBasicInfo,
-    },
-    {
-      id: "images",
-      title: "Images & Status",
-      content: (
-        <div className="space-y-6">
-          <div className="flex items-center space-x-6">
+        ),
+        validate: validateBasicInfo,
+      },
+      {
+        id: "images",
+        title: "Images & Status",
+        content: (
+          <div className="space-y-6">
             <DragDropImageUpload
               label="Logo"
               value={formData.logo}
-              onChange={(file) =>
-                setFormData((prev) => ({ ...prev, logo: file }))
-              }
+              onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
               previewUrl={logoPreview}
               required={false}
             />
-          </div>
-          <DragDropImageUpload
-            label="Cover Image"
-            value={formData.cover_image}
-            onChange={(file) =>
-              setFormData((prev) => ({ ...prev, cover_image: file }))
-            }
-            previewUrl={coverPreview}
-          />
-          <div className="flex items-center space-x-6">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_active: e.target.checked })
-                }
-                className="h-4 w-4 text-indigo-600 rounded"
-              />
-              <span className="text-sm text-gray-700">Active</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_featured}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_featured: e.target.checked })
-                }
-                className="h-4 w-4 text-indigo-600 rounded"
-              />
-              <span className="text-sm text-gray-700">Featured</span>
-            </label>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
-  // --- Table columns ---
-  const columns: Column<CompanyListItem>[] = [
-    {
-      key: "rowNumber",
-      header: "No.",
-      sortable: false,
-      render: (item: CompanyListItem & { rowNumber?: number }) => item.rowNumber,
-    },
-    {
-      key: "logo",
-      header: "Logo",
-      sortable: false,
-      render: (comp) =>
-        comp.logo ? (
-          <img
-            src={comp.logo}
-            alt={comp.name}
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-            <ImageIcon size={16} className="text-gray-400" />
+            <DragDropImageUpload
+              label="Cover Image"
+              value={formData.cover_image}
+              onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
+              previewUrl={coverPreview}
+            />
+            <div className="flex items-center space-x-6">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4 text-indigo-600 rounded"
+                />
+                <span className="text-sm text-gray-700">Active</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  className="h-4 w-4 text-indigo-600 rounded"
+                />
+                <span className="text-sm text-gray-700">Featured</span>
+              </label>
+            </div>
           </div>
         ),
-    },
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      className: "font-medium text-gray-900 max-w-[100px] break-words",
-    },
-    {
-      key: "slug",
-      header: "Slug",
-      sortable: true,
-      className: "font-mono text-gray-500 max-w-[100px] break-words",
-    },
-    { key: "category_name", header: "Category", sortable: true },
-    { key: "sub_category_name", header: "Subcategory", sortable: true },
-    {
-      key: "business_type",
-      header: "Type",
-      sortable: true,
-      render: (comp) => comp.business_type?.toUpperCase() || "-",
-    },
-    {
-      key: "is_active",
-      header: "Active",
-      sortable: true,
-      render: (comp) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-        >
-          {comp.is_active ? "Yes" : "No"}
-        </span>
-      ),
-    },
-    {
-      key: "is_featured",
-      header: "Featured",
-      sortable: true,
-      render: (comp) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}
-        >
-          {comp.is_featured ? "Yes" : "No"}
-        </span>
-      ),
-    },
-  ];
+      },
+    ],
+    [formData, formErrors, categories, filteredSubcategories, logoPreview, coverPreview]
+  );
 
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
@@ -597,7 +559,7 @@ const isSuperAdmin = !user?.memberships?.length;
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-[#6750A4]">Companies</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Companies</h2>
         {canAddCompany && (
           <button
             onClick={() => {
@@ -614,15 +576,14 @@ const isSuperAdmin = !user?.memberships?.length;
       {/* Only super admin sees search & sort controls */}
       {isSuperAdmin && (
         <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-          <div className="flex flex-col sm:flex-row gap-3 w-full items-stretch">
-
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
             <div className="flex-1">
               <SearchInput
-                value={searchTerm}
-                onChange={setSearchTerm}
+                value={inputValue}
+                onChange={handleInputChange}
+                debounceMs={0}
+                loading={loading}
                 placeholder="Search by name, slug, category, subcategory, or type..."
-                className="focus:ring-[#6750A4] focus:border-[#6750A4]"
-
               />
             </div>
             <select
@@ -633,26 +594,10 @@ const isSuperAdmin = !user?.memberships?.length;
                   if (desiredOrder !== sortOrder) handleSort(field);
                 } else {
                   handleSort(field);
-                  if (desiredOrder === "desc") handleSort(field);
+                  if (desiredOrder === 'desc') handleSort(field);
                 }
               }}
-              className="
-  bg-white
-  border border-gray-200
-  rounded-xl
-  px-4 py-2
-  text-sm
-  cursor-pointer
-  transition
-
-  focus:outline-none
-  focus:ring-2
-  focus:ring-[#6750A4]
-  focus:border-[#6750A4]
-
-  hover:border-gray-400
-  sm:w-48
-"
+              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
             >
               <option value="name|asc">Name (A-Z)</option>
               <option value="name|desc">Name (Z-A)</option>
@@ -668,19 +613,19 @@ const isSuperAdmin = !user?.memberships?.length;
         </TableControls>
       )}
 
-      <DataTable
+      <MemoizedDataTable
         data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No companies found"
         onEdit={openEdit}
-        onDelete={canDeleteCompany ? setDeleteTarget : undefined}
+        onDelete={canDeleteCompany ? handleDeleteClick : undefined}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={isSuperAdmin ? handleSort : undefined}
       />
 
-      <Pagination
+      <MemoizedPagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}

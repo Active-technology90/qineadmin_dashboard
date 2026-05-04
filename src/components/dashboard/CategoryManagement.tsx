@@ -1,5 +1,5 @@
 // src/components/admin/CategoryManagement.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Plus, ImageIcon } from "lucide-react";
 import {
   getCategories,
@@ -19,13 +19,32 @@ import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 import { Pagination } from "../ui/Pagination";
 import { TableControls } from "../ui/TableControls";
+import { DragDropImageUpload } from "../ui/DragDropImageUpload";
+
+// ----- Memoised sub‑components to prevent re‑renders -----
+const MemoizedDataTable = React.memo(DataTable);
+const MemoizedPagination = React.memo(Pagination);
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-const [searchTerm, setSearchTerm] = useState(""); 
-const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Local input value – updates instantly, no filtering/sorting
+  const [inputValue, setInputValue] = useState("");
+  // Debounced search term – triggers heavy operations
+  const [searchTerm, setSearchTerm] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Debounce logic: after user stops typing, update searchTerm
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchTerm(value);
+    }, 200); // 200ms feels instant
+  };
+
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -35,7 +54,7 @@ const [debouncedSearch, setDebouncedSearch] = useState("");
     slug: "",
     code: "",
     description: "",
-    icon: null as File | null, // ✅ FILE
+    icon: null as File | null,
     iconPreview: "" as string,
     order: 0,
     is_active: true,
@@ -44,30 +63,24 @@ const [debouncedSearch, setDebouncedSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const { toast, showToast } = useToast();
-useEffect(() => {
-  const timeout = setTimeout(() => {
-    setDebouncedSearch(searchTerm);
-  }, 300); // 300ms delay
 
-  return () => clearTimeout(timeout);
-}, [searchTerm]);
-  // Filtered data (search by name, Amharic name, slug, code)
+  // Filter categories client‑side – only runs when searchTerm changes (NOT on every key)
   const filteredCategories = useMemo(() => {
-  const term = (debouncedSearch || "").toLowerCase().trim();
-if (!term) return categories;
+    if (!searchTerm.trim()) return categories;
+    const term = searchTerm.toLowerCase();
     return categories.filter(
       (cat) =>
         cat.name.toLowerCase().includes(term) ||
         cat.name_am?.toLowerCase().includes(term) ||
         cat.slug.toLowerCase().includes(term) ||
-        cat.code?.toLowerCase().includes(term),
+        cat.code?.toLowerCase().includes(term)
     );
- }, [categories, debouncedSearch]);
+  }, [categories, searchTerm]);
 
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredCategories,
     "name",
-    "asc",
+    "asc"
   );
 
   const {
@@ -78,16 +91,18 @@ if (!term) return categories;
     resetPage,
     itemsPerPage,
   } = usePagination(sortedItems, pageSize);
-  // Inside CategoryManagement, after usePagination
+
   const paginatedItemsWithRowNumber = useMemo(() => {
     return paginatedItems.map((item, index) => ({
       ...item,
       rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
- useEffect(() => {
-  resetPage();
-}, [debouncedSearch, pageSize, resetPage]);
+
+  // Reset page when search term or page size changes
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, pageSize, resetPage]);
 
   const fetchCategories = async () => {
     try {
@@ -106,6 +121,98 @@ if (!term) return categories;
     fetchCategories();
   }, []);
 
+  // Columns are stable – memoised once
+  const columns: Column<Category>[] = useMemo(
+    () => [
+      {
+        key: "rowNumber",
+        header: "No.",
+        sortable: false,
+        render: (cat) => cat.rowNumber,
+      },
+      {
+        key: "icon",
+        header: "Icon",
+        sortable: false,
+        render: (cat) =>
+          cat.icon ? (
+            <img
+              src={cat.icon}
+              alt={cat.name}
+              className="h-8 w-8 rounded object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
+              <ImageIcon size={14} className="text-gray-400" />
+            </div>
+          ),
+      },
+      { key: "name", header: "Name", sortable: true },
+      {
+        key: "name_am",
+        header: "Name (Am)",
+        sortable: true,
+        render: (cat) => cat.name_am || "-",
+      },
+      { key: "slug", header: "Slug", sortable: true },
+      {
+        key: "code",
+        header: "Code",
+        sortable: true,
+        render: (cat) => cat.code || "-",
+      },
+      {
+        key: "order",
+        header: "Order",
+        sortable: true,
+        render: (cat) => cat.order ?? "-",
+      },
+      {
+        key: "is_active",
+        header: "Active",
+        sortable: true,
+        render: (cat) => (
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              cat.is_active
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {cat.is_active ? "Yes" : "No"}
+          </span>
+        ),
+      },
+      {
+        key: "company_count",
+        header: "Companies",
+        sortable: true,
+        render: (cat) => cat.company_count ?? 0,
+      },
+    ],
+    []
+  );
+
+  const handleEdit = useCallback((cat: Category) => {
+    setEditingId(cat.id);
+    setFormData({
+      name: cat.name,
+      name_am: cat.name_am || "",
+      slug: cat.slug,
+      code: cat.code || "",
+      description: cat.description || "",
+      icon: null,
+      iconPreview: cat.icon || "",
+      order: cat.order || 0,
+      is_active: cat.is_active ?? true,
+    });
+    setModalOpen(true);
+  }, []);
+
+  const handleDeleteClick = useCallback((cat: Category) => {
+    setDeleteTarget(cat);
+  }, []);
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = "Name is required";
@@ -120,24 +227,17 @@ if (!term) return categories;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setSubmitting(true);
-
     try {
       const fd = new FormData();
-
       fd.append("name", formData.name);
       if (formData.name_am) fd.append("name_am", formData.name_am);
       if (formData.slug) fd.append("slug", formData.slug);
       if (formData.code) fd.append("code", formData.code);
       if (formData.description) fd.append("description", formData.description);
-
       fd.append("order", String(formData.order));
       fd.append("is_active", String(formData.is_active));
-
-      if (formData.icon) {
-        fd.append("icon", formData.icon); // ✅ REAL FILE
-      }
+      if (formData.icon) fd.append("icon", formData.icon);
 
       if (editingId) {
         await updateCategory(formData.slug, fd);
@@ -146,7 +246,6 @@ if (!term) return categories;
         await createCategory(fd);
         showToast("success", "Category created");
       }
-
       setModalOpen(false);
       resetForm();
       fetchCategories();
@@ -156,6 +255,7 @@ if (!term) return categories;
       setSubmitting(false);
     }
   };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -184,89 +284,6 @@ if (!term) return categories;
     setFormErrors({});
   };
 
-  const openEdit = (cat: Category) => {
-    setEditingId(cat.id);
-    setFormData({
-      name: cat.name,
-      name_am: cat.name_am || "",
-      slug: cat.slug,
-      code: cat.code || "",
-      description: cat.description || "",
-      icon: null,
-      iconPreview: cat.icon || "",
-      order: cat.order || 0,
-      is_active: cat.is_active ?? true,
-    });
-    setModalOpen(true);
-  };
-
-  // Table columns (includes all relevant fields)
-  const columns: Column<Category>[] = [
-    // Replace the first column (id) with a row number column
-    {
-      key: "rowNumber",
-      header: "No.",
-      sortable: false,
-      render: (cat) => cat.rowNumber,
-    },
-    {
-      key: "icon",
-      header: "Icon",
-      sortable: false,
-      render: (cat) =>
-        cat.icon ? (
-          <img
-            src={cat.icon}
-            alt={cat.name}
-            className="h-8 w-8 rounded object-cover"
-          />
-        ) : (
-          <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
-            <ImageIcon size={14} className="text-gray-400" />
-          </div>
-        ),
-    },
-    { key: "name", header: "Name", sortable: true },
-    {
-      key: "name_am",
-      header: "Name (Am)",
-      sortable: true,
-      render: (cat) => cat.name_am || "-",
-    },
-    { key: "slug", header: "Slug", sortable: true },
-    {
-      key: "code",
-      header: "Code",
-      sortable: true,
-      render: (cat) => cat.code || "-",
-    },
-    {
-      key: "order",
-      header: "Order",
-      sortable: true,
-      render: (cat) => cat.order ?? "-",
-    },
-
-    {
-      key: "is_active",
-      header: "Active",
-      sortable: true,
-      render: (cat) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${cat.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-        >
-          {cat.is_active ? "Yes" : "No"}
-        </span>
-      ),
-    },
-    {
-      key: "company_count",
-      header: "Companies",
-      sortable: true,
-      render: (cat) => cat.company_count ?? 0,
-    },
-  ];
-
   if (error) return <ErrorView error={error} onRetry={fetchCategories} />;
 
   return (
@@ -287,21 +304,19 @@ if (!term) return categories;
 
       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-          {/* SEARCH */}
           <div className="flex-1">
             <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search by name, Amharic name, slug, or code..."
+              value={inputValue}
+              onChange={handleInputChange}
+              loading={loading}
+              placeholder="Fast search..."
+              debounceMs={0} // disable internal debounce, we manage it ourselves
             />
           </div>
-
-          {/* SORT ONLY */}
           <select
             value={`${sortField}|${sortOrder}`}
             onChange={(e) => {
               const [field, order] = e.target.value.split("|");
-
               if (field === sortField) {
                 if (order !== sortOrder) handleSort(field);
               } else {
@@ -309,8 +324,7 @@ if (!term) return categories;
                 if (order === "desc") handleSort(field);
               }
             }}
-            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm sm:w-56
-focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
+            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm sm:w-56 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
           >
             <option value="name|asc">Name (A-Z)</option>
             <option value="name|desc">Name (Z-A)</option>
@@ -323,27 +337,25 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
           </select>
         </div>
       </TableControls>
-      <DataTable
-        data={paginatedItemsWithRowNumber} // use the new array
+
+      <MemoizedDataTable
+        data={paginatedItemsWithRowNumber}
         columns={columns}
         loading={loading}
         emptyMessage="No categories found"
-        onEdit={openEdit}
-        onDelete={setDeleteTarget}
-        // currentPage={currentPage}
-        // totalPages={totalPages}
-        // onPageChange={goToPage}
-        // totalItems={sortedItems.length}
-        // itemsPerPage={itemsPerPage}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
       />
-      <Pagination
+
+      <MemoizedPagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
       />
+
       <FormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -353,6 +365,7 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
         maxWidth="lg"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* form fields (unchanged from previous version) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Name (English) *
@@ -363,7 +376,9 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full border rounded-lg p-2 ${
+                formErrors.name ? "border-red-500" : "border-gray-300"
+              }`}
               required
             />
             {formErrors.name && (
@@ -394,7 +409,9 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
               onChange={(e) =>
                 setFormData({ ...formData, slug: e.target.value })
               }
-              className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full border rounded-lg p-2 font-mono ${
+                formErrors.slug ? "border-red-500" : "border-gray-300"
+              }`}
             />
             {formErrors.slug && (
               <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
@@ -428,35 +445,24 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
               }
               className="w-full border border-gray-300 rounded-lg p-2"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Icon
-            </label>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-
-                setFormData({
-                  ...formData,
-                  icon: file,
-                  iconPreview: URL.createObjectURL(file),
-                });
-              }}
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-
-            {formData.iconPreview && (
-              <img
-                src={formData.iconPreview}
-                className="mt-2 h-16 w-16 object-cover rounded"
-              />
+            {formErrors.order && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
             )}
           </div>
+            <DragDropImageUpload
+                      label="Icon"
+                      value={formData.icon}
+                      previewUrl={formData.iconPreview}
+                      onChange={(file) =>
+                        setFormData({
+                          ...formData,
+                          icon: file,
+                          iconPreview: file ? URL.createObjectURL(file) : "",
+                        })
+                      }
+                      accept="image/*"
+                      maxSizeMB={5}
+                    />
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -470,7 +476,7 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
               rows={3}
             />
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="md:col-span-2 flex items-center space-x-2 mt-2">
             <input
               type="checkbox"
               id="is_active"
@@ -489,6 +495,7 @@ focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] tran
           </div>
         </div>
       </FormModal>
+
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.name || ""}

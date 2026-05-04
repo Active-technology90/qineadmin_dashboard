@@ -41,7 +41,8 @@ export default function Payments() {
 
   const isSuperAdmin = !user?.memberships?.length;
   const companySlug = user?.memberships?.[0]?.company_slug;
-
+  console.log("isSuperAdmin:", isSuperAdmin);
+console.log("companySlug:", companySlug);
   const fetchPayouts = async () => {
     setLoading(true);
     setError(null);
@@ -52,6 +53,7 @@ export default function Payments() {
         response = await getAdminPayouts(params);
       } else {
         if (!companySlug) throw new Error("Company slug not found");
+        console.log("Fetching payouts for company:", companySlug);
         response = await getPayouts(companySlug, params);
       }
       setPayouts(response.data.results || []);

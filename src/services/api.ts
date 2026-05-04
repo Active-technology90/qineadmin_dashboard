@@ -411,7 +411,7 @@ export const deleteShippingAddress = async (id: number) =>
   api.delete(`/orders/shipping-addresses/${id}/`);
 
 // ========== PAYMENTS ==========
-// ========== PAYMENTS ==========
+
 export const getPayouts = async (
   companySlug: string,
   params?: { page?: number; page_size?: number; status?: string }
