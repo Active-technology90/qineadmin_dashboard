@@ -1,12 +1,13 @@
+// src/components/dashboard/orders/Orders.tsx
 import { useState, useEffect, useMemo } from "react";
 import { Eye, Truck, Package } from "lucide-react";
 import { getAdminMasterOrders } from "../../../services/api";
 import type { MasterOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
-import { TableControls } from "../../ui/TableControls";
-import { OrderDetailModal } from "./OrderDetailModal";
 import { Pagination } from "../../ui/Pagination";
+import { OrderDetailModal } from "./OrderDetailModal";
+import { OrderFilters } from "./OrderFilters";
 
 const DEFAULT_PAGE_SIZE = 10;
 const DEBOUNCE_DELAY = 500;
@@ -16,29 +17,23 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Removed debouncedSearch – we'll filter locally, no need for debounce on API
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState("");
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<MasterOrder | null>(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const { toast, showToast } = useToast();
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-      setCurrentPage(1);
-    }, DEBOUNCE_DELAY);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
+  // Reset page when pageSize changes
   useEffect(() => {
     setCurrentPage(1);
   }, [pageSize]);
 
-  // Fetch orders
-  const fetchOrders = async (page: number, search: string, status: string) => {
+  // Fetch orders – no search param, fetch all data for current filters
+  const fetchOrders = async (page: number, status: string) => {
     const token = localStorage.getItem("access");
     if (!token) {
       setError("Please log in to view orders");
@@ -51,7 +46,7 @@ export default function Orders() {
       const res = await getAdminMasterOrders({
         page,
         page_size: pageSize,
-        search: search || undefined,
+        // search: undefined,  // <-- client side handles search now
         status: status || undefined,
         ordering: "-created_at",
       });
@@ -73,28 +68,58 @@ export default function Orders() {
 
   useEffect(() => {
     if (localStorage.getItem("access")) {
-      fetchOrders(currentPage, debouncedSearch, statusFilter);
+      fetchOrders(currentPage, statusFilter);
     }
-  }, [currentPage, debouncedSearch, statusFilter, pageSize]);
+  }, [currentPage, statusFilter, pageSize]);
+
+  // --- Combined client‑side filters (search + delivery status) ---
+  const filteredOrders = useMemo(() => {
+    let result = orders;
+
+    // Filter by search term (order ID, customer name, phone, shipping address)
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter((order) => {
+        const idMatch = String(order.id).includes(lowerSearch);
+        const nameMatch = order.recipient_name?.toLowerCase().includes(lowerSearch);
+        const phoneMatch = order.shipping_phone?.toLowerCase().includes(lowerSearch);
+        const addressMatch = order.shipping_address_text?.toLowerCase().includes(lowerSearch);
+        return idMatch || nameMatch || phoneMatch || addressMatch;
+      });
+    }
+
+    // Filter by delivery status (if any)
+    if (deliveryStatusFilter) {
+      result = result.filter((order) =>
+        order.vendor_orders?.some(
+          (vo) => vo.delivery_status === deliveryStatusFilter
+        )
+      );
+    }
+
+    return result;
+  }, [orders, searchTerm, deliveryStatusFilter]);
 
   const totalPages = useMemo(
     () => Math.ceil(totalCount / pageSize),
-    [totalCount, pageSize],
+    [totalCount, pageSize]
   );
-
-  const paginatedOrders = useMemo(() => {
-    return orders.slice(0, pageSize);
-  }, [orders, pageSize]);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
+    if (currentPage > totalPages) setCurrentPage(1);
   }, [totalPages]);
+
+  // Clear all filters (search, status, delivery) and reset page
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setDeliveryStatusFilter("");
+    setCurrentPage(1);
+  };
 
   const formatDateTime = (dateString: string) =>
     new Date(dateString).toLocaleString("en-US", {
@@ -107,18 +132,36 @@ export default function Orders() {
 
   const getStatusColor = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "completed") return "bg-green-100 text-green-800";
+    if (s === "completed" || s === "delivered")
+      return "bg-emerald-100 text-emerald-800";
     if (s === "paid") return "bg-blue-100 text-blue-800";
-    if (s === "pending") return "bg-yellow-100 text-yellow-800";
+    if (s === "pending") return "bg-amber-100 text-amber-800";
     if (s === "cancelled") return "bg-red-100 text-red-800";
     return "bg-gray-100 text-gray-800";
   };
 
+  const getPaymentStatusColor = (ps: string) => {
+    const p = ps?.toLowerCase();
+    if (p === "paid") return "bg-emerald-100 text-emerald-800";
+    if (p === "verifying receipt") return "bg-orange-100 text-orange-800";
+    if (p === "checkout initiated") return "bg-gray-100 text-gray-800";
+    if (p === "cancelled") return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-600";
+  };
+
+  const getDeliverySummary = (order: MasterOrder) => {
+    if (!order.vendor_orders || order.vendor_orders.length === 0) return "—";
+    const statuses = order.vendor_orders.map((vo) => vo.delivery_status);
+    const unique = [...new Set(statuses)];
+    if (unique.length === 1) return unique[0];
+    return `${unique.length} mixed`;
+  };
+
   const SkeletonRow = () => (
     <tr className="animate-pulse">
-      {[...Array(7)].map((_, i) => (
-        <td key={i} className="px-2 py-2">
-          <div className="h-4 bg-gray-200 rounded w-20" />
+      {[...Array(9)].map((_, i) => (
+        <td key={i} className="px-4 py-3">
+          <div className="h-4 bg-gray-100 rounded w-20" />
         </td>
       ))}
     </tr>
@@ -127,140 +170,122 @@ export default function Orders() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
-      <TableControls
-        pageSize={pageSize}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
+
+      {/* Filters – now search is purely client‑side */}
+      <OrderFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusChange={(val) => {
+          setStatusFilter(val);
           setCurrentPage(1);
-
-          // ✅ NEW: force immediate fetch
-          fetchOrders(1, debouncedSearch, statusFilter);
         }}
-      >
-        {/* LEFT SIDE: SEARCH + STATUS + CLEAR */}
-        <div className="flex flex-1 gap-2 w-full items-center">
-          {/* SEARCH */}
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search orders..."
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm
-  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
-  transition"
-          />
+        deliveryStatusFilter={deliveryStatusFilter}
+        onDeliveryStatusChange={setDeliveryStatusFilter}
+        onClear={handleClearFilters}
+        showMobile={showMobileFilters}
+        onToggleMobile={() => setShowMobileFilters((prev) => !prev)}
+      />
 
-          {/* STATUS FILTER */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white
-  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
-  transition cursor-pointer"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </TableControls>
+      <div className="flex justify-end items-center mb-4">
+        <label htmlFor="pageSize" className="text-sm text-gray-500 mr-2">
+          Rows:
+        </label>
+        <select
+          id="pageSize"
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          className="border border-gray-200 rounded-xl px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
+        >
+          {[10, 25, 50].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full table-fixed divide-y divide-gray-200">
+      {/* Table – uses filterOrders (client‑side) */}
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Order ID
-              </th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Customer
-              </th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Total
-              </th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Status
-              </th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Fulfillment
-              </th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">
-                Date
-              </th>
-              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
-                Actions
-              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendors</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-100">
             {loading ? (
-              [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
+              [...Array(pageSize)].map((_, i) => <SkeletonRow key={i} />)
             ) : error ? (
               <tr>
-                <td colSpan={7} className="text-center py-12">
+                <td colSpan={10} className="text-center py-16">
                   <div className="text-red-600 mb-4">{error}</div>
                   <button
-                    onClick={() =>
-                      fetchOrders(currentPage, debouncedSearch, statusFilter)
-                    }
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+                    onClick={() => fetchOrders(currentPage, statusFilter)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                   >
                     Retry
                   </button>
                 </td>
               </tr>
-            ) : paginatedOrders.length === 0 ? (
+            ) : filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-500">
+                <td colSpan={10} className="text-center py-16">
                   <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  No orders found
+                  <p className="text-gray-500">No orders found</p>
                 </td>
               </tr>
             ) : (
-              paginatedOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{order.id}
+              filteredOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-indigo-600">#{order.id}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {order.recipient_name || <span className="text-gray-400 italic">Pickup</span>}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
-                    {order.recipient_name || (
-                      <span className="text-gray-400 italic">Pickup</span>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
                     {Number(order.total_amount).toLocaleString()} ETB
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}
-                    >
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
-                    <div className="flex items-center gap-0.5">
-                      {order.fulfillment_type === "delivery" ? (
-                        <Truck size={14} />
-                      ) : (
-                        <Package size={14} />
-                      )}
-                      <span className="capitalize">
-                        {order.fulfillment_type}
-                      </span>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}`}>
+                      {order.payment_status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 capitalize">
+                    {getDeliverySummary(order)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      {order.fulfillment_type === "delivery" ? <Truck size={14} /> : <Package size={14} />}
+                      <span className="capitalize">{order.fulfillment_type}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium">
+                    {order.vendor_orders?.length ?? 0}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {formatDateTime(order.created_at)}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-right">
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 transition text-xs font-semibold"
                     >
                       <Eye className="h-4 w-4" />
-                      <span>View Detail</span>
+                      <span>View</span>
                     </button>
                   </td>
                 </tr>
@@ -270,11 +295,21 @@ export default function Orders() {
         </table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={goToPage}
-      />
+      {!loading && !error && totalCount > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-gray-500">
+            Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)}
+            –{Math.min(currentPage * pageSize, totalCount)} of {totalCount}{" "}
+            orders
+            {deliveryStatusFilter && " (delivery filter active)"}
+          </p>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
+        </div>
+      )}
 
       <OrderDetailModal
         order={selectedOrder}

@@ -1,3 +1,4 @@
+// src/components/dashboard/orders/OrderDetailModal.tsx (upgraded)
 import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -89,7 +90,7 @@ const CopyButton = memo(({ text }: { text?: string | number | null }) => {
 CopyButton.displayName = "CopyButton";
 
 const CustomerCard = memo(({ order }: { order: MasterOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
       <User className="h-4 w-4 text-[#6750A4]" /> Customer Information
     </h4>
@@ -113,7 +114,7 @@ const CustomerCard = memo(({ order }: { order: MasterOrder }) => (
 CustomerCard.displayName = "CustomerCard";
 
 const ShippingCard = memo(({ order }: { order: MasterOrder }) => (
-  <div className="bg-white rounded-xl border border-blue-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-2xl border border-blue-100 p-6 shadow-sm hover:shadow-md transition-shadow">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
       <MapPin className="h-4 w-4 text-[#6750A4]" /> Shipping Address
     </h4>
@@ -146,19 +147,19 @@ const VendorCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.2 }}
-    className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+    className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
   >
-    <div className="bg-gray-50/80 px-5 py-3 flex flex-wrap justify-between items-center gap-3 border-b border-gray-100">
+    <div className="bg-gray-50/80 px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-gray-100">
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-lg overflow-hidden flex items-center justify-center border border-gray-200 shadow-sm">
+        <div className="flex-shrink-0 w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-200 shadow-sm">
           {vendorOrder.company?.logo ? (
             <img
               src={vendorOrder.company.logo}
               alt={`${vendorOrder.company.name} logo`}
-              className="w-full h-full object-cover"
+              className="w-7 h-7 object-contain"
             />
           ) : (
-            <Building2 className="h-4 w-4 text-[#6750A4]" />
+            <Building2 className="h-5 w-5 text-[#6750A4]" />
           )}
         </div>
         <span className="font-semibold text-gray-800">
@@ -222,7 +223,7 @@ const VendorCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => (
           {vendorOrder.items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-4 p-2 rounded-xl hover:bg-gray-50 transition-colors"
             >
               <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200">
                 {item.product_image ? (
@@ -260,22 +261,32 @@ const VendorCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => (
 VendorCard.displayName = "VendorCard";
 
 const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
-  <div className="bg-gradient-to-br from-[#6750A4] to-[#5a448c] text-white rounded-xl p-6 shadow-sm">
-    <p className="text-sm font-semibold text-gray-100 flex items-center gap-2 mb-4">
-      <Receipt className="h-4 w-4" /> Financial Breakdown
-    </p>
-    <div className="space-y-3 text-sm">
-      <div className="flex justify-between">
-        <span className="text-gray-100">Subtotal</span>
-        <span className="font-medium">{Number(order.subtotal).toLocaleString()} ETB</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-gray-100">Tax</span>
-        <span className="font-medium">{Number(order.tax_total).toLocaleString()} ETB</span>
-      </div>
-      <div className="border-t border-white/20 pt-2 flex justify-between text-base font-bold">
-        <span>Total</span>
-        <span className="text-lg">{Number(order.total_amount).toLocaleString()} ETB</span>
+  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#6750A4] via-[#5a448c] to-[#4a3a78] p-6 shadow-lg">
+    {/* Glow accent */}
+    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+    <div className="relative z-10">
+      <p className="text-sm font-semibold text-gray-100 flex items-center gap-2 mb-4">
+        <Receipt className="h-4 w-4" /> Financial Breakdown
+      </p>
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-200">Subtotal</span>
+          <span className="font-medium text-white">
+            {Number(order.subtotal).toLocaleString()} ETB
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-200">Tax</span>
+          <span className="font-medium text-white">
+            {Number(order.tax_total).toLocaleString()} ETB
+          </span>
+        </div>
+        <div className="border-t border-white/20 pt-2 flex justify-between text-base font-bold text-white">
+          <span>Total</span>
+          <span className="text-lg">
+            {Number(order.total_amount).toLocaleString()} ETB
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -283,14 +294,14 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
 FinancialCard.displayName = "FinancialCard";
 
 const TimelineCard = memo(({ order }: { order: MasterOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+  <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
       <Calendar className="h-4 w-4 text-[#6750A4]" /> Timeline
     </h4>
     <div className="space-y-4">
       <div className="flex gap-3">
         <div className="flex flex-col items-center">
-          <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1.5" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#6750A4] mt-1.5 ring-2 ring-[#6750A4]/20" />
           <div className="w-px h-full bg-gray-200" />
         </div>
         <div className="pb-4">
@@ -302,7 +313,7 @@ const TimelineCard = memo(({ order }: { order: MasterOrder }) => (
       </div>
       <div className="flex gap-3">
         <div>
-          <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1.5" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#6750A4] mt-1.5 ring-2 ring-[#6750A4]/20" />
         </div>
         <div>
           <p className="text-xs text-gray-500">Last Updated</p>
@@ -330,19 +341,24 @@ const SummaryCard = memo(
     badge?: { text: string; color: string };
     accentColor?: string;
   }) => (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-200">
       <div className="flex items-center justify-between">
-        <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentColor}10` }}>
+        <div
+          className="p-2.5 rounded-xl transition-colors"
+          style={{ backgroundColor: `${accentColor}15` }}
+        >
           <Icon className="h-5 w-5" style={{ color: accentColor }} />
         </div>
         {badge && (
-          <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${badge.color}`}>
+          <span
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${badge.color}`}
+          >
             {badge.text}
           </span>
         )}
       </div>
       <p className="text-2xl font-bold mt-3 text-gray-900">{value ?? "—"}</p>
-      <p className="text-xs text-gray-500 mt-1">{label}</p>
+      <p className="text-xs font-medium text-gray-500 mt-1">{label}</p>
     </div>
   )
 );
@@ -440,7 +456,7 @@ export function OrderDetailModal({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
         onClick={onClose}
         aria-modal="true"
         role="dialog"
@@ -452,13 +468,16 @@ export function OrderDetailModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-white rounded-3xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
+          className="bg-white rounded-3xl w-full max-w-7xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/10 ring-1 ring-black/5 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-6 sm:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 sm:px-8 py-4 sm:py-5 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <h2 id="order-detail-title" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent">
+              <h2
+                id="order-detail-title"
+                className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent"
+              >
                 Order #{order.id}
               </h2>
               <CopyButton text={order.id} />
@@ -475,10 +494,10 @@ export function OrderDetailModal({
           {/* Scrollable Content */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
             {showTopShadow && (
-              <div className="sticky top-0 h-5 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
+              <div className="sticky top-0 h-6 bg-gradient-to-b from-white via-white to-transparent pointer-events-none z-10" />
             )}
 
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-6 sm:p-8 space-y-8">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <SummaryCard
@@ -547,7 +566,7 @@ export function OrderDetailModal({
             </div>
 
             {showBottomShadow && (
-              <div className="sticky bottom-0 h-5 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
+              <div className="sticky bottom-0 h-6 bg-gradient-to-t from-white via-white to-transparent pointer-events-none z-10" />
             )}
           </div>
         </motion.div>

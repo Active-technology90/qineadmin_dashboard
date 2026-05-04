@@ -47,19 +47,26 @@ const getInitials = (name: string) =>
 
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
+
   if (s === "completed" || s === "delivered")
-    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+
   if (s === "paid" || s === "out_for_delivery")
-    return "bg-purple-100 text-purple-800 border-purple-200";
-  if (s === "pending") return "bg-amber-100 text-amber-800 border-amber-200";
+    return "bg-violet-50 text-violet-700 border border-violet-200";
+
+  if (s === "pending")
+    return "bg-amber-50 text-amber-700 border border-amber-200";
+
   if (s === "processing" || s === "shipped")
-    return "bg-blue-100 text-blue-800 border-blue-200";
+    return "bg-sky-50 text-sky-700 border border-sky-200";
+
   if (s === "approved" || s === "accepted")
-    return "bg-green-100 text-green-800 border-green-200";
+    return "bg-green-50 text-green-700 border border-green-200";
+
   if (s === "rejected" || s === "cancelled")
-    return "bg-red-100 text-red-800 border-red-200";
-  if (s === "cancelled") return "bg-red-100 text-red-800 border-red-200";
-  return "bg-gray-100 text-gray-600 border-gray-200";
+    return "bg-rose-50 text-rose-700 border border-rose-200";
+
+  return "bg-gray-50 text-gray-600 border border-gray-200";
 };
 interface OrderReceipt {
   id: number;
@@ -160,6 +167,8 @@ const ShippingCard = ({ order }: { order: VendorOrder }) => (
 
 // 3. Delivery Card (enhanced with avatar, tracking, assignment)
 // Inside VendorOrderDetailModal.tsx – replacement for DeliveryCard with update support
+// Inside VendorOrderDetailModal.tsx – replace the DeliveryCard component
+
 const DeliveryCard = ({
   order,
   onUpdate,
@@ -176,9 +185,26 @@ const DeliveryCard = ({
 
   const delivery = order.delivery;
 
-  useEffect(() => {
-    if (delivery) console.log("Delivery object:", delivery);
-  }, [delivery]);
+  // ----- New rule: paid + confirmed -----
+  // const paymentPaid = order.payment_status?.toLowerCase() === "paid";
+  const orderConfirmed = order.status?.toLowerCase() === "confirmed";
+  const canManage = orderConfirmed;
+
+  // Highlight when ready to assign but not yet done
+  const shouldHighlight = canManage && !order.delivery;   // or !delivery?.delivery_person_name
+
+  const getDisabledReason = (): string => {
+    // if (!paymentPaid && !orderConfirmed) {
+    //   return "Payment must be completed and the order status must be 'Confirmed' before assigning a delivery person.";
+    // }
+    // if (!paymentPaid) {
+    //   return "Payment is not yet completed. Only paid orders can be assigned.";
+    // }
+    if (!orderConfirmed) {
+      return "Order status must be 'Confirmed' before a delivery person can be assigned.";
+    }
+    return "";
+  };
 
   useEffect(() => {
     if (!order.company?.slug) return;
@@ -189,7 +215,10 @@ const DeliveryCard = ({
         const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
         const mappedStaff = (res.data.results || res.data).map((staff: any) => ({
           id: staff.user.id,
-          name: `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() || staff.user.username || staff.user.email,
+          name:
+            `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() ||
+            staff.user.username ||
+            staff.user.email,
           phone: staff.user.phone_number,
         }));
         setStaffList(mappedStaff);
@@ -197,6 +226,7 @@ const DeliveryCard = ({
         setLoadingStaff(false);
       }
     };
+
     fetchStaff();
   }, [order.company?.slug]);
 
@@ -206,9 +236,7 @@ const DeliveryCard = ({
     try {
       if (delivery) {
         const deliveryId = delivery.tracking_id;
-        if (!deliveryId) {
-          throw new Error("Delivery record has no ID. Please check the API response.");
-        }
+        if (!deliveryId) throw new Error("Delivery record has no ID.");
         await updateDeliveryPerson(deliveryId, selectedUserId);
         showToast("success", "Delivery person updated");
       } else {
@@ -222,8 +250,10 @@ const DeliveryCard = ({
       setShowAssignForm(false);
       onUpdate();
     } catch (err: any) {
-      const msg = err.response?.data?.detail || err.message || "Operation failed";
-      showToast("error", msg);
+      showToast(
+        "error",
+        err.response?.data?.detail || err.message || "Operation failed",
+      );
     } finally {
       setAssigning(false);
     }
@@ -243,14 +273,25 @@ const DeliveryCard = ({
     setShowAssignForm(false);
     setSelectedUserId("");
   };
-const canChage=delivery?.status==="pending"?true:false
+
   return (
-    <div className="bg-white rounded-xl border border-purple-100 p-6 shadow-sm">
+    <div
+      className={`bg-white rounded-xl border p-6 shadow-sm transition-all ${
+        shouldHighlight
+          ? "border-[#6750A4] ring-2 ring-[#6750A4]/20"
+          : "border-purple-100"
+      }`}
+    >
       <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
         <Truck className="h-4 w-4 text-[#6750A4]" /> Delivery Details
+        {shouldHighlight && (
+          <span className="text-xs text-[#6750A4] font-normal ml-2">
+            (next step)
+          </span>
+        )}
       </h4>
 
-      {delivery ? (
+      {delivery && delivery.delivery_person_name ? (
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl">
@@ -275,13 +316,30 @@ const canChage=delivery?.status==="pending"?true:false
                 </span>
               )}
             </div>
-            {canChage&& (
+
+            {canManage && !showAssignForm && (
               <button
                 onClick={handleOpenForm}
                 disabled={assigning}
                 className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {assigning && <Loader2 className="h-3 w-3 animate-spin inline mr-1" />}
+                {assigning ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
+                    Processing...
+                  </>
+                ) : (
+                  "Change"
+                )}
+              </button>
+            )}
+
+            {!canManage && !showAssignForm && (
+              <button
+                disabled
+                title={getDisabledReason()}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-100 text-gray-400 bg-gray-50 cursor-not-allowed"
+              >
                 Change
               </button>
             )}
@@ -289,21 +347,39 @@ const canChage=delivery?.status==="pending"?true:false
         </div>
       ) : (
         <div className="text-center py-4">
-          <p className="text-sm text-gray-500 mb-3">No delivery person assigned yet</p>
-          {!showAssignForm && (
+          <p className="text-sm text-gray-500 mb-3">
+            No delivery person assigned yet
+          </p>
+          {canManage && !showAssignForm && (
             <button
               onClick={handleOpenForm}
               disabled={assigning}
               className="px-4 py-2 bg-[#6750A4] text-white text-sm font-medium rounded-lg hover:bg-[#59409A] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {assigning && <Loader2 className="h-4 w-4 animate-spin inline mr-1" />}
-              Assign Delivery Person
+              {assigning ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin inline mr-1" />
+                  Assigning...
+                </>
+              ) : (
+                "Assign Delivery Person"
+              )}
+            </button>
+          )}
+
+          {!canManage && (
+            <button
+              disabled
+              title={getDisabledReason()}
+              className="px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+            >
+              Assignment locked
             </button>
           )}
         </div>
       )}
 
-      {showAssignForm && (
+      {showAssignForm && canManage && (
         <div className="mt-6 pt-4 border-t border-gray-100">
           <p className="text-xs font-medium text-gray-600 mb-3">
             {delivery ? "Select new delivery person" : "Select delivery person"}
@@ -316,7 +392,9 @@ const canChage=delivery?.status==="pending"?true:false
             <div className="space-y-4">
               <select
                 value={selectedUserId}
-                onChange={(e) => setSelectedUserId(parseInt(e.target.value) || "")}
+                onChange={(e) =>
+                  setSelectedUserId(parseInt(e.target.value) || "")
+                }
                 className="w-full text-sm border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent"
               >
                 <option value="">-- Select a delivery person --</option>
@@ -333,7 +411,7 @@ const canChage=delivery?.status==="pending"?true:false
                   className="flex-1 py-2.5 bg-[#6750A4] text-white text-sm font-semibold rounded-lg hover:bg-[#59409A] disabled:opacity-60 transition flex items-center justify-center gap-2"
                 >
                   {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {assigning ? "Assigning..." : (delivery ? "Update" : "Assign")}
+                  {assigning ? "Assigning..." : delivery ? "Update" : "Assign"}
                 </button>
                 <button
                   onClick={handleCancel}
@@ -408,53 +486,53 @@ const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
 );
 
 // 5. Order Summary Card (right column)
-const OrderSummaryCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <Receipt className="h-4 w-4 text-[#6750A4]" /> Order Summary
-    </h4>
-    <div className="space-y-4 text-sm">
-      <div className="flex justify-between items-center">
-        <span className="text-gray-500">Order Status</span>
-        <span
-          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
-        >
-          {order.status}
-        </span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span className="text-gray-500">Delivery Status</span>
-        <span
-          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.delivery_status || "pending")}`}
-        >
-          {order.delivery_status || "pending"}
-        </span>
-      </div>
-      {order.tax_invoice?.invoice_number && (
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Invoice #</span>
-          <span className="font-mono text-gray-700">
-            {order.tax_invoice.invoice_number}
-          </span>
-        </div>
-      )}
-      <div className="pt-4 border-t border-gray-100">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500 font-medium">Total Amount</span>
-          <span className="text-xl font-bold text-[#6750A4]">
-            {Number(order.amount).toLocaleString()} ETB
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+// const OrderSummaryCard = ({ order }: { order: VendorOrder }) => (
+//   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+//     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+//       <Receipt className="h-4 w-4 text-[#6750A4]" /> Order Summary
+//     </h4>
+//     <div className="space-y-4 text-sm">
+//       <div className="flex justify-between items-center">
+//         <span className="text-gray-500">Order Status</span>
+//         <span
+//           className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
+//         >
+//           {order.status}
+//         </span>
+//       </div>
+//       <div className="flex justify-between items-center">
+//         <span className="text-gray-500">Delivery Status</span>
+//         <span
+//           className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.delivery_status || "pending")}`}
+//         >
+//           {order.delivery_status || "pending"}
+//         </span>
+//       </div>
+//       {order.tax_invoice?.invoice_number && (
+//         <div className="flex justify-between items-center">
+//           <span className="text-gray-500">Invoice #</span>
+//           <span className="font-mono text-gray-700">
+//             {order.tax_invoice.invoice_number}
+//           </span>
+//         </div>
+//       )}
+//       <div className="pt-4 border-t border-gray-100">
+//         <div className="flex justify-between items-center">
+//           <span className="text-gray-500 font-medium">Total Amount</span>
+//           <span className="text-xl font-bold text-[#6750A4]">
+//             {Number(order.amount).toLocaleString()} ETB
+//           </span>
+//         </div>
+//       </div>
+//     </div>
+//   </div>
+// );
 
 // 6. Financial Card (right column)
 const FinancialCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-[#6750A4] text-white rounded-xl p-6 shadow-sm">
     <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
-      <Receipt className="h-4 w-4" /> Financial Breakdown
+      <Receipt className="h-4 w-4" /> Order Summary
     </h4>
     <div className="space-y-3 text-sm">
       <div className="flex justify-between">
@@ -465,8 +543,16 @@ const FinancialCard = ({ order }: { order: VendorOrder }) => (
         <span className="text-white/70">Tax</span>
         <span>{Number(order.tax_amount).toLocaleString()} ETB</span>
       </div>
+      {order.tax_invoice?.invoice_number && (
+        <div className="flex justify-between items-center">
+          <span className="text-white/70">Invoice #</span>
+          <span className="font-mono text-white">
+            {order.tax_invoice.invoice_number}
+          </span>
+        </div>
+      )}
       <div className="border-t border-white/20 pt-3 flex justify-between text-base font-bold">
-        <span>Total</span>
+        <span>Total Amount</span>
         <span className="text-lg">
           {Number(order.amount).toLocaleString()} ETB
         </span>
@@ -596,7 +682,7 @@ const ReceiptReviewCard = ({
       showToast("success", `Receipt ${pendingAction}`);
       setNotes("");
       setPendingAction(null);
-      onUpdate(); // will refresh orders and update selectedOrder
+      onUpdate();
     } catch (err: any) {
       showToast("error", err.response?.data?.detail || "Review failed");
     } finally {
@@ -682,8 +768,36 @@ const ReceiptReviewCard = ({
         )}
 
         {isAlreadyReviewed && (
-          <div className="mt-2 text-xs text-gray-500 italic">
-            This receipt has already been {receipt.status}.
+          <div className="mt-2 space-y-2">
+            {receipt.status === "approved" ? (
+              <div className="flex items-start gap-2 text-sm">
+                <div className="p-1 rounded-full bg-green-100 text-green-700 mt-0.5">
+                  <Check className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">
+                    Payment approved
+                  </p>
+                  <p className="text-xs text-[#6750A4] mt-0.5">
+                    Next step: Assign a delivery person
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 text-sm">
+                <div className="p-1 rounded-full bg-red-100 text-red-700 mt-0.5">
+                  <X className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">
+                    Payment rejected
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    The customer may upload a new receipt.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -887,12 +1001,25 @@ export function VendorOrderDetailModal({
               </h2>
               <CopyButton text={String(order.id)} />
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-[#6750A4] p-2 rounded-full hover:bg-gray-100 transition"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">
+                  Order Status
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {order.status.replace(/_/g, " ")}
+                </span>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-[#6750A4] p-2 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Scrollable Body */}
@@ -934,7 +1061,7 @@ export function VendorOrderDetailModal({
                   <TimelineCard order={order} />
                   <FinancialCard order={order} />
 
-                  <OrderSummaryCard order={order} />
+                  {/* <OrderSummaryCard order={order} /> */}
 
                   {/* Tax Invoice quick link */}
                   {order.tax_invoice && (

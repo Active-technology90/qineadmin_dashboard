@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { User } from "../../../types";
 
 // --------------------------------------------------------------
-// Avatar component
+// Avatar component (unchanged)
 // --------------------------------------------------------------
 const UserAvatar = ({
   user,
@@ -36,20 +36,20 @@ const UserAvatar = ({
 };
 
 // --------------------------------------------------------------
-// Main modal component – uses live search
+// Main modal component – now supports 'delivery' role
 // --------------------------------------------------------------
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  searching: boolean; // true while API is fetching suggestions
+  searching: boolean;
   searchResults: User[];
   searchTerm: string;
   onSearchChange: (val: string) => void;
   selectedUser: User | null;
   onSelectUser: (user: User | null) => void;
-  selectedRole: "admin" | "staff" |  "viewer";
-  onRoleChange: (role: "admin" | "staff"  | "viewer") => void;
-  adding: boolean; // renamed from `loading` to avoid confusion
+  selectedRole: "admin" | "staff" | "viewer" | "delivery"; // ✅ added 'delivery'
+  onRoleChange: (role: "admin" | "staff" | "viewer" | "delivery") => void; // ✅
+  adding: boolean;
   onAdd: () => void;
 }
 
@@ -72,12 +72,10 @@ export function AddUserModal({
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Reset dropdown index when results change
   useEffect(() => {
     setDropdownIndex(-1);
   }, [searchResults]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -91,7 +89,6 @@ export function AddUserModal({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!showDropdown || searchResults.length === 0) return;
@@ -130,7 +127,7 @@ export function AddUserModal({
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-3xl  rounded-2xl shadow-xl overflow-hidden"
+        className="bg-white w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -266,7 +263,7 @@ export function AddUserModal({
             </div>
           )}
 
-          {/* Role selection */}
+          {/* Role selection – now includes Delivery */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Assign role <span className="text-red-500">*</span>
@@ -286,7 +283,9 @@ export function AddUserModal({
                 Admin – Full access to company management
               </option>
               <option value="staff">Staff – Manage products and orders</option>
-              {/* <option value="delivery">Delivery – Manage deliveries</option> */}
+              <option value="delivery">
+                Delivery – Manage deliveries
+              </option> {/* ✅ Uncommented and added */}
               <option value="viewer">Viewer – Read‑only access</option>
             </select>
             <p className="text-xs text-gray-400 mt-1.5">

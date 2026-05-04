@@ -272,6 +272,7 @@ export interface VendorOrder {
   created_at: string;
   items: OrderItem[];
   tax_invoice?: TaxInvoice;
+  payment_status?: string;
   recipient_name?: string;
   shipping_phone?: string;
   shipping_address_text?: string;
