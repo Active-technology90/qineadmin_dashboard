@@ -1,6 +1,6 @@
 // src/components/admin/CompanyManagement.tsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Plus, ImageIcon } from "lucide-react";
+import { Plus, ImageIcon, Edit3, Building2, Tag, X } from "lucide-react";
 import api from "../../services/api";
 import {
   createCompany,
@@ -28,7 +28,132 @@ import { TableControls } from "../ui/TableControls";
 // Memoised sub‑components to prevent re‑renders
 const MemoizedDataTable = React.memo(DataTable);
 const MemoizedPagination = React.memo(Pagination);
+const CompanyCard = ({ company, onEdit }: any) => (
+  <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group min-h-[420px]">
+    
+    {/* Cover Image Section - Full width at top */}
+    <div className="relative h-40 w-full overflow-hidden">
+      {company.cover_image ? (
+        <img 
+          src={company.cover_image} 
+          alt={company.name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-r from-[#6750A4] via-[#7c63b8] to-[#9b87f5]" />
+      )}
+      {/* Dark overlay for better contrast */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
+    </div>
 
+    {/* Content Container - White card section */}
+    <div className="relative z-10 flex flex-col bg-white rounded-t-3xl -mt-8 p-5 pt-0">
+      
+{/* Logo and Text Container - Side by side (logo left, text right) at intersection */}
+<div className="flex items-center gap-4 -mt-12 mb-4 px-4">
+  {/* Logo - Left side with enhanced shadow for dark backgrounds */}
+  <div className="flex-shrink-0 drop-shadow-xl">
+    {company.logo ? (
+      <img
+        src={company.logo}
+        alt={company.name}
+        className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-2xl"
+      />
+    ) : (
+      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#6750A4] to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
+        <Building2 size={32} className="text-white" />
+      </div>
+    )}
+  </div>
+
+  {/* Text Container - Right side with background for readability */}
+  <div className="flex-1 min-w-0">
+    {/* Company Name with text shadow and dark background fallback */}
+    <h3 className="font-bold text-xl mb-1 truncate drop-shadow-lg text-white [text-shadow:_0_1px_4px_rgb(0_0_0_/_0.5)]">
+      {company.name}
+    </h3>
+    
+    {/* Slug with semi-transparent background for visibility */}
+    <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-white/20 shadow-lg">
+      {company.slug}
+    </p>
+  </div>
+</div>
+      {/* Subcategory Section - New */}
+      {company.sub_category_name && (
+        <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl p-4 mb-4 border border-indigo-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <Tag size={18} className="text-indigo-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Subcategory</p>
+              <p className="font-medium text-gray-700 text-base">
+                {company.sub_category_name}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Section */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white rounded-lg shadow-sm">
+            <Tag size={18} className="text-indigo-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Category</p>
+            <p className="font-semibold text-gray-900 text-base">
+              {company.category_name}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Subcategory Section - New */}
+      {company.sub_category_name && (
+        <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl p-4 mb-4 border border-indigo-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <Tag size={18} className="text-indigo-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Subcategory</p>
+              <p className="font-medium text-gray-700 text-base">
+                {company.sub_category_name}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Business Type Section - Made clearer and more visible */}
+      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white rounded-lg shadow-sm">
+            <Building2 size={18} className="text-[#6750A4]" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Business Type</p>
+            <p className="font-bold text-gray-900 text-base">
+              {company.business_type?.toUpperCase() || "N/A"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Button - Bottom Right */}
+      <button
+        onClick={() => onEdit(company)}
+        className="absolute bottom-4 right-4 z-20 px-3 py-2 rounded-xl bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg transition-all duration-300 flex items-center gap-2 text-xs font-semibold group/btn"
+      >
+        <Edit3 size={24} className="group-hover/btn:rotate-12 transition-transform" />
+        Edit Company
+      </button>
+    </div>
+  </div>
+);
 type PaginatedResponse<T> = {
   results: T[];
   next: string | null;
@@ -115,7 +240,11 @@ export default function CompanyManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
   const { toast, showToast } = useToast();
-
+  
+  // NEW: State for inline editing on the right side
+  const [selectedCompanyForEdit, setSelectedCompanyForEdit] = useState<CompanyListItem | null>(null);
+  // NEW: State to track if editing is active (fields enabled)
+  const [isEditingActive, setIsEditingActive] = useState(false);
   // --- Data filtering (only for super admin) – runs only when searchTerm changes
   const filteredCompanies = useMemo(() => {
     if (!searchTerm.trim() || !isSuperAdmin) return companies;
@@ -329,7 +458,7 @@ export default function CompanyManagement() {
     setFormErrors({});
   };
 
-  const openEdit = useCallback((company: CompanyListItem) => {
+    const openEdit = useCallback((company: CompanyListItem) => {
     if (!canEditCompany(company.slug)) {
       showToast("error", "You don't have permission to edit this company");
       return;
@@ -350,8 +479,19 @@ export default function CompanyManagement() {
     });
     if (company.logo) setLogoPreview(company.logo);
     if (company.cover_image) setCoverPreview(company.cover_image);
-    setModalOpen(true);
+    // NEW: Set selected company for inline editing instead of opening modal
+    setSelectedCompanyForEdit(company);
+    // NEW: Enable editing mode so fields become editable
+    setIsEditingActive(true);
   }, [canEditCompany]);
+  
+  // NEW: Close inline edit form
+  const closeInlineEdit = useCallback(() => {
+    setSelectedCompanyForEdit(null);
+    setEditingSlug(null);
+    setIsEditingActive(false);
+    resetForm();
+  }, []);
 
   const handleDeleteClick = useCallback((company: CompanyListItem) => {
     setDeleteTarget(company);
@@ -558,20 +698,39 @@ export default function CompanyManagement() {
   return (
     <div>
       <Toast toast={toast} />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Companies</h2>
-        {canAddCompany && (
-          <button
-            onClick={() => {
-              resetForm();
-              setModalOpen(true);
-            }}
-            className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#6750A4] transition shadow-sm"
-          >
-            <Plus size={18} /> Add Company
-          </button>
-        )}
-      </div>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
+
+  {/* Title Section */}
+  <div>
+  <h2
+  className={`text-2xl font-bold transition-colors duration-200 ${
+    "text-[#6750A4]"
+  }`}
+>
+  {isSuperAdmin ? "Companies" : "Company Profile"}
+</h2>
+
+    {!isSuperAdmin && (
+      <p className="text-sm text-gray-500 mt-1">
+        Manage your company details and settings
+      </p>
+    )}
+  </div>
+
+  {/* Action Button */}
+  {canAddCompany && (
+    <button
+      onClick={() => {
+        resetForm();
+        setModalOpen(true);
+      }}
+      className="bg-[#6750A4] text-white px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm"
+    >
+      <Plus size={18} />
+      Add Company
+    </button>
+  )}
+</div>
 
       {/* Only super admin sees search & sort controls */}
       {isSuperAdmin && (
@@ -613,17 +772,243 @@ export default function CompanyManagement() {
         </TableControls>
       )}
 
-      <MemoizedDataTable
-        data={paginatedItemsWithRowNumber}
-        columns={columns}
-        loading={loading}
-        emptyMessage="No companies found"
-        onEdit={openEdit}
-        onDelete={canDeleteCompany ? handleDeleteClick : undefined}
-        sortField={sortField}
-        sortOrder={sortOrder}
-        onSort={isSuperAdmin ? handleSort : undefined}
-      />
+{isSuperAdmin ? (
+  <>
+    <MemoizedDataTable
+      data={paginatedItemsWithRowNumber}
+      columns={columns}
+      loading={loading}
+      emptyMessage="No companies found"
+      onEdit={openEdit}
+      onDelete={canDeleteCompany ? handleDeleteClick : undefined}
+      sortField={sortField}
+      sortOrder={sortOrder}
+      onSort={handleSort}
+    />
+
+    <MemoizedPagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={goToPage}
+    />
+  </>
+) : (
+    <div className="flex flex-col lg:flex-row gap-6">
+    {/* Left side: Company Cards Grid - Always full width on mobile, 2/3 on desktop */}
+    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 transition-all duration-300 ${
+      selectedCompanyForEdit ? 'lg:w-2/3 w-full' : 'w-full'
+    }`}>
+      {companies.map((company) => (
+        <CompanyCard
+          key={company.id}
+          company={company}
+          onEdit={openEdit}
+        />
+      ))}
+    </div>
+    
+    {/* Right side: Inline Edit Form (only when a company is selected for editing) */}
+    {selectedCompanyForEdit && (
+      <div className="lg:w-1/3 w-full bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+        {/* Close button */}
+        <button
+          onClick={closeInlineEdit}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={20} />
+        </button>
+        
+        <h3 className="text-xl font-bold text-[#6750A4] mb-6">Edit Company</h3>
+        
+        {/* Edit Form Content - All inputs from modal */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Basic Information Section */}
+          <div className="border-b border-gray-200 pb-3">
+            <h4 className="font-semibold text-gray-800 mb-3">Basic Information</h4>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name (English) *</label>
+                <input
+                  type="text"
+                  placeholder="Company Name (English) *"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={!isEditingActive}
+                  className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+                />
+                {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name (Amharic)</label>
+                <input
+                  type="text"
+                  placeholder="Name (Amharic)"
+                  value={formData.name_am}
+                  onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+                  disabled={!isEditingActive}
+                  className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (unique, optional)</label>
+                <input
+                  type="text"
+                  placeholder="Slug (unique, optional)"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  disabled={!isEditingActive}
+                  className={`w-full border rounded-lg p-2 font-mono ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+                />
+                {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => {
+                    const catId = Number(e.target.value);
+                    setFormData({ ...formData, category: catId, sub_category: 0 });
+                  }}
+                  disabled={!isEditingActive}
+                  className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+                >
+                  <option value={0}>Select Category *</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory *</label>
+                <select
+                  value={formData.sub_category}
+                  onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+                  disabled={!isEditingActive || !formData.category}
+                  className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                >
+                  <option value={0}>Select Subcategory *</option>
+                  {filteredSubcategories.map((sub) => (
+                    <option key={sub.id} value={sub.id}>{sub.name}</option>
+                  ))}
+                </select>
+                {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Business Type *</label>
+                <select
+                  value={formData.business_type}
+                  onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+                  disabled={!isEditingActive}
+                  className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+                >
+                  <option value="">Select Business Type *</option>
+                  <option value="brand">Brand</option>
+                  <option value="store">Store</option>
+                  <option value="service">Service</option>
+                  <option value="factory">Factory</option>
+                </select>
+                {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  placeholder="Description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={!isEditingActive}
+                  className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Images Section */}
+          <div className="border-b border-gray-200 pb-3">
+            <h4 className="font-semibold text-gray-800 mb-3">Images & Status</h4>
+            <div className="space-y-4">
+              <div className={!isEditingActive ? 'opacity-70' : ''}>
+                <DragDropImageUpload
+                  label="Logo"
+                  value={formData.logo}
+                  onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
+                  previewUrl={logoPreview}
+                  required={false}
+                  disabled={!isEditingActive}
+                />
+              </div>
+              <div className={!isEditingActive ? 'opacity-70' : ''}>
+                <DragDropImageUpload
+                  label="Cover Image"
+                  value={formData.cover_image}
+                  onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
+                  previewUrl={coverPreview}
+                  disabled={!isEditingActive}
+                />
+              </div>
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    disabled={!isEditingActive}
+                    className="h-4 w-4 text-indigo-600 rounded"
+                  />
+                  <span className={`text-sm ${!isEditingActive ? 'text-gray-500' : 'text-gray-700'}`}>Active</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_featured}
+                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                    disabled={!isEditingActive}
+                    className="h-4 w-4 text-indigo-600 rounded"
+                  />
+                  <span className={`text-sm ${!isEditingActive ? 'text-gray-500' : 'text-gray-700'}`}>Featured</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          {/* Form Buttons - Only show when in edit mode */}
+          {isEditingActive && (
+            <div className="flex gap-3 pt-4">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 bg-[#6750A4] text-white px-4 py-2 rounded-lg hover:bg-[#5b4694] transition disabled:opacity-50"
+              >
+                {submitting ? "Saving..." : (editingSlug ? "Update Company" : "Create Company")}
+              </button>
+              <button
+                type="button"
+                onClick={closeInlineEdit}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          
+          {/* View mode message */}
+          {!isEditingActive && (
+            <div className="text-center pt-4 text-gray-500 text-sm bg-gray-50 p-3 rounded-lg">
+              🔒 View only mode. Click "Edit Company" on the card to modify.
+            </div>
+          )}
+        </form>
+      </div>
+    )}
+  </div>
+)}
 
       <MemoizedPagination
         currentPage={currentPage}
@@ -631,14 +1016,15 @@ export default function CompanyManagement() {
         onPageChange={goToPage}
       />
 
-      <MultiStepFormModal
+      {/* Modal is now disabled - using inline edit instead */}
+      {/* <MultiStepFormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         steps={steps}
         onSubmit={handleSubmit}
         submitting={submitting}
         maxWidth="2xl"
-      />
+      /> */}
 
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
