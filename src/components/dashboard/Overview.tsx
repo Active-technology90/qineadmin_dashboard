@@ -438,7 +438,7 @@ export default function Overview() {
           <>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-700">Recent Orders</h3>
-              <a href="/admin/orders" className="text-xs font-medium text-[#6750A4] hover:underline">View all →</a>
+              <p className="text-xs font-medium text-[#6750A4] hover:underline">View all →</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full">
