@@ -18,9 +18,11 @@ import type {
   ProductImage,
   VendorOrder,
   Delivery,
+  AnalyticsOverviewResponse,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
+const API_URL = "http://localhost:8000/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -241,6 +243,11 @@ export const updateCompany = async (
     headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
   });
 };
+
+export const updateCompanyMinimumOrderTotal = async (
+  slug: string,
+  minimum_order_total: string | number
+) => api.patch<Company>(`/companies/${slug}/minimum-order-total/`, { minimum_order_total });
 
 export const deleteCompany = async (slug: string) =>
   api.delete(`/companies/${slug}/`);
@@ -496,6 +503,11 @@ export const getCompanyVendorOrders = async (
     signal,
   });
 };
+
+export const getAdminAnalyticsOverview = async (params?: {
+  period?: "week" | "month" | "year";
+  company_slug?: string;
+}) => api.get<AnalyticsOverviewResponse>("/orders/admin/analytics/overview/", { params });
   // ========== DELIVERIES ==========
 export const assignDelivery = async (data: { vendor_order: number; delivery_person: number }) =>
   api.post("/deliveries/", data);

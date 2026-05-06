@@ -159,10 +159,10 @@ type PaginatedResponse<T> = {
   next: string | null;
 };
 
-// Helper to get the highest‑privilege membership (admin > staff > delivery > viewer)
+// Helper to get the highest-privilege membership (owner > admin > staff > delivery > viewer)
 const getPrimaryMembership = (memberships: any[] | undefined) => {
   if (!memberships?.length) return null;
-  const priority: Record<string, number> = { admin: 4, staff: 3, delivery: 2, viewer: 1 };
+  const priority: Record<string, number> = { owner: 5, admin: 4, staff: 3, delivery: 2, viewer: 1 };
   let best = memberships[0];
   let bestScore = priority[best.role] || 0;
   for (const m of memberships) {
@@ -190,7 +190,7 @@ export default function CompanyManagement() {
   const canDeleteCompany = isSuperAdmin;
   const canEditCompany = (companySlug: string) => {
     if (isSuperAdmin) return true;
-    return userCompanyRole === "admin" && userCompanySlug === companySlug;
+    return ["owner", "admin"].includes(userCompanyRole || "") && userCompanySlug === companySlug;
   };
 
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
@@ -229,6 +229,7 @@ export default function CompanyManagement() {
     sub_category: 0,
     business_type: "",
     description: "",
+    minimum_order_total: "0.00",
     is_active: true,
     is_featured: false,
     logo: null as File | null,
@@ -310,6 +311,7 @@ export default function CompanyManagement() {
           sub_category: company.sub_category,
           sub_category_name: company.sub_category_name,
           business_type: company.business_type,
+          minimum_order_total: company.minimum_order_total || "0.00",
           is_active: company.is_active,
           is_featured: company.is_featured,
           description: company.description || "",
@@ -377,6 +379,7 @@ export default function CompanyManagement() {
         sub_category: formData.sub_category,
         business_type: formData.business_type,
         description: formData.description || undefined,
+        minimum_order_total: formData.minimum_order_total || "0.00",
         is_active: formData.is_active,
         is_featured: formData.is_featured,
       };
@@ -392,6 +395,7 @@ export default function CompanyManagement() {
         formPayload.append("sub_category", String(formData.sub_category));
         formPayload.append("business_type", formData.business_type);
         if (formData.description) formPayload.append("description", formData.description);
+        formPayload.append("minimum_order_total", formData.minimum_order_total || "0.00");
         formPayload.append("is_active", String(formData.is_active));
         formPayload.append("is_featured", String(formData.is_featured));
         if (formData.logo) formPayload.append("logo", formData.logo);
@@ -448,6 +452,7 @@ export default function CompanyManagement() {
       sub_category: 0,
       business_type: "",
       description: "",
+      minimum_order_total: "0.00",
       is_active: true,
       is_featured: false,
       logo: null,
@@ -472,6 +477,7 @@ export default function CompanyManagement() {
       sub_category: company.sub_category,
       business_type: company.business_type,
       description: company.description || "",
+      minimum_order_total: company.minimum_order_total || "0.00",
       is_active: company.is_active,
       is_featured: company.is_featured,
       logo: null,
@@ -786,6 +792,30 @@ export default function CompanyManagement() {
                         className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
                         rows={3}
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Minimum Order Total (ETB)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={formData.minimum_order_total}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            minimum_order_total: e.target.value,
+                          })
+                        }
+                        disabled={!isEditingActive}
+                        className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Orders below this company total are blocked at checkout.
+                      </p>
                     </div>
                   </div>
                 </div>

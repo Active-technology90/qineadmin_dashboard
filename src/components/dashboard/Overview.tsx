@@ -26,122 +26,32 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { getAdminAnalyticsOverview } from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
+import type { AnalyticsOverviewResponse } from "../../types";
 
-// ---------- Dummy Data ----------
-const summaryData = {
-  products: 1247,
-  users: 342,
-  orders: 856,
-  payments: { total: 2847500, change: 12.5, prevTotal: 2530000 },
-  avgOrderValue: 3326, // total / orders
-  conversionRate: 3.8, // %
+const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
+  scope: "company",
+  selected_company: null,
+  available_companies: [],
+  summary: {
+    products: 0,
+    users: 0,
+    orders: 0,
+    payments_total: 0,
+    avg_order_value: 0,
+    success_rate: 0,
+    active_categories: 0,
+  },
+  revenue_series: [],
+  order_status: [],
+  category_sales: [],
+  category_trend: [],
+  recent_orders: [],
 };
 
 const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
 const PIE_COLORS = ["#10B981", "#F59E0B", "#EF4444", "#3B82F6"];
-
-// Revenue data (current vs previous period)
-const revenueWeek = [
-  { label: "Mon", revenue: 420000, prevRevenue: 380000 },
-  { label: "Tue", revenue: 380000, prevRevenue: 350000 },
-  { label: "Wed", revenue: 510000, prevRevenue: 470000 },
-  { label: "Thu", revenue: 470000, prevRevenue: 430000 },
-  { label: "Fri", revenue: 620000, prevRevenue: 580000 },
-  { label: "Sat", revenue: 780000, prevRevenue: 700000 },
-  { label: "Sun", revenue: 710000, prevRevenue: 680000 },
-];
-const revenueMonth = [
-  { label: "W1", revenue: 1800000, prevRevenue: 1600000 },
-  { label: "W2", revenue: 2150000, prevRevenue: 1900000 },
-  { label: "W3", revenue: 1900000, prevRevenue: 1750000 },
-  { label: "W4", revenue: 2450000, prevRevenue: 2200000 },
-];
-const revenueYear = [
-  { label: "Jan", revenue: 4500000, prevRevenue: 4000000 },
-  { label: "Feb", revenue: 3800000, prevRevenue: 3500000 },
-  { label: "Mar", revenue: 5200000, prevRevenue: 4800000 },
-  { label: "Apr", revenue: 6100000, prevRevenue: 5600000 },
-  { label: "May", revenue: 5800000, prevRevenue: 5400000 },
-  { label: "Jun", revenue: 7000000, prevRevenue: 6500000 },
-  { label: "Jul", revenue: 7500000, prevRevenue: 7000000 },
-  { label: "Aug", revenue: 6300000, prevRevenue: 6000000 },
-  { label: "Sep", revenue: 6800000, prevRevenue: 6300000 },
-  { label: "Oct", revenue: 7200000, prevRevenue: 6800000 },
-  { label: "Nov", revenue: 8000000, prevRevenue: 7400000 },
-  { label: "Dec", revenue: 9500000, prevRevenue: 8900000 },
-];
-
-const orderStatusData = [
-  { name: "Completed", value: 512 },
-  { name: "Pending", value: 204 },
-  { name: "Cancelled", value: 98 },
-  { name: "Processing", value: 42 },
-];
-
-const categorySalesData = [
-  { name: "Flour", sales: 845000, color: CHART_COLORS[0] },
-  { name: "Grain", sales: 632000, color: CHART_COLORS[1] },
-  { name: "Furniture", sales: 410000, color: CHART_COLORS[2] },
-  { name: "Garment", sales: 385000, color: CHART_COLORS[3] },
-  { name: "Cleaning", sales: 275000, color: CHART_COLORS[4] },
-];
-
-const categoryTrendData = [
-  { month: "Jan", Flour: 450000, Grain: 320000, Furniture: 210000 },
-  { month: "Feb", Flour: 520000, Grain: 380000, Furniture: 250000 },
-  { month: "Mar", Flour: 480000, Grain: 350000, Furniture: 280000 },
-  { month: "Apr", Flour: 600000, Grain: 420000, Furniture: 310000 },
-  { month: "May", Flour: 700000, Grain: 480000, Furniture: 340000 },
-  { month: "Jun", Flour: 845000, Grain: 632000, Furniture: 410000 },
-];
-
-const recentOrders = [
-  {
-    id: "#138",
-    customer: "One",
-    amount: 7700,
-    status: "paid",
-    paymentStatus: "Paid",
-    date: "2026-04-30T15:18:31",
-    vendors: 3,
-  },
-  {
-    id: "#137",
-    customer: "One",
-    amount: 8545,
-    status: "paid",
-    paymentStatus: "Paid",
-    date: "2026-04-27T22:48:40",
-    vendors: 4,
-  },
-  {
-    id: "#136",
-    customer: "One",
-    amount: 4435,
-    status: "pending",
-    paymentStatus: "Checkout Initiated",
-    date: "2026-04-27T21:45:45",
-    vendors: 3,
-  },
-  {
-    id: "#135",
-    customer: "One",
-    amount: 425,
-    status: "pending",
-    paymentStatus: "Awaiting Bank Transfer",
-    date: "2026-04-27T21:34:15",
-    vendors: 1,
-  },
-  {
-    id: "#134",
-    customer: "One",
-    amount: 330,
-    status: "pending",
-    paymentStatus: "Checkout Initiated",
-    date: "2026-04-25T16:15:06",
-    vendors: 2,
-  },
-];
 
 type Period = "week" | "month" | "year";
 
@@ -250,28 +160,103 @@ const SummaryCard = ({
 
 // ---------- Main Overview Component ----------
 export default function Overview() {
+  const { user } = useAuth();
   const [period, setPeriod] = useState<Period>("week");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [analytics, setAnalytics] = useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
+  const [selectedCompanySlug, setSelectedCompanySlug] = useState<string>("");
 
-  // Simulate API loading
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!selectedCompanySlug && user?.memberships?.length) {
+      setSelectedCompanySlug(user.memberships[0].company_slug);
+    }
+  }, [user, selectedCompanySlug]);
 
-  const revenueMap: Record<Period, any[]> = {
-    week: revenueWeek,
-    month: revenueMonth,
-    year: revenueYear,
-  };
+  useEffect(() => {
+    let active = true;
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const { data } = await getAdminAnalyticsOverview({
+          period,
+          company_slug: selectedCompanySlug || undefined,
+        });
+        if (!active) return;
+        setAnalytics(data);
+        if (!selectedCompanySlug && data.selected_company?.slug) {
+          setSelectedCompanySlug(data.selected_company.slug);
+        }
+      } catch (err: any) {
+        if (!active) return;
+        setError(err?.response?.data?.detail || "Failed to load analytics.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchAnalytics();
+    return () => {
+      active = false;
+    };
+  }, [period, selectedCompanySlug]);
 
-  const currentData = revenueMap[period];
+  const currentData = analytics.revenue_series;
   const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
+  const summaryData = {
+    products: analytics.summary.products,
+    users: analytics.summary.users,
+    orders: analytics.summary.orders,
+    payments: { total: analytics.summary.payments_total, change: 0 },
+    avgOrderValue: analytics.summary.avg_order_value,
+    conversionRate: analytics.summary.success_rate,
+  };
+  const orderStatusData = analytics.order_status;
+  const categorySalesData = analytics.category_sales.map((cat, idx) => ({
+    ...cat,
+    color: CHART_COLORS[idx % CHART_COLORS.length],
+  }));
+  const categoryTrendData = analytics.category_trend;
+  const recentOrders = analytics.recent_orders;
+  const topCategoryNames = categoryTrendData.length
+    ? Object.keys(categoryTrendData[0]).filter((key) => key !== "month")
+    : [];
 
   // Orders disabled period selection effect on other charts (optional)
 
   return (
     <div className="space-y-8">
+      {(analytics.available_companies.length > 1 || analytics.scope === "platform") && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center gap-3">
+          <div className="text-sm text-gray-600">
+            Scope:{" "}
+            <span className="font-semibold text-gray-900">
+              {analytics.scope === "platform" && !analytics.selected_company
+                ? "All Companies"
+                : analytics.selected_company?.name || "Company"}
+            </span>
+          </div>
+          <select
+            value={selectedCompanySlug}
+            onChange={(e) => setSelectedCompanySlug(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
+            {analytics.scope === "platform" && <option value="">All Companies</option>}
+            {analytics.available_companies.map((company) => (
+              <option key={company.slug} value={company.slug}>
+                {company.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!!error && (
+        <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-3 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading ? (
@@ -357,7 +342,7 @@ export default function Overview() {
                   Active Categories
                 </p>
                 <p className="text-lg font-bold text-gray-900">
-                  {categorySalesData.length}
+                  {analytics.summary.active_categories}
                 </p>
               </div>
             </div>
@@ -544,18 +529,15 @@ export default function Overview() {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-[#6750A4]" />
-                    <span className="text-xs text-gray-600">Flour</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-[#9B7DD4]" />
-                    <span className="text-xs text-gray-600">Grain</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-[#B794F4]" />
-                    <span className="text-xs text-gray-600">Furniture</span>
-                  </div>
+                  {topCategoryNames.map((name, idx) => (
+                    <div key={name} className="flex items-center gap-1.5">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                      />
+                      <span className="text-xs text-gray-600">{name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="h-72">
@@ -593,30 +575,17 @@ export default function Overview() {
                         border: "1px solid #e5e7eb",
                       }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="Flour"
-                      stroke="#6750A4"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Grain"
-                      stroke="#9B7DD4"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Furniture"
-                      stroke="#B794F4"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5 }}
-                    />
+                    {topCategoryNames.map((name, idx) => (
+                      <Line
+                        key={name}
+                        type="monotone"
+                        dataKey={name}
+                        stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 5 }}
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -652,7 +621,7 @@ export default function Overview() {
                         <div
                           className="h-full rounded-full"
                           style={{
-                            width: `${(cat.sales / categorySalesData[0].sales) * 100}%`,
+                            width: `${categorySalesData[0]?.sales ? (cat.sales / categorySalesData[0].sales) * 100 : 0}%`,
                             backgroundColor: cat.color,
                           }}
                         />

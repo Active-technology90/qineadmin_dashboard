@@ -77,6 +77,7 @@ export interface Company {
   created_at?: string;
   // Financial fields (owner/admin only)
   chapa_sub_account_id?: string;
+  minimum_order_total?: string;
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
@@ -95,6 +96,7 @@ export interface CompanyListItem {
   sub_category: number;
   sub_category_name: string;
   business_type: string;
+  minimum_order_total?: string;
   is_active: boolean;
   is_featured: boolean;
   description?: string; // optional, not always in list
@@ -336,6 +338,55 @@ export interface PaginatedResponse<T> {
   next: string | null;
   previous: string | null;
   results: T[];
+}
+
+export interface AnalyticsCompanyOption {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface AnalyticsSummary {
+  products: number;
+  users: number;
+  orders: number;
+  payments_total: number;
+  avg_order_value: number;
+  success_rate: number;
+  active_categories: number;
+}
+
+export interface AnalyticsRevenuePoint {
+  label: string;
+  revenue: number;
+  prevRevenue: number;
+}
+
+export interface AnalyticsCategoryTrendPoint {
+  month: string;
+  [key: string]: string | number;
+}
+
+export interface AnalyticsRecentOrder {
+  id: string;
+  customer: string;
+  amount: number;
+  status: string;
+  paymentStatus: string;
+  date: string;
+  vendors: number;
+}
+
+export interface AnalyticsOverviewResponse {
+  scope: "platform" | "company";
+  selected_company: AnalyticsCompanyOption | null;
+  available_companies: AnalyticsCompanyOption[];
+  summary: AnalyticsSummary;
+  revenue_series: AnalyticsRevenuePoint[];
+  order_status: { name: string; value: number }[];
+  category_sales: { name: string; sales: number }[];
+  category_trend: AnalyticsCategoryTrendPoint[];
+  recent_orders: AnalyticsRecentOrder[];
 }
 
 // ── Legacy / Deprecated (keep for compatibility) ──
