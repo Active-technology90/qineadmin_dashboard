@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react"; // removed useMemo
+// src/components/admin/companyUser/CompanyUsers.tsx
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../context/authContext";
-import { useCompanySelection } from "../../../hooks/useCompanySelection";
+import { useCurrentCompany } from "../../../context/src/context/CurrentCompanyContext";
+import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { useCompanyUsers } from "../../../hooks/useCompanyUsers";
 import { useAddCompanyUser } from "../../../hooks/useAddCompanyUser";
 import { useUpdateUserRole } from "../../../hooks/useUpdateUserRole";
@@ -8,8 +10,7 @@ import { useDeleteCompanyUser } from "../../../hooks/useDeleteCompanyUser";
 import { searchUsers } from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
 import type { User } from "../../../types";
-import { UserPlus} from "lucide-react";
-// import { TableControls } from "../../ui/TableControls";
+import { UserPlus } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
 import { CompanyUsersTable } from "./CompanyUsersTable";
@@ -17,27 +18,37 @@ import { AddUserModal } from "./AddUserModal";
 import { EditUserModal } from "./EditUserModal";
 import { DeleteUserModal } from "./DeleteUserModal";
 import { CompanySelector } from "../company-products/CompanySelector";
-import { NoCompanyView } from "../company-products/NoCompanyView";
+import { useReadOnly } from "../AdminDashboard";
 
 export default function CompanyUsers() {
   const { user: currentUser } = useAuth();
-  const memberships = currentUser?.memberships || [];
-  const isSuperAdmin = memberships.length === 0;
-  const isCompanyAdmin = memberships.some((m: any) => m.role === "admin");
-  // Removed unused isCompanyStaff
+  const { company, switchCompany, clearCompany } = useCurrentCompany();
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
+  const readOnly = useReadOnly(); // true for viewers
 
-  const {
-    selectedCompany,
-    showSelector,
-    companies,
-    isLoadingCompanies,
-    selectCompany,
-    resetCompany,
-  } = useCompanySelection(currentUser);
+  // Company from context
+  const companySlug = company?.slug ?? null;
+  const companyName = company?.name ?? "";
 
-  const companySlug = selectedCompany?.slug ?? null;
-  const companyName = selectedCompany?.name ?? "";
+  const isSuperAdmin = !currentUser?.memberships?.length;
+  const showSelector = isSuperAdmin && !companySlug;
 
+  // Derive the current user’s role for the selected company
+  const currentUserRole = useMemo(() => {
+    if (!currentUser || !companySlug) return null;
+    if (isSuperAdmin) return "superAdmin";
+    const membership = currentUser.memberships?.find(
+      (m: any) => m.company_slug === companySlug,
+    );
+    return membership?.role || null;
+  }, [currentUser, companySlug, isSuperAdmin]);
+
+  // Viewers can see the user list, but cannot manage (add/edit/delete)
+  const canViewUsers = isSuperAdmin || currentUserRole === "admin" || currentUserRole === "staff" || readOnly;
+  const canManageUsers =
+    (isSuperAdmin || currentUserRole === "admin") && !readOnly;
+
+  // Company users hook
   const { users, loading, error, refetch } = useCompanyUsers(companySlug);
   const [tableSearch, setTableSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,22 +63,21 @@ export default function CompanyUsers() {
   );
 
   const totalPages = Math.ceil(filteredUsers.length / pageSize);
-
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+
   const { addUser } = useAddCompanyUser();
   const { updateUserRole } = useUpdateUserRole();
   const { deleteUser } = useDeleteCompanyUser();
 
-  // Add user modal state – live search
+  // Add user modal state
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [adding, setAdding] = useState(false);
-  // Include "delivery" in the union to match AddUserModal's expected type
   const [selectedRole, setSelectedRole] = useState<
     "admin" | "staff" | "viewer" | "delivery"
   >("staff");
@@ -103,37 +113,6 @@ export default function CompanyUsers() {
     };
     fetchSearchResults();
   }, [debouncedQuery]);
-
-  // Permission guard: only super admin or company admin can access
-  if (!isSuperAdmin && !isCompanyAdmin) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
-        <div className="text-red-600 mb-2">Access Denied</div>
-        <p className="text-gray-500">
-          You do not have permission to manage company users.
-        </p>
-      </div>
-    );
-  }
-
-  if (showSelector) {
-    return (
-      <CompanySelector
-        companies={companies}
-        isLoading={isLoadingCompanies}
-        onSelect={selectCompany}
-        onBack={resetCompany}
-      />
-    );
-  }
-
-  if (error && !companySlug) {
-    return <ErrorView error={error} onRetry={() => window.location.reload()} />;
-  }
-
-  if (!companySlug) {
-    return <NoCompanyView onSelectCompany={resetCompany} />;
-  }
 
   const handleAddUser = async () => {
     if (!companySlug || !selectedUser) return;
@@ -180,10 +159,50 @@ export default function CompanyUsers() {
     }
   };
 
+  // Permission guard for viewing – if user cannot even view, show access denied.
+  if (!canViewUsers) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+        <div className="text-red-600 mb-2">Access Denied</div>
+        <p className="text-gray-500">
+          You do not have permission to view company users.
+        </p>
+      </div>
+    );
+  }
+
+  if (showSelector) {
+    return (
+      <CompanySelector
+        companies={companies}
+        isLoading={isLoadingCompanies}
+        onSelect={(slug, name) => {
+          const membership = currentUser?.memberships?.find(
+            (m: any) => m.company_slug === slug,
+          );
+          const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+          switchCompany({ slug, name, role });
+        }}
+        onBack={clearCompany}
+      />
+    );
+  }
+
+  if (error && !companySlug) {
+    return <ErrorView error={error} onRetry={() => refetch?.()} />;
+  }
+
+  if (!companySlug) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+        No company selected. Please select a company to manage users.
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-        {/* LEFT SIDE TITLE */}
         <div>
           <h2 className="text-xl font-bold text-[#6750A4]">Company Users</h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -192,32 +211,23 @@ export default function CompanyUsers() {
           </p>
         </div>
 
-        {/*  TABLE CONTROLS */}
-
-        {/* TABLE CONTROLS */}
-        {/* <TableControls
-      pageSize={pageSize}
-      onPageSizeChange={(size) => {
-        setPageSize(size);
-        setCurrentPage(1);
-      }}
-    /> */}
-
         <div className="flex items-center gap-2 ml-auto">
           {isSuperAdmin && (
             <button
-              onClick={resetCompany}
+              onClick={clearCompany}
               className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
             >
               Switch
             </button>
           )}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90 flex items-center gap-2 shadow-sm transition"
-          >
-            <UserPlus className="h-4 w-4" /> Add User
-          </button>
+          {canManageUsers && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90 flex items-center gap-2 shadow-sm transition"
+            >
+              <UserPlus className="h-4 w-4" /> Add User
+            </button>
+          )}
         </div>
       </div>
 
@@ -234,7 +244,7 @@ export default function CompanyUsers() {
           setPageSize(size);
           setCurrentPage(1);
         }}
-        isAdmin={isCompanyAdmin}
+        isAdmin={canManageUsers} // edit/delete controls only for managers
         currentUser={currentUser}
         onEdit={(user) => {
           setEditingUser(user);
@@ -242,6 +252,7 @@ export default function CompanyUsers() {
         }}
         onDelete={setDeletingUser}
       />
+
       <AddUserModal
         isOpen={showAddModal}
         onClose={() => {
@@ -278,6 +289,7 @@ export default function CompanyUsers() {
         onClose={() => setDeletingUser(null)}
         onConfirm={handleDeleteUser}
       />
+
       {totalPages > 1 && (
         <div className="mt-4">
           <Pagination

@@ -1,5 +1,4 @@
-// src/pages/admin/AdminDashboard.tsx
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, createContext, useContext } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -7,6 +6,7 @@ import {
   ShoppingBag,
   CreditCard,
   LogOut,
+  Menu,
   X,
   Layout,
   ChevronDown,
@@ -17,6 +17,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+
 import Overview from "./Overview";
 import CompanyUsers from "./companyUser/CompanyUsers";
 import CompanyOrders from "./vedorOrders/CompanyOrders";
@@ -40,9 +42,15 @@ type Tab =
   | "payments"
   | "profile";
 
-// ════════════════════════════════════════════════════════
-// Extracted OrdersMenu component (no longer created during render)
-// ════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
+// Read‑only Context – tells child components if they are in viewer mode
+// ─────────────────────────────────────────────────────────────
+const ReadOnlyContext = createContext<boolean>(false);
+export const useReadOnly = () => useContext(ReadOnlyContext);
+
+// ════════════════════════════════════════════════════════════
+// OrdersMenu (unchanged)
+// ════════════════════════════════════════════════════════════
 function OrdersMenu({
   collapsed,
   activeTab,
@@ -58,11 +66,9 @@ function OrdersMenu({
   ordersMenuOpen: boolean;
   onToggleOrdersMenu: () => void;
 }) {
-  // Collapsed dropdown state (internal)
   const [collapsedOrdersOpen, setCollapsedOrdersOpen] = useState(false);
   const ordersRef = useRef<HTMLDivElement>(null);
 
-  // Close collapsed dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -78,11 +84,9 @@ function OrdersMenu({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [collapsedOrdersOpen]);
 
-  // ── Expanded mode ──
   if (!collapsed) {
     const isActive =
       activeTab === "masterOrders" || activeTab === "companyOrders";
-
     return (
       <div>
         <button
@@ -136,7 +140,6 @@ function OrdersMenu({
     );
   }
 
-  // ── Collapsed mode (icon + popover) ──
   return (
     <div className="relative" ref={ordersRef}>
       <button
@@ -189,55 +192,70 @@ function OrdersMenu({
 }
 
 // ════════════════════════════════════════════════════════
-// Main Dashboard Component
+// Main Dashboard
 // ════════════════════════════════════════════════════════
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile drawer
-  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false); // expanded submenu
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false); // profile dropdown
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const { company } = useCurrentCompany();
 
-  const memberships = user?.memberships || [];
-  const hasMembership = memberships.length > 0;
-  const isCompanyAdmin = memberships.some((m: any) => m.role === "admin");
-  const isCompanyStaff =
-    memberships.some((m: any) => m.role === "staff") && !isCompanyAdmin;
-  const isCompanyUser = hasMembership;
-  const showMasterOrders = !isCompanyUser; // only super admin sees Master Orders
+  // ── Core identity flags ────────────────────────────────
+  const isSuperAdmin = !user?.memberships?.length;
+  const isViewer = !isSuperAdmin && company?.role === "viewer";
 
-  // Helper to navigate to a tab and close mobile sidebar
+  // For viewers: show everything like super admin but read‑only
+  const showPlatformAdmin = isSuperAdmin || isViewer;
+  const showMasterOrders = isSuperAdmin || isViewer;
+
+  // Hide "Company Users" only for staff (not for viewers)
+  const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
+
   const navigate = (tab: Tab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
+    setProfileDropdownOpen(false);
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case "overview":
-        return <Overview />;
-      case "products":
-        return <CompanyProducts />;
-      case "users":
-        return <CompanyUsers />;
-      case "masterOrders":
-        return <MasterOrders />;
-      case "companyOrders":
-        return <CompanyOrders />;
-      case "payments":
-        return <Payments />;
-      case "profile":
-        return <AdminProfile />;
-      case "categories":
-        return <CategoryManagement />;
-      case "subcategories":
-        return <SubCategoryManagement />;
-      case "companies":
-        return <CompanyManagement />;
-      default:
-        return <Overview />;
-    }
+    const companyKey = company?.slug || "super";
+
+    // Wrap each content component with ReadOnlyContext provider
+    const content = (() => {
+      switch (activeTab) {
+        case "overview":
+          return <Overview />;
+        case "products":
+          return <CompanyProducts />;
+        case "users":
+          return <CompanyUsers />;
+        case "masterOrders":
+          return <MasterOrders />;
+        case "companyOrders":
+          return <CompanyOrders />;
+        case "payments":
+          return <Payments />;
+        case "profile":
+          return <AdminProfile />;
+        case "categories":
+          return <CategoryManagement />;
+        case "subcategories":
+          return <SubCategoryManagement />;
+        case "companies":
+          return <CompanyManagement />;
+        default:
+          return <Overview />;
+      }
+    })();
+
+    return (
+      <ReadOnlyContext.Provider key={companyKey} value={isViewer}>
+        {content}
+      </ReadOnlyContext.Provider>
+    );
   };
 
   return (
@@ -272,11 +290,13 @@ export default function AdminDashboard() {
           {!sidebarCollapsed && (
             <div className="flex-1">
               <span className="block text-lg font-bold tracking-wide">
-                {!isCompanyUser
+                {isSuperAdmin
                   ? "Super Admin Panel"
-                  : isCompanyAdmin
-                    ? "Company Admin Panel"
-                    : "Company Staff Panel"}
+                  : isViewer
+                    ? "Viewer Panel (Read‑Only)"
+                    : company?.role === "admin"
+                      ? "Company Admin Panel"
+                      : "Company Staff Panel"}
               </span>
               <span className="block text-xs text-indigo-300 mt-0.5">
                 Dashboard
@@ -292,7 +312,6 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto scrollbar-thin custom-scrollbar">
-          {/* Dashboard */}
           <SidebarItem
             icon={<LayoutDashboard className="h-5 w-5" />}
             label="Dashboard"
@@ -301,11 +320,13 @@ export default function AdminDashboard() {
             onClick={() => navigate("overview")}
           />
 
-          {/* Platform Admin (super admin only) */}
-          {!isCompanyUser && (
+          {/* Platform Admin section – shown for super admin AND viewer */}
+          {showPlatformAdmin && (
             <>
               <div
-                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""}`}
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
+                  sidebarCollapsed ? "hidden" : ""
+                }`}
               >
                 Platform Admin
               </div>
@@ -326,22 +347,22 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {/* Companies / Company Profile - Dynamic label based on user role */}
           <SidebarItem
             icon={<Users className="h-5 w-5" />}
-            label={!hasMembership ? "Companies" : "Company Profile"}
+            label={!user?.memberships?.length ? "Companies" : "Company Profile"}
             active={activeTab === "companies"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
           />
 
           <div
-            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""}`}
+            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
+              sidebarCollapsed ? "hidden" : ""
+            }`}
           >
             Management
           </div>
 
-          {/* Company Products */}
           <SidebarItem
             icon={<Package className="h-5 w-5" />}
             label="Company Products"
@@ -350,8 +371,7 @@ export default function AdminDashboard() {
             onClick={() => navigate("products")}
           />
 
-          {/* Company Users – super admin and company admin */}
-          {!isCompanyStaff && (
+          {/* {!hideUsersSidebar && ( */}
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
               label="Company Users"
@@ -359,9 +379,8 @@ export default function AdminDashboard() {
               collapsed={sidebarCollapsed}
               onClick={() => navigate("users")}
             />
-          )}
+          {/* )} */}
 
-          {/* Orders Dropdown – now a stable external component */}
           <OrdersMenu
             collapsed={sidebarCollapsed}
             activeTab={activeTab}
@@ -371,7 +390,6 @@ export default function AdminDashboard() {
             onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
           />
 
-          {/* Payments & Profile */}
           <SidebarItem
             icon={<CreditCard className="h-5 w-5" />}
             label="Payments"
@@ -379,7 +397,6 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("payments")}
           />
-
           <SidebarItem
             icon={<>👤</>}
             label="Profile"
@@ -388,7 +405,6 @@ export default function AdminDashboard() {
             onClick={() => navigate("profile")}
           />
 
-          {/* Account (Divider & Logout) */}
           <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Account
@@ -396,16 +412,15 @@ export default function AdminDashboard() {
           </div>
           <button
             onClick={logout}
-            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200
-              ${sidebarCollapsed ? "justify-center px-2" : ""}
-            `}
+            className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group text-red-300 hover:bg-red-500/10 hover:text-red-200 ${
+              sidebarCollapsed ? "justify-center px-2" : ""
+            }`}
           >
             <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
             {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </nav>
 
-        {/* Collapse toggle at the bottom right */}
         <div className="p-2 border-t border-gray-800 flex justify-end">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -422,22 +437,28 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-white">
+      <main className="flex-1 overflow-auto bg-white ">
         <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
           <div className="flex items-center gap-4">
-            {/* COMPANY NAME (LEFT SIDE) */}
-            {isCompanyUser && memberships[0] && (
+            <button
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+
+            {/* Company name – show for non‑super‑admin (including viewer) */}
+            {company && !isSuperAdmin && (
               <div className="hidden sm:block">
                 <p className="text-sm font-black text-indigo-700">
-                  {memberships[0].company_name}{" "}
+                  {company.name}{" "}
                   <span className="text-indigo-500 font-bold">
-                    ({memberships[0].role})
+                    ({company.role})
                   </span>
                 </p>
               </div>
             )}
           </div>
-          
 
           {/* Profile Dropdown */}
           <div className="relative">
@@ -445,51 +466,37 @@ export default function AdminDashboard() {
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               className="flex items-center gap-3 group focus:outline-none cursor-pointer"
             >
-              {/* User name with modern gradient text */}
               <div className="text-right hidden md:block">
                 <p className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   {user?.first_name || "Admin"} {user?.last_name}
                 </p>
               </div>
-
-              {/* Modern Avatar with 3-color gradient and enhanced effects */}
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">
                 {user?.first_name?.[0] || "A"}
               </div>
             </button>
 
-            {/* Dropdown Menu */}
             {profileDropdownOpen && (
               <>
-                {/* Backdrop */}
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setProfileDropdownOpen(false)}
                 />
-
-                {/* Dropdown content */}
                 <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {/* User Info Section */}
-<div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-transparent">
-  <p className="text-xs text-gray-500">
-    {user?.email}
-  </p>
-  {isCompanyUser && memberships[0] && (
-    <div className="mt-2 flex items-center gap-2">
-      <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
-      <p className="text-xs font-medium text-indigo-700">
-        Role: {memberships[0].role}
-      </p>
-    </div>
-  )}
-</div>
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-transparent">
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    {company && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                        <p className="text-xs font-medium text-indigo-700">
+                          Role: {company.role}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* My Profile Option */}
                   <button
-                    onClick={() => {
-                      navigate("profile");
-                      setProfileDropdownOpen(false);
-                    }}
+                    onClick={() => navigate("profile")}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors group cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
@@ -497,13 +504,29 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-left">
                       <p className="font-semibold">My Profile</p>
-                      <p className="text-xs text-gray-400">
-                       
-                      </p>
                     </div>
                   </button>
 
-                  {/* Sign Out Option */}
+                  {/* Switch Back – always visible when a company is selected */}
+                  {/* {company && !isSuperAdmin && (
+                    <button
+                      onClick={() => {
+                        clearCompany();
+                        setProfileDropdownOpen(false);
+                        navigate("overview");
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 transition-colors group border-t border-gray-100 cursor-pointer"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                        <Building2 className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold">Switch Back</p>
+                        <p className="text-xs text-gray-400">to default</p>
+                      </div>
+                    </button>
+                  )} */}
+
                   <button
                     onClick={() => {
                       logout();
@@ -516,9 +539,6 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-left">
                       <p className="font-semibold">Sign Out</p>
-                      <p className="text-xs text-gray-400">
-                       
-                      </p>
                     </div>
                   </button>
                 </div>
@@ -526,15 +546,17 @@ export default function AdminDashboard() {
             )}
           </div>
         </header>
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {renderContent()}
-        </div>
+        {/* add div and padding */}
+        
+        <div className="p-6 lg:p-8">
+    {renderContent()}
+  </div>
       </main>
     </div>
   );
 }
 
-// Reusable SidebarItem – respects collapse state
+// Reusable SidebarItem (unchanged)
 function SidebarItem({
   icon,
   label,
@@ -551,10 +573,11 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group
-        ${active ? "bg-white/40 text-white shadow-lg" : "text-gray-300 hover:bg-white/5 hover:text-white"}
-        ${collapsed ? "justify-center px-2" : ""}
-      `}
+      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+        active
+          ? "bg-white/40 text-white shadow-lg"
+          : "text-gray-300 hover:bg-white/5 hover:text-white"
+      } ${collapsed ? "justify-center px-2" : ""}`}
     >
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && <span>{label}</span>}

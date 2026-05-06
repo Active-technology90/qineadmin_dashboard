@@ -1,6 +1,6 @@
 // src/components/admin/CategoryManagement.tsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Plus, ImageIcon } from "lucide-react";
+import { Plus, ImageIcon, Eye } from "lucide-react";
 import {
   getCategories,
   createCategory,
@@ -20,29 +20,29 @@ import { useSorting } from "../../hooks/useSorting";
 import { Pagination } from "../ui/Pagination";
 import { TableControls } from "../ui/TableControls";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
+import { useReadOnly } from "./AdminDashboard"; // <-- import read‑only context
 
-// ----- Memoised sub‑components to prevent re‑renders -----
+// Memoised sub‑components
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
 
 export default function CategoryManagement() {
+  const readOnly = useReadOnly(); // true for viewers, false otherwise
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Local input value – updates instantly, no filtering/sorting
   const [inputValue, setInputValue] = useState("");
-  // Debounced search term – triggers heavy operations
   const [searchTerm, setSearchTerm] = useState("");
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounce logic: after user stops typing, update searchTerm
   const handleInputChange = (value: string) => {
     setInputValue(value);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setSearchTerm(value);
-    }, 200); // 200ms feels instant
+    }, 200);
   };
 
   const [pageSize, setPageSize] = useState(10);
@@ -55,7 +55,7 @@ export default function CategoryManagement() {
     code: "",
     description: "",
     icon: null as File | null,
-    iconPreview: "" as string,
+    iconPreview: "",
     order: 0,
     is_active: true,
   });
@@ -64,7 +64,7 @@ export default function CategoryManagement() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const { toast, showToast } = useToast();
 
-  // Filter categories client‑side – only runs when searchTerm changes (NOT on every key)
+  // Filter categories client‑side
   const filteredCategories = useMemo(() => {
     if (!searchTerm.trim()) return categories;
     const term = searchTerm.toLowerCase();
@@ -99,7 +99,6 @@ export default function CategoryManagement() {
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
 
-  // Reset page when search term or page size changes
   useEffect(() => {
     resetPage();
   }, [searchTerm, pageSize, resetPage]);
@@ -121,7 +120,7 @@ export default function CategoryManagement() {
     fetchCategories();
   }, []);
 
-  // Columns are stable – memoised once
+  // Columns – stable, no changes for viewer
   const columns: Column<Category>[] = useMemo(
     () => [
       {
@@ -193,25 +192,34 @@ export default function CategoryManagement() {
     []
   );
 
-  const handleEdit = useCallback((cat: Category) => {
-    setEditingId(cat.id);
-    setFormData({
-      name: cat.name,
-      name_am: cat.name_am || "",
-      slug: cat.slug,
-      code: cat.code || "",
-      description: cat.description || "",
-      icon: null,
-      iconPreview: cat.icon || "",
-      order: cat.order || 0,
-      is_active: cat.is_active ?? true,
-    });
-    setModalOpen(true);
-  }, []);
+  // Only allow edit if not read‑only
+  const handleEdit = useCallback(
+    (cat: Category) => {
+      if (readOnly) return;
+      setEditingId(cat.id);
+      setFormData({
+        name: cat.name,
+        name_am: cat.name_am || "",
+        slug: cat.slug,
+        code: cat.code || "",
+        description: cat.description || "",
+        icon: null,
+        iconPreview: cat.icon || "",
+        order: cat.order || 0,
+        is_active: cat.is_active ?? true,
+      });
+      setModalOpen(true);
+    },
+    [readOnly]
+  );
 
-  const handleDeleteClick = useCallback((cat: Category) => {
-    setDeleteTarget(cat);
-  }, []);
+  const handleDeleteClick = useCallback(
+    (cat: Category) => {
+      if (readOnly) return;
+      setDeleteTarget(cat);
+    },
+    [readOnly]
+  );
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -226,6 +234,7 @@ export default function CategoryManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!validateForm()) return;
     setSubmitting(true);
     try {
@@ -257,7 +266,7 @@ export default function CategoryManagement() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || readOnly) return;
     try {
       await deleteCategory(deleteTarget.slug);
       showToast("success", "Category deleted successfully");
@@ -289,17 +298,28 @@ export default function CategoryManagement() {
   return (
     <div>
       <Toast toast={toast} />
+
+      {/* Header with optional read‑only badge */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-[#6750A4]">Categories</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setModalOpen(true);
-          }}
-          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm"
-        >
-          <Plus size={18} /> Add Category
-        </button>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#6750A4]">Categories</h2>
+          {readOnly && (
+            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+              <Eye className="h-3 w-3" /> View Only
+            </span>
+          )}
+        </div>
+        {!readOnly && (
+          <button
+            onClick={() => {
+              resetForm();
+              setModalOpen(true);
+            }}
+            className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm"
+          >
+            <Plus size={18} /> Add Category
+          </button>
+        )}
       </div>
 
       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
@@ -310,7 +330,7 @@ export default function CategoryManagement() {
               onChange={handleInputChange}
               loading={loading}
               placeholder="Fast search..."
-              debounceMs={0} // disable internal debounce, we manage it ourselves
+              debounceMs={0}
             />
           </div>
           <select
@@ -343,8 +363,8 @@ export default function CategoryManagement() {
         columns={columns}
         loading={loading}
         emptyMessage="No categories found"
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
+        onEdit={readOnly ? undefined : handleEdit}
+        onDelete={readOnly ? undefined : handleDeleteClick}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
@@ -356,145 +376,147 @@ export default function CategoryManagement() {
         onPageChange={goToPage}
       />
 
-      <FormModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingId ? "Edit Category" : "New Category"}
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        maxWidth="lg"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* form fields (unchanged from previous version) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (English) *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 ${
-                formErrors.name ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            />
-            {formErrors.name && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (Amharic)
-            </label>
-            <input
-              type="text"
-              value={formData.name_am}
-              onChange={(e) =>
-                setFormData({ ...formData, name_am: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Slug (optional)
-            </label>
-            <input
-              type="text"
-              placeholder="auto-generated"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 font-mono ${
-                formErrors.slug ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {formErrors.slug && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Code
-            </label>
-            <input
-              type="text"
-              value={formData.code}
-              onChange={(e) =>
-                setFormData({ ...formData, code: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              value={formData.order}
-              onChange={(e) =>
+      {/* Modal – only rendered when not read‑only (optional, but keeps conditional) */}
+      {!readOnly && (
+        <FormModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={editingId ? "Edit Category" : "New Category"}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          maxWidth="lg"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name (English) *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 ${
+                  formErrors.name ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {formErrors.name && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name (Amharic)
+              </label>
+              <input
+                type="text"
+                value={formData.name_am}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_am: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Slug (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="auto-generated"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 font-mono ${
+                  formErrors.slug ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {formErrors.slug && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Code
+              </label>
+              <input
+                type="text"
+                value={formData.code}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Order
+              </label>
+              <input
+                type="number"
+                value={formData.order}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+              {formErrors.order && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
+              )}
+            </div>
+            <DragDropImageUpload
+              label="Icon"
+              value={formData.icon}
+              previewUrl={formData.iconPreview}
+              onChange={(file) =>
                 setFormData({
                   ...formData,
-                  order: parseInt(e.target.value) || 0,
+                  icon: file,
+                  iconPreview: file ? URL.createObjectURL(file) : "",
                 })
               }
-              className="w-full border border-gray-300 rounded-lg p-2"
+              accept="image/*"
+              maxSizeMB={5}
             />
-            {formErrors.order && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
-            )}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+                rows={3}
+              />
+            </div>
+            <div className="md:col-span-2 flex items-center space-x-2 mt-2">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="is_active"
+                className="text-sm font-medium text-gray-700"
+              >
+                Active
+              </label>
+            </div>
           </div>
-            <DragDropImageUpload
-                      label="Icon"
-                      value={formData.icon}
-                      previewUrl={formData.iconPreview}
-                      onChange={(file) =>
-                        setFormData({
-                          ...formData,
-                          icon: file,
-                          iconPreview: file ? URL.createObjectURL(file) : "",
-                        })
-                      }
-                      accept="image/*"
-                      maxSizeMB={5}
-                    />
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-              rows={3}
-            />
-          </div>
-          <div className="md:col-span-2 flex items-center space-x-2 mt-2">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={(e) =>
-                setFormData({ ...formData, is_active: e.target.checked })
-              }
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor="is_active"
-              className="text-sm font-medium text-gray-700"
-            >
-              Active
-            </label>
-          </div>
-        </div>
-      </FormModal>
+        </FormModal>
+      )}
 
       <DeleteConfirmModal
         isOpen={!!deleteTarget}

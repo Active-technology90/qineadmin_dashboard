@@ -1,22 +1,31 @@
-// src/components/dashboard/vendorOrders/CompanyOrders.tsx
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Eye, Package, Building2, User as UserIcon } from "lucide-react";
+import {
+  Eye,
+  Package,
+  Building2,
+  User as UserIcon,
+  RefreshCw,
+  X,
+} from "lucide-react";
 import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
-  getCompanies,
 } from "../../../services/api";
-import type { VendorOrder, CompanyListItem } from "../../../types";
+import type { VendorOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { useAuth } from "../../../hooks/useAuth";
+import { useCurrentCompany } from "../../../context/src/context/CurrentCompanyContext";
+import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { Toast } from "../../ui/Toast";
 import { VendorOrderFilters } from "./VendorOrderFilters";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
 import { DeliveryManager } from "./DeliveryManager";
+import { CompanySelector } from "../company-products/CompanySelector";
+import { useReadOnly } from "../AdminDashboard"; // 👈 viewer detection
 
 const ITEMS_PER_PAGE = 10;
 
-/* ---------- Reusable sub‑components (unchanged) ---------- */
+/* ---------- Reusable sub‑components ---------- */
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -37,22 +46,14 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
   const color = colors[status.toLowerCase()] || "bg-gray-100 text-gray-600";
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}>
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {status.replace(/_/g, " ")}
     </span>
   );
 };
 
-const CompanyAvatar = ({
-  logo,
-  name,
-}: {
-  logo?: string | null;
-  name: string;
-}) => (
+const CompanyAvatar = ({ logo, name }: { logo?: string | null; name: string }) => (
   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
     {logo ? (
       <img src={logo} alt={name} className="w-full h-full object-cover" />
@@ -94,7 +95,7 @@ const ErrorState = ({
       <div className="text-red-600 mb-4">{error}</div>
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-secodary text-white rounded-lg hover:bg-secondary transition"
+        className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary transition"
       >
         Retry
       </button>
@@ -120,6 +121,7 @@ const Pagination = ({
     else pageNum = currentPage - 2 + i;
     return pageNum;
   }).filter((p) => p >= 1 && p <= totalPages);
+
   return (
     <div className="flex gap-1">
       <button
@@ -133,7 +135,9 @@ const Pagination = ({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-lg text-sm ${page === currentPage ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+          className={`px-3 py-1 rounded-lg text-sm ${
+            page === currentPage ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+          }`}
         >
           {page}
         </button>
@@ -152,14 +156,34 @@ const Pagination = ({
 /* ---------- Main Component ---------- */
 export default function CompanyOrders() {
   const { user } = useAuth();
-  const isSuperAdmin = !user?.memberships?.length;
-  const isCompanyUser =
-    !isSuperAdmin && user?.memberships && user.memberships.length > 0;
-  const userCompanySlug = isCompanyUser
-    ? user.memberships?.[0]?.company_slug
-    : null;
+  const { company, switchCompany, clearCompany } = useCurrentCompany();
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
+  const readOnly = useReadOnly(); // true for viewers
 
-  // ----- All client‑side filter state -----
+  const isSuperAdmin = !user?.memberships?.length;
+  const isAdminLike = isSuperAdmin || readOnly; // viewers see all data like super admin
+
+  const companySlug = company?.slug ?? null;
+  const companyName = company?.name ?? "";
+
+  // ---- Company selector overlay state ----
+  const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
+
+  // Effective slug for API calls (only used when not admin‑like)
+  const effectiveSlug = useMemo(() => {
+    if (companySlug) return companySlug;
+    if (!isSuperAdmin && user?.memberships?.length && !readOnly) {
+      return user.memberships[0]?.company_slug || null;
+    }
+    return null;
+  }, [companySlug, isSuperAdmin, user, readOnly]);
+
+  // Are we showing all orders (super admin or viewer)?
+  const isAdminView = isAdminLike && !companySlug;
+  // For non‑admin‑like, show only the selected company's orders
+  const shouldFetchAll = isAdminView || (readOnly && !companySlug);
+
+  // ----- Filter state -----
   const [searchTerm, setSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
@@ -167,126 +191,103 @@ export default function CompanyOrders() {
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [allOrders, setAllOrders] = useState<VendorOrder[]>([]); // full list from server
+  const [allOrders, setAllOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const { toast, showToast } = useToast();
-
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // ----- Fetch companies (super admin only) -----
-  useEffect(() => {
-    if (!isCompanyUser) {
-      getCompanies()
-        .then((res) => setCompanies(res.data.results))
-        .catch(() => {});
-    }
-  }, [isCompanyUser]);
-
-  // ----- Fetch ALL orders at once -----
-  // 1. Update fetchAllOrders to return the fetched orders
-const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
-  const token = localStorage.getItem("access");
-  if (!token) {
-    setError("Please log in to view orders");
-    setLoading(false);
-    return [];
-  }
-
-  if (abortControllerRef.current) abortControllerRef.current.abort();
-  const controller = new AbortController();
-  abortControllerRef.current = controller;
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    const firstParams: any = {
-      page: 1,
-      page_size: 200,
-      ordering: "-created_at" as const,
-    };
-
-    let res;
-    if (isCompanyUser && userCompanySlug) {
-      res = await getCompanyVendorOrders(userCompanySlug, firstParams);
-    } else {
-      res = await getAdminVendorOrders({ ...firstParams });
+  // ----- Fetch orders based on user role / company selection -----
+  const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
+    const token = localStorage.getItem("access");
+    if (!token) {
+      setError("Please log in to view orders");
+      setLoading(false);
+      return [];
     }
 
-    if (controller.signal.aborted) return [];
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-    const total = res.data.count;
-    let allData = [...res.data.results];
+    setLoading(true);
+    setError(null);
 
-    const alreadyFetched = res.data.results.length;
-    if (total > alreadyFetched) {
-      const remainingPages = Math.ceil((total - alreadyFetched) / 200);
-      const promises = [];
-      for (let i = 0; i < remainingPages; i++) {
-        const page = i + 2;
-        const params = { page, page_size: 200, ordering: "-created_at" as const };
-        const promise =
-          isCompanyUser && userCompanySlug
-            ? getCompanyVendorOrders(userCompanySlug, params)
-            : getAdminVendorOrders({ ...params });
-        promises.push(promise);
+    try {
+      const fetchPage = async (page: number) => {
+        const params = {
+          page,
+          page_size: 200,
+          ordering: "-created_at" as const,
+        };
+
+        if (shouldFetchAll) {
+          return getAdminVendorOrders(params);
+        } else if (effectiveSlug) {
+          return getCompanyVendorOrders(effectiveSlug, params);
+        } else {
+          return { data: { results: [], count: 0 } };
+        }
+      };
+
+      const firstResponse = await fetchPage(1);
+      if (controller.signal.aborted) return [];
+
+      let allData = [...firstResponse.data.results];
+      const total = firstResponse.data.count;
+
+      if (total > allData.length) {
+        const remainingPages = Math.ceil((total - allData.length) / 200);
+        const promises = [];
+        for (let i = 0; i < remainingPages; i++) {
+          promises.push(fetchPage(i + 2));
+        }
+        const results = await Promise.all(promises);
+        results.forEach((res) => {
+          allData = allData.concat(res.data.results);
+        });
       }
-      const results = await Promise.all(promises);
-      results.forEach((r) => {
-        allData = allData.concat(r.data.results);
-      });
-    }
 
-    if (!controller.signal.aborted) {
-      setAllOrders(allData);
+      if (!controller.signal.aborted) {
+        setAllOrders(allData);
+      }
+      return allData;
+    } catch (err: any) {
+      if (err.name === "CanceledError" || err.code === "ERR_CANCELED")
+        return [];
+      const message =
+        err.message === "SESSION_EXPIRED"
+          ? "Your session has expired."
+          : err.response?.data?.detail || err.message || "Failed to load orders";
+      if (!controller.signal.aborted) {
+        setError(message);
+        showToast("error", message);
+      }
+      return [];
+    } finally {
+      if (!controller.signal.aborted) setLoading(false);
     }
-    return allData; // ← return the fresh array
-  } catch (err: any) {
-    if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return [];
-    const message =
-      err.message === "SESSION_EXPIRED"
-        ? "Your session has expired."
-        : err.response?.data?.detail || err.message || "Failed to load orders";
-    if (!controller.signal.aborted) {
-      setError(message);
-      showToast("error", message);
+  }, [shouldFetchAll, effectiveSlug, showToast]);
+
+  const handleModalUpdate = useCallback(async () => {
+    const freshOrders = await fetchAllOrders();
+    if (selectedOrder) {
+      const updated = freshOrders.find((o) => o.id === selectedOrder.id);
+      if (updated) setSelectedOrder(updated);
     }
-    return [];
-  } finally {
-    if (!controller.signal.aborted) setLoading(false);
-  }
-}, [isCompanyUser, userCompanySlug, showToast]);
+  }, [fetchAllOrders, selectedOrder]);
 
-// 2. Create a callback that refreshes the modal’s selected order
-const handleModalUpdate = useCallback(async () => {
-  const freshOrders = await fetchAllOrders();
-  if (selectedOrder) {
-    const updated = freshOrders.find((o) => o.id === selectedOrder.id);
-    if (updated) setSelectedOrder(updated);
-  }
-}, [fetchAllOrders, selectedOrder]);
-
-  // Initial fetch & after assignment updates
   useEffect(() => {
     fetchAllOrders();
   }, [fetchAllOrders]);
 
-  // ----- Reset to page 1 whenever any filter changes -----
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    searchTerm,
-    orderStatusFilter,
-    deliveryStatusFilter,
-    paymentMethodFilter,
-    selectedCompanyId,
-  ]);
+  }, [searchTerm, orderStatusFilter, deliveryStatusFilter, paymentMethodFilter, selectedCompanyId]);
 
-  // ----- Client‑side filtering -----
+  // Client‑side filtering (same as before)
   const filteredOrders = useMemo(() => {
     let result = allOrders;
 
@@ -307,8 +308,7 @@ const handleModalUpdate = useCallback(async () => {
     if (deliveryStatusFilter) {
       result = result.filter(
         (o) =>
-          o.delivery?.status?.toLowerCase() ===
-          deliveryStatusFilter.toLowerCase(),
+          o.delivery?.status?.toLowerCase() === deliveryStatusFilter.toLowerCase(),
       );
     }
     if (paymentMethodFilter) {
@@ -333,7 +333,6 @@ const handleModalUpdate = useCallback(async () => {
     selectedCompanyId,
   ]);
 
-  // ----- Client‑side pagination -----
   const totalFilteredCount = filteredOrders.length;
   const totalPages = Math.ceil(totalFilteredCount / ITEMS_PER_PAGE);
   const paginatedOrders = filteredOrders.slice(
@@ -341,13 +340,11 @@ const handleModalUpdate = useCallback(async () => {
     currentPage * ITEMS_PER_PAGE,
   );
 
-  const showingFrom =
-    totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const showingFrom = totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount);
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
 
-  // ----- Clear all filters -----
   const clearFilters = () => {
     setSearchTerm("");
     setOrderStatusFilter("");
@@ -357,34 +354,68 @@ const handleModalUpdate = useCallback(async () => {
     setCurrentPage(1);
   };
 
-// ----- Assignment logic: only when payment is "Paid" AND order status is "confirmed" -----
-const isAssignAllowed = (order: VendorOrder): boolean => {
-  // const paymentOk = order.payment_status?.toLowerCase() === "paid";
-  const orderConfirmed = order.status?.toLowerCase() === "confirmed";
-  return  orderConfirmed;
-};
+  // Actions are disabled for viewers
+  const canAssign = !readOnly;
+  // const canClearCompany = isSuperAdmin || readOnly;
+  const canSwitchCompany = isSuperAdmin || readOnly;
 
-const getDisabledReason = (order: VendorOrder): string => {
-  // const paymentOk = order.payment_status?.toLowerCase() === "paid";
-  const orderConfirmed = order.status?.toLowerCase() === "confirmed";
-
-  // if (!paymentOk && !orderConfirmed) {
-  //   return "Payment must be completed and the order must be confirmed before assigning a delivery person.";
-  // }
-  // if (!paymentOk) {
-  //   return "Payment is not yet completed. Only paid orders can be assigned.";
-  // }
-  if (!orderConfirmed) {
-    return "Order status must be 'Confirmed' before a delivery person can be assigned.";
-  }
-  return "";
+  const isAssignAllowed = (order: VendorOrder): boolean => {
+    if (!canAssign) return false;
+    const orderConfirmed = order.status?.toLowerCase() === "confirmed";
+    return orderConfirmed;
   };
-  
-  /* ---------- Render ---------- */
+
+  const getDisabledReason = (order: VendorOrder): string => {
+    if (!canAssign) return "You are in view‑only mode.";
+    if (!order.status || order.status.toLowerCase() !== "confirmed") {
+      return "Order status must be 'Confirmed' before a delivery person can be assigned.";
+    }
+    return "";
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
 
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#6750A4]">Vendor Orders</h2>
+          {readOnly && (
+            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+              View Only
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {isSuperAdmin && (
+            <button
+              onClick={() => clearCompany()}
+              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+            >
+              <X className="h-4 w-4" /> Clear Company
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setIsCompanySelectorOpen(true)}
+              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+            >
+              <RefreshCw className="h-4 w-4" /> Switch Company
+            </button>
+          )}
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500 mt-1 mb-4">
+        {isAdminView
+          ? "Showing all vendor orders"
+          : companySlug
+          ? `Orders for ${companyName}`
+          : "Orders"}
+      </p>
+
+      {/* Filters */}
       <VendorOrderFilters
         searchTerm={searchTerm}
         onSearchChange={(v) => setSearchTerm(v)}
@@ -396,154 +427,146 @@ const getDisabledReason = (order: VendorOrder): string => {
         onPaymentMethodChange={(v) => setPaymentMethodFilter(v)}
         selectedCompanyId={selectedCompanyId}
         onCompanyChange={(v) => setSelectedCompanyId(v)}
-        companies={companies}
+        companies={isAdminLike ? companies : []}
         onClear={clearFilters}
         showMobile={showFilters}
         onToggleMobile={() => setShowFilters(!showFilters)}
-        hideCompanyFilter={isCompanyUser}
+        hideCompanyFilter={!isAdminLike}
       />
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              {[
-                "Order ID",
-                "Company",
-                "Amount",
-                "Status",
-                "Delivery",
-                "Delivery Person",
-                "Payment Method",
-                "Actions",
-              ].map((head) => (
-                <th
-                  key={head}
-                  className={`px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider ${head === "Actions" ? "text-right" : ""}`}
-                >
-                  {head}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            ) : error ? (
-              <ErrorState error={error} onRetry={fetchAllOrders} />
-            ) : paginatedOrders.length === 0 ? (
-              <EmptyState />
-            ) : (
-              paginatedOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                    #{order.id}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <CompanyAvatar
-                        logo={order.company?.logo}
-                        name={order.company?.name || "Unknown"}
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        {order.company?.name || "Unknown"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                    {Number(order.amount).toLocaleString()}{" "}
-                    <span className="text-xs text-gray-500">ETB</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={order.status} />
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge
-                      status={order.delivery?.status || "not assigned"}
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-2">
-                      {order.delivery?.delivery_person_name ? (
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-800">
-                            {order.delivery.delivery_person_name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">
-                          Not assigned
-                        </span>
-                      )}
-                      <div>
-                        {isAssignAllowed(order) ? (
-                          <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10">
-                            <DeliveryManager
-                              orderId={order.id}
-                              currentDelivery={order.delivery || null}
-                              companySlug={order.company?.slug || ""}
-                              onUpdate={fetchAllOrders}
-                            />
-                            {order.delivery?.delivery_person_name
-                              ? "Change"
-                              : "Assign"}
-                          </button>
-                        ) : (
-                          <button
-                            disabled
-                            title={getDisabledReason(order)}
-                            className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          >
-                            {order.delivery?.delivery_person_name
-                              ? "Change"
-                              : "Assign"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {order.payment_method
-                      ? order.payment_method.replace(/_/g, " ")
-                      : "—"}
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-right">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
-                    >
-                      <Eye className="h-4 w-4" /> <span>View Detail</span>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Company selector overlay – accessible to viewers */}
+      {isCompanySelectorOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-4xl mx-4">
+            <CompanySelector
+              companies={companies}
+              isLoading={isLoadingCompanies}
+              onSelect={(slug, name) => {
+                const membership = user?.memberships?.find(
+                  (m: any) => m.company_slug === slug
+                );
+                const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+                switchCompany({ slug, name, role });
+                setIsCompanySelectorOpen(false);
+              }}
+              onBack={() => setIsCompanySelectorOpen(false)}
+              allowSwitch={canSwitchCompany}
+            />
+          </div>
+        </div>
+      )}
 
+      {/* Orders Table */}
+      {error ? (
+        <ErrorState error={error} onRetry={fetchAllOrders} />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Person</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Method</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : paginatedOrders.length === 0 ? (
+                <EmptyState />
+              ) : (
+                paginatedOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">#{order.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <CompanyAvatar logo={order.company?.logo} name={order.company?.name || "Unknown"} />
+                        <span className="text-sm font-medium text-gray-700">{order.company?.name || "Unknown"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                      {Number(order.amount).toLocaleString()} <span className="text-xs text-gray-500">ETB</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <StatusBadge status={order.status} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <StatusBadge status={order.delivery?.status || "not assigned"} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-2">
+                        {order.delivery?.delivery_person_name ? (
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm font-medium text-gray-800">{order.delivery?.delivery_person_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Not assigned</span>
+                        )}
+                        <div>
+                          {isAssignAllowed(order) ? (
+                            <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10">
+                              <DeliveryManager
+                                orderId={order.id}
+                                currentDelivery={order.delivery || null}
+                                companySlug={order.company?.slug || ""}
+                                onUpdate={fetchAllOrders}
+                              />
+                              {order.delivery?.delivery_person_name ? "Change" : "Assign"}
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              title={getDisabledReason(order)}
+                              className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                            >
+                              {order.delivery?.delivery_person_name ? "Change" : "Assign"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.payment_method ? order.payment_method.replace(/_/g, " ") : "—"}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-right">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+                      >
+                        <Eye className="h-4 w-4" /> <span>View Detail</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination footer */}
       {!loading && totalFilteredCount > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
           <div className="text-sm text-gray-500">
             Showing {showingFrom} to {showingTo} of {totalFilteredCount} orders
           </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-          />
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
         </div>
       )}
 
+      {/* Detail modal – read‑only by nature (no edit controls) */}
       <VendorOrderDetailModal
         order={selectedOrder}
         receipt={selectedOrder?.receipt || null}
         onClose={() => setSelectedOrder(null)}
-      onUpdate={handleModalUpdate} 
+        onUpdate={handleModalUpdate}
+        readOnly={readOnly} 
       />
     </div>
   );
