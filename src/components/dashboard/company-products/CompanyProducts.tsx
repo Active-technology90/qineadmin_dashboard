@@ -12,7 +12,7 @@ import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
 // import { NoCompanyView } from './NoCompanyView';
 import { TableControls } from "../../ui/TableControls";
-import { useCurrentCompany } from "../../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 
 export default function CompanyProducts() {

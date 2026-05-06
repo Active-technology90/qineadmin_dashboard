@@ -34,7 +34,7 @@ import { Pagination } from "../ui/Pagination";
 import { useSorting } from "../../hooks/useSorting";
 import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
-import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 import { useReadOnly } from "./AdminDashboard"; // 👈 viewer detection
 
 // Memoised sub‑components
@@ -172,11 +172,16 @@ type PaginatedResponse<T> = {
   next: string | null;
 };
 
-
 // Helper to get the highest-privilege membership (owner > admin > staff > delivery > viewer)
 const getPrimaryMembership = (memberships: any[] | undefined) => {
   if (!memberships?.length) return null;
-  const priority: Record<string, number> = { owner: 5, admin: 4, staff: 3, delivery: 2, viewer: 1 };
+  const priority: Record<string, number> = {
+    owner: 5,
+    admin: 4,
+    staff: 3,
+    delivery: 2,
+    viewer: 1,
+  };
 
   let best = memberships[0];
   let bestScore = priority[best.role] || 0;
@@ -212,7 +217,10 @@ export default function CompanyManagement() {
   const canEditCompany = (companySlug: string) => {
     if (readOnly) return false;
     if (isSuperAdmin) return true;
-    return ["owner", "admin"].includes(userCompanyRole || "") && userCompanySlug === companySlug;
+    return (
+      ["owner", "admin"].includes(userCompanyRole || "") &&
+      userCompanySlug === companySlug
+    );
   };
 
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
@@ -425,8 +433,12 @@ export default function CompanyManagement() {
         formPayload.append("sub_category", String(formData.sub_category));
         formPayload.append("business_type", formData.business_type);
 
-        if (formData.description) formPayload.append("description", formData.description);
-        formPayload.append("minimum_order_total", formData.minimum_order_total || "0.00");
+        if (formData.description)
+          formPayload.append("description", formData.description);
+        formPayload.append(
+          "minimum_order_total",
+          formData.minimum_order_total || "0.00",
+        );
 
         formPayload.append("is_active", String(formData.is_active));
         formPayload.append("is_featured", String(formData.is_featured));
@@ -528,7 +540,6 @@ export default function CompanyManagement() {
     },
     [canEditCompany, readOnly],
   );
-
 
   const closeInlineEdit = useCallback(() => {
     setSelectedCompanyForEdit(null);
@@ -955,7 +966,7 @@ export default function CompanyManagement() {
                           })
                         }
                         disabled={!isEditingActive}
-                        className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
+                        className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? "bg-gray-50" : "bg-white"}`}
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Orders below this company total are blocked at checkout.

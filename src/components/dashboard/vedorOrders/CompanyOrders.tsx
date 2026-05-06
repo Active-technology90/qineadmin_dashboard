@@ -14,7 +14,7 @@ import {
 import type { VendorOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import { useAuth } from "../../../hooks/useAuth";
-import { useCurrentCompany } from "../../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { Toast } from "../../ui/Toast";
 import { VendorOrderFilters } from "./VendorOrderFilters";
@@ -46,14 +46,22 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
   const color = colors[status.toLowerCase()] || "bg-gray-100 text-gray-600";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}
+    >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {status.replace(/_/g, " ")}
     </span>
   );
 };
 
-const CompanyAvatar = ({ logo, name }: { logo?: string | null; name: string }) => (
+const CompanyAvatar = ({
+  logo,
+  name,
+}: {
+  logo?: string | null;
+  name: string;
+}) => (
   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
     {logo ? (
       <img src={logo} alt={name} className="w-full h-full object-cover" />
@@ -136,7 +144,9 @@ const Pagination = ({
           key={page}
           onClick={() => onPageChange(page)}
           className={`px-3 py-1 rounded-lg text-sm ${
-            page === currentPage ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+            page === currentPage
+              ? "bg-indigo-600 text-white"
+              : "border border-gray-200 text-gray-700 hover:bg-gray-50"
           }`}
         >
           {page}
@@ -260,7 +270,9 @@ export default function CompanyOrders() {
       const message =
         err.message === "SESSION_EXPIRED"
           ? "Your session has expired."
-          : err.response?.data?.detail || err.message || "Failed to load orders";
+          : err.response?.data?.detail ||
+            err.message ||
+            "Failed to load orders";
       if (!controller.signal.aborted) {
         setError(message);
         showToast("error", message);
@@ -285,7 +297,13 @@ export default function CompanyOrders() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, orderStatusFilter, deliveryStatusFilter, paymentMethodFilter, selectedCompanyId]);
+  }, [
+    searchTerm,
+    orderStatusFilter,
+    deliveryStatusFilter,
+    paymentMethodFilter,
+    selectedCompanyId,
+  ]);
 
   // Client‑side filtering (same as before)
   const filteredOrders = useMemo(() => {
@@ -308,7 +326,8 @@ export default function CompanyOrders() {
     if (deliveryStatusFilter) {
       result = result.filter(
         (o) =>
-          o.delivery?.status?.toLowerCase() === deliveryStatusFilter.toLowerCase(),
+          o.delivery?.status?.toLowerCase() ===
+          deliveryStatusFilter.toLowerCase(),
       );
     }
     if (paymentMethodFilter) {
@@ -340,7 +359,8 @@ export default function CompanyOrders() {
     currentPage * ITEMS_PER_PAGE,
   );
 
-  const showingFrom = totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const showingFrom =
+    totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount);
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
@@ -411,8 +431,8 @@ export default function CompanyOrders() {
         {isAdminView
           ? "Showing all vendor orders"
           : companySlug
-          ? `Orders for ${companyName}`
-          : "Orders"}
+            ? `Orders for ${companyName}`
+            : "Orders"}
       </p>
 
       {/* Filters */}
@@ -443,9 +463,10 @@ export default function CompanyOrders() {
               isLoading={isLoadingCompanies}
               onSelect={(slug, name) => {
                 const membership = user?.memberships?.find(
-                  (m: any) => m.company_slug === slug
+                  (m: any) => m.company_slug === slug,
                 );
-                const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+                const role =
+                  membership?.role ?? (isSuperAdmin ? "admin" : "staff");
                 switchCompany({ slug, name, role });
                 setIsCompanySelectorOpen(false);
               }}
@@ -464,14 +485,30 @@ export default function CompanyOrders() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Person</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Method</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Order ID
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Delivery
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Delivery Person
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Payment Method
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
@@ -481,32 +518,49 @@ export default function CompanyOrders() {
                 <EmptyState />
               ) : (
                 paginatedOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">#{order.id}</td>
+                  <tr
+                    key={order.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                      #{order.id}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <CompanyAvatar logo={order.company?.logo} name={order.company?.name || "Unknown"} />
-                        <span className="text-sm font-medium text-gray-700">{order.company?.name || "Unknown"}</span>
+                        <CompanyAvatar
+                          logo={order.company?.logo}
+                          name={order.company?.name || "Unknown"}
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {order.company?.name || "Unknown"}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                      {Number(order.amount).toLocaleString()} <span className="text-xs text-gray-500">ETB</span>
+                      {Number(order.amount).toLocaleString()}{" "}
+                      <span className="text-xs text-gray-500">ETB</span>
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={order.status} />
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge status={order.delivery?.status || "not assigned"} />
+                      <StatusBadge
+                        status={order.delivery?.status || "not assigned"}
+                      />
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">
                         {order.delivery?.delivery_person_name ? (
                           <div className="flex items-center gap-2">
                             <UserIcon className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-800">{order.delivery?.delivery_person_name}</span>
+                            <span className="text-sm font-medium text-gray-800">
+                              {order.delivery?.delivery_person_name}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Not assigned</span>
+                          <span className="text-xs text-gray-400 italic">
+                            Not assigned
+                          </span>
                         )}
                         <div>
                           {isAssignAllowed(order) ? (
@@ -517,7 +571,9 @@ export default function CompanyOrders() {
                                 companySlug={order.company?.slug || ""}
                                 onUpdate={fetchAllOrders}
                               />
-                              {order.delivery?.delivery_person_name ? "Change" : "Assign"}
+                              {order.delivery?.delivery_person_name
+                                ? "Change"
+                                : "Assign"}
                             </button>
                           ) : (
                             <button
@@ -525,14 +581,18 @@ export default function CompanyOrders() {
                               title={getDisabledReason(order)}
                               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                             >
-                              {order.delivery?.delivery_person_name ? "Change" : "Assign"}
+                              {order.delivery?.delivery_person_name
+                                ? "Change"
+                                : "Assign"}
                             </button>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.payment_method ? order.payment_method.replace(/_/g, " ") : "—"}
+                      {order.payment_method
+                        ? order.payment_method.replace(/_/g, " ")
+                        : "—"}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-right">
                       <button
@@ -556,7 +616,11 @@ export default function CompanyOrders() {
           <div className="text-sm text-gray-500">
             Showing {showingFrom} to {showingTo} of {totalFilteredCount} orders
           </div>
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
 
@@ -566,7 +630,7 @@ export default function CompanyOrders() {
         receipt={selectedOrder?.receipt || null}
         onClose={() => setSelectedOrder(null)}
         onUpdate={handleModalUpdate}
-        readOnly={readOnly} 
+        readOnly={readOnly}
       />
     </div>
   );

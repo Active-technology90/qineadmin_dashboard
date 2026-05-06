@@ -6,7 +6,7 @@ import { Pagination } from "../ui/Pagination";
 import { TableControls } from "../ui/TableControls";
 import { getAdminPayouts, getPayouts } from "../../services/api";
 import { useAuth } from "../../context/authContext";
-import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../hooks/useCompaniesList";
 import { CompanySelector } from "./company-products/CompanySelector";
 
@@ -85,7 +85,7 @@ export default function Payments() {
       setLoading(false);
     }
   };
-console.log(totalCount)
+  console.log(totalCount);
   // Refetch when dependencies change
   useEffect(() => {
     fetchPayouts();
@@ -113,7 +113,7 @@ console.log(totalCount)
   const totalPages = Math.ceil(filteredPayouts.length / pageSize);
   const paginatedPayouts = filteredPayouts.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const goToPage = (page: number) => {
@@ -199,9 +199,10 @@ console.log(totalCount)
               isLoading={isLoadingCompanies}
               onSelect={(slug, name) => {
                 const membership = user?.memberships?.find(
-                  (m: any) => m.company_slug === slug
+                  (m: any) => m.company_slug === slug,
                 );
-                const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+                const role =
+                  membership?.role ?? (isSuperAdmin ? "admin" : "staff");
                 switchCompany({ slug, name, role });
                 setIsCompanySelectorOpen(false);
               }}

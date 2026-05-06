@@ -8,9 +8,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   DollarSign,
-  Activity,
-  BarChart3,
-  PieChart as PieChartIcon,
 } from "lucide-react";
 import {
   BarChart,
@@ -27,8 +24,8 @@ import {
   Line,
 } from "recharts";
 import { getAdminAnalyticsOverview } from "../../services/api";
-import { useAuth } from "../../hooks/useAuth";
 import type { AnalyticsOverviewResponse } from "../../types";
+import { useReadOnly } from "./AdminDashboard";
 
 const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   scope: "company",
@@ -51,11 +48,9 @@ const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
 };
 
 const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
-const PIE_COLORS = ["#10B981", "#F59E0B", "#EF4444", "#3B82F6"];
 
 type Period = "week" | "month" | "year";
 
-// ---------- Helpers ----------
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -89,7 +84,40 @@ const paymentStatusClass = (ps: string) => {
   return "bg-gray-100 text-gray-600";
 };
 
-// ---------- Skeleton Presets ----------
+// Get meaningful color for each order status
+const getStatusColor = (statusName: string): string => {
+  const s = statusName.toLowerCase();
+
+  if (s.includes("paid") || s.includes("approved") || s.includes("success"))
+    return "#10B981"; // green
+
+  if (s.includes("cancell") || s.includes("reject") || s.includes("failed"))
+    return "#EF4444"; // red
+
+  if (s.includes("pending") || s.includes("waiting")) return "#F59E0B"; // amber
+
+  if (s.includes("verify") || s.includes("review") || s.includes("check"))
+    return "#F97316"; // orange
+
+  if (s.includes("process") || s.includes("shipp") || s.includes("confirm"))
+    return "#3B82F6"; // blue
+
+  if (s.includes("out for delivery") || s.includes("on the way"))
+    return "#8B5CF6"; // purple
+
+  if (s.includes("delivered") || s.includes("completed")) return "#059669"; // emerald
+
+  // Fallback: generate consistent color from name hash
+  let hash = 0;
+  for (let i = 0; i < statusName.length; i++) {
+    hash = (hash << 5) - hash + statusName.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 55%)`;
+};
+
+// Skeleton components
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-pulse">
     <div className="flex items-start justify-between">
@@ -110,7 +138,6 @@ const SkeletonChart = ({ height = "h-64" }: { height?: string }) => (
   </div>
 );
 
-// ---------- Summary Card Component ----------
 const SummaryCard = ({
   title,
   value,
@@ -119,15 +146,7 @@ const SummaryCard = ({
   textColor,
   trend,
   trendLabel,
-}: {
-  title: string;
-  value: string;
-  icon: any;
-  bgLight: string;
-  textColor: string;
-  trend?: number;
-  trendLabel?: string;
-}) => (
+}: any) => (
   <div className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
     <div className="flex items-start justify-between">
       <div
@@ -158,20 +177,14 @@ const SummaryCard = ({
   </div>
 );
 
-// ---------- Main Overview Component ----------
 export default function Overview() {
-  const { user } = useAuth();
+  const readOnly = useReadOnly();
   const [period, setPeriod] = useState<Period>("week");
+  const [selectedCompanySlug, setSelectedCompanySlug] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  const [analytics, setAnalytics] = useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
-  const [selectedCompanySlug, setSelectedCompanySlug] = useState<string>("");
-
-  useEffect(() => {
-    if (!selectedCompanySlug && user?.memberships?.length) {
-      setSelectedCompanySlug(user.memberships[0].company_slug);
-    }
-  }, [user, selectedCompanySlug]);
+  const [analytics, setAnalytics] =
+    useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
 
   useEffect(() => {
     let active = true;
@@ -185,9 +198,6 @@ export default function Overview() {
         });
         if (!active) return;
         setAnalytics(data);
-        if (!selectedCompanySlug && data.selected_company?.slug) {
-          setSelectedCompanySlug(data.selected_company.slug);
-        }
       } catch (err: any) {
         if (!active) return;
         setError(err?.response?.data?.detail || "Failed to load analytics.");
@@ -211,7 +221,13 @@ export default function Overview() {
     avgOrderValue: analytics.summary.avg_order_value,
     conversionRate: analytics.summary.success_rate,
   };
-  const orderStatusData = analytics.order_status;
+
+  // Prepare order status data with dynamic colors
+  const orderStatusData = analytics.order_status.map((item) => ({
+    ...item,
+    color: getStatusColor(item.name),
+  }));
+
   const categorySalesData = analytics.category_sales.map((cat, idx) => ({
     ...cat,
     color: CHART_COLORS[idx % CHART_COLORS.length],
@@ -222,34 +238,38 @@ export default function Overview() {
     ? Object.keys(categoryTrendData[0]).filter((key) => key !== "month")
     : [];
 
-  // Orders disabled period selection effect on other charts (optional)
+  const scopeOptions = [
+    { value: "", label: "All Companies" },
+    ...analytics.available_companies.map((c) => ({
+      value: c.slug,
+      label: c.name,
+    })),
+  ];
 
   return (
     <div className="space-y-8">
-      {(analytics.available_companies.length > 1 || analytics.scope === "platform") && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center gap-3">
-          <div className="text-sm text-gray-600">
-            Scope:{" "}
-            <span className="font-semibold text-gray-900">
-              {analytics.scope === "platform" && !analytics.selected_company
-                ? "All Companies"
-                : analytics.selected_company?.name || "Company"}
-            </span>
-          </div>
+      {/* Scope selector */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Scope:</span>
           <select
             value={selectedCompanySlug}
             onChange={(e) => setSelectedCompanySlug(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent"
           >
-            {analytics.scope === "platform" && <option value="">All Companies</option>}
-            {analytics.available_companies.map((company) => (
-              <option key={company.slug} value={company.slug}>
-                {company.name}
+            {scopeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
               </option>
             ))}
           </select>
         </div>
-      )}
+        {readOnly && (
+          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+            View Only
+          </span>
+        )}
+      </div>
 
       {!!error && (
         <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-3 text-sm">
@@ -296,9 +316,8 @@ export default function Overview() {
           </>
         )}
       </div>
-
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+       {/* Quick Stats Row */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loading ? (
           <>
             <SkeletonCard />
@@ -348,7 +367,7 @@ export default function Overview() {
             </div>
           </>
         )}
-      </div>
+      </div> */}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -383,11 +402,7 @@ export default function Overview() {
                       <button
                         key={p}
                         onClick={() => setPeriod(p)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                          period === p
-                            ? "bg-white shadow text-[#6750A4]"
-                            : "text-gray-500 hover:text-gray-700"
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? "bg-white shadow text-[#6750A4]" : "text-gray-500 hover:text-gray-700"}`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
                       </button>
@@ -454,7 +469,7 @@ export default function Overview() {
           )}
         </div>
 
-        {/* Order Status Pie */}
+        {/* Order Status Pie Chart with dynamic colors */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
             <SkeletonChart height="h-[300px]" />
@@ -475,17 +490,12 @@ export default function Overview() {
                       paddingAngle={3}
                       dataKey="value"
                     >
-                      {orderStatusData.map((_, idx) => (
-                        <Cell
-                          key={idx}
-                          fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                        />
+                      {orderStatusData.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: any) => [
-                        `${value} orders`,
-                      ]}
+                      formatter={(value: any) => [`${value} orders`]}
                       contentStyle={{
                         borderRadius: "12px",
                         border: "1px solid #e5e7eb",
@@ -495,11 +505,11 @@ export default function Overview() {
                 </ResponsiveContainer>
               </div>
               <div className="flex flex-wrap gap-3 mt-2">
-                {orderStatusData.map((s, i) => (
+                {orderStatusData.map((s) => (
                   <div key={s.name} className="flex items-center gap-1.5">
                     <span
                       className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: PIE_COLORS[i] }}
+                      style={{ backgroundColor: s.color }}
                     />
                     <span className="text-xs text-gray-600">
                       {s.name} ({s.value})
@@ -512,7 +522,7 @@ export default function Overview() {
         </div>
       </div>
 
-      {/* Category Trend & Top Categories */}
+      {/* Category Trend & Top Categories – unchanged */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
@@ -533,7 +543,10 @@ export default function Overview() {
                     <div key={name} className="flex items-center gap-1.5">
                       <span
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                        style={{
+                          backgroundColor:
+                            CHART_COLORS[idx % CHART_COLORS.length],
+                        }}
                       />
                       <span className="text-xs text-gray-600">{name}</span>
                     </div>
@@ -635,7 +648,7 @@ export default function Overview() {
         </div>
       </div>
 
-      {/* Recent Orders */}
+      {/* Recent Orders Table */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
         {loading ? (
           <SkeletonChart height="h-[320px]" />
@@ -645,7 +658,7 @@ export default function Overview() {
               <h3 className="text-sm font-semibold text-gray-700">
                 Recent Orders
               </h3>
-              <p className="text-xs font-medium text-[#6750A4] hover:underline">
+              <p className="text-xs font-medium text-[#6750A4] hover:underline cursor-pointer">
                 View all →
               </p>
             </div>

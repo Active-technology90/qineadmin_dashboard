@@ -1,7 +1,7 @@
 // src/components/admin/companyUser/CompanyUsers.tsx
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../context/authContext";
-import { useCurrentCompany } from "../../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { useCompanyUsers } from "../../../hooks/useCompanyUsers";
 import { useAddCompanyUser } from "../../../hooks/useAddCompanyUser";
@@ -44,7 +44,11 @@ export default function CompanyUsers() {
   }, [currentUser, companySlug, isSuperAdmin]);
 
   // Viewers can see the user list, but cannot manage (add/edit/delete)
-  const canViewUsers = isSuperAdmin || currentUserRole === "admin" || currentUserRole === "staff" || readOnly;
+  const canViewUsers =
+    isSuperAdmin ||
+    currentUserRole === "admin" ||
+    currentUserRole === "staff" ||
+    readOnly;
   const canManageUsers =
     (isSuperAdmin || currentUserRole === "admin") && !readOnly;
 

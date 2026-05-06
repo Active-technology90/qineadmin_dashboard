@@ -27,7 +27,7 @@ import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
-import { useReadOnly } from "./AdminDashboard"; // 👈 viewer detection
+import { useReadOnly } from "./AdminDashboard";
 
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);

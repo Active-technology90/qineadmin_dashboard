@@ -17,7 +17,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
 import Overview from "./Overview";
 import CompanyUsers from "./companyUser/CompanyUsers";
@@ -372,13 +372,13 @@ export default function AdminDashboard() {
           />
 
           {/* {!hideUsersSidebar && ( */}
-            <SidebarItem
-              icon={<Users className="h-5 w-5" />}
-              label="Company Users"
-              active={activeTab === "users"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("users")}
-            />
+          <SidebarItem
+            icon={<Users className="h-5 w-5" />}
+            label="Company Users"
+            active={activeTab === "users"}
+            collapsed={sidebarCollapsed}
+            onClick={() => navigate("users")}
+          />
           {/* )} */}
 
           <OrdersMenu
@@ -547,10 +547,8 @@ export default function AdminDashboard() {
           </div>
         </header>
         {/* add div and padding */}
-        
-        <div className="p-6 lg:p-8">
-    {renderContent()}
-  </div>
+
+        <div className="p-6 lg:p-8">{renderContent()}</div>
       </main>
     </div>
   );

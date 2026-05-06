@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { updateProfile, changePassword, getMe } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
-import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 import {
   User,
   Mail,
@@ -35,7 +35,7 @@ export default function AdminProfile() {
   const { user, setUser, logout } = useAuth();
   const { company, switchCompany } = useCurrentCompany();
   const isSuperAdmin = !user?.memberships?.length;
-  console.log(user)
+  console.log(user);
 
   const [avatar, setAvatar] = useState<string | null>(
     user?.profile_image || user?.image || null,
