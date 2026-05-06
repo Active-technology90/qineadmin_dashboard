@@ -2,6 +2,19 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { updateProfile, changePassword, getMe } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
+import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Key,
+  Building,
+  ArrowRight,
+  Camera,
+  LogOut,
+  CheckCircle,
+} from "lucide-react";
 
 type ProfileForm = {
   first_name: string;
@@ -20,12 +33,13 @@ const BRAND_COLOR = "#6750A4";
 
 export default function AdminProfile() {
   const { user, setUser, logout } = useAuth();
+  const { company, switchCompany } = useCurrentCompany();
   const isSuperAdmin = !user?.memberships?.length;
+  console.log(user)
 
   const [avatar, setAvatar] = useState<string | null>(
     user?.profile_image || user?.image || null,
   );
-
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [activeForm, setActiveForm] = useState<
@@ -53,30 +67,19 @@ export default function AdminProfile() {
     },
   });
 
-  // =========================
-  // PROFILE UPDATE
-  // =========================
   const onSubmitProfile = async (data: ProfileForm) => {
     setProfileLoading(true);
-
     try {
       const formData = new FormData();
       formData.append("first_name", data.first_name);
       formData.append("last_name", data.last_name);
       formData.append("email", data.email);
       formData.append("phone_number", data.phone_number);
-
       await updateProfile(formData);
-
       const res = await getMe();
       const updatedUser = res.data;
-
       setUser(updatedUser);
-
-      if (updatedUser.profile_image) {
-        setAvatar(updatedUser.profile_image ?? null);
-      }
-
+      if (updatedUser.profile_image) setAvatar(updatedUser.profile_image);
       alert("Profile updated successfully");
     } catch (err) {
       console.error(err);
@@ -86,23 +89,17 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // PASSWORD CHANGE
-  // =========================
   const onSubmitPassword = async (data: PasswordForm) => {
     if (data.newPassword !== data.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-
     setPasswordLoading(true);
-
     try {
       await changePassword({
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
-
       alert("Password changed successfully");
       reset();
     } catch (err) {
@@ -113,37 +110,23 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // AVATAR CHANGE (WEB)
-  // =========================
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // (optional but recommended)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image must be less than 5MB");
       return;
     }
-
-    // preview only
     const url = URL.createObjectURL(file);
     setAvatar(url);
-
     try {
       const formData = new FormData();
-
-      // ⚠️ MUST MATCH BACKEND
       formData.append("profile_image", file);
-
       await updateProfile(formData);
-
       const res = await getMe();
       const updatedUser = res.data;
-
       setUser(updatedUser);
       setAvatar(updatedUser.profile_image ?? null);
-
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
@@ -151,326 +134,385 @@ export default function AdminProfile() {
     }
   };
 
-  // =========================
-  // LOGOUT
-  // =========================
-  const handleLogout = async () => {
-    await logout();
+  const handleSwitchCompany = (membership: any) => {
+    switchCompany({
+      slug: membership.company_slug,
+      name: membership.company_name,
+      role: membership.role,
+    });
+  };
+
+  // Determine if a membership is currently selected
+  const isCurrentCompany = (membership: any) => {
+    return company?.slug === membership.company_slug;
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 p-6">
-      {/* HEADER */}
-      <div
-        className="rounded-2xl p-6 text-white flex items-center justify-between shadow-xl backdrop-blur-md"
-        style={{
-          backgroundColor: BRAND_COLOR,
-          backgroundImage:
-            "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.15))",
-        }}
-      >
-        <div className="flex items-center gap-4">
-          {/* AVATAR */}
-          <div className="relative group w-16 h-16">
-            {/* AVATAR IMAGE */}
-            {avatar ? (
-              <img
-                src={avatar}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                👤
+    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+      {/* Profile Header Card */}
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+        <div
+          className="relative h-32 bg-gradient-to-r from-[#6750A4] to-[#8B6BB4]"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${BRAND_COLOR}, #6750A4)`,
+          }}
+        >
+          <div className="absolute -bottom-12 left-6 flex items-end gap-4">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden">
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    className="w-full h-full object-cover"
+                    alt="avatar"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                    <User className="h-10 w-10" />
+                  </div>
+                )}
               </div>
-            )}
-
-            {/* CAMERA ICON OVERLAY */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition">
-              <span className="text-white text-lg">📷</span>
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 transition"
+              >
+                <Camera className="h-4 w-4 text-gray-600" />
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </label>
             </div>
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-sm">
+                {user?.first_name} {user?.last_name}
+              </h1>
 
-            {/* FILE INPUT */}
-            <input
-              type="file"
-              onChange={handleAvatarChange}
-              className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          </div>
-
-          {/* USER INFO */}
-          {/* USER INFO + MEMBERSHIP */}
-          <div className="space-y-1">
-            {/* NAME */}
-            <h2 className="text-lg font-bold">
-              {user?.first_name} {user?.last_name}
-            </h2>
-
-            {/* EMAIL */}
-            <p className="text-sm opacity-80">{user?.email}</p>
-
-            {/* GLOBAL ROLE */}
-            {/* <span className="text-xs bg-white/20 px-2 py-1 rounded-full inline-block">
-    Role: {user?.role} 
-  </span> */}
-
-            {/* MEMBERSHIPS SECTION (NEW FEATURE) */}
-          </div>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="bg-white text-black px-4 py-2 rounded-lg"
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* TABS */}
-      <div className="flex gap-2 mt-6 bg-white p-2 rounded-full w-fit shadow-sm">
-        <button
-          onClick={() => setActiveForm("profile")}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeForm === "profile"
-              ? "text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          style={
-            activeForm === "profile" ? { backgroundColor: BRAND_COLOR } : {}
-          }
-        >
-          Edit Profile
-        </button>
-
-        <button
-          onClick={() => setActiveForm("password")}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeForm === "password"
-              ? "text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          style={
-            activeForm === "password" ? { backgroundColor: BRAND_COLOR } : {}
-          }
-        >
-          Change Password
-        </button>
-        {!isSuperAdmin && (
-          <button
-            onClick={() => setActiveForm("membership")}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              activeForm === "membership"
-                ? "text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            style={
-              activeForm === "membership"
-                ? { backgroundColor: BRAND_COLOR }
-                : {}
-            }
-          >
-            Membership
-          </button>
-        )}
-      </div>
-
-      {/* PROFILE FORM */}
-      {activeForm === "profile" && (
-        <div className="bg-white p-6 rounded-2xl mt-6 space-y-4 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold">Personal Info</h3>
-
-          <Controller
-            control={control}
-            name="first_name"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="First Name"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="last_name"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Last Name"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Email"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="phone_number"
-            render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Phone Number"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <button
-            onClick={handleSubmit(onSubmitProfile)}
-            disabled={profileLoading}
-            className="w-full sm:w-auto px-6 py-2 rounded-full text-white font-medium transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-95"
-            style={{ backgroundColor: BRAND_COLOR }}
-          >
-            {profileLoading ? "Updating..." : "Update Profile"}
-          </button>
-        </div>
-      )}
-
-      {/* PASSWORD FORM */}
-      {activeForm === "password" && (
-        <div className="bg-white p-6 rounded-2xl mt-6 space-y-4 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold">Change Password</h3>
-
-          <Controller
-            control={passwordControl}
-            name="currentPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="Current Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={passwordControl}
-            name="newPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="New Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <Controller
-            control={passwordControl}
-            name="confirmPassword"
-            render={({ field }) => (
-              <input
-                {...field}
-                type="password"
-                placeholder="Confirm Password"
-                className="w-full border border-gray-200 p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-              />
-            )}
-          />
-
-          <button
-            onClick={handlePasswordSubmit(onSubmitPassword)}
-            disabled={passwordLoading}
-            className="w-full sm:w-auto px-6 py-2 rounded-full text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
-            style={{ backgroundColor: BRAND_COLOR }}
-          >
-            {passwordLoading ? "Saving..." : "Change Password"}
-          </button>
-        </div>
-      )}
-
-      {/* MEMBERSHIP FORM */}
-      {!isSuperAdmin && activeForm === "membership" && (
-        <div className="bg-white p-6 rounded-2xl mt-6 shadow-lg border border-gray-100">
-          {/* HEADER */}
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-bold text-gray-800">
-              Company Memberships
-            </h3>
-
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
-              {user?.memberships?.length || 0} companies
-            </span>
-          </div>
-
-          {/* TABLE */}
-          {user?.memberships?.length ? (
-            <div className="overflow-hidden rounded-xl border border-gray-200">
-              <table className="w-full">
-                {/* HEADER */}
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Company
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Role
-                    </th>
-                  </tr>
-                </thead>
-
-                {/* BODY */}
-                <tbody className="divide-y divide-gray-100">
-                  {user.memberships.map((m: any, index: number) => (
-                    <tr key={index} className="hover:bg-gray-50 transition">
-                      {/* COMPANY NAME */}
-                      <td className="p-4 flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-sm font-bold">
-                          🏢
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">
-                            {m.company_name}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Member organization
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* ROLE */}
-                      <td className="p-4">
-                        <span
-                          className={`text-xs px-3 py-1 rounded-full font-medium ${
-                            m.role === "admin"
-                              ? "bg-green-100 text-green-700"
-                              : m.role === "viewer"
-                                ? "bg-gray-100 text-gray-600"
-                                : "bg-purple-100 text-purple-700"
-                          }`}
-                        >
-                          {m.role}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="mt-2 inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">
+                <span className="w-2 h-2 rounded-full bg-white" />
+                <p className="text-black/60 text-sm font-medium">
+                  {user?.email}
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-10">
-              <div className="text-gray-400 text-4xl mb-2">🏢</div>
-              <p className="text-gray-500 text-sm">
-                No company memberships found
-              </p>
+          </div>
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        </div>
+        <div className="pt-16 pb-6 px-6">
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-gray-200">
+            <button
+              onClick={() => setActiveForm("profile")}
+              className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
+                activeForm === "profile"
+                  ? "text-[#6750A4]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Edit Profile
+              {activeForm === "profile" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveForm("password")}
+              className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
+                activeForm === "password"
+                  ? "text-[#6750A4]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Change Password
+              {activeForm === "password" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+              )}
+            </button>
+            {!isSuperAdmin && (
+              <button
+                onClick={() => setActiveForm("membership")}
+                className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
+                  activeForm === "membership"
+                    ? "text-[#6750A4]"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Memberships
+                {activeForm === "membership" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Profile Form */}
+          {activeForm === "profile" && (
+            <div className="mt-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <Controller
+                    control={control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                          placeholder="First Name"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <Controller
+                    control={control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                          placeholder="Last Name"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        type="email"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <Controller
+                  control={control}
+                  name="phone_number"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                        placeholder="+251 9XX XXX XXX"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={handleSubmit(onSubmitProfile)}
+                  disabled={profileLoading}
+                  className="px-6 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {profileLoading ? "Updating..." : "Update Profile"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Password Form */}
+          {activeForm === "password" && (
+            <div className="mt-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Password
+                </label>
+                <Controller
+                  control={passwordControl}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        type="password"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <Controller
+                  control={passwordControl}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        type="password"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        placeholder="New password"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <Controller
+                  control={passwordControl}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        type="password"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={handlePasswordSubmit(onSubmitPassword)}
+                  disabled={passwordLoading}
+                  className="px-6 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50"
+                >
+                  {passwordLoading ? "Saving..." : "Change Password"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Membership Section with current selection highlight */}
+          {!isSuperAdmin && activeForm === "membership" && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Your Companies
+                </h3>
+                <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                  {user?.memberships?.length || 0} memberships
+                </span>
+              </div>
+
+              {user?.memberships?.length ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {user.memberships.map((membership: any, idx: number) => {
+                    const isActive = isCurrentCompany(membership);
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => handleSwitchCompany(membership)}
+                        className={`relative bg-white border rounded-xl p-4 cursor-pointer transition-all duration-200 group ${
+                          isActive
+                            ? "border-[#6750A4] shadow-md ring-1 ring-[#6750A4]/20"
+                            : "border-gray-200 hover:shadow-md"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                                isActive
+                                  ? "bg-[#6750A4] text-white"
+                                  : "bg-[#6750A4]/10 text-[#6750A4]"
+                              }`}
+                            >
+                              <Building className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p
+                                className={`font-medium transition-colors ${
+                                  isActive
+                                    ? "text-[#6750A4]"
+                                    : "text-gray-800 group-hover:text-[#6750A4]"
+                                }`}
+                              >
+                                {membership.company_name}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                {isActive
+                                  ? "Currently active"
+                                  : "Click to switch"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                                membership.role === "admin"
+                                  ? "bg-green-100 text-green-700"
+                                  : membership.role === "staff"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {membership.role}
+                            </span>
+                            {isActive ? (
+                              <CheckCircle className="h-4 w-4 text-[#6750A4]" />
+                            ) : (
+                              <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-[#6750A4] transition-colors" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <Building className="h-12 w-12 mx-auto text-gray-300" />
+                  <p className="text-gray-500 mt-2">
+                    No company memberships found
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

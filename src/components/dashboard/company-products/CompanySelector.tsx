@@ -19,6 +19,7 @@ interface CompanySelectorProps {
   isLoading: boolean;
   onSelect: (slug: string, name: string) => void;
   onBack: () => void;
+  allowSwitch?: boolean; 
 }
 
 // ---------------------------------------------------------------------------
@@ -220,14 +221,15 @@ export function CompanySelector({
   isLoading,
   onSelect,
   onBack,
+  allowSwitch=false
 }: CompanySelectorProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   const isSuperAdmin = !user?.memberships || user.memberships.length === 0;
-
-  if (!isSuperAdmin) {
+  const hasAccess = isSuperAdmin || allowSwitch;
+  if (!hasAccess) {
     return <AccessDenied onBack={onBack} />;
   }
 

@@ -24,7 +24,6 @@ import {
   assignDelivery,
   updateDeliveryPerson,
 } from "../../../services/api";
-
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 
@@ -68,6 +67,7 @@ const getStatusBadge = (status: string) => {
 
   return "bg-gray-50 text-gray-600 border border-gray-200";
 };
+
 interface OrderReceipt {
   id: number;
   status: string;
@@ -76,20 +76,6 @@ interface OrderReceipt {
   amount: string;
   uploaded_at: string;
 }
-// ---------- Types ----------
-// interface PaymentReceipt {
-//   id: number;
-//   master_order: number;
-//   customer_name: string;
-//   order_total: number;
-//   bank_info: string | null;
-//   bank_name: string;
-//   receipt_image: string;
-//   amount: string;
-//   status: string;
-//   admin_notes: string;
-//   uploaded_at: string;
-// }
 
 interface StaffMember {
   id: number;
@@ -107,7 +93,7 @@ interface StaffMember {
 
 // ---------- Sub‑components ----------
 
-// 1. Customer Card (with copyable fields)
+// Customer Card (unchanged)
 const CustomerCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -126,19 +112,12 @@ const CustomerCard = ({ order }: { order: VendorOrder }) => (
           <span>{order.shipping_phone || "No phone"}</span>
           <CopyButton text={order.shipping_phone} />
         </div>
-        {/* {order.email && (
-          <div className="flex items-center gap-2 text-gray-500">
-            <Mail className="h-3.5 w-3.5" />
-            <span>{order.email}</span>
-            <CopyButton text={order.email} />
-          </div>
-        )} */}
       </div>
     </div>
   </div>
 );
 
-// 2. Shipping Card
+// Shipping Card (unchanged)
 const ShippingCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-white rounded-xl border border-blue-100 p-6 shadow-sm">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -167,16 +146,15 @@ const ShippingCard = ({ order }: { order: VendorOrder }) => (
   </div>
 );
 
-// 3. Delivery Card (enhanced with avatar, tracking, assignment)
-// Inside VendorOrderDetailModal.tsx – replacement for DeliveryCard with update support
-// Inside VendorOrderDetailModal.tsx – replace the DeliveryCard component
-
+// Delivery Card – now accepts readOnly prop
 const DeliveryCard = ({
   order,
   onUpdate,
+  readOnly,
 }: {
   order: VendorOrder;
   onUpdate: () => void;
+  readOnly: boolean;
 }) => {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
@@ -186,29 +164,16 @@ const DeliveryCard = ({
   const { showToast } = useToast();
 
   const delivery = order.delivery;
-  const formatStatus = (status?: string) => {
-  if (!status) return "";
-
-  return status
-    .replace(/_/g, " ")                 // out_for_delivery → out for delivery
-    .replace(/\b\w/g, (c) => c.toUpperCase()); // capitalize each word
-};
-
-  // ----- New rule: paid + confirmed -----
-  // const paymentPaid = order.payment_status?.toLowerCase() === "paid";
   const orderConfirmed = order.status?.toLowerCase() === "confirmed";
-  const canManage = orderConfirmed;
+  const canManage = !readOnly && orderConfirmed;
 
-  // Highlight when ready to assign but not yet done
-  const shouldHighlight = canManage && !order.delivery;   // or !delivery?.delivery_person_name
+  const formatStatus = (status?: string) => {
+    if (!status) return "";
+    return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
   const getDisabledReason = (): string => {
-    // if (!paymentPaid && !orderConfirmed) {
-    //   return "Payment must be completed and the order status must be 'Confirmed' before assigning a delivery person.";
-    // }
-    // if (!paymentPaid) {
-    //   return "Payment is not yet completed. Only paid orders can be assigned.";
-    // }
+    if (readOnly) return "You are in view‑only mode.";
     if (!orderConfirmed) {
       return "Order status must be 'Confirmed' before a delivery person can be assigned.";
     }
@@ -217,25 +182,28 @@ const DeliveryCard = ({
 
   useEffect(() => {
     if (!order.company?.slug) return;
-
     const fetchStaff = async () => {
       setLoadingStaff(true);
       try {
-        const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
-        const mappedStaff = (res.data.results || res.data).map((staff: any) => ({
-          id: staff.user.id,
-          name:
-            `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() ||
-            staff.user.username ||
-            staff.user.email,
-          phone: staff.user.phone_number,
-        }));
+        const res = await getCompanyStaffByRole(
+          order.company.slug!,
+          "delivery",
+        );
+        const mappedStaff = (res.data.results || res.data).map(
+          (staff: any) => ({
+            id: staff.user.id,
+            name:
+              `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() ||
+              staff.user.username ||
+              staff.user.email,
+            phone: staff.user.phone_number,
+          }),
+        );
         setStaffList(mappedStaff);
       } finally {
         setLoadingStaff(false);
       }
     };
-
     fetchStaff();
   }, [order.company?.slug]);
 
@@ -269,7 +237,7 @@ const DeliveryCard = ({
   };
 
   const handleOpenForm = () => {
-    if (assigning) return;
+    if (assigning || readOnly) return;
     if (delivery?.delivery_person) {
       setSelectedUserId(delivery.delivery_person);
     } else {
@@ -282,6 +250,8 @@ const DeliveryCard = ({
     setShowAssignForm(false);
     setSelectedUserId("");
   };
+
+  const shouldHighlight = canManage && !order.delivery;
 
   return (
     <div
@@ -437,7 +407,8 @@ const DeliveryCard = ({
     </div>
   );
 };
-// 4. Order Items Table (full width)
+
+// Order Items Card (unchanged)
 const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -494,50 +465,7 @@ const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
   </div>
 );
 
-// 5. Order Summary Card (right column)
-// const OrderSummaryCard = ({ order }: { order: VendorOrder }) => (
-//   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-//     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-//       <Receipt className="h-4 w-4 text-[#6750A4]" /> Order Summary
-//     </h4>
-//     <div className="space-y-4 text-sm">
-//       <div className="flex justify-between items-center">
-//         <span className="text-gray-500">Order Status</span>
-//         <span
-//           className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
-//         >
-//           {order.status}
-//         </span>
-//       </div>
-//       <div className="flex justify-between items-center">
-//         <span className="text-gray-500">Delivery Status</span>
-//         <span
-//           className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.delivery_status || "pending")}`}
-//         >
-//           {order.delivery_status || "pending"}
-//         </span>
-//       </div>
-//       {order.tax_invoice?.invoice_number && (
-//         <div className="flex justify-between items-center">
-//           <span className="text-gray-500">Invoice #</span>
-//           <span className="font-mono text-gray-700">
-//             {order.tax_invoice.invoice_number}
-//           </span>
-//         </div>
-//       )}
-//       <div className="pt-4 border-t border-gray-100">
-//         <div className="flex justify-between items-center">
-//           <span className="text-gray-500 font-medium">Total Amount</span>
-//           <span className="text-xl font-bold text-[#6750A4]">
-//             {Number(order.amount).toLocaleString()} ETB
-//           </span>
-//         </div>
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// 6. Financial Card (right column)
+// Financial Card (unchanged)
 const FinancialCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-[#6750A4] text-white rounded-xl p-6 shadow-sm">
     <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
@@ -570,7 +498,7 @@ const FinancialCard = ({ order }: { order: VendorOrder }) => (
   </div>
 );
 
-// 7. Timeline Card (right column)
+// Timeline Card (unchanged)
 const TimelineCard = ({ order }: { order: VendorOrder }) => (
   <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
@@ -606,17 +534,17 @@ const TimelineCard = ({ order }: { order: VendorOrder }) => (
   </div>
 );
 
-// 8. Receipt Review Card (right column, with image preview modal)
-// inside VendorOrderDetailModal.tsx
-
+// Receipt Review Card – accepts readOnly prop
 const ReceiptReviewCard = ({
   receipt,
   paymentMethod,
   onUpdate,
+  readOnly,
 }: {
   receipt?: OrderReceipt | null;
   paymentMethod?: string;
   onUpdate: () => void;
+  readOnly: boolean;
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -627,7 +555,6 @@ const ReceiptReviewCard = ({
   >(null);
   const { showToast } = useToast();
 
-  // Case 1: Chapa
   if (paymentMethod === "chapa") {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
@@ -649,7 +576,6 @@ const ReceiptReviewCard = ({
     );
   }
 
-  // Case 2: Bank transfer but no receipt uploaded yet
   if (!receipt) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
@@ -671,11 +597,12 @@ const ReceiptReviewCard = ({
     );
   }
 
-  // Case 3: Bank transfer with receipt
   const isAlreadyReviewed =
     receipt.status === "approved" || receipt.status === "rejected";
+  const canReview = !readOnly && !isAlreadyReviewed;
 
   const handleActionClick = (action: "approved" | "rejected") => {
+    if (!canReview) return;
     setPendingAction(action);
     setShowConfirm(true);
   };
@@ -748,7 +675,7 @@ const ReceiptReviewCard = ({
           </div>
         )}
 
-        {!isAlreadyReviewed && (
+        {canReview && (
           <div className="pt-2 space-y-3">
             <div className="flex gap-2 flex-wrap">
               <button
@@ -784,9 +711,7 @@ const ReceiptReviewCard = ({
                   <Check className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800">
-                    Payment approved
-                  </p>
+                  <p className="font-medium text-gray-800">Payment approved</p>
                   <p className="text-xs text-[#6750A4] mt-0.5">
                     Next step: Assign a delivery person
                   </p>
@@ -798,9 +723,7 @@ const ReceiptReviewCard = ({
                   <X className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800">
-                    Payment rejected
-                  </p>
+                  <p className="font-medium text-gray-800">Payment rejected</p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     The customer may upload a new receipt.
                   </p>
@@ -811,7 +734,6 @@ const ReceiptReviewCard = ({
         )}
       </div>
 
-      {/* Image modal */}
       {showImage && receipt.receipt_image && (
         <div
           className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
@@ -858,54 +780,7 @@ const ReceiptReviewCard = ({
   );
 };
 
-// 9. Status Update Section (top bar)
-// const StatusUpdateSection = ({
-//   orderId,
-//   currentStatus,
-//   onUpdate,
-// }: {
-//   orderId: number;
-//   currentStatus: string;
-//   onUpdate: () => void;
-// }) => {
-//   const [selected, setSelected] = useState(currentStatus);
-//   const [updating, setUpdating] = useState(false);
-//   const { showToast } = useToast();
-
-//   useEffect(() => setSelected(currentStatus), [currentStatus]);
-
-//   const handleChange = async (newStatus: string) => {
-//     setUpdating(true);
-//     try {
-//       await api.patch(`/orders/vendor/${orderId}/`, { status: newStatus });
-//       showToast("success", `Status updated to ${newStatus.replace(/_/g, " ")}`);
-//       onUpdate();
-//     } catch (err: any) {
-//       showToast("error", err.response?.data?.detail || "Update failed");
-//     } finally {
-//       setUpdating(false);
-//     }
-//   };
-
-//   return (
-//     <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
-//       <span className="text-sm font-semibold text-gray-700">Order Status:</span>
-//       <select
-//         value={selected}
-//         onChange={(e) => handleChange(e.target.value)}
-//         disabled={updating}
-//         className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#6750A4]"
-//       >
-//         {["pending", "accepted", "processing", "completed", "cancelled"].map((s) => (
-//           <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-//         ))}
-//       </select>
-//       {updating && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
-//     </div>
-//   );
-// };
-
-// Reusable Copy Button
+// Copy Button (unchanged)
 const CopyButton = ({ text }: { text?: string | null }) => {
   const [copied, setCopied] = useState(false);
   if (!text) return null;
@@ -928,32 +803,33 @@ const CopyButton = ({ text }: { text?: string | null }) => {
   );
 };
 
-// ════════════════════════════════════════
-// MAIN MODAL
-// ════════════════════════════════════════
-
+// Animation variants
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.96 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
   exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15 } },
 };
-
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
 
+// ════════════════════════════════════════
+// MAIN MODAL COMPONENT
+// ════════════════════════════════════════
 export function VendorOrderDetailModal({
   order,
   receipt,
   onClose,
   onUpdate,
+  readOnly = false,
 }: {
   order: VendorOrder | null;
-  receipt?: OrderReceipt | null; // use the simplified type
+  receipt?: OrderReceipt | null;
   onClose: () => void;
   onUpdate?: () => void;
+  readOnly?: boolean;
 }) {
   const [showTopShadow, setShowTopShadow] = useState(false);
   const [showBottomShadow, setShowBottomShadow] = useState(false);
@@ -1041,22 +917,18 @@ export function VendorOrderDetailModal({
             )}
 
             <div className="p-8 space-y-6">
-              {/* Status Update Bar */}
-              {/* <StatusUpdateSection
-                orderId={order.id}
-                currentStatus={order.status}
-                onUpdate={handleLocalUpdate}
-              /> */}
-
-              {/* Two‑column layout */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Left column (wider) */}
+                {/* Left column */}
                 <div className="xl:col-span-2 space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <CustomerCard order={order} />
                     <ShippingCard order={order} />
                   </div>
-                  <DeliveryCard order={order} onUpdate={handleLocalUpdate} />
+                  <DeliveryCard
+                    order={order}
+                    onUpdate={handleLocalUpdate}
+                    readOnly={readOnly}
+                  />
                   <OrderItemsCard order={order} />
                 </div>
 
@@ -1066,13 +938,11 @@ export function VendorOrderDetailModal({
                     receipt={receipt}
                     paymentMethod={order.payment_method}
                     onUpdate={handleLocalUpdate}
+                    readOnly={readOnly}
                   />
                   <TimelineCard order={order} />
                   <FinancialCard order={order} />
 
-                  {/* <OrderSummaryCard order={order} /> */}
-
-                  {/* Tax Invoice quick link */}
                   {order.tax_invoice && (
                     <div className="bg-gray-50 rounded-xl p-5">
                       <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
@@ -1097,7 +967,6 @@ export function VendorOrderDetailModal({
                 </div>
               </div>
 
-              {/* Empty fallback */}
               {(!order.items || order.items.length === 0) && (
                 <div className="text-center py-16 text-gray-500">
                   <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />

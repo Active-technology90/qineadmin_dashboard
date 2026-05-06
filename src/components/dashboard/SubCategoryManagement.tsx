@@ -27,22 +27,23 @@ import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
+import { useReadOnly } from "./AdminDashboard"; // 👈 viewer detection
 
-// Memoised components to prevent unnecessary re‑renders
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
 
 export default function SubCategoryManagement() {
+  const readOnly = useReadOnly(); // true for viewers
+
   const [pageSize, setPageSize] = useState(10);
   const [subs, setSubs] = useState<SubCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Separate local input (instant) from debounced search term (triggers heavy work)
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer =  useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -63,7 +64,6 @@ export default function SubCategoryManagement() {
   const [deleteTarget, setDeleteTarget] = useState<SubCategory | null>(null);
   const { toast, showToast } = useToast();
 
-  // Fetch subcategories and categories
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -85,7 +85,6 @@ export default function SubCategoryManagement() {
     fetchData();
   }, []);
 
-  // Filter subcategories based on debounced searchTerm
   const filteredSubs = useMemo(() => {
     if (!searchTerm.trim()) return subs;
     const term = searchTerm.toLowerCase();
@@ -102,14 +101,12 @@ export default function SubCategoryManagement() {
     );
   }, [subs, categories, searchTerm]);
 
-  // Apply sorting to filtered subcategories
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredSubs,
     "name",
     "asc",
   );
 
-  // Paginate sorted items
   const {
     paginatedItems,
     currentPage,
@@ -126,12 +123,10 @@ export default function SubCategoryManagement() {
     }));
   }, [paginatedItems, currentPage, itemsPerPage]);
 
-  // Reset page when search term or page size changes
   useEffect(() => {
     resetPage();
   }, [searchTerm, pageSize, resetPage]);
 
-  // Debounced search handler
   const handleInputChange = (value: string) => {
     setInputValue(value);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -140,7 +135,6 @@ export default function SubCategoryManagement() {
     }, 200);
   };
 
-  // Cleanup debounce
   useEffect(() => {
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -161,6 +155,7 @@ export default function SubCategoryManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!validateForm()) return;
     setSubmitting(true);
     try {
@@ -194,7 +189,7 @@ export default function SubCategoryManagement() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || readOnly) return;
     try {
       await deleteSubCategory(deleteTarget.slug);
       showToast("success", "Subcategory deleted successfully");
@@ -222,28 +217,35 @@ export default function SubCategoryManagement() {
     setFormErrors({});
   };
 
-  const openEdit = useCallback((sub: SubCategory) => {
-    setEditingId(sub.id);
-    setFormData({
-      name: sub.name,
-      name_am: sub.name_am || "",
-      slug: sub.slug,
-      category: sub.category,
-      item_code: sub.item_code || "",
-      description: sub.description || "",
-      icon: null,
-      iconPreview: sub.icon || "",
-      order: sub.order || 0,
-      is_active: sub.is_active ?? true,
-    });
-    setModalOpen(true);
-  }, []);
+  const openEdit = useCallback(
+    (sub: SubCategory) => {
+      if (readOnly) return;
+      setEditingId(sub.id);
+      setFormData({
+        name: sub.name,
+        name_am: sub.name_am || "",
+        slug: sub.slug,
+        category: sub.category,
+        item_code: sub.item_code || "",
+        description: sub.description || "",
+        icon: null,
+        iconPreview: sub.icon || "",
+        order: sub.order || 0,
+        is_active: sub.is_active ?? true,
+      });
+      setModalOpen(true);
+    },
+    [readOnly],
+  );
 
-  const handleDeleteClick = useCallback((sub: SubCategory) => {
-    setDeleteTarget(sub);
-  }, []);
+  const handleDeleteClick = useCallback(
+    (sub: SubCategory) => {
+      if (readOnly) return;
+      setDeleteTarget(sub);
+    },
+    [readOnly],
+  );
 
-  // Memoised columns – stable reference
   const columns: Column<SubCategory>[] = useMemo(
     () => [
       {
@@ -339,16 +341,25 @@ export default function SubCategoryManagement() {
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-[#6750A4]">SubCategories</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setModalOpen(true);
-          }}
-          className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#6750A4] transition shadow-sm"
-        >
-          <Plus size={18} /> Add SubCategory
-        </button>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#6750A4]">SubCategories</h2>
+          {readOnly && (
+            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+              View Only
+            </span>
+          )}
+        </div>
+        {!readOnly && (
+          <button
+            onClick={() => {
+              resetForm();
+              setModalOpen(true);
+            }}
+            className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm"
+          >
+            <Plus size={18} /> Add SubCategory
+          </button>
+        )}
       </div>
 
       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
@@ -357,7 +368,7 @@ export default function SubCategoryManagement() {
             <SearchInput
               value={inputValue}
               onChange={handleInputChange}
-              debounceMs={0} // we manage debounce manually
+              debounceMs={0}
               placeholder="Search by name, Amharic name, slug, item code, or category..."
               loading={loading}
             />
@@ -373,11 +384,7 @@ export default function SubCategoryManagement() {
                 if (desiredOrder === "desc") handleSort(field);
               }
             }}
-            className="
-              bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm
-              cursor-pointer transition focus:outline-none focus:ring-2
-              focus:ring-[#6750A4] focus:border-[#6750A4] hover:border-gray-400
-            "
+            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] hover:border-gray-400"
           >
             <option value="name|asc">Name (A-Z)</option>
             <option value="name|desc">Name (Z-A)</option>
@@ -399,8 +406,8 @@ export default function SubCategoryManagement() {
         columns={columns}
         loading={loading}
         emptyMessage="No subcategories found"
-        onEdit={openEdit}
-        onDelete={handleDeleteClick}
+        onEdit={!readOnly ? openEdit : undefined}
+        onDelete={!readOnly ? handleDeleteClick : undefined}
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={handleSort}
@@ -412,178 +419,180 @@ export default function SubCategoryManagement() {
         onPageChange={goToPage}
       />
 
-      <FormModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingId ? "Edit SubCategory" : "New SubCategory"}
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        maxWidth="lg"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (English) *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 ${
-                formErrors.name ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            />
-            {formErrors.name && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-            )}
-          </div>
+      {!readOnly && (
+        <FormModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={editingId ? "Edit SubCategory" : "New SubCategory"}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          maxWidth="lg"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name (English) *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 ${
+                  formErrors.name ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {formErrors.name && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (Amharic)
-            </label>
-            <input
-              type="text"
-              value={formData.name_am}
-              onChange={(e) =>
-                setFormData({ ...formData, name_am: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name (Amharic)
+              </label>
+              <input
+                type="text"
+                value={formData.name_am}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_am: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Slug (optional)
-            </label>
-            <input
-              type="text"
-              placeholder="auto-generated"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              className={`w-full border rounded-lg p-2 font-mono ${
-                formErrors.slug ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {formErrors.slug && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
-            )}
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Slug (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="auto-generated"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 font-mono ${
+                  formErrors.slug ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {formErrors.slug && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
-            </label>
-            <select
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: Number(e.target.value) })
-              }
-              className={`w-full border rounded-lg p-2 ${
-                formErrors.category ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            >
-              <option value={0}>Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            {formErrors.category && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
-            )}
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category *
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: Number(e.target.value) })
+                }
+                className={`w-full border rounded-lg p-2 ${
+                  formErrors.category ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              >
+                <option value={0}>Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.category && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Item Code
-            </label>
-            <input
-              type="text"
-              value={formData.item_code}
-              onChange={(e) =>
-                setFormData({ ...formData, item_code: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Item Code
+              </label>
+              <input
+                type="text"
+                value={formData.item_code}
+                onChange={(e) =>
+                  setFormData({ ...formData, item_code: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={formData.order}
-              onChange={(e) =>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Order
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.order}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+              {formErrors.order && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
+              )}
+            </div>
+
+            <DragDropImageUpload
+              label="Icon"
+              value={formData.icon}
+              previewUrl={formData.iconPreview}
+              onChange={(file) =>
                 setFormData({
                   ...formData,
-                  order: parseInt(e.target.value) || 0,
+                  icon: file,
+                  iconPreview: file ? URL.createObjectURL(file) : "",
                 })
               }
-              className="w-full border border-gray-300 rounded-lg p-2"
+              accept="image/*"
+              maxSizeMB={5}
             />
-            {formErrors.order && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.order}</p>
-            )}
-          </div>
 
-          <DragDropImageUpload
-            label="Icon"
-            value={formData.icon}
-            previewUrl={formData.iconPreview}
-            onChange={(file) =>
-              setFormData({
-                ...formData,
-                icon: file,
-                iconPreview: file ? URL.createObjectURL(file) : "",
-              })
-            }
-            accept="image/*"
-            maxSizeMB={5}
-          />
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+                rows={3}
+              />
+            </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg p-2"
-              rows={3}
-            />
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="is_active"
+                className="text-sm font-medium text-gray-700"
+              >
+                Active
+              </label>
+            </div>
           </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={(e) =>
-                setFormData({ ...formData, is_active: e.target.checked })
-              }
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor="is_active"
-              className="text-sm font-medium text-gray-700"
-            >
-              Active
-            </label>
-          </div>
-        </div>
-      </FormModal>
+        </FormModal>
+      )}
 
       <DeleteConfirmModal
         isOpen={!!deleteTarget}

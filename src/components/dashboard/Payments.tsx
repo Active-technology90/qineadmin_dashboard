@@ -1,22 +1,21 @@
-// src/components/admin/Payments.tsx
-
-
-import { useState, useEffect } from "react"; // added useEffect
-import { Search, Download, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, Download, Loader2, RefreshCw, X } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
 import { Pagination } from "../ui/Pagination";
 import { TableControls } from "../ui/TableControls";
 import { getAdminPayouts, getPayouts } from "../../services/api";
 import { useAuth } from "../../context/authContext";
+import { useCurrentCompany } from "../../context/src/context/CurrentCompanyContext";
+import { useCompaniesList } from "../../hooks/useCompaniesList";
+import { CompanySelector } from "./company-products/CompanySelector";
 
-// Extended interface to match API response including company_logo
 interface Payout {
   id: number;
   vendor_order: number;
   company_name: string;
   company_slug: string;
-  company_logo?: string; // added optional field
+  company_logo?: string;
   gross_amount: string;
   platform_fee: string;
   net_amount: string;
@@ -28,33 +27,55 @@ interface Payout {
 
 export default function Payments() {
   const { user } = useAuth();
+  const { company, switchCompany, clearCompany } = useCurrentCompany();
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
+
+  const isSuperAdmin = !user?.memberships?.length;
+
+  // Company from context
+  const companySlug = company?.slug ?? null;
+  const companyName = company?.name ?? "";
+
+  // Overlay for company selector
+  const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
+
+  // Effective slug for API calls
+  const effectiveCompanySlug = useMemo(() => {
+    if (companySlug) return companySlug;
+    if (!isSuperAdmin && user?.memberships?.length) {
+      return user.memberships[0]?.company_slug || null;
+    }
+    return null;
+  }, [companySlug, isSuperAdmin, user]);
+
+  const isAllPayouts = isSuperAdmin && !effectiveCompanySlug;
+
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>(""); // "" means all
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { toast, showToast } = useToast();
 
-  const isSuperAdmin = !user?.memberships?.length;
-  const companySlug = user?.memberships?.[0]?.company_slug;
-  console.log("isSuperAdmin:", isSuperAdmin);
-console.log("companySlug:", companySlug);
   const fetchPayouts = async () => {
     setLoading(true);
     setError(null);
     try {
-      let response;
       const params = { page: currentPage, page_size: pageSize };
-      if (isSuperAdmin) {
+      let response;
+      if (isAllPayouts) {
         response = await getAdminPayouts(params);
       } else {
-        if (!companySlug) throw new Error("Company slug not found");
-        console.log("Fetching payouts for company:", companySlug);
-        response = await getPayouts(companySlug, params);
+        if (!effectiveCompanySlug) {
+          setPayouts([]);
+          setTotalCount(0);
+          return;
+        }
+        response = await getPayouts(effectiveCompanySlug, params);
       }
       setPayouts(response.data.results || []);
       setTotalCount(response.data.count || 0);
@@ -64,23 +85,20 @@ console.log("companySlug:", companySlug);
       setLoading(false);
     }
   };
-  console.log(totalCount);
-  // Refetch when page, pageSize, or role changes
+console.log(totalCount)
+  // Refetch when dependencies change
   useEffect(() => {
     fetchPayouts();
-  }, [currentPage, pageSize, isSuperAdmin, companySlug]);
+  }, [currentPage, pageSize, effectiveCompanySlug, isSuperAdmin, isAllPayouts]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or company change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, effectiveCompanySlug]);
 
-  // Client-side filtering based on search term and status
+  // Client-side filtering
   const filteredPayouts = payouts.filter((payout) => {
-    // Status filter
     if (statusFilter && payout.status !== statusFilter) return false;
-
-    // Search filter (vendor_order, company_name, status)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       return (
@@ -92,7 +110,6 @@ console.log("companySlug:", companySlug);
     return true;
   });
 
-  // Pagination on filtered results
   const totalPages = Math.ceil(filteredPayouts.length / pageSize);
   const paginatedPayouts = filteredPayouts.slice(
     (currentPage - 1) * pageSize,
@@ -120,6 +137,7 @@ console.log("companySlug:", companySlug);
     showToast("info", `Receipt for payout ${payoutId} not yet implemented`);
   };
 
+  // Error state (before table)
   if (error) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 md:p-4">
@@ -139,15 +157,63 @@ console.log("companySlug:", companySlug);
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <Toast toast={toast} />
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-[#6750A4]">
-          {isSuperAdmin ? "All Payouts" : "Company Payouts"}
-        </h2>
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-[#6750A4]">
+            {isAllPayouts ? "All Payouts" : `Payouts – ${companyName}`}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {isAllPayouts
+              ? "Showing payouts across all companies"
+              : `Payouts for ${companyName}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isSuperAdmin && companySlug && (
+            <button
+              onClick={() => clearCompany()}
+              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+            >
+              <X className="h-4 w-4" /> Clear Company
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setIsCompanySelectorOpen(true)}
+              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+            >
+              <RefreshCw className="h-4 w-4" /> Switch Company
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* Company Selector Overlay */}
+      {isCompanySelectorOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-4xl mx-4">
+            <CompanySelector
+              companies={companies}
+              isLoading={isLoadingCompanies}
+              onSelect={(slug, name) => {
+                const membership = user?.memberships?.find(
+                  (m: any) => m.company_slug === slug
+                );
+                const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+                switchCompany({ slug, name, role });
+                setIsCompanySelectorOpen(false);
+              }}
+              onBack={() => setIsCompanySelectorOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Table Controls */}
       <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-          {/* Search input */}
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -159,13 +225,10 @@ console.log("companySlug:", companySlug);
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl
-  focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
+                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] transition"
               />
             </div>
           </div>
-
-          {/* Status filter dropdown */}
           <div className="w-full sm:w-48">
             <select
               value={statusFilter}
@@ -182,6 +245,7 @@ console.log("companySlug:", companySlug);
         </div>
       </TableControls>
 
+      {/* Payouts Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

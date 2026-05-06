@@ -39,8 +39,18 @@ interface ProductModalProps {
   onProductUpdated?: () => void;
   /** If false, disables SKU, title, unit, and image management */
   canEditBasic?: boolean;
-  /** If false, disables price and stock fields */
+  /** 
+   * If false, disables price and stock fields unconditionally. 
+   * Use this for admin‑only pricing. For staff that should only 
+   * restrict on edit, use `isStaff` instead.
+   */
   canEditPricing?: boolean;
+  /** 
+   * Set to `true` for staff users. When true, price & stock are disabled 
+   * ONLY when editing an existing product (i.e., `editingProduct` is not null).
+   * In create mode, price & stock remain editable.
+   */
+  isStaff?: boolean;
 }
 
 export function ProductModal({
@@ -52,6 +62,7 @@ export function ProductModal({
   onProductUpdated,
   canEditBasic = true,
   canEditPricing = true,
+  isStaff = false,
 }: ProductModalProps) {
   const [step, setStep] = useState<'details' | 'gallery'>('details');
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -136,7 +147,15 @@ export function ProductModal({
 
   const stepProgress = step === 'details' ? 50 : 100;
   const isReadOnlyBasic = !canEditBasic;
-  const isReadOnlyPricing = !canEditPricing;
+  
+  // PRICE & STOCK DISABLE LOGIC:
+  // 1. If canEditPricing === false → always disabled (admin override)
+  // 2. Else if isStaff === true and editingProduct exists → disabled (staff edit mode)
+  // 3. Otherwise → enabled
+  const isPricingDisabled = !canEditPricing || (isStaff && !!editingProduct);
+  
+  // For UI label clarity
+  const isEditMode = !!editingProduct;
 
   return (
     <div
@@ -151,7 +170,7 @@ export function ProductModal({
               <h3 className="text-xl font-semibold text-gray-900">
                 {editingProduct ? 'Product Details' : 'New Product'}
                 {isReadOnlyBasic && <span className="ml-2 text-sm font-normal text-amber-600">(View only)</span>}
-                {!isReadOnlyBasic && isReadOnlyPricing && (
+                {!isReadOnlyBasic && isPricingDisabled && isEditMode && (
                   <span className="ml-2 text-sm font-normal text-blue-600">(Price/Stock read only)</span>
                 )}
               </h3>
@@ -269,9 +288,11 @@ export function ProductModal({
                         errors.price
                           ? 'border-red-500 focus:ring-red-100'
                           : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
-                      } transition-all outline-none ${isReadOnlyPricing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                      } transition-all outline-none ${
+                        isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                      }`}
                       placeholder="0.00"
-                      disabled={isSubmitting || isReadOnlyPricing}
+                      disabled={isSubmitting || isPricingDisabled}
                     />
                     {errors.price && (
                       <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
@@ -288,9 +309,11 @@ export function ProductModal({
                         errors.stock
                           ? 'border-red-500 focus:ring-red-100'
                           : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
-                      } transition-all outline-none ${isReadOnlyPricing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                      } transition-all outline-none ${
+                        isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                      }`}
                       placeholder="0"
-                      disabled={isSubmitting || isReadOnlyPricing}
+                      disabled={isSubmitting || isPricingDisabled}
                     />
                     {errors.stock && (
                       <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>
