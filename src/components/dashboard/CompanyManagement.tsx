@@ -1,5 +1,11 @@
 // src/components/admin/CompanyManagement.tsx
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Plus, ImageIcon, Edit3, Building2, Tag, X } from "lucide-react";
 import api from "../../services/api";
 import {
@@ -10,10 +16,15 @@ import {
   getSubCategories,
   getCompanyDetail,
 } from "../../services/api";
-import type { CompanyListItem, Category, SubCategory, Company } from "../../types";
+import type {
+  CompanyListItem,
+  Category,
+  SubCategory,
+  Company,
+} from "../../types";
 import { SearchInput } from "../ui/SearchInput";
 import { DataTable, type Column } from "../ui/DataTable";
-
+import { MultiStepFormModal, type FormStep } from "../ui/MultiStepFormModal";
 import { DragDropImageUpload } from "../ui/DragDropImageUpload";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 import { ErrorView } from "../ui/ErrorView";
@@ -25,12 +36,11 @@ import { useSorting } from "../../hooks/useSorting";
 import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
 
-// Memoised sub‑components to prevent re‑renders
-const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
+// Memoised sub components to prevent re renders
+const MemoizedDataTable = React.memo(DataTable);
 const MemoizedPagination = React.memo(Pagination);
-const CompanyCard = ({ company, onEdit }: any) => (
-  <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group min-h-[420px]">
-
+const CompanyCard = ({ company, onEdit, userRole }: any) => (
+  <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group h-fit">
     {/* Cover Image Section - Full width at top */}
     <div className="relative h-40 w-full overflow-hidden">
       {company.cover_image ? (
@@ -47,8 +57,7 @@ const CompanyCard = ({ company, onEdit }: any) => (
     </div>
 
     {/* Content Container - White card section */}
-    <div className="relative z-10 flex flex-col bg-white rounded-t-3xl -mt-8 p-5 pt-0">
-
+    <div className="relative z-10 flex flex-col bg-white rounded-t-3xl -mt-8 px-5 pb-3 pt-0">
       {/* Logo and Text Container - Side by side (logo left, text right) at intersection */}
       <div className="flex items-center gap-4 -mt-12 mb-4 px-4">
         {/* Logo - Left side with enhanced shadow for dark backgrounds */}
@@ -74,37 +83,41 @@ const CompanyCard = ({ company, onEdit }: any) => (
           </h3>
 
           {/* Slug with semi-transparent background for visibility */}
-          <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-white/20 shadow-lg">
+          <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-[#6750A4]/50 shadow-lg">
             {company.slug}
           </p>
         </div>
       </div>
-      {/* Subcategory Section - New */}
-      {company.sub_category_name && (
-        <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl p-4 mb-4 border border-indigo-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Tag size={18} className="text-indigo-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Subcategory</p>
-              <p className="font-medium text-gray-700 text-base">
-                {company.sub_category_name}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+
+      {/* Status Badges */}
+      <div className="flex gap-2 flex-wrap justify-end mb-3">
+        <span
+          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${
+            company.is_active
+              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+              : "bg-gray-100 text-gray-500 border border-gray-200"
+          }`}
+        >
+          {company.is_active ? "● Active" : "○ Inactive"}
+        </span>
+        {/* {company.is_featured && (
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+            ★ Featured
+          </span>
+        )} */}
+      </div>
 
       {/* Category Section */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white rounded-lg shadow-sm">
-            <Tag size={18} className="text-indigo-600" />
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 mb-2">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-white rounded-md shadow-sm">
+            <Tag size={14} className="text-indigo-600" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Category</p>
-            <p className="font-semibold text-gray-900 text-base">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+              Category
+            </p>
+            <p className="font-semibold text-gray-900 text-sm">
               {company.category_name}
             </p>
           </div>
@@ -113,14 +126,16 @@ const CompanyCard = ({ company, onEdit }: any) => (
 
       {/* Subcategory Section - New */}
       {company.sub_category_name && (
-        <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl p-4 mb-4 border border-indigo-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Tag size={18} className="text-indigo-400" />
+        <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-lg p-3 mb-2 border border-indigo-100">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 bg-white rounded-md shadow-sm">
+              <Tag size={14} className="text-indigo-400" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Subcategory</p>
-              <p className="font-medium text-gray-700 text-base">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+                Subcategory
+              </p>
+              <p className="font-medium text-gray-700 text-sm">
                 {company.sub_category_name}
               </p>
             </div>
@@ -129,26 +144,38 @@ const CompanyCard = ({ company, onEdit }: any) => (
       )}
 
       {/* Business Type Section - Made clearer and more visible */}
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white rounded-lg shadow-sm">
-            <Building2 size={18} className="text-[#6750A4]" />
+      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-white rounded-md shadow-sm">
+            <Building2 size={14} className="text-[#6750A4]" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Business Type</p>
-            <p className="font-bold text-gray-900 text-base">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+              Business Type
+            </p>
+            <p className="font-bold text-gray-900 text-sm">
               {company.business_type?.toUpperCase() || "N/A"}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Edit Button - Bottom Right */}
+      {/* Edit Button - Visible but DISABLED for staff (grayed out, no click) */}
       <button
         onClick={() => onEdit(company)}
-        className="absolute bottom-4 right-4 z-20 px-3 py-2 rounded-xl bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg transition-all duration-300 flex items-center gap-2 text-xs font-semibold group/btn"
+        disabled={userRole !== "admin" && userRole !== "super_admin"}
+        className={`absolute bottom-3 right-4 z-20 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all duration-300 group/btn
+    ${
+      userRole === "admin" || userRole === "super_admin"
+        ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer"
+        : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+    }
+  `}
       >
-        <Edit3 size={24} className="group-hover/btn:rotate-12 transition-transform" />
+        <Edit3
+          size={24}
+          className={`transition-transform ${userRole === "admin" || userRole === "super_admin" ? "group-hover/btn:rotate-12" : ""}`}
+        />
         Edit Company
       </button>
     </div>
@@ -159,10 +186,15 @@ type PaginatedResponse<T> = {
   next: string | null;
 };
 
-// Helper to get the highest‑privilege membership (admin > staff > delivery > viewer)
+// Helper to get the highest privilege membership (admin > staff > delivery > viewer)
 const getPrimaryMembership = (memberships: any[] | undefined) => {
   if (!memberships?.length) return null;
-  const priority: Record<string, number> = { admin: 4, staff: 3, delivery: 2, viewer: 1 };
+  const priority: Record<string, number> = {
+    admin: 4,
+    staff: 3,
+    delivery: 2,
+    viewer: 1,
+  };
   let best = memberships[0];
   let bestScore = priority[best.role] || 0;
   for (const m of memberships) {
@@ -182,14 +214,19 @@ export default function CompanyManagement() {
   // Permission flags
   const isSuperAdmin = !user?.memberships?.length;
   const memberships = user?.memberships ?? [];
-  const primaryMembership = !isSuperAdmin ? getPrimaryMembership(memberships) : null;
+  const primaryMembership = !isSuperAdmin
+    ? getPrimaryMembership(memberships)
+    : null;
   const userCompanySlug = primaryMembership?.company_slug ?? null;
   const userCompanyRole = primaryMembership?.role ?? null;
 
   const canAddCompany = isSuperAdmin;
   const canDeleteCompany = isSuperAdmin;
   const canEditCompany = (companySlug: string) => {
+    // Super admin can edit everything
     if (isSuperAdmin) return true;
+
+    // Only company admin can edit their own company
     return userCompanyRole === "admin" && userCompanySlug === companySlug;
   };
 
@@ -202,7 +239,7 @@ export default function CompanyManagement() {
   // ----- DEBOUNCED SEARCH -----
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -219,7 +256,7 @@ export default function CompanyManagement() {
   }, []);
 
   // ----- MODAL STATE -----
-
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -238,11 +275,14 @@ export default function CompanyManagement() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(
+    null,
+  );
   const { toast, showToast } = useToast();
 
   // NEW: State for inline editing on the right side
-  const [selectedCompanyForEdit, setSelectedCompanyForEdit] = useState<CompanyListItem | null>(null);
+  const [selectedCompanyForEdit, setSelectedCompanyForEdit] =
+    useState<CompanyListItem | null>(null);
   // NEW: State to track if editing is active (fields enabled)
   const [isEditingActive, setIsEditingActive] = useState(false);
   // --- Data filtering (only for super admin) – runs only when searchTerm changes
@@ -254,9 +294,10 @@ export default function CompanyManagement() {
         comp.name.toLowerCase().includes(term) ||
         (comp.name_am && comp.name_am.toLowerCase().includes(term)) ||
         comp.slug.toLowerCase().includes(term) ||
-        (comp.business_type && comp.business_type.toLowerCase().includes(term)) ||
+        (comp.business_type &&
+          comp.business_type.toLowerCase().includes(term)) ||
         comp.category_name.toLowerCase().includes(term) ||
-        comp.sub_category_name.toLowerCase().includes(term)
+        comp.sub_category_name.toLowerCase().includes(term),
     );
   }, [companies, searchTerm, isSuperAdmin]);
 
@@ -264,7 +305,7 @@ export default function CompanyManagement() {
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     isSuperAdmin ? filteredCompanies : companies,
     "name",
-    "asc"
+    "asc",
   );
 
   const {
@@ -282,7 +323,7 @@ export default function CompanyManagement() {
         ...item,
         rowNumber: (currentPage - 1) * itemsPerPage + index + 1,
       })),
-    [paginatedItems, currentPage, itemsPerPage]
+    [paginatedItems, currentPage, itemsPerPage],
   );
 
   useEffect(() => {
@@ -315,6 +356,26 @@ export default function CompanyManagement() {
           description: company.description || "",
         };
         setCompanies([companyListItem]);
+        // Auto-select the company for the right side form
+        setSelectedCompanyForEdit(companyListItem);
+        // Load its data into the form
+        setEditingSlug(companyListItem.slug);
+        setFormData({
+          name: companyListItem.name,
+          name_am: companyListItem.name_am || "",
+          slug: companyListItem.slug,
+          category: companyListItem.category,
+          sub_category: companyListItem.sub_category,
+          business_type: companyListItem.business_type,
+          description: companyListItem.description || "",
+          is_active: companyListItem.is_active,
+          is_featured: companyListItem.is_featured,
+          logo: null,
+          cover_image: null,
+        });
+        if (companyListItem.logo) setLogoPreview(companyListItem.logo);
+        if (companyListItem.cover_image)
+          setCoverPreview(companyListItem.cover_image);
       } else if (isSuperAdmin) {
         let allCompanies: CompanyListItem[] = [];
         let nextUrl: string | null = "/companies/?page=1&ordering=name";
@@ -325,10 +386,31 @@ export default function CompanyManagement() {
           nextUrl = data.next;
         }
         setCompanies(allCompanies);
+        // Auto-select the first company for the right side form
+        if (allCompanies.length > 0) {
+          const firstCompany = allCompanies[0];
+          setSelectedCompanyForEdit(firstCompany);
+          setEditingSlug(firstCompany.slug);
+          setFormData({
+            name: firstCompany.name,
+            name_am: firstCompany.name_am || "",
+            slug: firstCompany.slug,
+            category: firstCompany.category,
+            sub_category: firstCompany.sub_category,
+            business_type: firstCompany.business_type,
+            description: firstCompany.description || "",
+            is_active: firstCompany.is_active,
+            is_featured: firstCompany.is_featured,
+            logo: null,
+            cover_image: null,
+          });
+          if (firstCompany.logo) setLogoPreview(firstCompany.logo);
+          if (firstCompany.cover_image)
+            setCoverPreview(firstCompany.cover_image);
+        }
       } else {
         setCompanies([]);
       }
-
       const [categoriesRes, subcategoriesRes] = await Promise.all([
         getCategories(),
         getSubCategories(),
@@ -349,23 +431,28 @@ export default function CompanyManagement() {
   // --- Form helpers ---
   const filteredSubcategories = useMemo(
     () => subcategories.filter((sub) => sub.category === formData.category),
-    [subcategories, formData.category]
+    [subcategories, formData.category],
   );
 
   const validateBasicInfo = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = "Company name is required";
     if (formData.category === 0) errors.category = "Please select a category";
-    if (formData.sub_category === 0) errors.sub_category = "Please select a subcategory";
-    if (!formData.business_type) errors.business_type = "Please select a business type";
+    if (formData.sub_category === 0)
+      errors.sub_category = "Please select a subcategory";
+    if (!formData.business_type)
+      errors.business_type = "Please select a business type";
     if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug))
-      errors.slug = "Slug must contain only lowercase letters, numbers, and hyphens";
+      errors.slug =
+        "Slug must contain only lowercase letters, numbers, and hyphens";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // ✅ Add this to prevent event bubbling
+
     if (!validateBasicInfo()) return;
     setSubmitting(true);
     try {
@@ -391,11 +478,13 @@ export default function CompanyManagement() {
         formPayload.append("category", String(formData.category));
         formPayload.append("sub_category", String(formData.sub_category));
         formPayload.append("business_type", formData.business_type);
-        if (formData.description) formPayload.append("description", formData.description);
+        if (formData.description)
+          formPayload.append("description", formData.description);
         formPayload.append("is_active", String(formData.is_active));
         formPayload.append("is_featured", String(formData.is_featured));
         if (formData.logo) formPayload.append("logo", formData.logo);
-        if (formData.cover_image) formPayload.append("cover_image", formData.cover_image);
+        if (formData.cover_image)
+          formPayload.append("cover_image", formData.cover_image);
 
         if (editingSlug) {
           await updateCompany(editingSlug, formPayload);
@@ -412,15 +501,30 @@ export default function CompanyManagement() {
 
       showToast(
         "success",
-        editingSlug ? "Company updated successfully" : "Company created successfully"
+        editingSlug
+          ? "Company updated successfully"
+          : "Company created successfully",
       );
 
+      // ✅ Reset form and exit edit mode
       resetForm();
-      fetchData();
+      setIsEditingActive(false); // ✅ Exit edit mode after successful save
+      setSelectedCompanyForEdit(null); // ✅ Clear selected company
+
+      // ✅ Refresh data WITHOUT causing redirect
+      await fetchData();
     } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.response?.data?.detail || "Operation failed";
-      showToast("error", msg);
+      console.error("Save error:", err);
+      // ✅ Check if it's an authentication error
+      if (err?.response?.status === 401) {
+        showToast("error", "Session expired. Please refresh the page.");
+      } else {
+        const msg =
+          err.response?.data?.message ||
+          err.response?.data?.detail ||
+          "Operation failed";
+        showToast("error", msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -458,32 +562,35 @@ export default function CompanyManagement() {
     setFormErrors({});
   };
 
-  const openEdit = useCallback((company: CompanyListItem) => {
-    if (!canEditCompany(company.slug)) {
-      showToast("error", "You don't have permission to edit this company");
-      return;
-    }
-    setEditingSlug(company.slug);
-    setFormData({
-      name: company.name,
-      name_am: company.name_am || "",
-      slug: company.slug,
-      category: company.category,
-      sub_category: company.sub_category,
-      business_type: company.business_type,
-      description: company.description || "",
-      is_active: company.is_active,
-      is_featured: company.is_featured,
-      logo: null,
-      cover_image: null,
-    });
-    if (company.logo) setLogoPreview(company.logo);
-    if (company.cover_image) setCoverPreview(company.cover_image);
-    // NEW: Set selected company for inline editing instead of opening modal
-    setSelectedCompanyForEdit(company);
-    // NEW: Enable editing mode so fields become editable
-    setIsEditingActive(true);
-  }, [canEditCompany]);
+  const openEdit = useCallback(
+    (company: CompanyListItem) => {
+      if (!canEditCompany(company.slug)) {
+        showToast("error", "You don't have permission to edit this company");
+        return;
+      }
+      setEditingSlug(company.slug);
+      setFormData({
+        name: company.name,
+        name_am: company.name_am || "",
+        slug: company.slug,
+        category: company.category,
+        sub_category: company.sub_category,
+        business_type: company.business_type,
+        description: company.description || "",
+        is_active: company.is_active,
+        is_featured: company.is_featured,
+        logo: null,
+        cover_image: null,
+      });
+      if (company.logo) setLogoPreview(company.logo);
+      if (company.cover_image) setCoverPreview(company.cover_image);
+      // NEW: Set selected company for inline editing instead of opening modal
+      setSelectedCompanyForEdit(company);
+      // NEW: Enable editing mode so fields become editable
+      setIsEditingActive(true);
+    },
+    [canEditCompany],
+  );
 
   // NEW: Close inline edit form
   const closeInlineEdit = useCallback(() => {
@@ -504,7 +611,8 @@ export default function CompanyManagement() {
         key: "rowNumber",
         header: "No.",
         sortable: false,
-        render: (item: CompanyListItem & { rowNumber?: number }) => item.rowNumber,
+        render: (item: CompanyListItem & { rowNumber?: number }) =>
+          item.rowNumber,
       },
       {
         key: "logo",
@@ -512,15 +620,29 @@ export default function CompanyManagement() {
         sortable: false,
         render: (comp) =>
           comp.logo ? (
-            <img src={comp.logo} alt={comp.name} className="h-10 w-10 rounded-full object-cover" />
+            <img
+              src={comp.logo}
+              alt={comp.name}
+              className="h-10 w-10 rounded-full object-cover"
+            />
           ) : (
             <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
               <ImageIcon size={16} className="text-gray-400" />
             </div>
           ),
       },
-      { key: "name", header: "Name", sortable: true, className: "font-medium text-gray-900 max-w-[100px] break-words" },
-      { key: "slug", header: "Slug", sortable: true, className: "font-mono text-gray-500 max-w-[100px] break-words" },
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        className: "font-medium text-gray-900 max-w-[100px] break-words",
+      },
+      {
+        key: "slug",
+        header: "Slug",
+        sortable: true,
+        className: "font-mono text-gray-500 max-w-[100px] break-words",
+      },
       { key: "category_name", header: "Category", sortable: true },
       { key: "sub_category_name", header: "Subcategory", sortable: true },
       {
@@ -534,7 +656,9 @@ export default function CompanyManagement() {
         header: "Active",
         sortable: true,
         render: (comp) => (
-          <span className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${comp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          >
             {comp.is_active ? "Yes" : "No"}
           </span>
         ),
@@ -544,16 +668,210 @@ export default function CompanyManagement() {
         header: "Featured",
         sortable: true,
         render: (comp) => (
-          <span className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}>
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${comp.is_featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}
+          >
             {comp.is_featured ? "Yes" : "No"}
           </span>
         ),
       },
     ],
-    []
+    [],
   );
 
-
+  // --- Multi step form steps (unchanged, but defined inside render) ---
+  const steps: FormStep[] = useMemo(
+    () => [
+      {
+        id: "basic",
+        title: "Basic Information",
+        content: (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ... same as before ... */}
+            <div>
+              <input
+                type="text"
+                placeholder="Company Name (English) *"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+              />
+              {formErrors.name && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+              )}
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="Name (Amharic)"
+                value={formData.name_am}
+                onChange={(e) =>
+                  setFormData({ ...formData, name_am: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <input
+                type="text"
+                placeholder="Slug (unique, optional)"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
+              />
+              {formErrors.slug && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+              )}
+            </div>
+            <div>
+              <select
+                value={formData.category}
+                onChange={(e) => {
+                  const catId = Number(e.target.value);
+                  setFormData({
+                    ...formData,
+                    category: catId,
+                    sub_category: 0,
+                  });
+                }}
+                className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value={0}>Select Category *</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.category && (
+                <p className="text-red-500 text-xs mt-1">
+                  {formErrors.category}
+                </p>
+              )}
+            </div>
+            <div>
+              <select
+                value={formData.sub_category}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    sub_category: Number(e.target.value),
+                  })
+                }
+                className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                disabled={!formData.category}
+              >
+                <option value={0}>Select Subcategory *</option>
+                {filteredSubcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.sub_category && (
+                <p className="text-red-500 text-xs mt-1">
+                  {formErrors.sub_category}
+                </p>
+              )}
+            </div>
+            <div>
+              <select
+                value={formData.business_type}
+                onChange={(e) =>
+                  setFormData({ ...formData, business_type: e.target.value })
+                }
+                className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value="">Select Business Type *</option>
+                <option value="brand">Brand</option>
+                <option value="store">Store</option>
+                <option value="service">Service</option>
+                <option value="factory">Factory</option>
+              </select>
+              {formErrors.business_type && (
+                <p className="text-red-500 text-xs mt-1">
+                  {formErrors.business_type}
+                </p>
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <textarea
+                placeholder="Description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg p-2"
+                rows={3}
+              />
+            </div>
+          </div>
+        ),
+        validate: validateBasicInfo,
+      },
+      {
+        id: "images",
+        title: "Images & Status",
+        content: (
+          <div className="space-y-6">
+            <DragDropImageUpload
+              label="Logo"
+              value={formData.logo}
+              onChange={(file) =>
+                setFormData((prev) => ({ ...prev, logo: file }))
+              }
+              previewUrl={logoPreview}
+              required={false}
+            />
+            <DragDropImageUpload
+              label="Cover Image"
+              value={formData.cover_image}
+              onChange={(file) =>
+                setFormData((prev) => ({ ...prev, cover_image: file }))
+              }
+              previewUrl={coverPreview}
+            />
+            <div className="flex items-center space-x-6">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
+                  className="h-4 w-4 text-indigo-600 rounded"
+                />
+                <span className="text-sm text-gray-700">Active</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_featured: e.target.checked })
+                  }
+                  className="h-4 w-4 text-indigo-600 rounded"
+                />
+                <span className="text-sm text-gray-700">Featured</span>
+              </label>
+            </div>
+          </div>
+        ),
+      },
+    ],
+    [
+      formData,
+      formErrors,
+      categories,
+      filteredSubcategories,
+      logoPreview,
+      coverPreview,
+    ],
+  );
 
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
@@ -561,12 +879,10 @@ export default function CompanyManagement() {
     <div>
       <Toast toast={toast} />
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
-
         {/* Title Section */}
         <div>
           <h2
-            className={`text-2xl font-bold transition-colors duration-200 ${"text-[#6750A4]"
-              }`}
+            className={`text-2xl font-bold transition-colors duration-200 ${"text-[#6750A4]"}`}
           >
             {isSuperAdmin ? "Companies" : "Company Profile"}
           </h2>
@@ -583,6 +899,7 @@ export default function CompanyManagement() {
           <button
             onClick={() => {
               resetForm();
+              setModalOpen(true);
             }}
             className="bg-[#6750A4] text-white px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm"
           >
@@ -608,12 +925,12 @@ export default function CompanyManagement() {
             <select
               value={`${sortField}|${sortOrder}`}
               onChange={(e) => {
-                const [field, desiredOrder] = e.target.value.split('|');
+                const [field, desiredOrder] = e.target.value.split("|");
                 if (field === sortField) {
                   if (desiredOrder !== sortOrder) handleSort(field);
                 } else {
                   handleSort(field);
-                  if (desiredOrder === 'desc') handleSort(field);
+                  if (desiredOrder === "desc") handleSort(field);
                 }
               }}
               className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
@@ -631,7 +948,6 @@ export default function CompanyManagement() {
           </div>
         </TableControls>
       )}
-
 
       {isSuperAdmin ? (
         <>
@@ -654,204 +970,349 @@ export default function CompanyManagement() {
           />
         </>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left side: Company Cards Grid - Always full width on mobile, 2/3 on desktop */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 transition-all duration-300 ${selectedCompanyForEdit ? 'lg:w-2/3 w-full' : 'w-full'
-            }`}>
+        <div className="flex flex-col lg:flex-row gap-0 items-stretch">
+          {/* Left side: Company Cards Grid - Takes 2/3 of space */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5 lg:w-3/5 w-full">
             {companies.map((company) => (
               <CompanyCard
                 key={company.id}
                 company={company}
                 onEdit={openEdit}
+                userRole={userCompanyRole}
               />
             ))}
           </div>
 
-          {/* Right side: Inline Edit Form (only when a company is selected for editing) */}
-          {selectedCompanyForEdit && (
-            <div className="lg:w-1/3 w-full bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-              {/* Close button */}
-              <button
-                onClick={closeInlineEdit}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={20} />
-              </button>
+          {/* Right side: Company Details Form - WIDER to fill empty space */}
+          <div className="lg:w-1/2 w-full bg-white rounded-xl border border-gray-200 shadow-md sticky top-6 overflow-hidden -ml-54">
+            {/* Header with close button */}
+            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+              <div className="flex items-center justify-between w-full">
+                <button
+                  onClick={closeInlineEdit}
+                  className="text-[#6750A4] hover:text-[#5b4694] hover:bg-gray-100 p-1 rounded-md transition-colors flex items-center gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  <span className="text-[10px] font-medium">Back</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-0.5 bg-[#6750A4] rounded-full"></div>
+                  <h3 className="pr-5 text-xs font-bold text-[#6750A4] uppercase tracking-wide">
+                    Company Details
+                  </h3>
+                </div>
+              </div>
+            </div>
 
-              <h3 className="text-xl font-bold text-[#6750A4] mb-6">Edit Company</h3>
+            {/* Show loading indicator */}
+            {loading && companies.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6750A4] mx-auto mb-3"></div>
+                <p className="text-sm">Loading company data...</p>
+              </div>
+            )}
 
-              {/* Edit Form Content - All inputs from modal */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Basic Information Section */}
-                <div className="border-b border-gray-200 pb-3">
-                  <h4 className="font-semibold text-gray-800 mb-3">Basic Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Name (English) *</label>
-                      <input
-                        type="text"
-                        placeholder="Company Name (English) *"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        disabled={!isEditingActive}
-                        className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
-                      />
-                      {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name (Amharic)</label>
-                      <input
-                        type="text"
-                        placeholder="Name (Amharic)"
-                        value={formData.name_am}
-                        onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
-                        disabled={!isEditingActive}
-                        className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Slug (unique, optional)</label>
-                      <input
-                        type="text"
-                        placeholder="Slug (unique, optional)"
-                        value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        disabled={!isEditingActive}
-                        className={`w-full border rounded-lg p-2 font-mono ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
-                      />
-                      {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) => {
-                          const catId = Number(e.target.value);
-                          setFormData({ ...formData, category: catId, sub_category: 0 });
-                        }}
-                        disabled={!isEditingActive}
-                        className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
-                      >
-                        <option value={0}>Select Category *</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
-                      {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory *</label>
-                      <select
-                        value={formData.sub_category}
-                        onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
-                        disabled={!isEditingActive || !formData.category}
-                        className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
-                      >
-                        <option value={0}>Select Subcategory *</option>
-                        {filteredSubcategories.map((sub) => (
-                          <option key={sub.id} value={sub.id}>{sub.name}</option>
-                        ))}
-                      </select>
-                      {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Business Type *</label>
-                      <select
-                        value={formData.business_type}
-                        onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
-                        disabled={!isEditingActive}
-                        className={`w-full border rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'} ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
-                      >
-                        <option value="">Select Business Type *</option>
-                        <option value="brand">Brand</option>
-                        <option value="store">Store</option>
-                        <option value="service">Service</option>
-                        <option value="factory">Factory</option>
-                      </select>
-                      {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <textarea
-                        placeholder="Description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        disabled={!isEditingActive}
-                        className={`w-full border border-gray-300 rounded-lg p-2 ${!isEditingActive ? 'bg-gray-50' : 'bg-white'}`}
-                        rows={3}
-                      />
-                    </div>
-                  </div>
+            {/* TWO COLUMN HORIZONTAL FORM LAYOUT */}
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-row divide-x divide-gray-100"
+            >
+              {/* LEFT COLUMN - Basic Information */}
+              <div className="flex-1 p-3 space-y-2 overflow-y-auto max-h-[calc(100vh-160px)]">
+                {/* Company Name */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Company Name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    disabled={!isEditingActive}
+                    className={`w-full border rounded-md p-1.5 text-xs transition-all ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"}`}
+                  />
+                  {formErrors.name && (
+                    <p className="text-red-500 text-[10px] mt-0.5">
+                      {formErrors.name}
+                    </p>
+                  )}
                 </div>
 
-                {/* Images Section */}
-                <div className="border-b border-gray-200 pb-3">
-                  <h4 className="font-semibold text-gray-800 mb-3">Images & Status</h4>
-                  <div className="space-y-4">
-                    <div className={!isEditingActive ? 'opacity-70' : ''}>
-                      <DragDropImageUpload
-                        label="Logo"
-                        value={formData.logo}
-                        onChange={(file) => setFormData((prev) => ({ ...prev, logo: file }))}
-                        previewUrl={logoPreview}
-                        required={false}
-                        disabled={!isEditingActive}
-                      />
-                    </div>
-                    <div className={!isEditingActive ? 'opacity-70' : ''}>
-                      <DragDropImageUpload
-                        label="Cover Image"
-                        value={formData.cover_image}
-                        onChange={(file) => setFormData((prev) => ({ ...prev, cover_image: file }))}
-                        previewUrl={coverPreview}
-                        disabled={!isEditingActive}
-                      />
-                    </div>
-                    <div className="flex items-center space-x-6">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.is_active}
-                          onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                          disabled={!isEditingActive}
-                          className="h-4 w-4 text-indigo-600 rounded"
-                        />
-                        <span className={`text-sm ${!isEditingActive ? 'text-gray-500' : 'text-gray-700'}`}>Active</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.is_featured}
-                          onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                          disabled={!isEditingActive}
-                          className="h-4 w-4 text-indigo-600 rounded"
-                        />
-                        <span className={`text-sm ${!isEditingActive ? 'text-gray-500' : 'text-gray-700'}`}>Featured</span>
-                      </label>
-                    </div>
-                  </div>
+                {/* Name Amharic */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Name (Amharic)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="አማርኛ ስም"
+                    value={formData.name_am}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name_am: e.target.value })
+                    }
+                    disabled={!isEditingActive}
+                    className={`w-full border rounded-md p-1.5 text-xs ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"}`}
+                  />
                 </div>
 
-                {/* Form Buttons - Only show when in edit mode */}
+                {/* Slug */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Slug
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="company-slug"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData({ ...formData, slug: e.target.value })
+                    }
+                    disabled={!isEditingActive}
+                    className={`w-full border rounded-md p-1.5 text-xs font-mono ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"} ${formErrors.slug ? "border-red-500" : ""}`}
+                  />
+                  {formErrors.slug && (
+                    <p className="text-red-500 text-[10px] mt-0.5">
+                      {formErrors.slug}
+                    </p>
+                  )}
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Category *
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => {
+                      const catId = Number(e.target.value);
+                      setFormData({
+                        ...formData,
+                        category: catId,
+                        sub_category: 0,
+                      });
+                    }}
+                    disabled={!isEditingActive}
+                    className={`w-full border rounded-md p-1.5 text-xs ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"} ${formErrors.category ? "border-red-500" : ""}`}
+                  >
+                    <option value={0}>Select Category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.category && (
+                    <p className="text-red-500 text-[10px] mt-0.5">
+                      {formErrors.category}
+                    </p>
+                  )}
+                </div>
+
+                {/* Subcategory */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Subcategory *
+                  </label>
+                  <select
+                    value={formData.sub_category}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        sub_category: Number(e.target.value),
+                      })
+                    }
+                    disabled={!isEditingActive || !formData.category}
+                    className={`w-full border rounded-md p-1.5 text-xs ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"} ${formErrors.sub_category ? "border-red-500" : ""}`}
+                  >
+                    <option value={0}>Select Subcategory</option>
+                    {filteredSubcategories.map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.sub_category && (
+                    <p className="text-red-500 text-[10px] mt-0.5">
+                      {formErrors.sub_category}
+                    </p>
+                  )}
+                </div>
+
+                {/* Business Type */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Business Type *
+                  </label>
+                  <select
+                    value={formData.business_type}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        business_type: e.target.value,
+                      })
+                    }
+                    disabled={!isEditingActive}
+                    className={`w-full border rounded-md p-1.5 text-xs ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"} ${formErrors.business_type ? "border-red-500" : ""}`}
+                  >
+                    <option value="">Select Business Type</option>
+                    <option value="brand">Brand</option>
+                    <option value="store">Store</option>
+                    <option value="service">Service</option>
+                    <option value="factory">Factory</option>
+                  </select>
+                  {formErrors.business_type && (
+                    <p className="text-red-500 text-[10px] mt-0.5">
+                      {formErrors.business_type}
+                    </p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                    Description
+                  </label>
+                  <textarea
+                    placeholder="Company description..."
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    disabled={!isEditingActive}
+                    rows={2}
+                    className={`w-full border rounded-md p-1.5 text-xs resize-none ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-[#6750A4]/30 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"}`}
+                  />
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN - Images, Status & Buttons - WIDER for banner */}
+              <div className="w-72 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-160px)]">
+                {/* Logo Upload - LEFT ALIGNED (not centered) */}
+                <div className="relative w-32">
+                  <div className={!isEditingActive ? "opacity-70" : ""}>
+                    <DragDropImageUpload
+                      label="Logo (Square)"
+                      value={formData.logo}
+                      onChange={(file) =>
+                        setFormData((prev) => ({ ...prev, logo: file }))
+                      }
+                      previewUrl={logoPreview}
+                      required={false}
+                      disabled={!isEditingActive}
+                    />
+                  </div>
+                  {!isEditingActive && (
+                    <div className="absolute inset-0 cursor-not-allowed z-10"></div>
+                  )}
+                  <p className="text-[8px] text-gray-400 text-left mt-1">
+                    Square image (1:1 ratio)
+                  </p>
+                </div>
+
+                {/* Cover Image Upload - HORIZONTALLY WIDE (now column is wider) */}
+                <div className="relative w-full">
+                  <div className={!isEditingActive ? "opacity-70" : ""}>
+                    <div className="w-full">
+                      <div className="w-full bg-gradient-to-r from-purple-100/40 to-indigo-100/40 rounded-xl p-2 border-2 border-[#6750A4]/30 shadow-sm">
+                        <DragDropImageUpload
+                          label="🎬 COVER IMAGE (Wide Banner)"
+                          value={formData.cover_image}
+                          onChange={(file) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              cover_image: file,
+                            }))
+                          }
+                          previewUrl={coverPreview}
+                          disabled={!isEditingActive}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {!isEditingActive && (
+                    <div className="absolute inset-0 cursor-not-allowed z-10"></div>
+                  )}
+                  <p className="text-[8px] text-gray-400 text-center mt-1">
+                    📐 16:9 banner ratio - fits full width
+                  </p>
+                </div>
+
+                {/* Status Section */}
+                <div className="pt-1 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_active: e.target.checked,
+                        })
+                      }
+                      disabled={!isEditingActive}
+                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
+                    />
+                    <span
+                      className={`text-[11px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
+                    >
+                      Active
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_featured}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_featured: e.target.checked,
+                        })
+                      }
+                      disabled={!isEditingActive}
+                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
+                    />
+                    <span
+                      className={`text-[11px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
+                    >
+                      Featured
+                    </span>
+                  </label>
+                </div>
+
+                {/* Buttons - Only in edit mode */}
                 {isEditingActive && (
-                  <div className="flex gap-3 pt-4">
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="flex-1 bg-[#6750A4] text-white px-4 py-2 rounded-lg hover:bg-[#5b4694] transition disabled:opacity-50"
+                      className="w-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] text-white px-2 py-1.5 rounded-md text-xs font-semibold hover:from-[#5b4694] hover:to-[#6b55a8] transition-all duration-300 disabled:opacity-50 shadow-sm"
                     >
-                      {submitting ? "Saving..." : (editingSlug ? "Update Company" : "Create Company")}
+                      {submitting
+                        ? "Saving..."
+                        : editingSlug
+                          ? "Update"
+                          : "Create"}
                     </button>
                     <button
                       type="button"
                       onClick={closeInlineEdit}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                      className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
                     >
                       Cancel
                     </button>
@@ -860,13 +1321,13 @@ export default function CompanyManagement() {
 
                 {/* View mode message */}
                 {!isEditingActive && (
-                  <div className="text-center pt-4 text-gray-500 text-sm bg-gray-50 p-3 rounded-lg">
-                    🔒 View only mode. Click "Edit Company" on the card to modify.
+                  <div className="text-center py-2 text-gray-500 text-[10px] bg-gray-50 rounded-md border border-gray-100 mt-2">
+                    🔒 View only
                   </div>
                 )}
-              </form>
-            </div>
-          )}
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
