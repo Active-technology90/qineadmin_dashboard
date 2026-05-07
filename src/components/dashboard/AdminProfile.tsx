@@ -9,11 +9,10 @@ import {
   Phone,
   Lock,
   Key,
-  Eye,
-  EyeOff,
   Building,
   ArrowRight,
   Camera,
+  LogOut,
   CheckCircle,
 } from "lucide-react";
 
@@ -32,8 +31,24 @@ type PasswordForm = {
 
 const BRAND_COLOR = "#6750A4";
 
+// Professional phone number validation function
+const isValidPhoneNumber = (phone: string): boolean => {
+  if (!phone || phone.trim() === "") return false;
+  const cleaned = phone.trim();
+  // Reject placeholder patterns
+  if (
+    cleaned.includes("XXX") ||
+    cleaned.includes("xxx") ||
+    cleaned === "+251 9XX XXX XXX"
+  )
+    return false;
+  // Ethiopian phone number format: +251XXXXXXXXX or 09XXXXXXXX
+  const phoneRegex = /^(?:\+251|0)[0-9]{9}$/;
+  return phoneRegex.test(cleaned);
+};
+
 export default function AdminProfile() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const { company, switchCompany } = useCurrentCompany();
   const isSuperAdmin = !user?.memberships?.length;
   console.log(user);
@@ -55,11 +70,6 @@ export default function AdminProfile() {
     newPassword?: string;
     confirmPassword?: string;
   }>({});
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    next: false,
-    confirm: false,
-  });
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -90,7 +100,13 @@ export default function AdminProfile() {
       formData.append("first_name", data.first_name);
       formData.append("last_name", data.last_name);
       formData.append("email", data.email);
-      formData.append("phone_number", data.phone_number);
+
+      // ✅ Only send valid phone numbers - prevents duplicate empty string constraint
+      if (isValidPhoneNumber(data.phone_number)) {
+        formData.append("phone_number", data.phone_number.trim());
+      }
+      // If phone number is invalid/empty, skip sending it - backend keeps existing value
+
       await updateProfile(formData);
       const res = await getMe();
       const updatedUser = res.data;
@@ -98,23 +114,28 @@ export default function AdminProfile() {
       if (updatedUser.profile_image) setAvatar(updatedUser.profile_image);
       setToast({ message: "Profile updated successfully", type: "success" });
       setTimeout(() => setToast(null), 3000);
-    } catch (err: unknown) {
-      console.error(err);
-      const responseData =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: { data?: unknown } }).response?.data ===
-          "object"
-          ? ((err as { response?: { data?: Record<string, string> } }).response
-              ?.data ?? {})
-          : {};
-      const errorMsg =
-        responseData.detail ||
-        responseData.message ||
-        "Failed to update profile";
+    } catch (err: any) {
+      console.error("Profile update error:", err);
+
+      let errorMsg = "Failed to update profile";
+
+      // Handle specific database constraint error
+      if (
+        err?.response?.data?.detail?.includes("phone_number") ||
+        err?.response?.data?.detail?.includes("unique constraint")
+      ) {
+        errorMsg =
+          "Phone number is already in use by another account. Please use a different number.";
+      } else if (err?.response?.data?.detail) {
+        errorMsg = err.response.data.detail;
+      } else if (err?.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err?.response?.data?.phone_number) {
+        errorMsg = `Phone number: ${err.response.data.phone_number[0]}`;
+      }
+
       setToast({ message: errorMsg, type: "error" });
-      setTimeout(() => setToast(null), 3000);
+      setTimeout(() => setToast(null), 5000);
     } finally {
       setProfileLoading(false);
     }
@@ -153,21 +174,12 @@ export default function AdminProfile() {
       setToast({ message: "Password changed successfully", type: "success" });
       setTimeout(() => setToast(null), 3000);
       reset();
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
-      const responseData =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: { data?: unknown } }).response?.data ===
-          "object"
-          ? ((err as { response?: { data?: Record<string, string> } }).response
-              ?.data ?? {})
-          : {};
       const errorMsg =
-        responseData.detail ||
-        responseData.message ||
-        (err instanceof Error ? err.message : "") ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
         "Failed to change password";
 
       // Handle specific backend errors
@@ -255,6 +267,17 @@ export default function AdminProfile() {
             backgroundImage: `linear-gradient(135deg, ${BRAND_COLOR}, #6750A4)`,
           }}
         >
+          {/* Logout button - top right corner */}
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+          
           <div className="absolute -bottom-12 left-6 flex items-end gap-4">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden">
@@ -348,7 +371,6 @@ export default function AdminProfile() {
           {activeForm === "profile" && (
             <div className="mt-6 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
@@ -372,7 +394,6 @@ export default function AdminProfile() {
                     )}
                   />
                 </div>
-                {/* Last Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Last Name
@@ -392,49 +413,50 @@ export default function AdminProfile() {
                     )}
                   />
                 </div>
-                {/* Email Address */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <Controller
-                    control={control}
-                    name="email"
-                    render={({ field }) => (
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          {...field}
-                          type="email"
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                          placeholder="you@example.com"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <Controller
-                    control={control}
-                    name="phone_number"
-                    render={({ field }) => (
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          {...field}
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                          placeholder="+251 9XX XXX XXX"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
               </div>
-              {/* Update Profile Button */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        type="email"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <Controller
+                  control={control}
+                  name="phone_number"
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                        placeholder="+251 9XX XXX XXX"
+                      />
+                    </div>
+                  )}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Format: +251XXXXXXXXX or 09XXXXXXXX
+                </p>
+              </div>
               <div className="pt-2">
                 <button
                   onClick={handleSubmit(onSubmitProfile)}
@@ -458,35 +480,14 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="currentPassword"
                   render={({ field }) => (
-                    <div className="relative w-1/2">
+                    <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type={showPasswords.current ? "text" : "password"}
-                        className="w-full pl-9 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        type="password"
+                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
                         placeholder="Enter current password"
                       />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswords((prev) => ({
-                            ...prev,
-                            current: !prev.current,
-                          }))
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                        aria-label={
-                          showPasswords.current
-                            ? "Hide current password"
-                            : "Show current password"
-                        }
-                      >
-                        {showPasswords.current ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
                     </div>
                   )}
                 />
@@ -504,39 +505,18 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="newPassword"
                   render={({ field }) => (
-                    <div className="relative w-1/2">
+                    <div className="relative">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type={showPasswords.next ? "text" : "password"}
-                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                        type="password"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.currentPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
                         }`}
                         placeholder="New password"
                       />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswords((prev) => ({
-                            ...prev,
-                            next: !prev.next,
-                          }))
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                        aria-label={
-                          showPasswords.next
-                            ? "Hide new password"
-                            : "Show new password"
-                        }
-                      >
-                        {showPasswords.next ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
                     </div>
                   )}
                 />
@@ -554,39 +534,18 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="confirmPassword"
                   render={({ field }) => (
-                    <div className="relative w-1/2">
+                    <div className="relative">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type={showPasswords.confirm ? "text" : "password"}
-                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                        type="password"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.newPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
                         }`}
                         placeholder="Confirm new password"
                       />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswords((prev) => ({
-                            ...prev,
-                            confirm: !prev.confirm,
-                          }))
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                        aria-label={
-                          showPasswords.confirm
-                            ? "Hide confirm password"
-                            : "Show confirm password"
-                        }
-                      >
-                        {showPasswords.confirm ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
                     </div>
                   )}
                 />
