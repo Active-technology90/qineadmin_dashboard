@@ -310,7 +310,9 @@ export default function CompanyManagement() {
       data = data.filter((comp) => comp.category_name === categoryFilter);
     }
     if (subCategoryFilter !== "all") {
-      data = data.filter((comp) => comp.sub_category_name === subCategoryFilter);
+      data = data.filter(
+        (comp) => comp.sub_category_name === subCategoryFilter,
+      );
     }
 
     if (!searchTerm.trim()) return data;
@@ -354,7 +356,9 @@ export default function CompanyManagement() {
   const subCategoryOptions = useMemo(
     () =>
       Array.from(
-        new Set(companies.map((comp) => comp.sub_category_name).filter(Boolean)),
+        new Set(
+          companies.map((comp) => comp.sub_category_name).filter(Boolean),
+        ),
       ).sort(),
     [companies],
   );
@@ -586,7 +590,7 @@ export default function CompanyManagement() {
 
       // ✅ Reset form and exit edit mode
       resetForm();
-      setModalOpen(false)
+      setModalOpen(false);
       setIsEditingActive(false); // ✅ Exit edit mode after successful save
       setSelectedCompanyForEdit(null); // ✅ Clear selected company
 
@@ -1113,9 +1117,9 @@ export default function CompanyManagement() {
           />
         </>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-0 items-stretch">
+        <div className="flex flex-col lg:flex-row gap-12 items-stretch">
           {/* Left side: Company Cards Grid - Takes 2/3 of space */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5 lg:w-3/5 w-full">
+          <div className="flex flex-col">
             {companies.map((company) => (
               <CompanyCard
                 key={company.id}
@@ -1127,7 +1131,7 @@ export default function CompanyManagement() {
           </div>
 
           {/* Right side: Company Details Form - WIDER to fill empty space */}
-          <div className="lg:w-1/2 w-full bg-white rounded-xl border border-gray-200 shadow-md sticky top-6 overflow-hidden -ml-54">
+          <div className="lg:w-2/3 w-full bg-white rounded-xl border border-gray-200 shadow-md sticky top-6 overflow-hidden ">
             {/* Header with close button */}
             <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center justify-between w-full">
@@ -1148,7 +1152,7 @@ export default function CompanyManagement() {
                   >
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
-                  <span className="text-[10px] font-medium">Back</span>
+                  <span className="text-[14px] font-medium">Back</span>
                 </button>
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-0.5 bg-[#6750A4] rounded-full"></div>
@@ -1173,10 +1177,10 @@ export default function CompanyManagement() {
               className="flex flex-row divide-x divide-gray-100"
             >
               {/* LEFT COLUMN - Basic Information */}
-              <div className="flex-1 p-3 space-y-2 overflow-y-auto max-h-[calc(100vh-160px)]">
+              <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-160px)]">
                 {/* Company Name */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Company Name *
                   </label>
                   <input
@@ -1198,8 +1202,8 @@ export default function CompanyManagement() {
 
                 {/* Name Amharic */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
-                    Name (Amharic)
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+                    Company Name (Amharic)
                   </label>
                   <input
                     type="text"
@@ -1215,7 +1219,7 @@ export default function CompanyManagement() {
 
                 {/* Slug */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Slug
                   </label>
                   <input
@@ -1225,7 +1229,7 @@ export default function CompanyManagement() {
                     onChange={(e) =>
                       setFormData({ ...formData, slug: e.target.value })
                     }
-                    disabled={!isEditingActive}
+                    disabled={true}
                     className={`w-full border rounded-md p-1.5 text-xs font-mono ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"} ${formErrors.slug ? "border-red-500" : ""}`}
                   />
                   {formErrors.slug && (
@@ -1237,7 +1241,7 @@ export default function CompanyManagement() {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Category *
                   </label>
                   <select
@@ -1269,7 +1273,7 @@ export default function CompanyManagement() {
 
                 {/* Subcategory */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Subcategory *
                   </label>
                   <select
@@ -1297,9 +1301,34 @@ export default function CompanyManagement() {
                   )}
                 </div>
 
+                {/* Logo Upload - LEFT ALIGNED (not centered) */}
+                <div className="relative w-32">
+                  <div className={!isEditingActive ? "opacity-70 " : ""}>
+                    <DragDropImageUpload
+                      label="Logo (Square)"
+                      value={formData.logo}
+                      onChange={(file) =>
+                        setFormData((prev) => ({ ...prev, logo: file }))
+                      }
+                      previewUrl={logoPreview}
+                      required={false}
+                      disabled={!isEditingActive}
+                    />
+                  </div>
+                  {!isEditingActive && (
+                    <div className="absolute inset-0 cursor-not-allowed z-10"></div>
+                  )}
+                  <p className="text-[8px] text-gray-400 text-left mt-1">
+                    Square image (1:1 ratio)
+                  </p>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN - Images, Status & Buttons - WIDER for banner */}
+              <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-160px)]">
                 {/* Business Type */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Business Type *
                   </label>
                   <select
@@ -1328,7 +1357,7 @@ export default function CompanyManagement() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Description
                   </label>
                   <textarea
@@ -1345,7 +1374,7 @@ export default function CompanyManagement() {
 
                 {/* Minimum Order Total */}
                 <div>
-                  <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
+                  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
                     Minimum Order Total (ETB)
                   </label>
                   <input
@@ -1363,34 +1392,51 @@ export default function CompanyManagement() {
                     disabled={!isEditingActive}
                     className={`w-full border rounded-md p-1.5 text-xs ${!isEditingActive ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"}`}
                   />
-                  <p className="text-[9px] text-gray-400 mt-0.5">
+                  <p className="text-[10px] text-gray-400 mt-0.5">
                     0 means no minimum for this company.
                   </p>
                 </div>
-              </div>
 
-              {/* RIGHT COLUMN - Images, Status & Buttons - WIDER for banner */}
-              <div className="w-72 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-160px)]">
-                {/* Logo Upload - LEFT ALIGNED (not centered) */}
-                <div className="relative w-32">
-                  <div className={!isEditingActive ? "opacity-70" : ""}>
-                    <DragDropImageUpload
-                      label="Logo (Square)"
-                      value={formData.logo}
-                      onChange={(file) =>
-                        setFormData((prev) => ({ ...prev, logo: file }))
+                {/* Status Section */}
+                <div className="pt-1 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_active: e.target.checked,
+                        })
                       }
-                      previewUrl={logoPreview}
-                      required={false}
                       disabled={!isEditingActive}
+                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
                     />
-                  </div>
-                  {!isEditingActive && (
-                    <div className="absolute inset-0 cursor-not-allowed z-10"></div>
-                  )}
-                  <p className="text-[8px] text-gray-400 text-left mt-1">
-                    Square image (1:1 ratio)
-                  </p>
+                    <span
+                      className={`text-[14px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
+                    >
+                      Active
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_featured}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_featured: e.target.checked,
+                        })
+                      }
+                      disabled={!isEditingActive}
+                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
+                    />
+                    <span
+                      className={`text-[14px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
+                    >
+                      Featured
+                    </span>
+                  </label>
                 </div>
 
                 {/* Cover Image Upload - HORIZONTALLY WIDE (now column is wider) */}
@@ -1417,59 +1463,17 @@ export default function CompanyManagement() {
                     <div className="absolute inset-0 cursor-not-allowed z-10"></div>
                   )}
                   <p className="text-[8px] text-gray-400 text-center mt-1">
-                    📐 16:9 banner ratio - fits full width
+                    16:9 banner ratio - fits full width
                   </p>
-                </div>
-
-                {/* Status Section */}
-                <div className="pt-1 space-y-1.5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          is_active: e.target.checked,
-                        })
-                      }
-                      disabled={!isEditingActive}
-                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
-                    />
-                    <span
-                      className={`text-[11px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
-                    >
-                      Active
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_featured}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          is_featured: e.target.checked,
-                        })
-                      }
-                      disabled={!isEditingActive}
-                      className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
-                    />
-                    <span
-                      className={`text-[11px] ${!isEditingActive ? "text-gray-500" : "text-gray-700"}`}
-                    >
-                      Featured
-                    </span>
-                  </label>
                 </div>
 
                 {/* Buttons - Only in edit mode */}
                 {isEditingActive && (
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                  <div className="flex flex-row gap-4 items-center justify-center pt-2 border-t border-gray-100">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] text-white px-2 py-1.5 rounded-md text-xs font-semibold hover:from-[#5b4694] hover:to-[#6b55a8] transition-all duration-300 disabled:opacity-50 shadow-sm"
+                      className="w-full cursor-pointer bg-gradient-to-r from-[#6750A4] to-[#7c63b8] text-white px-2 py-1.5 rounded-md text-xs font-semibold hover:from-[#5b4694] hover:to-[#6b55a8] transition-all duration-300 disabled:opacity-50 shadow-sm"
                     >
                       {submitting
                         ? "Saving..."
@@ -1480,7 +1484,7 @@ export default function CompanyManagement() {
                     <button
                       type="button"
                       onClick={closeInlineEdit}
-                      className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                      className="w-full cursor-pointer border border-gray-300 rounded-md px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
                     >
                       Cancel
                     </button>
