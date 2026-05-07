@@ -37,7 +37,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { TableControls } from "../ui/TableControls";
 
 // Memoised sub components to prevent re renders
-const MemoizedDataTable = React.memo(DataTable);
 const MemoizedPagination = React.memo(Pagination);
 const CompanyCard = ({ company, onEdit, userRole }: any) => (
   <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group h-fit">
@@ -250,7 +249,7 @@ export default function CompanyManagement() {
   const [businessTypeFilter, setBusinessTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subCategoryFilter, setSubCategoryFilter] = useState("all");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -292,9 +291,6 @@ export default function CompanyManagement() {
   );
   const { toast, showToast } = useToast();
 
-  // NEW: State for inline editing on the right side
-  const [selectedCompanyForEdit, setSelectedCompanyForEdit] =
-    useState<CompanyListItem | null>(null);
   // NEW: State to track if editing is active (fields enabled)
   const [isEditingActive, setIsEditingActive] = useState(false);
   // --- Data filtering (super admin) ---
@@ -431,8 +427,6 @@ export default function CompanyManagement() {
           description: company.description || "",
         };
         setCompanies([companyListItem]);
-        // Auto-select the company for the right side form
-        setSelectedCompanyForEdit(companyListItem);
         // Load its data into the form
         setEditingSlug(companyListItem.slug);
         setFormData({
@@ -465,7 +459,6 @@ export default function CompanyManagement() {
         // Auto-select the first company for the right side form
         if (allCompanies.length > 0) {
           const firstCompany = allCompanies[0];
-          setSelectedCompanyForEdit(firstCompany);
           setEditingSlug(firstCompany.slug);
           setFormData({
             name: firstCompany.name,
@@ -592,7 +585,6 @@ export default function CompanyManagement() {
       resetForm();
       setModalOpen(false);
       setIsEditingActive(false); // ✅ Exit edit mode after successful save
-      setSelectedCompanyForEdit(null); // ✅ Clear selected company
 
       // ✅ Refresh data WITHOUT causing redirect
       await fetchData();
@@ -673,7 +665,6 @@ export default function CompanyManagement() {
         setModalOpen(true);
       } else {
         // Non-superadmin uses inline editor panel
-        setSelectedCompanyForEdit(company);
         setIsEditingActive(true);
       }
     },
@@ -682,7 +673,6 @@ export default function CompanyManagement() {
 
   // NEW: Close inline edit form
   const closeInlineEdit = useCallback(() => {
-    setSelectedCompanyForEdit(null);
     setEditingSlug(null);
     setIsEditingActive(false);
     resetForm();
@@ -1098,7 +1088,7 @@ export default function CompanyManagement() {
 
       {isSuperAdmin ? (
         <>
-          <MemoizedDataTable
+          <DataTable
             data={paginatedItemsWithRowNumber}
             columns={columns}
             loading={loading}

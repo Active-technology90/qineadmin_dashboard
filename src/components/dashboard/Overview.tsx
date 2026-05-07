@@ -241,15 +241,17 @@ export default function Overview({
         setAnalytics(data);
       } catch (err: unknown) {
         if (!active) return;
-        const detail =
+        let detail = "Failed to load analytics.";
+        if (
           typeof err === "object" &&
           err !== null &&
           "response" in err &&
-          typeof (err as { response?: { data?: { detail?: string } } }).response
+          typeof (err as { response?: { data?: { detail?: unknown } } }).response
             ?.data?.detail === "string"
-            ? (err as { response?: { data?: { detail?: string } } }).response!
-                .data!.detail
-            : "Failed to load analytics.";
+        ) {
+          detail = (err as { response?: { data?: { detail?: string } } })
+            .response?.data?.detail as string;
+        }
         setError(detail);
       } finally {
         if (active) setLoading(false);
@@ -502,10 +504,10 @@ export default function Overview({
                         tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                       />
                       <Tooltip
-                      formatter={(value: number | string, name: string) => [
+                        formatter={(value, name) => [
                           typeof value === "number"
                             ? formatCurrency(value)
-                            : value,
+                            : String(value ?? ""),
                           name === "revenue" ? "Revenue" : "Prev. Revenue",
                         ]}
                         contentStyle={{
@@ -568,9 +570,7 @@ export default function Overview({
                           ))}
                         </Pie>
                         <Tooltip
-                        formatter={(value: number | string) => [
-                          `${value} orders`,
-                        ]}
+                          formatter={(value) => [`${value ?? 0} orders`]}
                           contentStyle={{
                             borderRadius: "12px",
                             border: "1px solid #e5e7eb",
@@ -661,10 +661,10 @@ export default function Overview({
                         tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                       />
                       <Tooltip
-                        formatter={(value: number | string) => [
+                        formatter={(value) => [
                           typeof value === "number"
                             ? formatCurrency(value)
-                            : value,
+                            : String(value ?? ""),
                           "",
                         ]}
                         contentStyle={{

@@ -310,10 +310,6 @@ export default function CompanyOrders() {
     currentPage * pageSize,
   );
 
-  const showingFrom =
-    totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-
-  const showingTo = Math.min(currentPage * pageSize, totalFilteredCount);
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
 

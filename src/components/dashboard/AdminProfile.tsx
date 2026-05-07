@@ -14,7 +14,6 @@ import {
   Building,
   ArrowRight,
   Camera,
-  LogOut,
   CheckCircle,
 } from "lucide-react";
 
@@ -34,7 +33,7 @@ type PasswordForm = {
 const BRAND_COLOR = "#6750A4";
 
 export default function AdminProfile() {
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser } = useAuth();
   const { company, switchCompany } = useCurrentCompany();
   const isSuperAdmin = !user?.memberships?.length;
   console.log(user);
@@ -99,11 +98,20 @@ export default function AdminProfile() {
       if (updatedUser.profile_image) setAvatar(updatedUser.profile_image);
       setToast({ message: "Profile updated successfully", type: "success" });
       setTimeout(() => setToast(null), 3000);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
+      const responseData =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: unknown } }).response?.data ===
+          "object"
+          ? ((err as { response?: { data?: Record<string, string> } }).response
+              ?.data ?? {})
+          : {};
       const errorMsg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
+        responseData.detail ||
+        responseData.message ||
         "Failed to update profile";
       setToast({ message: errorMsg, type: "error" });
       setTimeout(() => setToast(null), 3000);
@@ -145,12 +153,21 @@ export default function AdminProfile() {
       setToast({ message: "Password changed successfully", type: "success" });
       setTimeout(() => setToast(null), 3000);
       reset();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
+      const responseData =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: unknown } }).response?.data ===
+          "object"
+          ? ((err as { response?: { data?: Record<string, string> } }).response
+              ?.data ?? {})
+          : {};
       const errorMsg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message ||
+        responseData.detail ||
+        responseData.message ||
+        (err instanceof Error ? err.message : "") ||
         "Failed to change password";
 
       // Handle specific backend errors
