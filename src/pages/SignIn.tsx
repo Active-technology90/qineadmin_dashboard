@@ -9,6 +9,7 @@ export default function SignIn(): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -61,38 +62,38 @@ export default function SignIn(): React.JSX.Element {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5f4bb6] via-[#6a5acd] to-[#4b3ca7] font-sans">
-      <div className="w-full max-w-5xl grid md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
+   return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5f4bb6] via-[#6a5acd] to-[#4b3ca7] font-sans p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden mx-auto">
 
-        {/* LEFT SIDE */}
-        <div className="hidden md:flex flex-col justify-center items-center text-white p-10 bg-gradient-to-br from-[#6a5acd] to-[#4b3ca7] relative">
+         {/* LEFT SIDE - Responsive (hidden on mobile, visible on md+) */}
+        <div className="hidden md:flex flex-col justify-center items-center text-white p-6 lg:p-10 bg-gradient-to-br from-[#6a5acd] to-[#4b3ca7] relative">
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_30%,white,transparent_40%),radial-gradient(circle_at_80%_70%,white,transparent_40%)]"></div>
 
           <div className="relative z-10 text-center flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center mb-6">
+            <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white flex items-center justify-center mb-4 lg:mb-6">
               <img src="/qinemartethio.jpeg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
             </div>
 
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-2xl lg:text-3xl font-bold mb-2">
               Qine Mart
             </h1>
 
-            <p className="text-sm opacity-90">
+            <p className="text-xs lg:text-sm opacity-90 px-4">
               Manage your platform with full control
             </p>
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="p-8 md:p-10 flex flex-col justify-center">
+        {/* RIGHT SIDE - Responsive */}
+        <div className="p-6 sm:p-8 md:p-10 flex flex-col justify-center">
 
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Welcome
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Welcome Back
             </h2>
 
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
               Enter your credentials to access the panel
             </p>
           </div>
@@ -106,8 +107,8 @@ export default function SignIn(): React.JSX.Element {
           <form onSubmit={handleLogin} className="space-y-4">
 
             <div>
-              <label className="text-sm text-gray-600">
-                Username
+              <label className="text-xs sm:text-sm text-gray-600 font-medium">
+                Username / Email
               </label>
 
               <input
@@ -115,38 +116,73 @@ export default function SignIn(): React.JSX.Element {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none"
+                className="w-full mt-1 p-2.5 sm:p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none transition-all text-sm sm:text-base"
                 placeholder="admin@qine.com"
               />
             </div>
 
             <div>
-              <label className="text-sm text-gray-600">
+              <label className="text-xs sm:text-sm text-gray-600 font-medium">
                 Password
               </label>
 
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-1 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none"
-                placeholder="••••••••"
-              />
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none transition-all text-sm sm:text-base pr-12"
+                  placeholder="••••••••"
+                />
+                
+                {/* Password visibility toggle button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#6a5acd] transition-colors"
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m-3.65 8.35l3.65-3.65" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#6a5acd] text-white p-3 rounded-xl font-semibold hover:bg-[#5a4ac0] transition"
+              className="w-full bg-[#6a5acd] text-white py-2.5 sm:py-3 px-4 rounded-xl font-semibold 
+                hover:bg-[#5a4ac0] hover:scale-[1.02] active:scale-[0.98] 
+                transition-all duration-200 ease-in-out shadow-md hover:shadow-lg
+                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                text-sm sm:text-base"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </span>
+              ) : (
+                "Sign In"
+              )}
             </button>
 
           </form>
 
-          <div className="mt-6 text-xs text-gray-400 text-center">
-            Qine Mart • v1.0.0
+          <div className="mt-6 text-[10px] sm:text-xs text-gray-400 text-center">
+            Secure Login • Qine Mart v1.0.0
           </div>
 
         </div>
