@@ -174,12 +174,21 @@ export default function AdminProfile() {
       setToast({ message: "Password changed successfully", type: "success" });
       setTimeout(() => setToast(null), 3000);
       reset();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
+      const responseData =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: unknown } }).response?.data ===
+          "object"
+          ? ((err as { response?: { data?: Record<string, string> } }).response
+              ?.data ?? {})
+          : {};
       const errorMsg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message ||
+        responseData.detail ||
+        responseData.message ||
+        (err instanceof Error ? err.message : "") ||
         "Failed to change password";
 
       // Handle specific backend errors
