@@ -13,6 +13,8 @@ import {
   User,
   AtSign,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -38,6 +40,7 @@ type FormErrors = {
   phone_number?: string;
   username?: string;
   password?: string;
+  confirm_password?: string;
 };
 
 export function CreateCompanyUserModal({
@@ -53,11 +56,16 @@ export function CreateCompanyUserModal({
     username: "",
     phone_number: "",
     password: "",
+    confirm_password: "",
     role: "staff" as "admin" | "staff" | "viewer" | "delivery",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^(\+251|0)?9\d{8}$/;
@@ -66,14 +74,14 @@ export function CreateCompanyUserModal({
   const validate = () => {
     const newErrors: FormErrors = {};
 
-    // First name
+    // First Name
     if (!formData.first_name.trim()) {
       newErrors.first_name = "First name is required";
     } else if (formData.first_name.trim().length < 2) {
       newErrors.first_name = "Minimum 2 characters required";
     }
 
-    // Last name
+    // Last Name
     if (!formData.last_name.trim()) {
       newErrors.last_name = "Last name is required";
     } else if (formData.last_name.trim().length < 2) {
@@ -115,6 +123,17 @@ export function CreateCompanyUserModal({
     ) {
       newErrors.password =
         "Include uppercase, number and special character";
+    }
+
+    // Confirm Password
+    if (!formData.confirm_password) {
+      newErrors.confirm_password =
+        "Please confirm your password";
+    } else if (
+      formData.confirm_password !== formData.password
+    ) {
+      newErrors.confirm_password =
+        "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -169,25 +188,32 @@ export function CreateCompanyUserModal({
     const isValid = validate();
 
     if (!isValid) {
-      const allTouched = {
+      setTouched({
         first_name: true,
         last_name: true,
         email: true,
         username: true,
         phone_number: true,
         password: true,
-      };
-
-      setTouched(allTouched);
+        confirm_password: true,
+      });
 
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      username: formData.username,
+      phone_number: formData.phone_number,
+      password: formData.password,
+      role: formData.role,
+    });
   };
 
   const inputClass = (field: keyof FormErrors) => `
-    w-full pl-10 pr-4 py-3 rounded-2xl border bg-white
+    w-full pl-10 pr-12 py-3 rounded-2xl border bg-white
     outline-none transition-all duration-200
     ${
       touched[field] && errors[field]
@@ -404,7 +430,7 @@ export function CreateCompanyUserModal({
             </div>
 
             {/* PASSWORD */}
-            <div className="md:col-span-2">
+            <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Password <span className="text-red-500">*</span>
               </label>
@@ -413,7 +439,7 @@ export function CreateCompanyUserModal({
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Strong password..."
                   value={formData.password}
                   onChange={(e) =>
@@ -422,9 +448,22 @@ export function CreateCompanyUserModal({
                   onBlur={() => handleBlur("password")}
                   className={inputClass("password")}
                 />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
 
-              {/* Password Strength */}
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex items-center justify-between mb-1">
@@ -464,17 +503,65 @@ export function CreateCompanyUserModal({
                 </div>
               )}
 
-              {touched.password && errors.password ? (
+              {touched.password && errors.password && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
                   <AlertCircle className="h-3.5 w-3.5" />
                   {errors.password}
                 </p>
-              ) : (
-                <p className="text-xs text-gray-400 mt-2">
-                  Use at least 8 characters including uppercase,
-                  number and symbol.
-                </p>
               )}
+            </div>
+
+            {/* CONFIRM PASSWORD */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+
+                <input
+                  type={
+                    showConfirmPassword ? "text" : "password"
+                  }
+                  placeholder="Confirm password..."
+                  value={formData.confirm_password}
+                  onChange={(e) =>
+                    handleChange(
+                      "confirm_password",
+                      e.target.value,
+                    )
+                  }
+                  onBlur={() =>
+                    handleBlur("confirm_password")
+                  }
+                  className={inputClass("confirm_password")}
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(
+                      !showConfirmPassword,
+                    )
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+
+              {touched.confirm_password &&
+                errors.confirm_password && (
+                  <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    {errors.confirm_password}
+                  </p>
+                )}
             </div>
           </div>
         </div>

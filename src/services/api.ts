@@ -167,6 +167,7 @@ export const onboardCompanyStaff = (
     email: string;
     phone_number: string;
     password: string;
+  
     role: "admin" | "staff" | "viewer" | "delivery";
   },
 ) => {
