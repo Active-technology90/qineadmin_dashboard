@@ -1,6 +1,6 @@
 // src/components/ui/DataTable.tsx
 import React from 'react';
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit, Pencil, Trash2 } from 'lucide-react';
 import { SkeletonRow } from './SkeletonRow';
 import { SortableHeader } from './SortableHeader';
 
@@ -125,7 +125,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                           className="text-blue-600 hover:text-blue-800 p-1"
                           title="Edit"
                         >
-                          <Pencil size={16} />
+                          <Edit size={16} />
                         </button>
                       )}
                       {onDelete && (

@@ -507,7 +507,7 @@ export function OrderDetailModal({
                 />
                 <SummaryCard
                   icon={CreditCard}
-                  label="Payment"
+                  label="Payment Method"
                   value={order.payment_method}
                   badge={{
                     text: order.payment_status || "Unknown",
@@ -516,7 +516,7 @@ export function OrderDetailModal({
                 />
                 <SummaryCard
                   icon={Building2}
-                  label="Active Vendors"
+                  label="Active Companies"
                   value={order.vendor_orders?.length ?? 0}
                 />
                 <SummaryCard
@@ -540,7 +540,7 @@ export function OrderDetailModal({
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-[#6750A4]" />
                     <h4 className="text-base font-semibold text-gray-800">
-                      Vendor Orders ({order.vendor_orders.length})
+                      Company Orders ({order.vendor_orders.length})
                     </h4>
                   </div>
                   {order.vendor_orders.map((vo) => (

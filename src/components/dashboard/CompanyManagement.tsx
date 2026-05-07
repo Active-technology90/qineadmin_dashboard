@@ -247,6 +247,9 @@ export default function CompanyManagement() {
   // ----- DEBOUNCED SEARCH -----
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [businessTypeFilter, setBusinessTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("all");
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const handleInputChange = (value: string) => {
@@ -294,11 +297,26 @@ export default function CompanyManagement() {
     useState<CompanyListItem | null>(null);
   // NEW: State to track if editing is active (fields enabled)
   const [isEditingActive, setIsEditingActive] = useState(false);
-  // --- Data filtering (only for super admin) – runs only when searchTerm changes
+  // --- Data filtering (super admin) ---
   const filteredCompanies = useMemo(() => {
-    if (!searchTerm.trim() || !isSuperAdmin) return companies;
+    if (!isSuperAdmin) return companies;
+
+    let data = [...companies];
+
+    if (businessTypeFilter !== "all") {
+      data = data.filter((comp) => comp.business_type === businessTypeFilter);
+    }
+    if (categoryFilter !== "all") {
+      data = data.filter((comp) => comp.category_name === categoryFilter);
+    }
+    if (subCategoryFilter !== "all") {
+      data = data.filter((comp) => comp.sub_category_name === subCategoryFilter);
+    }
+
+    if (!searchTerm.trim()) return data;
+
     const term = searchTerm.toLowerCase();
-    return companies.filter(
+    return data.filter(
       (comp) =>
         comp.name.toLowerCase().includes(term) ||
         (comp.name_am && comp.name_am.toLowerCase().includes(term)) ||
@@ -308,7 +326,43 @@ export default function CompanyManagement() {
         comp.category_name.toLowerCase().includes(term) ||
         comp.sub_category_name.toLowerCase().includes(term),
     );
-  }, [companies, searchTerm, isSuperAdmin]);
+  }, [
+    companies,
+    searchTerm,
+    isSuperAdmin,
+    businessTypeFilter,
+    categoryFilter,
+    subCategoryFilter,
+  ]);
+
+  const businessTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(companies.map((comp) => comp.business_type).filter(Boolean)),
+      ).sort(),
+    [companies],
+  );
+
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(companies.map((comp) => comp.category_name).filter(Boolean)),
+      ).sort(),
+    [companies],
+  );
+
+  const subCategoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(companies.map((comp) => comp.sub_category_name).filter(Boolean)),
+      ).sort(),
+    [companies],
+  );
+  const hasActiveFilters =
+    !!inputValue.trim() ||
+    businessTypeFilter !== "all" ||
+    categoryFilter !== "all" ||
+    subCategoryFilter !== "all";
 
   // Sorting & pagination (super admin sees all, others see single company)
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
@@ -337,7 +391,14 @@ export default function CompanyManagement() {
 
   useEffect(() => {
     resetPage();
-  }, [searchTerm, pageSize, resetPage]);
+  }, [
+    searchTerm,
+    pageSize,
+    businessTypeFilter,
+    categoryFilter,
+    subCategoryFilter,
+    resetPage,
+  ]);
 
   // --- API fetching ---
   const fetchData = async () => {
@@ -525,6 +586,7 @@ export default function CompanyManagement() {
 
       // ✅ Reset form and exit edit mode
       resetForm();
+      setModalOpen(false)
       setIsEditingActive(false); // ✅ Exit edit mode after successful save
       setSelectedCompanyForEdit(null); // ✅ Clear selected company
 
@@ -603,12 +665,15 @@ export default function CompanyManagement() {
       });
       if (company.logo) setLogoPreview(company.logo);
       if (company.cover_image) setCoverPreview(company.cover_image);
-      // NEW: Set selected company for inline editing instead of opening modal
-      setSelectedCompanyForEdit(company);
-      // NEW: Enable editing mode so fields become editable
-      setIsEditingActive(true);
+      if (isSuperAdmin) {
+        setModalOpen(true);
+      } else {
+        // Non-superadmin uses inline editor panel
+        setSelectedCompanyForEdit(company);
+        setIsEditingActive(true);
+      }
     },
-    [canEditCompany],
+    [canEditCompany, isSuperAdmin, showToast],
   );
 
   // NEW: Close inline edit form
@@ -672,7 +737,7 @@ export default function CompanyManagement() {
       },
       {
         key: "is_active",
-        header: "Active",
+        header: "Is Active",
         sortable: true,
         render: (comp) => (
           <span
@@ -931,39 +996,98 @@ export default function CompanyManagement() {
       {/* Only super admin sees search & sort controls */}
       {isSuperAdmin && (
         <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <div className="flex-1">
-              <SearchInput
-                value={inputValue}
-                onChange={handleInputChange}
-                debounceMs={0}
-                loading={loading}
-                placeholder="Search by name, slug, category, subcategory, or type..."
-              />
+          <div className="flex flex-col gap-3 w-full">
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <div className="flex-1">
+                <SearchInput
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  debounceMs={0}
+                  loading={loading}
+                  showClearButton={false}
+                  placeholder="Search by name, slug, category, subcategory, or type..."
+                />
+              </div>
+              <select
+                value={`${sortField}|${sortOrder}`}
+                onChange={(e) => {
+                  const [field, desiredOrder] = e.target.value.split("|");
+                  if (field === sortField) {
+                    if (desiredOrder !== sortOrder) handleSort(field);
+                  } else {
+                    handleSort(field);
+                    if (desiredOrder === "desc") handleSort(field);
+                  }
+                }}
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
+              >
+                <option value={`${sortField}|${sortOrder}`}>All Filters</option>
+                <option value="name|asc">Name (A-Z)</option>
+                <option value="name|desc">Name (Z-A)</option>
+                {/* <option value="business_type|asc">Business Type (A-Z)</option>
+                <option value="category_name|asc">Category (A-Z)</option>
+                <option value="sub_category_name|asc">Subcategory (A-Z)</option> */}
+                <option value="is_active|desc">Active First</option>
+                <option value="is_featured|desc">Featured First</option>
+              </select>
             </div>
-            <select
-              value={`${sortField}|${sortOrder}`}
-              onChange={(e) => {
-                const [field, desiredOrder] = e.target.value.split("|");
-                if (field === sortField) {
-                  if (desiredOrder !== sortOrder) handleSort(field);
-                } else {
-                  handleSort(field);
-                  if (desiredOrder === "desc") handleSort(field);
-                }
-              }}
-              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
-            >
-              <option value="name|asc">Name (A-Z)</option>
-              <option value="name|desc">Name (Z-A)</option>
-              <option value="id|asc">Oldest (ID ↑)</option>
-              <option value="id|desc">Newest (ID ↓)</option>
-              <option value="business_type|asc">Business Type (A-Z)</option>
-              <option value="category_name|asc">Category (A-Z)</option>
-              <option value="sub_category_name|asc">Subcategory (A-Z)</option>
-              <option value="is_active|desc">Active First</option>
-              <option value="is_featured|desc">Featured First</option>
-            </select>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3 ">
+              <select
+                value={businessTypeFilter}
+                onChange={(e) => setBusinessTypeFilter(e.target.value)}
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="all">All Business Types</option>
+                {businessTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="all">All Categories</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={subCategoryFilter}
+                onChange={(e) => setSubCategoryFilter(e.target.value)}
+                className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="all">All Subcategories</option>
+                {subCategoryOptions.map((subCat) => (
+                  <option key={subCat} value={subCat}>
+                    {subCat}
+                  </option>
+                ))}
+              </select>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputValue("");
+                    setSearchTerm("");
+                    setBusinessTypeFilter("all");
+                    setCategoryFilter("all");
+                    setSubCategoryFilter("all");
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 border border-[#f31313] text-[#f31313] rounded-lg px-4 py-2 text-sm w-1/3 hover:bg-[#f31313]/5"
+                >
+                  <X size={14} />
+                  Clear
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
           </div>
         </TableControls>
       )}
@@ -1375,21 +1499,14 @@ export default function CompanyManagement() {
         </div>
       )}
 
-      <MemoizedPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={goToPage}
-      />
-
-      {/* Modal is now disabled - using inline edit instead */}
-      {/* <MultiStepFormModal
+      <MultiStepFormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         steps={steps}
         onSubmit={handleSubmit}
         submitting={submitting}
         maxWidth="2xl"
-      /> */}
+      />
 
       <DeleteConfirmModal
         isOpen={!!deleteTarget}

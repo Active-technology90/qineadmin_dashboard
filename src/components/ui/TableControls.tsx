@@ -13,7 +13,7 @@ export const TableControls = memo(function TableControls({
   children,
 }: TableControlsProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 items-start bg-gray-50 p-2 rounded-xl border border-gray-200">
       <div className="flex-1 w-full">{children}</div>
 
       <div className="w-auto flex items-center gap-2 bg-white px-2 py-1 rounded-xl">

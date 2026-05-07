@@ -43,6 +43,7 @@ export default function SubCategoryManagement() {
 
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -86,9 +87,14 @@ export default function SubCategoryManagement() {
   }, []);
 
   const filteredSubs = useMemo(() => {
-    if (!searchTerm.trim()) return subs;
+    const categoryFiltered =
+      categoryFilter === "all"
+        ? subs
+        : subs.filter((sub) => String(sub.category) === categoryFilter);
+
+    if (!searchTerm.trim()) return categoryFiltered;
     const term = searchTerm.toLowerCase();
-    return subs.filter(
+    return categoryFiltered.filter(
       (sub) =>
         sub.name.toLowerCase().includes(term) ||
         sub.name_am?.toLowerCase().includes(term) ||
@@ -99,7 +105,7 @@ export default function SubCategoryManagement() {
           ?.name.toLowerCase()
           .includes(term),
     );
-  }, [subs, categories, searchTerm]);
+  }, [subs, categories, searchTerm, categoryFilter]);
 
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredSubs,
@@ -125,7 +131,7 @@ export default function SubCategoryManagement() {
 
   useEffect(() => {
     resetPage();
-  }, [searchTerm, pageSize, resetPage]);
+  }, [searchTerm, pageSize, categoryFilter, resetPage]);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -311,7 +317,7 @@ export default function SubCategoryManagement() {
       },
       {
         key: "is_active",
-        header: "Active",
+        header: "Is Active",
         sortable: true,
         render: (sub) => (
           <span
@@ -369,6 +375,7 @@ export default function SubCategoryManagement() {
               value={inputValue}
               onChange={handleInputChange}
               debounceMs={0}
+              showClearButton={false}
               placeholder="Search by name, Amharic name, slug, item code, or category..."
               loading={loading}
             />
@@ -388,15 +395,27 @@ export default function SubCategoryManagement() {
           >
             <option value="name|asc">Name (A-Z)</option>
             <option value="name|desc">Name (Z-A)</option>
-            <option value="id|asc">Oldest (ID ↑)</option>
-            <option value="id|desc">Newest (ID ↓)</option>
+            {/* <option value="id|asc">Oldest (ID ↑)</option>
+            <option value="id|desc">Newest (ID ↓)</option> */}
             <option value="order|asc">Order (Ascending)</option>
             <option value="order|desc">Order (Descending)</option>
-            <option value="item_code|asc">Item Code (A-Z)</option>
+            {/* <option value="item_code|asc">Item Code (A-Z)</option> */}
             <option value="company_count|desc">Most Companies</option>
             <option value="company_count|asc">Fewest Companies</option>
             <option value="is_active|desc">Active First</option>
             <option value="is_active|asc">Inactive First</option>
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] hover:border-gray-400"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={String(cat.id)}>
+                {cat.name}
+              </option>
+            ))}
           </select>
         </div>
       </TableControls>
@@ -465,7 +484,7 @@ export default function SubCategoryManagement() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slug (optional)
+                Slug
               </label>
               <input
                 type="text"
@@ -474,9 +493,10 @@ export default function SubCategoryManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, slug: e.target.value })
                 }
+                disabled={!!editingId}
                 className={`w-full border rounded-lg p-2 font-mono ${
                   formErrors.slug ? "border-red-500" : "border-gray-300"
-                }`}
+                } ${editingId ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
               />
               {formErrors.slug && (
                 <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>

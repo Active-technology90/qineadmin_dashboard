@@ -384,8 +384,8 @@ export interface AnalyticsOverviewResponse {
   summary: AnalyticsSummary;
   revenue_series: AnalyticsRevenuePoint[];
   order_status: { name: string; value: number }[];
-  category_sales: { name: string; sales: number }[];
-  category_trend: AnalyticsCategoryTrendPoint[];
+  top_products: { name: string; sales: number }[];
+  product_sales_trend: AnalyticsCategoryTrendPoint[];
   recent_orders: AnalyticsRecentOrder[];
 }
 

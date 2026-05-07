@@ -115,6 +115,7 @@ export default function Payments() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+  const hasActiveFilters = Boolean(searchTerm.trim() || statusFilter);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
@@ -220,7 +221,7 @@ export default function Payments() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by vendor order, company, or status..."
+                placeholder="Search by company, or status..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -233,7 +234,10 @@ export default function Payments() {
           <div className="w-full sm:w-48">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All statuses</option>
@@ -243,6 +247,20 @@ export default function Payments() {
               <option value="failed">Failed</option>
             </select>
           </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("");
+                setCurrentPage(1);
+              }}
+              className="w-full sm:w-auto px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition flex items-center justify-center gap-1.5"
+            >
+              <X className="h-4 w-4" />
+              Clear
+            </button>
+          )}
         </div>
       </TableControls>
 
@@ -252,7 +270,7 @@ export default function Payments() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Vendor Order ID
+                Company Order ID
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Company

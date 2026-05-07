@@ -219,6 +219,9 @@ export default function AdminDashboard() {
     setIsSidebarOpen(false);
     setProfileDropdownOpen(false);
   };
+  const navigateFromOverview = (
+    tab: "products" | "masterOrders" | "companyOrders",
+  ) => navigate(tab);
 
   const renderContent = () => {
     const companyKey = company?.slug || "super";
@@ -227,7 +230,7 @@ export default function AdminDashboard() {
     const content = (() => {
       switch (activeTab) {
         case "overview":
-          return <Overview />;
+          return <Overview onNavigate={navigateFromOverview} />;
         case "products":
           return <CompanyProducts />;
         case "users":
@@ -458,6 +461,13 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )}
+            {isSuperAdmin && (
+              <div className="hidden sm:block">
+                <p className="text-sm font-black text-indigo-700">
+                  Super Admin
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Profile Dropdown */}
@@ -468,7 +478,7 @@ export default function AdminDashboard() {
             >
               <div className="text-right hidden md:block">
                 <p className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {user?.first_name || "Admin"} {user?.last_name}
+                  {user?.first_name || user?.username} {user?.last_name}
                 </p>
               </div>
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">

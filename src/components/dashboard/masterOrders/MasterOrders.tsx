@@ -149,14 +149,6 @@ export default function Orders() {
     return "bg-gray-100 text-gray-600";
   };
 
-  const getDeliverySummary = (order: MasterOrder) => {
-    if (!order.vendor_orders || order.vendor_orders.length === 0) return "—";
-    const statuses = order.vendor_orders.map((vo) => vo.delivery_status);
-    const unique = [...new Set(statuses)];
-    if (unique.length === 1) return unique[0];
-    return `${unique.length} mixed`;
-  };
-
   const SkeletonRow = () => (
     <tr className="animate-pulse">
       {[...Array(9)].map((_, i) => (
@@ -182,28 +174,12 @@ export default function Orders() {
         }}
         deliveryStatusFilter={deliveryStatusFilter}
         onDeliveryStatusChange={setDeliveryStatusFilter}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
         onClear={handleClearFilters}
         showMobile={showMobileFilters}
         onToggleMobile={() => setShowMobileFilters((prev) => !prev)}
       />
-
-      <div className="flex justify-end items-center mb-4">
-        <label htmlFor="pageSize" className="text-sm text-gray-500 mr-2">
-          Rows:
-        </label>
-        <select
-          id="pageSize"
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-          className="border border-gray-200 rounded-xl px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
-        >
-          {[10, 25, 50].map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
-      </div>
 
       {/* Table – uses filterOrders (client‑side) */}
       <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -215,11 +191,11 @@ export default function Orders() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery</th>
+              {/* <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery</th> */}
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendors</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"><span className="sr-only">Actions</span></th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Companies</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created at</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider"><span className="">Actions</span></th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
@@ -264,9 +240,9 @@ export default function Orders() {
                       {order.payment_status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 capitalize">
+                  {/* <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 capitalize">
                     {getDeliverySummary(order)}
-                  </td>
+                  </td> */}
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       {order.fulfillment_type === "delivery" ? <Truck size={14} /> : <Package size={14} />}
@@ -297,12 +273,12 @@ export default function Orders() {
 
       {!loading && !error && totalCount > 0 && (
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-gray-500">
+          {/* <p className="text-sm text-gray-500">
             Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)}
             –{Math.min(currentPage * pageSize, totalCount)} of {totalCount}{" "}
             orders
             {deliveryStatusFilter && " (delivery filter active)"}
-          </p>
+          </p> */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
