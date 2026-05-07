@@ -16,8 +16,8 @@ interface ProductTableProps {
   products: Product[];
   totalItems: number;
   loading: boolean;
-  onEdit?: (product: Product) => void; 
-  onDelete?: (id: number, title: string) => void; 
+  onEdit?: (product: Product) => void;
+  onDelete?: (id: number, title: string) => void;
 }
 
 function StockBadge({ stock }: { stock: number }) {
@@ -181,18 +181,21 @@ export function ProductTable({
                     {product.unit}
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
-                    {onEdit && (
-                      <button onClick={() => onEdit(product)}>
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={() => onDelete(product.id, product.title)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {onEdit && (
+                        <button onClick={() => onEdit(product)}>
+                          <Edit className="h-4 w-4 text-blue-700" />
+                        </button>
+                      )}
+
+                      {onDelete && (
+                        <button
+                          onClick={() => onDelete(product.id, product.title)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-700" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

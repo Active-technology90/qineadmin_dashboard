@@ -179,6 +179,7 @@ export default function CompanyUsers() {
     return (
       <CompanySelector
         companies={companies}
+        subtitle="Select a company to manage users"
         isLoading={isLoadingCompanies}
         onSelect={(slug, name) => {
           const membership = currentUser?.memberships?.find(

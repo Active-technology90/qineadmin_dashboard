@@ -96,7 +96,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
         <input
           ref={setRefs}
-          type="search"
+        type="search"
           name={name}
           id={id}
           value={internalValue}

@@ -20,7 +20,7 @@ export function DeleteUserModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-5 border-b">
+        <div className="flex justify-between items-center p-5 ">
           <h2 className="text-xl font-semibold text-gray-900">Remove User</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -40,12 +40,12 @@ export function DeleteUserModal({
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-3 p-5 border-t bg-gray-50 rounded-b-2xl">
-          <button onClick={onClose} className="px-4 py-2 border rounded-full text-gray-700 hover:bg-gray-100">Cancel</button>
+        <div className="flex justify-end gap-3 p-5  bg-gray-50 rounded-b-2xl">
+          <button onClick={onClose}            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
           <button
             onClick={onConfirm}
             disabled={deleting}
-            className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:opacity-50"
+           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             {deleting ? "Removing..." : "Remove User"}
           </button>
