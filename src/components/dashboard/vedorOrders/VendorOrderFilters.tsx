@@ -1,22 +1,32 @@
-// src/components/dashboard/vendorOrders/VendorOrderFilters.tsx
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, ChevronDown } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
 
 interface VendorOrderFiltersProps {
   searchTerm: string;
   onSearchChange: (val: string) => void;
-  orderStatusFilter: string; // NEW: order status filter
-  onOrderStatusChange: (val: string) => void; // NEW
-  selectedCompanyId: string;
-  onCompanyChange: (val: string) => void;
-  companies: CompanyListItem[];
-  onClear: () => void;
-  showMobile: boolean;
-  onToggleMobile: () => void;
+
+  orderStatusFilter: string;
+  onOrderStatusChange: (val: string) => void;
+
   deliveryStatusFilter: string;
   onDeliveryStatusChange: (val: string) => void;
+
   paymentMethodFilter: string;
   onPaymentMethodChange: (val: string) => void;
+
+  selectedCompanyId: string;
+  onCompanyChange: (val: string) => void;
+
+  companies: CompanyListItem[];
+
+  pageSize: number;
+  onPageSizeChange?: (size: number) => void;
+
+  onClear: () => void;
+
+  showMobile: boolean;
+  onToggleMobile: () => void;
+
   hideCompanyFilter?: boolean;
 }
 
@@ -25,79 +35,92 @@ export function VendorOrderFilters({
   onSearchChange,
   orderStatusFilter,
   onOrderStatusChange,
-  selectedCompanyId,
-  onCompanyChange,
-  companies,
-  onClear,
-  showMobile,
-  onToggleMobile,
   deliveryStatusFilter,
   onDeliveryStatusChange,
   paymentMethodFilter,
   onPaymentMethodChange,
+  selectedCompanyId,
+  onCompanyChange,
+  companies,
+  pageSize,
+  onPageSizeChange,
+  onClear,
+  showMobile,
+  onToggleMobile,
   hideCompanyFilter = false,
 }: VendorOrderFiltersProps) {
-  const hasFilters = hideCompanyFilter
-    ? !!searchTerm ||
-      !!orderStatusFilter ||
-      !!deliveryStatusFilter ||
-      !!paymentMethodFilter
-    : !!searchTerm ||
-      !!orderStatusFilter ||
-      !!selectedCompanyId ||
-      !!deliveryStatusFilter ||
-      !!paymentMethodFilter;
+  const hasFilters =
+    !!searchTerm ||
+    !!orderStatusFilter ||
+    !!deliveryStatusFilter ||
+    !!paymentMethodFilter ||
+    (!!selectedCompanyId && !hideCompanyFilter);
 
   return (
-    <>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-900">
-          Vendor Orders
-        </h2>
-
-        <button
-          onClick={onToggleMobile}
-          className="md:hidden flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white shadow-sm"
-        >
-          <Filter size={16} />
-          Filters
+    <div
+      className={`${
+        showMobile ? "block" : "hidden md:block"
+      } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
+    >
+      {/* Header – only title & utility buttons */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
           {hasFilters && (
-            <span className="bg-[#6750A4]/10 text-[#6750A4] text-xs px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-[#6750A4]/10 text-[#6750A4] px-2 py-0.5 rounded-full font-medium">
               Active
             </span>
           )}
-        </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {hasFilters && (
+            <button
+              onClick={onClear}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium
+                         border border-red-200 text-red-600 hover:bg-red-50 transition"
+            >
+              <X size={14} />
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onToggleMobile}
+            className="md:hidden inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium
+                       border border-gray-200 rounded-xl bg-white shadow-sm"
+          >
+            <Filter size={14} />
+            Filters
+          </button>
+        </div>
       </div>
 
-      {/* Filters Card */}
-      <div
-        className={`${
-          showMobile ? "block" : "hidden md:block"
-        } bg-white border border-gray-100 rounded-2xl shadow-sm p-4 md:p-5 mb-6`}
-      >
-        <div className="flex flex-col gap-4">
+      {/* Body – search + filters + page size inline */}
+      <div className="p-5 space-y-5">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by order ID, customer name, or company..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                       focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                       outline-none transition text-sm"
+          />
+        </div>
 
-          {/* Search */}
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by order ID, company name..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 outline-none transition"
-            />
-          </div>
-
-          {/* Filters Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-
-            {/* Order Status */}
+        {/* Filters + Page Size – all in one grid row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {/* Order Status */}
+          <div className="relative">
             <select
               value={orderStatusFilter}
               onChange={(e) => onOrderStatusChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">Order Status</option>
               <option value="pending">Pending</option>
@@ -108,12 +131,17 @@ export function VendorOrderFilters({
               <option value="payment_rejected">Payment Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* Delivery Status */}
+          {/* Delivery Status */}
+          <div className="relative">
             <select
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">Delivery Status</option>
               <option value="pending">Pending</option>
@@ -123,25 +151,35 @@ export function VendorOrderFilters({
               <option value="delivered">Delivered</option>
               <option value="failed">Failed</option>
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* Payment */}
+          {/* Payment Method */}
+          <div className="relative">
             <select
               value={paymentMethodFilter}
               onChange={(e) => onPaymentMethodChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
-              <option value="">Payment</option>
+              <option value="">Payment Method</option>
               <option value="bank_transfer">Bank Transfer</option>
               <option value="chapa">Chapa</option>
               <option value="other">Other</option>
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* Company */}
-            {!hideCompanyFilter && (
+          {/* Company (conditional) */}
+          {!hideCompanyFilter && (
+            <div className="relative">
               <select
                 value={selectedCompanyId}
                 onChange={(e) => onCompanyChange(e.target.value)}
-                className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+                className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                           focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                           text-sm pr-8 outline-none transition"
               >
                 <option value="">Company</option>
                 {companies.map((c) => (
@@ -150,21 +188,29 @@ export function VendorOrderFilters({
                   </option>
                 ))}
               </select>
-            )}
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
+          )}
 
-            {/* Clear Button */}
-            {hasFilters && (
-              <button
-                onClick={onClear}
-                className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition text-sm"
-              >
-                <X size={14} />
-                Clear
-              </button>
-            )}
+          {/* Page Size – now in the same row! */}
+          <div className="relative">
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
+            >
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={15}>15 / page</option>
+              <option value={30}>30 / page</option>
+              <option value={60}>60 / page</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

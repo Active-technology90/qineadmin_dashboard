@@ -20,6 +20,7 @@ interface CompanySelectorProps {
   onSelect: (slug: string, name: string) => void;
   onBack: () => void;
   allowSwitch?: boolean; 
+   subtitle?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,7 +222,8 @@ export function CompanySelector({
   isLoading,
   onSelect,
   onBack,
-  allowSwitch=false
+  allowSwitch = false,
+  subtitle = "Select a company to manage its products"
 }: CompanySelectorProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -254,7 +256,7 @@ export function CompanySelector({
       <Header
         onBack={onBack}
         title="Choose Company"
-        subtitle="Select a company to manage its products"
+        subtitle={subtitle}
       />
 
       {/* Scrollable content area (search + grid) */}

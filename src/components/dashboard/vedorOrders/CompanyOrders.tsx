@@ -7,6 +7,8 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+
+import { Pagination } from "../../ui/Pagination";
 import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
@@ -23,7 +25,7 @@ import { DeliveryManager } from "./DeliveryManager";
 import { CompanySelector } from "../company-products/CompanySelector";
 import { useReadOnly } from "../AdminDashboard"; // 👈 viewer detection
 
-const ITEMS_PER_PAGE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 /* ---------- Reusable sub‑components ---------- */
 const StatusBadge = ({ status }: { status: string }) => {
@@ -111,58 +113,6 @@ const ErrorState = ({
   </tr>
 );
 
-const Pagination = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) => {
-  if (totalPages <= 1) return null;
-  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-    let pageNum: number;
-    if (totalPages <= 5) pageNum = i + 1;
-    else if (currentPage <= 3) pageNum = i + 1;
-    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-    else pageNum = currentPage - 2 + i;
-    return pageNum;
-  }).filter((p) => p >= 1 && p <= totalPages);
-
-  return (
-    <div className="flex gap-1">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-      >
-        ‹
-      </button>
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-lg text-sm ${
-            page === currentPage
-              ? "bg-indigo-600 text-white"
-              : "border border-gray-200 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-      >
-        ›
-      </button>
-    </div>
-  );
-};
-
 /* ---------- Main Component ---------- */
 export default function CompanyOrders() {
   const { user } = useAuth();
@@ -200,7 +150,7 @@ export default function CompanyOrders() {
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [allOrders, setAllOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -353,15 +303,17 @@ export default function CompanyOrders() {
   ]);
 
   const totalFilteredCount = filteredOrders.length;
-  const totalPages = Math.ceil(totalFilteredCount / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalFilteredCount / pageSize);
+
   const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   );
 
   const showingFrom =
-    totalFilteredCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount);
+    totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+
+  const showingTo = Math.min(currentPage * pageSize, totalFilteredCount);
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
 
@@ -400,7 +352,7 @@ export default function CompanyOrders() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-[#6750A4]">Vendor Orders</h2>
+          <h2 className="text-xl font-bold text-[#6750A4]">Company orders</h2>
           {readOnly && (
             <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
               View Only
@@ -408,12 +360,13 @@ export default function CompanyOrders() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {isSuperAdmin && (
+          {isSuperAdmin && companySlug && (
             <button
               onClick={() => clearCompany()}
               className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
             >
-              <X className="h-4 w-4" /> Clear Company
+              <X className="h-4 w-4" />
+              Clear Company
             </button>
           )}
           {isSuperAdmin && (
@@ -429,7 +382,7 @@ export default function CompanyOrders() {
 
       <p className="text-sm text-gray-500 mt-1 mb-4">
         {isAdminView
-          ? "Showing all vendor orders"
+          ? "Showing all company orders"
           : companySlug
             ? `Orders for ${companyName}`
             : "Orders"}
@@ -440,6 +393,7 @@ export default function CompanyOrders() {
         searchTerm={searchTerm}
         onSearchChange={(v) => setSearchTerm(v)}
         orderStatusFilter={orderStatusFilter}
+        pageSize={pageSize}
         onOrderStatusChange={(v) => setOrderStatusFilter(v)}
         deliveryStatusFilter={deliveryStatusFilter}
         onDeliveryStatusChange={(v) => setDeliveryStatusFilter(v)}
@@ -452,6 +406,10 @@ export default function CompanyOrders() {
         showMobile={showFilters}
         onToggleMobile={() => setShowFilters(!showFilters)}
         hideCompanyFilter={!isAdminLike}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       />
 
       {/* Company selector overlay – accessible to viewers */}
@@ -613,13 +571,18 @@ export default function CompanyOrders() {
       {/* Pagination footer */}
       {!loading && totalFilteredCount > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-          <div className="text-sm text-gray-500">
-            Showing {showingFrom} to {showingTo} of {totalFilteredCount} orders
-          </div>
+          <div className="text-sm text-gray-500"></div>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
+            pageSize={pageSize}
+            // onPageSizeChange={(size) => {
+            //   setPageSize(size);
+            //   setCurrentPage(1);
+            // }}
+            enableUrlSync={true}
+            className="rounded-2xl border border-gray-100"
           />
         </div>
       )}

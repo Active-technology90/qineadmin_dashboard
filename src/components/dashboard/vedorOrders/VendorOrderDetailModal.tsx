@@ -882,7 +882,7 @@ export function VendorOrderDetailModal({
           <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-8 py-5 flex justify-between items-center">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent">
-                Vendor Order #{order.id}
+                Company Order #{order.id}
               </h2>
               <CopyButton text={String(order.id)} />
             </div>

@@ -1,6 +1,6 @@
 // src/components/ui/DataTable.tsx
 import React from 'react';
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit,  Trash2 } from 'lucide-react';
 import { SkeletonRow } from './SkeletonRow';
 import { SortableHeader } from './SortableHeader';
 
@@ -28,6 +28,7 @@ interface DataTableProps<T> {
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   onSort?: (field: string) => void;
+  
 }
 
 export function DataTable<T extends { id?: number | string; slug?: string }>({
@@ -125,7 +126,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                           className="text-blue-600 hover:text-blue-800 p-1"
                           title="Edit"
                         >
-                          <Pencil size={16} />
+                           <Edit className="h-4 w-4" />
                         </button>
                       )}
                       {onDelete && (

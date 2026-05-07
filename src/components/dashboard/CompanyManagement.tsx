@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon, Edit3, Building2, Tag, X } from "lucide-react";
+import { Plus, ImageIcon, Edit3, Building2, Tag, X, Edit } from "lucide-react";
 import api from "../../services/api";
 import {
   createCompany,
@@ -39,7 +39,7 @@ import { TableControls } from "../ui/TableControls";
 // Memoised sub components to prevent re renders
 const MemoizedDataTable = React.memo(DataTable);
 const MemoizedPagination = React.memo(Pagination);
-const CompanyCard = ({ company, onEdit, userRole }: any) => (
+const CompanyCard = ({ company, onEdit, canEdit }: any) => (
   <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group h-fit">
     {/* Cover Image Section - Full width at top */}
     <div className="relative h-40 w-full overflow-hidden">
@@ -163,23 +163,16 @@ const CompanyCard = ({ company, onEdit, userRole }: any) => (
       {/* Edit Button - Visible but DISABLED for staff (grayed out, no click) */}
       <button
         onClick={() => onEdit(company)}
-        disabled={
-          userRole !== "owner" &&
-          userRole !== "admin" &&
-          userRole !== "super_admin"
-        }
+        disabled={!canEdit}
         className={`absolute bottom-3 right-4 z-20 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all duration-300 group/btn
     ${
-      userRole === "owner" || userRole === "admin" || userRole === "super_admin"
+      canEdit
         ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer"
         : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
     }
   `}
       >
-        <Edit3
-          size={24}
-          className={`transition-transform ${userRole === "owner" || userRole === "admin" || userRole === "super_admin" ? "group-hover/btn:rotate-12" : ""}`}
-        />
+         <Edit className="h-4 w-4" />
         Edit Company
       </button>
     </div>
@@ -227,6 +220,14 @@ export default function CompanyManagement() {
 
   const canAddCompany = isSuperAdmin;
   const canDeleteCompany = isSuperAdmin;
+  console.log(
+    "canDeleteCompany",
+    canDeleteCompany,
+    "user",
+    user,
+    "isSuperAdmin",
+    isSuperAdmin,
+  );
   const canEditCompany = (companySlug: string) => {
     // Super admin can edit everything
     if (isSuperAdmin) return true;
@@ -247,7 +248,7 @@ export default function CompanyManagement() {
   // ----- DEBOUNCED SEARCH -----
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -586,6 +587,8 @@ export default function CompanyManagement() {
         showToast("error", "You don't have permission to edit this company");
         return;
       }
+
+      // Populate form data with the selected company
       setEditingSlug(company.slug);
       setFormData({
         name: company.name,
@@ -601,16 +604,21 @@ export default function CompanyManagement() {
         logo: null,
         cover_image: null,
       });
-      if (company.logo) setLogoPreview(company.logo);
-      if (company.cover_image) setCoverPreview(company.cover_image);
-      // NEW: Set selected company for inline editing instead of opening modal
-      setSelectedCompanyForEdit(company);
-      // NEW: Enable editing mode so fields become editable
-      setIsEditingActive(true);
-    },
-    [canEditCompany],
-  );
+      setLogoPreview(company.logo || null);
+      setCoverPreview(company.cover_image || null);
+      setFormErrors({});
 
+      if (isSuperAdmin) {
+        // ✅ Super admin: use the modal
+        setModalOpen(true);
+      } else {
+        // ✅ Non‑super‑admin: use the inline edit form
+        setSelectedCompanyForEdit(company);
+        setIsEditingActive(true);
+      }
+    },
+    [canEditCompany, isSuperAdmin],
+  );
   // NEW: Close inline edit form
   const closeInlineEdit = useCallback(() => {
     setSelectedCompanyForEdit(null);
@@ -672,7 +680,7 @@ export default function CompanyManagement() {
       },
       {
         key: "is_active",
-        header: "Active",
+        header: "isActive",
         sortable: true,
         render: (comp) => (
           <span
@@ -956,8 +964,8 @@ export default function CompanyManagement() {
             >
               <option value="name|asc">Name (A-Z)</option>
               <option value="name|desc">Name (Z-A)</option>
-              <option value="id|asc">Oldest (ID ↑)</option>
-              <option value="id|desc">Newest (ID ↓)</option>
+              {/* <option value="id|asc">Oldest (ID ↑)</option>
+              <option value="id|desc">Newest (ID ↓)</option> */}
               <option value="business_type|asc">Business Type (A-Z)</option>
               <option value="category_name|asc">Category (A-Z)</option>
               <option value="sub_category_name|asc">Subcategory (A-Z)</option>
@@ -997,7 +1005,7 @@ export default function CompanyManagement() {
                 key={company.id}
                 company={company}
                 onEdit={openEdit}
-                userRole={userCompanyRole}
+                canEdit={canEditCompany(company.slug)}
               />
             ))}
           </div>
@@ -1075,7 +1083,7 @@ export default function CompanyManagement() {
                 {/* Name Amharic */}
                 <div>
                   <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
-                    Name (Amharic)
+                    ስም
                   </label>
                   <input
                     type="text"
@@ -1375,21 +1383,25 @@ export default function CompanyManagement() {
         </div>
       )}
 
-      <MemoizedPagination
+      {/* <MemoizedPagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
-      />
+      /> */}
 
       {/* Modal is now disabled - using inline edit instead */}
-      {/* <MultiStepFormModal
+      <MultiStepFormModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          resetForm(); // clear editing state when closing
+        }}
         steps={steps}
         onSubmit={handleSubmit}
         submitting={submitting}
         maxWidth="2xl"
-      /> */}
+        title={editingSlug ? "Edit Company" : "Add New Company"}
+      />
 
       <DeleteConfirmModal
         isOpen={!!deleteTarget}

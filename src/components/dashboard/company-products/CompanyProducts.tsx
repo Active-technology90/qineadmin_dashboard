@@ -224,6 +224,7 @@ export default function CompanyProducts() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <input
               value={search}
+              type="search"
               onChange={(e) => {
                 setSearch(e.target.value);
                 setCurrentPage(1);
