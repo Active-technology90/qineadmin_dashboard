@@ -80,7 +80,7 @@ export default function SignIn(): React.JSX.Element {
             </h1>
 
             <p className="text-xs lg:text-sm opacity-90 px-4">
-              Manage your platform with full control
+              Manage your company with full control
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function SignIn(): React.JSX.Element {
 
           <div className="mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-              Welcome Back
+              Welcome 
             </h2>
 
             <p className="text-gray-500 text-xs sm:text-sm mt-1">
@@ -108,7 +108,7 @@ export default function SignIn(): React.JSX.Element {
 
             <div>
               <label className="text-xs sm:text-sm text-gray-600 font-medium">
-                Username / Email
+                Username 
               </label>
 
               <input

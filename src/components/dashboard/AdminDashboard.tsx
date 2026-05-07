@@ -15,6 +15,7 @@ import {
   Building2,
   PanelLeftClose,
   PanelLeftOpen,
+  User,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -202,6 +203,7 @@ export default function AdminDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const { company } = useCurrentCompany();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // ── Core identity flags ────────────────────────────────
   const isSuperAdmin = !user?.memberships?.length;
@@ -219,9 +221,21 @@ export default function AdminDashboard() {
     setIsSidebarOpen(false);
     setProfileDropdownOpen(false);
   };
+
   const navigateFromOverview = (
     tab: "products" | "masterOrders" | "companyOrders",
   ) => navigate(tab);
+
+  // Handle logout with confirmation
+  const handleLogoutClick = () => {
+    setProfileDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    logout();
+  };
 
   const renderContent = () => {
     const companyKey = company?.slug || "super";
@@ -401,14 +415,14 @@ export default function AdminDashboard() {
             onClick={() => navigate("payments")}
           />
           <SidebarItem
-            icon={<>👤</>}
+            icon={<User className="h-5 w-5" />}
             label="Profile"
             active={activeTab === "profile"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("profile")}
           />
 
-          <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
+          {/* <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Account
             </p>
@@ -421,7 +435,7 @@ export default function AdminDashboard() {
           >
             <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
             {!sidebarCollapsed && <span>Logout</span>}
-          </button>
+          </button> */}
         </nav>
 
         <div className="p-2 border-t border-gray-800 flex justify-end">
@@ -450,6 +464,22 @@ export default function AdminDashboard() {
               <Menu className="h-6 w-6" />
             </button>
 
+            {/* Role display - Modern badge design for Super Admin */}
+            {isSuperAdmin && (
+              <div className="hidden sm:block">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-full border border-indigo-200 shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                  <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+                    Role:
+                  </span>
+                  <span className="text-sm font-black bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
+                    {user?.role === "super_admin"
+                      ? "Super Administrator"
+                      : user?.role || "Super Admin"}
+                  </span>
+                </div>
+              </div>
+            )}
             {/* Company name – show for non‑super‑admin (including viewer) */}
             {company && !isSuperAdmin && (
               <div className="hidden sm:block">
@@ -461,13 +491,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )}
-            {isSuperAdmin && (
-              <div className="hidden sm:block">
-                <p className="text-sm font-black text-indigo-700">
-                  Super Admin
-                </p>
-              </div>
-            )}
+           
           </div>
 
           {/* Profile Dropdown */}
@@ -477,9 +501,14 @@ export default function AdminDashboard() {
               className="flex items-center gap-3 group focus:outline-none cursor-pointer"
             >
               <div className="text-right hidden md:block">
-                <p className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {user?.first_name || user?.username} {user?.last_name}
-                </p>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">
+                    Welcome,
+                  </span>
+                  <p className="text-base font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
+                    {user?.username || user?.email?.split("@")[0] || "User"}
+                  </p>
+                </div>
               </div>
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">
                 {user?.first_name?.[0] || "A"}
@@ -538,10 +567,7 @@ export default function AdminDashboard() {
                   )} */}
 
                   <button
-                    onClick={() => {
-                      logout();
-                      setProfileDropdownOpen(false);
-                    }}
+                    onClick={handleLogoutClick}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors group border-t border-gray-100 mt-1 cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
@@ -560,6 +586,34 @@ export default function AdminDashboard() {
 
         <div className="p-6 lg:p-8">{renderContent()}</div>
       </main>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Confirm Sign Out
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to sign out of your account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

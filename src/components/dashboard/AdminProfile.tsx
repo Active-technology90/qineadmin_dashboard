@@ -9,6 +9,8 @@ import {
   Phone,
   Lock,
   Key,
+  Eye,
+  EyeOff,
   Building,
   ArrowRight,
   Camera,
@@ -45,6 +47,20 @@ export default function AdminProfile() {
   const [activeForm, setActiveForm] = useState<
     "profile" | "password" | "membership"
   >("profile");
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+  const [passwordErrors, setPasswordErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    next: false,
+    confirm: false,
+  });
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -69,6 +85,7 @@ export default function AdminProfile() {
 
   const onSubmitProfile = async (data: ProfileForm) => {
     setProfileLoading(true);
+    setToast(null);
     try {
       const formData = new FormData();
       formData.append("first_name", data.first_name);
@@ -80,18 +97,43 @@ export default function AdminProfile() {
       const updatedUser = res.data;
       setUser(updatedUser);
       if (updatedUser.profile_image) setAvatar(updatedUser.profile_image);
-      alert("Profile updated successfully");
+      setToast({ message: "Profile updated successfully", type: "success" });
+      setTimeout(() => setToast(null), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to update profile");
+      const errorMsg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Failed to update profile";
+      setToast({ message: errorMsg, type: "error" });
+      setTimeout(() => setToast(null), 3000);
     } finally {
       setProfileLoading(false);
     }
   };
 
   const onSubmitPassword = async (data: PasswordForm) => {
+    // Clear previous errors
+    setPasswordErrors({});
+    setToast(null);
+
+    // Validate current password is not empty
+    if (!data.currentPassword) {
+      setPasswordErrors({ currentPassword: "Current password is required" });
+      return;
+    }
+
+    // Validate password length
+    if (data.newPassword.length < 8) {
+      setPasswordErrors({
+        newPassword: "Password must be at least 8 characters",
+      });
+      return;
+    }
+
+    // Validate password match
     if (data.newPassword !== data.confirmPassword) {
-      alert("Passwords do not match");
+      setPasswordErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
     setPasswordLoading(true);
@@ -100,11 +142,29 @@ export default function AdminProfile() {
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
-      alert("Password changed successfully");
+      setToast({ message: "Password changed successfully", type: "success" });
+      setTimeout(() => setToast(null), 3000);
       reset();
     } catch (err) {
       console.error(err);
-      alert("Failed to change password");
+      const errorMsg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to change password";
+
+      // Handle specific backend errors
+      if (
+        errorMsg.toLowerCase().includes("current") ||
+        errorMsg.toLowerCase().includes("old password")
+      ) {
+        setPasswordErrors({ currentPassword: errorMsg });
+      } else if (errorMsg.toLowerCase().includes("match")) {
+        setPasswordErrors({ confirmPassword: errorMsg });
+      } else {
+        setToast({ message: errorMsg, type: "error" });
+        setTimeout(() => setToast(null), 3000);
+      }
     } finally {
       setPasswordLoading(false);
     }
@@ -149,6 +209,27 @@ export default function AdminProfile() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 ${
+            toast.type === "success"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          } border rounded-xl shadow-lg p-4 max-w-sm`}
+        >
+          <div className="flex items-center gap-3">
+            {toast.type === "success" ? (
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            ) : (
+              <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
+                !
+              </div>
+            )}
+            <p className="text-sm font-medium">{toast.message}</p>
+          </div>
+        </div>
+      )}
       {/* Profile Header Card */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
         <div
@@ -198,15 +279,6 @@ export default function AdminProfile() {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="absolute top-4 right-4">
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
           </div>
         </div>
         <div className="pt-16 pb-6 px-6">
@@ -259,6 +331,7 @@ export default function AdminProfile() {
           {activeForm === "profile" && (
             <div className="mt-6 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
@@ -271,13 +344,18 @@ export default function AdminProfile() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                           {...field}
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                          className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                            passwordErrors.confirmPassword
+                              ? "border-red-500 focus:ring-red-500"
+                              : "border-gray-200 focus:border-transparent"
+                          }`}
                           placeholder="First Name"
                         />
                       </div>
                     )}
                   />
                 </div>
+                {/* Last Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Last Name
@@ -297,46 +375,49 @@ export default function AdminProfile() {
                     )}
                   />
                 </div>
+                {/* Email Address */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          type="email"
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          placeholder="you@example.com"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <Controller
+                    control={control}
+                    name="phone_number"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          placeholder="+251 9XX XXX XXX"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        {...field}
-                        type="email"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <Controller
-                  control={control}
-                  name="phone_number"
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        {...field}
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                        placeholder="+251 9XX XXX XXX"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
+              {/* Update Profile Button */}
               <div className="pt-2">
                 <button
                   onClick={handleSubmit(onSubmitProfile)}
@@ -360,17 +441,43 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="currentPassword"
                   render={({ field }) => (
-                    <div className="relative">
+                    <div className="relative w-1/2">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        type={showPasswords.current ? "text" : "password"}
+                        className="w-full pl-9 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
                         placeholder="Enter current password"
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            current: !prev.current,
+                          }))
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        aria-label={
+                          showPasswords.current
+                            ? "Hide current password"
+                            : "Show current password"
+                        }
+                      >
+                        {showPasswords.current ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
+                {passwordErrors.currentPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.currentPassword}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -380,17 +487,47 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="newPassword"
                   render={({ field }) => (
-                    <div className="relative">
+                    <div className="relative w-1/2">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        type={showPasswords.next ? "text" : "password"}
+                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.currentPassword
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 focus:border-transparent"
+                        }`}
                         placeholder="New password"
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            next: !prev.next,
+                          }))
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        aria-label={
+                          showPasswords.next
+                            ? "Hide new password"
+                            : "Show new password"
+                        }
+                      >
+                        {showPasswords.next ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
+                {passwordErrors.newPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.newPassword}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -400,17 +537,47 @@ export default function AdminProfile() {
                   control={passwordControl}
                   name="confirmPassword"
                   render={({ field }) => (
-                    <div className="relative">
+                    <div className="relative w-1/2">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        type={showPasswords.confirm ? "text" : "password"}
+                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.newPassword
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 focus:border-transparent"
+                        }`}
                         placeholder="Confirm new password"
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            confirm: !prev.confirm,
+                          }))
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        aria-label={
+                          showPasswords.confirm
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                      >
+                        {showPasswords.confirm ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
+                {passwordErrors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.confirmPassword}
+                  </p>
+                )}
               </div>
               <div className="pt-2">
                 <button
