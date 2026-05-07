@@ -7,7 +7,7 @@ import { useCompanyUsers } from "../../../hooks/useCompanyUsers";
 import { useAddCompanyUser } from "../../../hooks/useAddCompanyUser";
 import { useUpdateUserRole } from "../../../hooks/useUpdateUserRole";
 import { useDeleteCompanyUser } from "../../../hooks/useDeleteCompanyUser";
-import { searchUsers } from "../../../services/api";
+import { onboardCompanyStaff, searchUsers } from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
 import type { User } from "../../../types";
 import { UserPlus } from "lucide-react";
@@ -19,13 +19,15 @@ import { EditUserModal } from "./EditUserModal";
 import { DeleteUserModal } from "./DeleteUserModal";
 import { CompanySelector } from "../company-products/CompanySelector";
 import { useReadOnly } from "../AdminDashboard";
+import { CreateCompanyUserModal } from "./CreateCompanyUserModal";
 
 export default function CompanyUsers() {
   const { user: currentUser } = useAuth();
   const { company, switchCompany, clearCompany } = useCurrentCompany();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
   const readOnly = useReadOnly(); // true for viewers
-
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
   // Company from context
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
@@ -134,6 +136,23 @@ export default function CompanyUsers() {
       setAdding(false);
     }
   };
+  const handleCreateUser = async (data: any) => {
+    if (!companySlug) return;
+
+    setCreatingUser(true);
+
+    try {
+      await onboardCompanyStaff(companySlug, data);
+
+      setShowCreateModal(false);
+
+      await refetch();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreatingUser(false);
+    }
+  };
 
   const handleEditUser = async () => {
     if (!companySlug || !editingUser) return;
@@ -230,7 +249,16 @@ export default function CompanyUsers() {
               onClick={() => setShowAddModal(true)}
               className="px-4 py-2 rounded-full bg-secondary text-white hover:opacity-90 flex items-center gap-2 shadow-sm transition"
             >
-              <UserPlus className="h-4 w-4" /> Add User
+              <UserPlus className="h-4 w-4" /> Add Team Member
+            </button>
+          )}
+           {canManageUsers && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 rounded-full border border-[#6750A4]/20 text-[#6750A4] hover:bg-[#6750A4]/5 flex items-center gap-2 shadow-sm transition"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create User
             </button>
           )}
         </div>
@@ -276,6 +304,12 @@ export default function CompanyUsers() {
         adding={adding}
         onAdd={handleAddUser}
       />
+      <CreateCompanyUserModal
+  isOpen={showCreateModal}
+  onClose={() => setShowCreateModal(false)}
+  loading={creatingUser}
+  onSubmit={handleCreateUser}
+/>
 
       <EditUserModal
         isOpen={!!editingUser}

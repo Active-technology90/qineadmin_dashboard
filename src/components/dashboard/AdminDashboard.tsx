@@ -211,10 +211,10 @@ export default function AdminDashboard() {
 
   // For viewers: show everything like super admin but read‑only
   const showPlatformAdmin = isSuperAdmin || isViewer;
-  const showMasterOrders = isSuperAdmin || isViewer;
+  const showMasterOrders = isSuperAdmin;
 
   // Hide "Company Users" only for staff (not for viewers)
-  const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
+  // const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
 
   const navigate = (tab: Tab) => {
     setActiveTab(tab);

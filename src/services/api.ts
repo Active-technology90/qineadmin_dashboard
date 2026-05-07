@@ -21,8 +21,8 @@ import type {
   AnalyticsOverviewResponse,
 } from "../types";
 
-// const API_URL = "https://backend-qine.activetechet.com/api/v1";
-const API_URL = "http://localhost:8000/api/v1";
+const API_URL = "https://backend-qine.activetechet.com/api/v1";
+// const API_URL = "http://localhost:8000/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -156,6 +156,25 @@ export const resetPasswordConfirm = async (data: {
   token: string;
   new_password: string;
 }) => api.post("/auth/users/reset_password_confirm/", data);
+
+
+export const onboardCompanyStaff = (
+  companySlug: string,
+  payload: {
+    first_name: string;
+    last_name: string;
+    username: string;
+    email: string;
+    phone_number: string;
+    password: string;
+    role: "admin" | "staff" | "viewer" | "delivery";
+  },
+) => {
+  return api.post(
+    `/companies/${companySlug}/staff/onboard/`,
+    payload,
+  );
+};
 
 // ========== CATEGORIES ==========
 export const getCategories = async () => api.get<Category[]>("/categories/");
