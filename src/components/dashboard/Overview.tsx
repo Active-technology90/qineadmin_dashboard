@@ -27,6 +27,7 @@ import { getAdminAnalyticsOverview } from "../../services/api";
 import type { AnalyticsOverviewResponse } from "../../types";
 import { useReadOnly } from "./AdminDashboard";
 
+
 const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   scope: "company",
   selected_company: null,
@@ -42,14 +43,24 @@ const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   },
   revenue_series: [],
   order_status: [],
-  category_sales: [],
-  category_trend: [],
+  top_products: [],
+  product_sales_trend: [],
   recent_orders: [],
 };
 
-const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
 
+// const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
+const CHART_COLORS = [
+  "#6366F1", // indigo
+  "#10B981", // emerald
+  "#F59E0B", // amber
+  "#EF4444", // red
+  "#8B5CF6", // violet
+  "#06B6D4", // cyan
+  "#EC4899", // pink
+];
 type Period = "week" | "month" | "year";
+
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-US", {
@@ -59,12 +70,14 @@ const formatCurrency = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
+
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+
 
 const statusClass = (status: string) => {
   const s = status.toLowerCase();
@@ -75,6 +88,7 @@ const statusClass = (status: string) => {
   return "bg-gray-100 text-gray-800";
 };
 
+
 const paymentStatusClass = (ps: string) => {
   const p = ps?.toLowerCase();
   if (p === "paid") return "bg-emerald-100 text-emerald-800";
@@ -84,28 +98,37 @@ const paymentStatusClass = (ps: string) => {
   return "bg-gray-100 text-gray-600";
 };
 
+
 // Get meaningful color for each order status
 const getStatusColor = (statusName: string): string => {
   const s = statusName.toLowerCase();
 
+
   if (s.includes("paid") || s.includes("approved") || s.includes("success"))
     return "#10B981"; // green
+
 
   if (s.includes("cancell") || s.includes("reject") || s.includes("failed"))
     return "#EF4444"; // red
 
+
   if (s.includes("pending") || s.includes("waiting")) return "#F59E0B"; // amber
+
 
   if (s.includes("verify") || s.includes("review") || s.includes("check"))
     return "#F97316"; // orange
 
+
   if (s.includes("process") || s.includes("shipp") || s.includes("confirm"))
     return "#3B82F6"; // blue
+
 
   if (s.includes("out for delivery") || s.includes("on the way"))
     return "#8B5CF6"; // purple
 
+
   if (s.includes("delivered") || s.includes("completed")) return "#059669"; // emerald
+
 
   // Fallback: generate consistent color from name hash
   let hash = 0;
@@ -116,6 +139,7 @@ const getStatusColor = (statusName: string): string => {
   const hue = Math.abs(hash % 360);
   return `hsl(${hue}, 70%, 55%)`;
 };
+
 
 // Skeleton components
 const SkeletonCard = () => (
@@ -129,6 +153,7 @@ const SkeletonCard = () => (
   </div>
 );
 
+
 const SkeletonChart = ({ height = "h-64" }: { height?: string }) => (
   <div
     className={`bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-pulse ${height}`}
@@ -137,6 +162,7 @@ const SkeletonChart = ({ height = "h-64" }: { height?: string }) => (
     <div className="flex-1 bg-gray-100 rounded-xl" />
   </div>
 );
+
 
 const SummaryCard = ({
   title,
@@ -177,6 +203,7 @@ const SummaryCard = ({
   </div>
 );
 
+
 export default function Overview() {
   const readOnly = useReadOnly();
   const [period, setPeriod] = useState<Period>("week");
@@ -185,6 +212,7 @@ export default function Overview() {
   const [error, setError] = useState<string>("");
   const [analytics, setAnalytics] =
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
+
 
   useEffect(() => {
     let active = true;
@@ -211,6 +239,7 @@ export default function Overview() {
     };
   }, [period, selectedCompanySlug]);
 
+
   const currentData = analytics.revenue_series;
   const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
   const summaryData = {
@@ -222,21 +251,24 @@ export default function Overview() {
     conversionRate: analytics.summary.success_rate,
   };
 
+
   // Prepare order status data with dynamic colors
   const orderStatusData = analytics.order_status.map((item) => ({
     ...item,
     color: getStatusColor(item.name),
   }));
 
-  const categorySalesData = analytics.category_sales.map((cat, idx) => ({
-    ...cat,
+
+  const productSalesData = analytics.top_products.map((product, idx) => ({
+    ...product,
     color: CHART_COLORS[idx % CHART_COLORS.length],
   }));
-  const categoryTrendData = analytics.category_trend;
+  const productTrendData = analytics.product_sales_trend;
   const recentOrders = analytics.recent_orders;
-  const topCategoryNames = categoryTrendData.length
-    ? Object.keys(categoryTrendData[0]).filter((key) => key !== "month")
+  const topProductNames = productTrendData.length
+    ? Object.keys(productTrendData[0]).filter((key) => key !== "month")
     : [];
+
 
   const scopeOptions = [
     { value: "", label: "All Companies" },
@@ -245,6 +277,7 @@ export default function Overview() {
       label: c.name,
     })),
   ];
+
 
   return (
     <div className="space-y-8">
@@ -271,11 +304,13 @@ export default function Overview() {
         )}
       </div>
 
+
       {!!error && (
         <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-3 text-sm">
           {error}
         </div>
       )}
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -368,6 +403,7 @@ export default function Overview() {
           </>
         )}
       </div> */}
+
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -469,6 +505,7 @@ export default function Overview() {
           )}
         </div>
 
+
         {/* Order Status Pie Chart with dynamic colors */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
@@ -522,7 +559,8 @@ export default function Overview() {
         </div>
       </div>
 
-      {/* Category Trend & Top Categories – unchanged */}
+
+      {/* Product Trend & Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
@@ -532,14 +570,14 @@ export default function Overview() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Category Sales Trend
+                    Product Sales Trend
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
                     Monthly comparison
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  {topCategoryNames.map((name, idx) => (
+                  {topProductNames.map((name, idx) => (
                     <div key={name} className="flex items-center gap-1.5">
                       <span
                         className="w-3 h-3 rounded-full"
@@ -556,7 +594,7 @@ export default function Overview() {
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={categoryTrendData}
+                    data={productTrendData}
                     margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
                   >
                     <CartesianGrid
@@ -588,7 +626,7 @@ export default function Overview() {
                         border: "1px solid #e5e7eb",
                       }}
                     />
-                    {topCategoryNames.map((name, idx) => (
+                    {topProductNames.map((name, idx) => (
                       <Line
                         key={name}
                         type="monotone"
@@ -605,37 +643,37 @@ export default function Overview() {
             </>
           )}
         </div>
-
+          {/* Top products */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
             <SkeletonChart height="h-[300px]" />
           ) : (
             <>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                Top Categories
+                Top Products
               </h3>
               <div className="space-y-4">
-                {categorySalesData.map((cat) => (
-                  <div key={cat.name} className="flex items-center gap-3">
+                {productSalesData.map((product) => (
+                  <div key={product.name} className="flex items-center gap-3">
                     <div
                       className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: cat.color }}
+                      style={{ backgroundColor: product.color }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline">
                         <p className="text-sm font-medium text-gray-700 truncate">
-                          {cat.name}
+                          {product.name}
                         </p>
                         <span className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(cat.sales)}
+                          {formatCurrency(product.sales)}
                         </span>
                       </div>
                       <div className="mt-1 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
-                            width: `${categorySalesData[0]?.sales ? (cat.sales / categorySalesData[0].sales) * 100 : 0}%`,
-                            backgroundColor: cat.color,
+                            width: `${productSalesData[0]?.sales ? (product.sales / productSalesData[0].sales) * 100 : 0}%`,
+                            backgroundColor: product.color,
                           }}
                         />
                       </div>
@@ -648,6 +686,7 @@ export default function Overview() {
         </div>
       </div>
 
+
       {/* Recent Orders Table */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
         {loading ? (
@@ -659,7 +698,7 @@ export default function Overview() {
                 Recent Orders
               </h3>
               <p className="text-xs font-medium text-[#6750A4] hover:underline cursor-pointer">
-                View all →
+                View all
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -682,25 +721,25 @@ export default function Overview() {
                       Payment
                     </th>
                     <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 uppercase">
-                      Vendors
+                      Companies
                     </th>
                     <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">
+                    {/* <th className="text-right py-2.5 pl-3 text-xs font-medium text-gray-500 uppercase">
                       Action
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {recentOrders.map((order) => (
+                  {recentOrders.map((order, idx) => (
                     <tr
                       key={order.id}
                       className="hover:bg-gray-50/50 transition-colors"
                     >
                       <td className="py-2.5 pr-3">
                         <span className="text-sm font-semibold text-indigo-600">
-                          {order.id}
+                          {idx + 1}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-sm text-gray-700">
@@ -729,11 +768,11 @@ export default function Overview() {
                       <td className="py-2.5 pl-3 text-right text-sm text-gray-500">
                         {formatDate(order.date)}
                       </td>
-                      <td className="py-2.5 pl-3 text-right">
+                      {/* <td className="py-2.5 pl-3 text-right">
                         <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">
                           View
                         </button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

@@ -45,6 +45,15 @@ export default function AdminProfile() {
   const [activeForm, setActiveForm] = useState<
     "profile" | "password" | "membership"
   >("profile");
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+  const [passwordErrors, setPasswordErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -69,6 +78,7 @@ export default function AdminProfile() {
 
   const onSubmitProfile = async (data: ProfileForm) => {
     setProfileLoading(true);
+    setToast(null);
     try {
       const formData = new FormData();
       formData.append("first_name", data.first_name);
@@ -80,18 +90,43 @@ export default function AdminProfile() {
       const updatedUser = res.data;
       setUser(updatedUser);
       if (updatedUser.profile_image) setAvatar(updatedUser.profile_image);
-      alert("Profile updated successfully");
+      setToast({ message: "Profile updated successfully", type: "success" });
+      setTimeout(() => setToast(null), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to update profile");
+      const errorMsg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Failed to update profile";
+      setToast({ message: errorMsg, type: "error" });
+      setTimeout(() => setToast(null), 3000);
     } finally {
       setProfileLoading(false);
     }
   };
 
   const onSubmitPassword = async (data: PasswordForm) => {
+    // Clear previous errors
+    setPasswordErrors({});
+    setToast(null);
+
+    // Validate current password is not empty
+    if (!data.currentPassword) {
+      setPasswordErrors({ currentPassword: "Current password is required" });
+      return;
+    }
+
+    // Validate password length
+    if (data.newPassword.length < 8) {
+      setPasswordErrors({
+        newPassword: "Password must be at least 8 characters",
+      });
+      return;
+    }
+
+    // Validate password match
     if (data.newPassword !== data.confirmPassword) {
-      alert("Passwords do not match");
+      setPasswordErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
     setPasswordLoading(true);
@@ -100,11 +135,29 @@ export default function AdminProfile() {
         current_password: data.currentPassword,
         new_password: data.newPassword,
       });
-      alert("Password changed successfully");
+      setToast({ message: "Password changed successfully", type: "success" });
+      setTimeout(() => setToast(null), 3000);
       reset();
     } catch (err) {
       console.error(err);
-      alert("Failed to change password");
+      const errorMsg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to change password";
+
+      // Handle specific backend errors
+      if (
+        errorMsg.toLowerCase().includes("current") ||
+        errorMsg.toLowerCase().includes("old password")
+      ) {
+        setPasswordErrors({ currentPassword: errorMsg });
+      } else if (errorMsg.toLowerCase().includes("match")) {
+        setPasswordErrors({ confirmPassword: errorMsg });
+      } else {
+        setToast({ message: errorMsg, type: "error" });
+        setTimeout(() => setToast(null), 3000);
+      }
     } finally {
       setPasswordLoading(false);
     }
@@ -149,6 +202,27 @@ export default function AdminProfile() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 ${
+            toast.type === "success"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          } border rounded-xl shadow-lg p-4 max-w-sm`}
+        >
+          <div className="flex items-center gap-3">
+            {toast.type === "success" ? (
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            ) : (
+              <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
+                !
+              </div>
+            )}
+            <p className="text-sm font-medium">{toast.message}</p>
+          </div>
+        </div>
+      )}
       {/* Profile Header Card */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
         <div
@@ -271,7 +345,11 @@ export default function AdminProfile() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                           {...field}
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                          className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                            passwordErrors.confirmPassword
+                              ? "border-red-500 focus:ring-red-500"
+                              : "border-gray-200 focus:border-transparent"
+                          }`}
                           placeholder="First Name"
                         />
                       </div>
@@ -371,6 +449,11 @@ export default function AdminProfile() {
                     </div>
                   )}
                 />
+                {passwordErrors.currentPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.currentPassword}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -385,12 +468,21 @@ export default function AdminProfile() {
                       <input
                         {...field}
                         type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.currentPassword
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 focus:border-transparent"
+                        }`}
                         placeholder="New password"
                       />
                     </div>
                   )}
                 />
+                {passwordErrors.newPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.newPassword}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -405,12 +497,21 @@ export default function AdminProfile() {
                       <input
                         {...field}
                         type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.newPassword
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 focus:border-transparent"
+                        }`}
                         placeholder="Confirm new password"
                       />
                     </div>
                   )}
                 />
+                {passwordErrors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {passwordErrors.confirmPassword}
+                  </p>
+                )}
               </div>
               <div className="pt-2">
                 <button
