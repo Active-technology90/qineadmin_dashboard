@@ -273,15 +273,7 @@ export default function AdminProfile() {
               </div>
             </div>
           </div>
-          <div className="absolute top-4 right-4">
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
+
         </div>
         <div className="pt-16 pb-6 px-6">
           {/* Tabs */}
