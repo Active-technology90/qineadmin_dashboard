@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, RefreshCw, Search, Building2 } from "lucide-react";
+import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
 import { useCompanyProducts } from "../../../hooks/useCompanyProducts";
@@ -22,6 +23,12 @@ export default function CompanyProducts() {
 
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
+  // Get logo from companies list (since CurrentCompany doesn't have logo)
+  const companyLogo = useMemo(() => {
+    if (!companySlug || !companies.length) return null;
+    const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
+    return foundCompany?.logo || null;
+  }, [companySlug, companies]);
 
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -182,14 +189,20 @@ export default function CompanyProducts() {
 
       <div className="p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-[#6750A4]">
-              Company Products
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Manage catalog for{" "}
-              <span className="text-indigo-600 font-medium">{companyName}</span>
-            </p>
+          <div className="flex items-center gap-3">
+            {companyLogo ? (
+              <img
+                src={companyLogo}
+                alt={companyName}
+                className="w-10 h-10 rounded-full object-cover border border-gray-200"
+              />
+            ) : (
+              <Building2 className="w-8 h-8 text-gray-400" />
+            )}
+            <div>
+              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
+              <p className="text-sm font-medium text-secondary">Products</p>
+            </div>
           </div>
           <div className="flex gap-3">
             {isSuperAdmin && (

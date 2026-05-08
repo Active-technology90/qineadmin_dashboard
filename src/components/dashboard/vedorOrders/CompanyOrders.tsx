@@ -125,6 +125,12 @@ export default function CompanyOrders() {
 
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
+// Get logo from companies list (since CurrentCompany doesn't have logo)
+  const companyLogo = useMemo(() => {
+    if (!companySlug || !companies.length) return null;
+    const foundCompany = companies.find((c: any) => c.slug === companySlug);
+    return foundCompany?.logo || null;
+  }, [companySlug, companies]);
 
   // ---- Company selector overlay state ----
   const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
@@ -345,11 +351,29 @@ export default function CompanyOrders() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
 
-      {/* Header */}
+       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-[#6750A4]">Company orders</h2>
-          {readOnly && (
+        <div className="flex items-center gap-3">
+          {!isAdminView && companySlug && companyLogo ? (
+            <img
+              src={companyLogo}
+              alt={companyName}
+              className="w-10 h-10 rounded-full object-cover border border-gray-200"
+            />
+          ) : (
+            !isAdminView && companySlug && <Building2 className="w-8 h-8 text-gray-400" />
+          )}
+          {!isAdminView && companySlug ? (
+            <div>
+              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
+              <p className="text-sm font-medium text-secondary">Orders</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              {isAdminView ? "Showing all company orders" : "Orders"}
+            </p>
+          )}
+          {readOnly && !isAdminView && companySlug && (
             <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
               View Only
             </span>
@@ -376,14 +400,6 @@ export default function CompanyOrders() {
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 mt-1 mb-4">
-        {isAdminView
-          ? "Showing all company orders"
-          : companySlug
-            ? `Orders for ${companyName}`
-            : "Orders"}
-      </p>
-
       {/* Filters */}
       <VendorOrderFilters
         searchTerm={searchTerm}
@@ -406,6 +422,7 @@ export default function CompanyOrders() {
           setPageSize(size);
           setCurrentPage(1);
         }}
+        onRefresh={fetchAllOrders}
       />
 
       {/* Company selector overlay – accessible to viewers */}

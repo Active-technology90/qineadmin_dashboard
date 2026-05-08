@@ -1,4 +1,4 @@
-import { Search, X, Filter, ChevronDown } from "lucide-react";
+import { Search, X, Filter, ChevronDown, RefreshCw } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
 
 interface VendorOrderFiltersProps {
@@ -21,6 +21,7 @@ interface VendorOrderFiltersProps {
 
   pageSize: number;
   onPageSizeChange?: (size: number) => void;
+   onRefresh?: () => void;
 
   onClear: () => void;
 
@@ -45,6 +46,7 @@ export function VendorOrderFilters({
   pageSize,
   onPageSizeChange,
   onClear,
+  onRefresh,
   showMobile,
   onToggleMobile,
   hideCompanyFilter = false,
@@ -63,9 +65,9 @@ export function VendorOrderFilters({
       } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
     >
       {/* Header – only title & utility buttons */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800">Filters</h2> */}
           {hasFilters && (
             <span className="text-xs bg-[#6750A4]/10 text-[#6750A4] px-2 py-0.5 rounded-full font-medium">
               Active
@@ -97,9 +99,10 @@ export function VendorOrderFilters({
 
       {/* Body – search + filters + page size inline */}
       <div className="p-5 space-y-5">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+         {/* Search with Refresh Button */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search by order ID, customer name, or company..."
@@ -109,7 +112,19 @@ export function VendorOrderFilters({
                        focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                        outline-none transition text-sm"
           />
+          </div>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
+                         hover:bg-white hover:border-[#6750A4] transition-all duration-200 group flex-shrink-0"
+              title="Refresh orders"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4] group-hover:rotate-180 transition-all duration-300" />
+            </button>
+          )}
         </div>
+        
 
         {/* Filters + Page Size – all in one grid row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

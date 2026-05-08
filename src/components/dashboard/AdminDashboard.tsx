@@ -295,7 +295,7 @@ export default function AdminDashboard() {
       >
         {/* Logo & title */}
         <div
-          className={`p-8 border-b border-gray-800 flex items-center gap-3 ${sidebarCollapsed ? "justify-center p-4" : ""}`}
+          className={`mx-2 mt-2 p-6 border-b border-gray-800 flex items-center gap-3 rounded-2xl ${sidebarCollapsed ? "justify-center p-4" : ""}`}
         >
           <div className="bg-white/10 p-1 w-12 h-12 rounded-lg backdrop-blur-sm flex-shrink-0">
             <img
@@ -438,7 +438,11 @@ export default function AdminDashboard() {
           </button> */}
         </nav>
 
-        <div className="p-2 border-t border-gray-800 flex justify-end">
+        <div className="mx-2 mb-2 p-2 flex justify-end"
+                  style={{
+            borderTop: '1px solid rgba(31, 41, 55, 0.5)',
+            borderRadius: '16px',
+          }}>
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
             className="p-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition"
@@ -449,7 +453,7 @@ export default function AdminDashboard() {
             ) : (
               <PanelLeftClose className="h-5 w-5" />
             )}
-          </button>
+          </button> 
         </div>
       </aside>
 

@@ -9,8 +9,8 @@ interface OrderFiltersProps {
   onStatusChange: (val: string) => void;
   deliveryStatusFilter: string;
   onDeliveryStatusChange: (val: string) => void;
-  pageSize: number;
-  onPageSizeChange: (size: number) => void;
+  // pageSize: number;
+  // onPageSizeChange: (size: number) => void;
   onClear: () => void;
   showMobile: boolean;
   onToggleMobile: () => void;
@@ -23,8 +23,8 @@ export function OrderFilters({
   onStatusChange,
   deliveryStatusFilter,
   onDeliveryStatusChange,
-  pageSize,
-  onPageSizeChange,
+  // pageSize,
+  // onPageSizeChange,
   onClear,
   showMobile,
   onToggleMobile,
@@ -49,8 +49,8 @@ export function OrderFilters({
         </button>
       </div>
 
-      <div className={`${showMobile ? "block" : "hidden md:block"} mb-6`}>
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 md:p-5">
+           <div className={`${showMobile ? "block" : "hidden md:block"}`}>
+        <div className="bg-transparent">
           <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
             {/* Search */}
             <div className="relative flex-1">
@@ -92,18 +92,8 @@ export function OrderFilters({
               <option value="failed">Failed</option>
             </select>
 
-            {/* Rows per page */}
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
-            >
-              {[10, 25, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size} / page
-                </option>
-              ))}
-            </select>
+                       {/* Rows per page - Now handled by TableControls component in parent */}
+            <div className="hidden"></div>
 
             {/* Clear Button */}
             {hasFilters && (

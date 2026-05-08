@@ -14,6 +14,9 @@ import {
   Camera,
   LogOut,
   CheckCircle,
+  Eye,
+  EyeOff,
+  Shield,
 } from "lucide-react";
 
 type ProfileForm = {
@@ -70,6 +73,10 @@ export default function AdminProfile() {
     newPassword?: string;
     confirmPassword?: string;
   }>({});
+  // State for password visibility
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { control, handleSubmit } = useForm<ProfileForm>({
     defaultValues: {
@@ -270,10 +277,18 @@ export default function AdminProfile() {
       )}
       {/* Profile Header Card */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-        <div
+        {/* <div
           className="relative h-32 bg-gradient-to-r from-[#6750A4] to-[#8B6BB4]"
           style={{
             backgroundImage: `linear-gradient(135deg, ${BRAND_COLOR}, #6750A4)`,
+          }}
+        > */}
+                <div
+          className="relative h-32 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('/src/assets/profile bg.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
           {/* Logout button - top right corner */}
@@ -376,9 +391,10 @@ export default function AdminProfile() {
             )}
           </div>
 
-          {/* Profile Form */}
+          {/* Profile Form - Updated with 2-column layout for all fields */}
           {activeForm === "profile" && (
             <div className="mt-6 space-y-5">
+              {/* Row 1: First Name and Last Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -423,49 +439,55 @@ export default function AdminProfile() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        {...field}
-                        type="email"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                  )}
-                />
+
+              {/* Row 2: Email Address and Phone Number */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          type="email"
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          placeholder="you@example.com"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <Controller
+                    control={control}
+                    name="phone_number"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          placeholder="+251 9XX XXX XXX"
+                        />
+                      </div>
+                    )}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Format: +251XXXXXXXXX or 09XXXXXXXX
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <Controller
-                  control={control}
-                  name="phone_number"
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
-                        placeholder="+251 9XX XXX XXX"
-                      />
-                    </div>
-                  )}
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Format: +251XXXXXXXXX or 09XXXXXXXX
-                </p>
-              </div>
+
+              {/* Submit Button */}
               <div className="pt-2">
                 <button
                   onClick={handleSubmit(onSubmitProfile)}
@@ -478,10 +500,11 @@ export default function AdminProfile() {
             </div>
           )}
 
-          {/* Password Form */}
+                    {/* Password Form - Updated with icons and reduced width */}
           {activeForm === "password" && (
-            <div className="mt-6 space-y-5">
-              <div>
+            <div className="mt-6 max-w-md">
+              <div className="space-y-5">
+                           <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current Password
                 </label>
@@ -493,10 +516,25 @@ export default function AdminProfile() {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                        type={showCurrentPassword ? "text" : "password"}
+                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.currentPassword
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 focus:border-transparent"
+                        }`}
                         placeholder="Enter current password"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
@@ -506,7 +544,7 @@ export default function AdminProfile() {
                   </p>
                 )}
               </div>
-              <div>
+               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Password
                 </label>
@@ -518,14 +556,25 @@ export default function AdminProfile() {
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
-                          passwordErrors.currentPassword
+                        type={showNewPassword ? "text" : "password"}
+                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.newPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
                         }`}
-                        placeholder="New password"
+                        placeholder="New password (min. 8 characters)"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
@@ -534,6 +583,10 @@ export default function AdminProfile() {
                     {passwordErrors.newPassword}
                   </p>
                 )}
+                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                  <Shield className="h-3 w-3" />
+                  Password must be at least 8 characters
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -547,14 +600,25 @@ export default function AdminProfile() {
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         {...field}
-                        type="password"
-                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
-                          passwordErrors.newPassword
+                        type={showConfirmPassword ? "text" : "password"}
+                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          passwordErrors.confirmPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
                         }`}
                         placeholder="Confirm new password"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   )}
                 />
@@ -572,6 +636,7 @@ export default function AdminProfile() {
                 >
                   {passwordLoading ? "Saving..." : "Change Password"}
                 </button>
+              </div>
               </div>
             </div>
           )}
