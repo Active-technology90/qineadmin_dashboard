@@ -9,22 +9,53 @@ export function useCompaniesList() {
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    getCompanies({ page: 1 })
-      .then(res => {
+
+    const fetchAllCompanies = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        let allCompanies: CompanyListItem[] = [];
+        let page = 1;
+        let hasNext = true;
+
+        while (hasNext && !cancelled) {
+          const res = await getCompanies({ page });
+
+          const results = res.data.results || [];
+
+          allCompanies = [...allCompanies, ...results];
+
+          // Check if next page exists
+          hasNext = !!res.data.next;
+
+          page += 1;
+        }
+
         if (!cancelled) {
-          setCompanies(res.data.results || []);
+          setCompanies(allCompanies);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setError(e.message || 'Failed to fetch companies');
+        }
+      } finally {
+        if (!cancelled) {
           setIsLoading(false);
         }
-      })
-      .catch(e => {
-        if (!cancelled) {
-          setError(e.message);
-          setIsLoading(false);
-        }
-      });
-    return () => { cancelled = true; };
+      }
+    };
+
+    fetchAllCompanies();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  return { companies, isLoading, error };
+  return {
+    companies,
+    isLoading,
+    error,
+  };
 }

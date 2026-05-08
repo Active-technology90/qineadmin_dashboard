@@ -1,4 +1,5 @@
 // src/components/ui/MultiStepFormModal.tsx
+
 import React, {
   useState,
   useEffect,
@@ -6,12 +7,20 @@ import React, {
   useCallback,
   useMemo,
   type ReactNode,
-} from 'react';
-import { X, Loader2, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+} from "react";
+
+import {
+  X,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+} from "lucide-react";
 
 export interface FormStep {
   id: string;
   title: string;
+  description?: string;
   content: ReactNode;
   validate?: () => boolean | Promise<boolean>;
 }
@@ -24,8 +33,10 @@ interface MultiStepFormModalProps {
   submitting?: boolean;
   initialStep?: number;
   onStepChange?: (stepIndex: number) => void;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl";
   showStepIndicator?: boolean;
+  closeOnBackdrop?: boolean;
+  preventCloseWhileSubmitting?: boolean;
   autoSave?: {
     data: Record<string, any>;
     save: (data: Record<string, any>) => void;
@@ -33,26 +44,32 @@ interface MultiStepFormModalProps {
 }
 
 const maxWidthClasses = {
-  sm: 'sm:max-w-md',
-  md: 'sm:max-w-lg',
-  lg: 'sm:max-w-2xl',
-  xl: 'sm:max-w-2xl',
-  '2xl': 'sm:max-w-4xl',
+  sm: "sm:max-w-md",
+  md: "sm:max-w-lg",
+  lg: "sm:max-w-2xl",
+  xl: "sm:max-w-3xl",
+  "2xl": "sm:max-w-5xl",
 };
 
-// Focus trap – fixed type to accept null
-const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active: boolean) => {
+const useFocusTrap = (
+  containerRef: React.RefObject<HTMLElement | null>,
+  active: boolean,
+) => {
   useEffect(() => {
     if (!active || !containerRef.current) return;
-    const focusableElements = containerRef.current.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+    const focusable = containerRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
-    const first = focusableElements[0] as HTMLElement;
-    const last = focusableElements[focusableElements.length - 1] as HTMLElement;
-    if (first) first.focus();
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    first?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
+      if (e.key !== "Tab") return;
+
       if (e.shiftKey) {
         if (document.activeElement === first) {
           e.preventDefault();
@@ -65,8 +82,12 @@ const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active:
         }
       }
     };
-    window.addEventListener('keydown', handleTab);
-    return () => window.removeEventListener('keydown', handleTab);
+
+    window.addEventListener("keydown", handleTab);
+
+    return () => {
+      window.removeEventListener("keydown", handleTab);
+    };
   }, [active, containerRef]);
 };
 
@@ -78,267 +99,430 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
   submitting = false,
   initialStep = 0,
   onStepChange,
-  maxWidth = 'xl',
+  maxWidth = "xl",
   showStepIndicator = true,
+  closeOnBackdrop = true,
+  preventCloseWhileSubmitting = true,
   autoSave,
 }) => {
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [currentStep, setCurrentStep] = useState(() => initialStep);
   const [isValidating, setIsValidating] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [animateOut, setAnimateOut] = useState(false);
-  const [stepTransition, setStepTransition] = useState<'next' | 'prev' | null>(null);
+  const [direction, setDirection] = useState<"next" | "prev" | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const previousOpen = useRef(isOpen);
 
-  // Focus trap – now modalRef is compatible
-  useFocusTrap(modalRef, isOpen && !animateOut);
+  useFocusTrap(modalRef, isOpen);
+
+  const current = steps[currentStep];
+  const isFirst = currentStep === 0;
+  const isLast = currentStep === steps.length - 1;
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') handleClose();
-      };
-      window.addEventListener('keydown', handleEsc);
-      return () => {
-        window.removeEventListener('keydown', handleEsc);
-        document.body.style.overflow = '';
-      };
+      setMounted(true);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && !previousOpen.current) {
+    if (isOpen) {
+      setMounted(true);
       setAnimateOut(false);
+
+      // reset step when opening
       setCurrentStep(initialStep);
-      setStepTransition(null);
+
+      document.body.style.overflow = "hidden";
+    } else if (mounted) {
+      // play close animation before unmount
+      setAnimateOut(true);
+
+      const timer = window.setTimeout(() => {
+        setMounted(false);
+        setAnimateOut(false);
+      }, 220);
+
+      document.body.style.overflow = "";
+
+      return () => clearTimeout(timer);
     }
-    previousOpen.current = isOpen;
-  }, [isOpen, initialStep]);
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, initialStep, mounted]);
+
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     setCurrentStep(initialStep);
+  //   }
+  // }, [initialStep, isOpen]);
 
   useEffect(() => {
-    if (autoSave && !submitting && isOpen) {
-      autoSave.save({ ...autoSave.data, lastStep: currentStep });
+    if (autoSave && isOpen) {
+      autoSave.save({
+        ...autoSave.data,
+        currentStep,
+      });
     }
-  }, [currentStep, autoSave, submitting, isOpen]);
+  }, [currentStep]);
 
   const handleClose = () => {
-    setAnimateOut(true);
-    setTimeout(() => {
-      onClose();
-      setAnimateOut(false);
-    }, 200);
+    if (preventCloseWhileSubmitting && submitting) return;
+
+    onClose();
   };
 
-  const goToNext = useCallback(async () => {
+  const nextStep = useCallback(async () => {
     const step = steps[currentStep];
+
     if (step.validate) {
       setIsValidating(true);
+
       try {
         const valid = await step.validate();
+
         if (!valid) return;
       } catch (err) {
-        console.error('Validation error', err);
+        console.error(err);
         return;
       } finally {
         setIsValidating(false);
       }
     }
-    setStepTransition('next');
+
+    setDirection("next");
+
     setTimeout(() => {
       const next = currentStep + 1;
+
       setCurrentStep(next);
       onStepChange?.(next);
-      setStepTransition(null);
-      if (contentRef.current) contentRef.current.scrollTop = 0;
-    }, 150);
-  }, [currentStep, steps, onStepChange]);
 
-  const goToPrev = useCallback(() => {
-    setStepTransition('prev');
+      setDirection(null);
+
+      if (contentRef.current) {
+        contentRef.current.scrollTop = 0;
+      }
+    }, 150);
+  }, [currentStep, steps]);
+
+  const prevStep = useCallback(() => {
+    setDirection("prev");
+
     setTimeout(() => {
       const prev = currentStep - 1;
+
       setCurrentStep(prev);
       onStepChange?.(prev);
-      setStepTransition(null);
-      if (contentRef.current) contentRef.current.scrollTop = 0;
+
+      setDirection(null);
+
+      if (contentRef.current) {
+        contentRef.current.scrollTop = 0;
+      }
     }, 150);
-  }, [currentStep, onStepChange]);
+  }, [currentStep]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (submitting) return;
+
     onSubmit(e);
   };
 
-  const isFirst = currentStep === 0;
-  const isLast = currentStep === steps.length - 1;
-  const currentStepObj = steps[currentStep];
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const contentAnimation =
+    direction === "next"
+      ? "animate-slide-left"
+      : direction === "prev"
+        ? "animate-slide-right"
+        : "animate-fade-in";
 
-  const renderStepIndicator = useMemo(() => {
+  const stepIndicator = useMemo(() => {
     if (!showStepIndicator || steps.length <= 1) return null;
+
     return (
-      <div className="flex justify-center gap-2 mt-4">
-        {steps.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => {
-              if (idx < currentStep) {
-                setCurrentStep(idx);
-                onStepChange?.(idx);
-              }
-            }}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              idx === currentStep
-                ? 'w-6 bg-[#6750A4]'
-                : idx < currentStep
-                ? 'w-2 bg-[#6750A4]/40'
-                : 'w-2 bg-gray-300'
-            }`}
-            aria-label={`Go to step ${idx + 1}`}
-            disabled={idx > currentStep}
-          />
-        ))}
+      <div className="flex items-center justify-center gap-2 mt-5">
+        {steps.map((step, index) => {
+          const active = currentStep === index;
+          const completed = index < currentStep;
+
+          return (
+            <button
+              key={step.id}
+              disabled={index > currentStep}
+              onClick={() => {
+                if (index <= currentStep) {
+                  setCurrentStep(index);
+                }
+              }}
+              className={`
+                relative transition-all duration-300
+                ${
+                  active
+                    ? "w-10 bg-[#6750A4]"
+                    : completed
+                      ? "w-3 bg-[#6750A4]/40"
+                      : "w-3 bg-gray-300"
+                }
+                h-3 rounded-full
+              `}
+            />
+          );
+        })}
       </div>
     );
-  }, [currentStep, steps.length, showStepIndicator, onStepChange]);
+  }, [currentStep, steps, showStepIndicator]);
 
-  const contentAnimationClass =
-    stepTransition === 'next'
-      ? 'animate-slide-left-out'
-      : stepTransition === 'prev'
-      ? 'animate-slide-right-out'
-      : 'animate-slide-in';
-
-  if (!isOpen && !animateOut) return null;
+  if (!mounted && !isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center transition-all duration-200 ${
-        animateOut ? 'bg-black/0 backdrop-blur-0' : 'bg-black/50 backdrop-blur-sm'
-      }`}
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="modal-title"
-    >
+    <>
       <div
-        ref={modalRef}
+        onClick={() => {
+          if (closeOnBackdrop) {
+            handleClose();
+          }
+        }}
         className={`
-          w-full bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl
-          flex flex-col max-h-[95vh] sm:max-h-[90vh] transition-all duration-300
-          ${maxWidthClasses[maxWidth]}
-          ${animateOut ? 'translate-y-full sm:scale-95 opacity-0' : 'translate-y-0 sm:scale-100 opacity-100'}
+          fixed inset-0 z-50
+          transition-all duration-200
+          flex items-end sm:items-center justify-center
+          px-0 sm:px-6
+          ${
+            animateOut
+              ? "bg-black/0 backdrop-blur-0"
+              : "bg-black/60 backdrop-blur-sm"
+          }
         `}
       >
-        <div className="sticky top-0 z-10 bg-white rounded-t-3xl border-b border-gray-100">
-          <div className="px-5 pt-5 pb-3 sm:px-7 sm:pt-6 sm:pb-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">
-                  {currentStepObj.title}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Step {currentStep + 1} of {steps.length}
-                </p>
-              </div>
-              <button
-                onClick={handleClose}
-                className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
-                aria-label="Close modal"
-              >
-                <X size={22} />
-              </button>
-            </div>
-            <div className="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#6750A4] to-[#9f7aea] transition-all duration-500 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            {renderStepIndicator}
-          </div>
-        </div>
+        <div
+          ref={modalRef}
+          onClick={(e) => e.stopPropagation()}
+          className={`
+            w-full bg-white
+            rounded-t-[32px] sm:rounded-[32px]
+            shadow-[0_20px_60px_rgba(0,0,0,0.2)]
+            flex flex-col overflow-hidden
+            max-h-[100dvh] sm:max-h-[92vh]
+            ${maxWidthClasses[maxWidth]}
+            transition-all duration-300
+            ${
+              animateOut
+                ? "translate-y-full sm:translate-y-10 opacity-0 scale-[0.98]"
+                : "translate-y-0 opacity-100 scale-100"
+            }
+          `}
+        >
+          {/* HEADER */}
+          <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-gray-100">
+            <div className="px-5 sm:px-7 pt-5 pb-4">
+              <div className="flex items-start justify-between">
+                <div className="pr-4">
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#6750A4] bg-[#6750A4]/10 px-3 py-1 rounded-full mb-3">
+                    Step {currentStep + 1} of {steps.length}
+                  </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto" ref={contentRef}>
-            <div className={`p-5 sm:p-7 ${contentAnimationClass}`}>
-              {currentStepObj.content}
+                  <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+                    {current.title}
+                  </h2>
+
+                  {current.description && (
+                    <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+                      {current.description}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleClose}
+                  disabled={submitting}
+                  className="
+                    h-11 w-11 rounded-full
+                    flex items-center justify-center
+                    bg-gray-100 hover:bg-gray-200
+                    text-gray-500 hover:text-gray-700
+                    transition-all duration-200
+                    disabled:opacity-50
+                  "
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* PROGRESS */}
+              <div className="mt-5">
+                <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="
+                      h-full rounded-full
+                      bg-gradient-to-r from-[#6750A4] to-[#8B5CF6]
+                      transition-all duration-500 ease-out
+                    "
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+
+              {stepIndicator}
             </div>
           </div>
-          <div className="sticky bottom-0 bg-white border-t border-gray-100 p-5 sm:p-6 rounded-b-3xl">
-            <div className="flex flex-col-reverse sm:flex-row gap-3">
-              {!isFirst && (
-                <button
-                  type="button"
-                  onClick={goToPrev}
-                  disabled={isValidating || submitting}
-                  className="flex-1 sm:flex-none px-6 py-2.5 border border-gray-300 rounded-xl
-                             text-gray-700 font-medium hover:bg-gray-50 focus:ring-2 focus:ring-[#6750A4]/40
-                             disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronLeft className="inline mr-1" size={18} />
-                  Back
-                </button>
-              )}
-              {!isLast ? (
-                <button
-                  type="button"
-                  onClick={goToNext}
-                  disabled={isValidating}
-                  className="flex-1 bg-[#6750A4] text-white rounded-xl py-2.5 px-6
-                             font-medium hover:bg-[#5a3e8e] focus:ring-2 focus:ring-[#6750A4]/40
-                             disabled:opacity-50 disabled:cursor-not-allowed transition
-                             flex items-center justify-center gap-2"
-                >
-                  {isValidating && <Loader2 className="animate-spin h-4 w-4" />}
-                  Continue
-                  <ChevronRight size={18} />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={submitting || isValidating}
-                  className="flex-1 bg-[#6750A4] text-white rounded-xl py-2.5 px-6
-                             font-medium hover:bg-[#5a3e8e] focus:ring-2 focus:ring-[#6750A4]/40
-                             disabled:opacity-50 disabled:cursor-not-allowed transition
-                             flex items-center justify-center gap-2"
-                >
-                  {submitting && <Loader2 className="animate-spin h-4 w-4" />}
-                  {submitting ? 'Submitting...' : 'Submit'}
-                  {!submitting && <CheckCircle size={18} />}
-                </button>
-              )}
+
+          {/* CONTENT */}
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col flex-1 overflow-hidden"
+          >
+            <div
+              ref={contentRef}
+              className="
+                flex-1 overflow-y-auto
+                scrollbar-thin scrollbar-thumb-gray-300
+              "
+            >
+              <div className={`p-5 sm:p-7 ${contentAnimation}`}>
+                {current.content}
+              </div>
             </div>
-          </div>
-        </form>
+
+            {/* FOOTER */}
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-5 py-4 sm:px-7">
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                {!isFirst ? (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    disabled={submitting || isValidating}
+                    className="
+                      h-12 px-5 rounded-2xl
+                      border border-gray-300
+                      text-gray-700 font-semibold
+                      hover:bg-gray-50
+                      transition-all duration-200
+                      disabled:opacity-50
+                      flex items-center justify-center gap-2
+                    "
+                  >
+                    <ChevronLeft size={18} />
+                    Back
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                {!isLast ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={isValidating}
+                    className="
+                      flex-1 h-12 rounded-2xl
+                      bg-[#6750A4]
+                      hover:bg-[#5B4294]
+                      text-white font-semibold
+                      transition-all duration-200
+                      disabled:opacity-50
+                      flex items-center justify-center gap-2
+                      shadow-lg shadow-[#6750A4]/20
+                    "
+                  >
+                    {isValidating && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    Continue
+                    <ChevronRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={submitting || isValidating}
+                    className="
+                      flex-1 h-12 rounded-2xl
+                      bg-[#6750A4]
+                      hover:bg-[#5B4294]
+                      text-white font-semibold
+                      transition-all duration-200
+                      disabled:opacity-50
+                      flex items-center justify-center gap-2
+                      shadow-lg shadow-[#6750A4]/20
+                    "
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        Submit
+                        <CheckCircle2 size={18} />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
 
-      {/* Regular style tag – no 'jsx' attribute */}
       <style>{`
-        @keyframes slideLeftOut {
-          from { transform: translateX(0); opacity: 1; }
-          to { transform: translateX(-20px); opacity: 0; }
+        @keyframes slideLeft {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
-        @keyframes slideRightOut {
-          from { transform: translateX(0); opacity: 1; }
-          to { transform: translateX(20px); opacity: 0; }
+
+        @keyframes slideRight {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
-        @keyframes slideIn {
-          from { transform: translateX(20px); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .animate-slide-left-out {
-          animation: slideLeftOut 150ms ease forwards;
+
+        .animate-slide-left {
+          animation: slideLeft 220ms ease;
         }
-        .animate-slide-right-out {
-          animation: slideRightOut 150ms ease forwards;
+
+        .animate-slide-right {
+          animation: slideRight 220ms ease;
         }
-        .animate-slide-in {
-          animation: slideIn 200ms ease-out;
+
+        .animate-fade-in {
+          animation: fadeIn 250ms ease;
         }
       `}</style>
-    </div>
+    </>
   );
 };

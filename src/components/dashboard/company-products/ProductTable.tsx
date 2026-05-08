@@ -149,9 +149,11 @@ export function ProductTable({
               <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Unit
               </th>
-              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Actions
-              </th>
+              {onEdit || onDelete ? (
+                <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Actions
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">

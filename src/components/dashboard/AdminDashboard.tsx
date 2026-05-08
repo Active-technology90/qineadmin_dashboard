@@ -27,9 +27,10 @@ import Payments from "./Payments";
 import CompanyProducts from "./company-products/CompanyProducts";
 import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
-import CompanyManagement from "./CompanyManagement";
+
 import MasterOrders from "./masterOrders/MasterOrders";
 import AdminProfile from "./AdminProfile";
+import CompanyManagement from "./CompanyManagement/CompanyManagement";
 
 type Tab =
   | "overview"

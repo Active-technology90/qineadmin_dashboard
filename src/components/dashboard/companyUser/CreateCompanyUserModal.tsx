@@ -1,6 +1,4 @@
-// ============================================================
-// src/components/admin/companyUser/CreateCompanyUserModal.tsx
-// ============================================================
+
 
 import {
   X,
@@ -237,7 +235,7 @@ export function CreateCompanyUserModal({
         <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              Create Team Member
+              Create User
             </h2>
 
             <p className="text-sm text-gray-500 mt-1">

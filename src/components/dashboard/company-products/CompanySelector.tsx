@@ -203,7 +203,7 @@ function CompanyGridCard({
 
       {/* Info */}
       <div className="min-w-0 w-full">
-        <p className="font-semibold text-gray-900 truncate text-sm">
+        <p className="font-bold text-gray-900 truncate text-lg">
           {company.name}
         </p>
         <p className="text-xs text-gray-500 truncate capitalize mt-0.5">
@@ -288,7 +288,7 @@ export function CompanySelector({
           )}
 
           {!isLoading && filteredCompanies.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mt-3">
               <AnimatePresence>
                 {filteredCompanies.map((company) => (
                   <CompanyGridCard

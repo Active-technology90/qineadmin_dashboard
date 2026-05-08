@@ -393,6 +393,7 @@ export default function CategoryManagement() {
               </label>
               <input
                 type="text"
+                placeholder="e.g. Agro"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -413,6 +414,7 @@ export default function CategoryManagement() {
               <input
                 type="text"
                 value={formData.name_am}
+                placeholder="e.g. አግሮ"
                 onChange={(e) =>
                   setFormData({ ...formData, name_am: e.target.value })
                 }
@@ -421,11 +423,11 @@ export default function CategoryManagement() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slug (optional)
+                Slug *
               </label>
               <input
                 type="text"
-                placeholder="auto-generated"
+                placeholder="e.g. agro"
                 value={formData.slug}
                 onChange={(e) =>
                   setFormData({ ...formData, slug: e.target.value })
@@ -440,10 +442,11 @@ export default function CategoryManagement() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code
+                Item Code
               </label>
               <input
                 type="text"
+                   placeholder="e.g. 01"
                 value={formData.code}
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
@@ -457,6 +460,7 @@ export default function CategoryManagement() {
               </label>
               <input
                 type="number"
+             
                 value={formData.order}
                 onChange={(e) =>
                   setFormData({
@@ -489,6 +493,7 @@ export default function CategoryManagement() {
                 Description
               </label>
               <textarea
+                placeholder="e.g. description about this category"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
