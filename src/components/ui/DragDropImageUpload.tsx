@@ -58,7 +58,7 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const sizeConfig = {
   sm: {
-    drop: "min-h-[110px]",
+    drop: "min-h-[140px]",
     icon: "h-12 w-12",
     iconSize: 22,
     padding: "px-4 py-6",
