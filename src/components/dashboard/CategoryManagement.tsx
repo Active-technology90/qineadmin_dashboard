@@ -162,7 +162,7 @@ export default function CategoryManagement() {
       },
       {
         key: "order",
-        header: "Order",
+        header: "Priority",
         sortable: true,
         render: (cat) => cat.order ?? "-",
       },
@@ -317,7 +317,7 @@ export default function CategoryManagement() {
             }}
             className="bg-[#6750A4] text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm"
           >
-            <Plus size={18} /> Add Category
+            <Plus size={18} /> Create Category
           </button>
         )}
       </div>
@@ -350,8 +350,8 @@ export default function CategoryManagement() {
             <option value="name|desc">Name (Z-A)</option>
             {/* <option value="id|asc">ID (Low to High)</option>
             <option value="id|desc">ID (High to Low)</option> */}
-            <option value="order|asc">Order (Ascending)</option>
-            <option value="order|desc">Order (Descending)</option>
+            <option value="order|asc">Priority (Ascending)</option>
+            <option value="order|desc">Priority (Descending)</option>
             <option value="company_count|desc">Most Companies</option>
             <option value="company_count|asc">Fewest Companies</option>
           </select>
@@ -453,7 +453,7 @@ export default function CategoryManagement() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Order
+              Priority
               </label>
               <input
                 type="number"

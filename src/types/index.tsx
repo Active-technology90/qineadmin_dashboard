@@ -347,6 +347,8 @@ export interface AnalyticsCompanyOption {
 }
 
 export interface AnalyticsSummary {
+  company_total_count: number;
+  company_active_count: number;
   products: number;
   users: number;
   orders: number;
@@ -384,7 +386,7 @@ export interface AnalyticsOverviewResponse {
   summary: AnalyticsSummary;
   revenue_series: AnalyticsRevenuePoint[];
   order_status: { name: string; value: number }[];
-  top_products: { name: string; sales: number }[];
+  top_products: { name: string; sales: number, company_name: string }[];
   product_sales_trend: AnalyticsCategoryTrendPoint[];
   recent_orders: AnalyticsRecentOrder[];
 }

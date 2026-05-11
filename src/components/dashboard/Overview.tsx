@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   TrendingUp,
   DollarSign,
+  Building2,
 } from "lucide-react";
 import {
   BarChart,
@@ -246,8 +247,8 @@ export default function Overview({
           typeof err === "object" &&
           err !== null &&
           "response" in err &&
-          typeof (err as { response?: { data?: { detail?: unknown } } }).response
-            ?.data?.detail === "string"
+          typeof (err as { response?: { data?: { detail?: unknown } } })
+            .response?.data?.detail === "string"
         ) {
           detail = (err as { response?: { data?: { detail?: string } } })
             .response?.data?.detail as string;
@@ -265,14 +266,26 @@ export default function Overview({
 
   const currentData = analytics.revenue_series;
   const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
-  const summaryData = {
-    products: analytics.summary.products,
-    users: analytics.summary.users,
-    orders: analytics.summary.orders,
-    payments: { total: analytics.summary.payments_total, change: 0 },
-    avgOrderValue: analytics.summary.avg_order_value,
-    conversionRate: analytics.summary.success_rate,
-  };
+
+  const summaryData = isSuperAdmin
+    ? {
+        company_total_count: analytics.summary.company_total_count,
+        company_active_count: analytics.summary.company_active_count,
+        products: analytics.summary.products,
+        users: analytics.summary.users,
+        orders: analytics.summary.orders,
+        payments: { total: analytics.summary.payments_total, change: 0 },
+        avgOrderValue: analytics.summary.avg_order_value,
+        conversionRate: analytics.summary.success_rate,
+      }
+    : {
+        products: analytics.summary.products,
+        users: analytics.summary.users,
+        orders: analytics.summary.orders,
+        payments: { total: analytics.summary.payments_total, change: 0 },
+        avgOrderValue: analytics.summary.avg_order_value,
+        conversionRate: analytics.summary.success_rate,
+      };
 
   // Prepare order status data with dynamic colors
   const orderStatusData = analytics.order_status.map((item) => ({
@@ -302,7 +315,8 @@ export default function Overview({
     currentData.length > 0 &&
     currentData.some((item) => item.revenue > 0 || item.prevRevenue > 0);
   const hasOrderStatusData =
-    orderStatusData.length > 0 && orderStatusData.some((item) => item.value > 0);
+    orderStatusData.length > 0 &&
+    orderStatusData.some((item) => item.value > 0);
   const hasProductTrendData =
     productTrendData.length > 0 &&
     topProductNames.length > 0 &&
@@ -352,12 +366,19 @@ export default function Overview({
         ) : (
           <>
             <SummaryCard
-              title="Total Products"
-              value={summaryData.products.toLocaleString()}
-              icon={Package}
+              title="Total Companies"
+              value={summaryData.company_total_count}
+              icon={Building2}
               bgLight="bg-blue-50"
               textColor="text-blue-600"
             />
+            {/* <SummaryCard
+              title="Active Companies"
+              value={summaryData.company_active_count.toLocaleString()}
+              icon={Building2}
+              bgLight="bg-blue-50"
+              textColor="text-blue-600"
+            />   */}
             <SummaryCard
               title="Company Users"
               value={summaryData.users.toLocaleString()}
@@ -366,23 +387,31 @@ export default function Overview({
               textColor="text-emerald-600"
             />
             <SummaryCard
+              title="Total Products"
+              value={summaryData.products.toLocaleString()}
+              icon={Package}
+              bgLight="bg-blue-50"
+              textColor="text-blue-600"
+            />
+
+            <SummaryCard
               title="Total Orders"
               value={summaryData.orders.toLocaleString()}
               icon={ShoppingBag}
               bgLight="bg-purple-50"
               textColor="text-purple-600"
             />
-            <SummaryCard
+            {/* <SummaryCard
               title="Total Payments"
               value={formatCurrency(summaryData.payments.total)}
               icon={DollarSign}
               bgLight="bg-amber-50"
               textColor="text-amber-600"
-            />
+            /> */}
           </>
         )}
       </div>
-       {/* Quick Stats Row */}
+      {/* Quick Stats Row */}
       {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loading ? (
           <>
@@ -695,7 +724,7 @@ export default function Overview({
             </>
           )}
         </div>
-          {/* Top products */}
+        {/* Top products */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           {loading ? (
             <SkeletonChart height="h-[300px]" />
@@ -710,7 +739,7 @@ export default function Overview({
                   onClick={() => onNavigate?.("products")}
                   className="text-xs font-medium text-[#6750A4] hover:underline cursor-pointer"
                 >
-                  View all 
+                  View all
                 </button>
               </div>
               {hasTopProductsData ? (
@@ -723,12 +752,20 @@ export default function Overview({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
-                          <p className="text-sm font-medium text-gray-700 truncate">
-                            {product.name}
+                          <p className="text-sm font-medium  truncate" style={{ color: product.color }}>
+                            {product.product_name}
                           </p>
                           <span className="text-sm font-semibold text-gray-900">
                             {formatCurrency(product.sales)}
                           </span>
+                        </div>
+                        <div className="flex flex-row gap-2 items-center ">
+                          <div className="flex flex-row gap-2 items-center rounded p-1" style={{ backgroundColor: product.color }}>
+                            <Building2 className="h-4 w-4 text-white" />
+                            <p className="text-[11px] font-medium text-white truncate">
+                              {product.company_name}
+                            </p>
+                          </div>
                         </div>
                         <div className="mt-1 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
@@ -811,7 +848,7 @@ export default function Overview({
                       >
                         <td className="py-2.5 pr-3">
                           <span className="text-sm font-semibold text-indigo-600">
-                            {idx + 1}
+                            {order.id}
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-sm text-gray-700">

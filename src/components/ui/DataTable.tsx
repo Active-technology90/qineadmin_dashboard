@@ -123,7 +123,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                       {onEdit && (
                         <button
                           onClick={() => onEdit(item)}
-                          className="text-blue-600 hover:text-blue-800 p-1"
+                          className="text-blue-600 cursor-pointer hover:text-blue-800 p-1"
                           title="Edit"
                         >
                            <Edit className="h-4 w-4" />
@@ -132,7 +132,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
                       {onDelete && (
                         <button
                           onClick={() => onDelete(item)}
-                          className="text-red-600 hover:text-red-800 p-1"
+                          className="text-red-600 cursor-pointer hover:text-red-800 p-1 "
                           title="Delete"
                         >
                           <Trash2 size={16} />

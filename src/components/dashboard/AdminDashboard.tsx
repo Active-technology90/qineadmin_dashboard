@@ -16,6 +16,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   User,
+  ListOrdered, 
+  Proportions, 
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -119,7 +121,7 @@ function OrdersMenu({
                   : "text-gray-300 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <Building2 className="h-4 w-4" />
+              <ListOrdered className="h-4 w-4" />
               Company Orders
             </button>
             {showMasterOrders && (
@@ -355,7 +357,7 @@ export default function AdminDashboard() {
                 onClick={() => navigate("categories")}
               />
               <SidebarItem
-                icon={<Layout className="h-5 w-5" />}
+                icon={<Proportions className="h-5 w-5" />}
                 label="SubCategories"
                 active={activeTab === "subcategories"}
                 collapsed={sidebarCollapsed}
@@ -365,7 +367,7 @@ export default function AdminDashboard() {
           )}
 
           <SidebarItem
-            icon={<Users className="h-5 w-5" />}
+            icon={<Building2 className="h-5 w-5" />}
             label={!user?.memberships?.length ? "Companies" : "Company Profile"}
             active={activeTab === "companies"}
             collapsed={sidebarCollapsed}
@@ -379,6 +381,23 @@ export default function AdminDashboard() {
           >
             Management
           </div>
+
+          <OrdersMenu
+            collapsed={sidebarCollapsed}
+            activeTab={activeTab}
+            onNavigate={navigate}
+            showMasterOrders={showMasterOrders}
+            ordersMenuOpen={ordersMenuOpen}
+            onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
+          />
+
+          <SidebarItem
+            icon={<CreditCard className="h-5 w-5" />}
+            label="Payments"
+            active={activeTab === "payments"}
+            collapsed={sidebarCollapsed}
+            onClick={() => navigate("payments")}
+          />
 
           <SidebarItem
             icon={<Package className="h-5 w-5" />}
@@ -398,22 +417,7 @@ export default function AdminDashboard() {
           />
           {/* )} */}
 
-          <OrdersMenu
-            collapsed={sidebarCollapsed}
-            activeTab={activeTab}
-            onNavigate={navigate}
-            showMasterOrders={showMasterOrders}
-            ordersMenuOpen={ordersMenuOpen}
-            onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
-          />
-
-          <SidebarItem
-            icon={<CreditCard className="h-5 w-5" />}
-            label="Payments"
-            active={activeTab === "payments"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("payments")}
-          />
+          
           <SidebarItem
             icon={<User className="h-5 w-5" />}
             label="Profile"
@@ -498,7 +502,7 @@ export default function AdminDashboard() {
           <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-3 group focus:outline-none cursor-pointer"
+              className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gray-100 rounded p-4 ${profileDropdownOpen ? "bg-gray-100" : ""}`}
             >
               <div className="text-right hidden md:block">
                 <div className="flex flex-col">
@@ -510,7 +514,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
               </div>
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">
+              <div className="h-10 w-10 rounded-full bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">
                 {user?.first_name?.[0] || "A"}
               </div>
             </button>
