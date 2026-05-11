@@ -211,7 +211,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-100 bg-white/90 backdrop-blur-xl shadow-xl overflow-hidden z-50 animate-fadeIn">
+        <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#6758D4] bg-white/90 backdrop-blur-xl shadow-xl overflow-hidden z-50 animate-fadeIn">
           <button
             onClick={() => {
               onView(user);
