@@ -16,8 +16,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   User,
-  ListOrdered, 
-  Proportions, 
+  ListOrdered,
+  Proportions,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -33,6 +33,7 @@ import SubCategoryManagement from "./SubCategoryManagement";
 import MasterOrders from "./masterOrders/MasterOrders";
 import AdminProfile from "./AdminProfile";
 import CompanyManagement from "./CompanyManagement/CompanyManagement";
+import SuperAdminUsers from "./UserManagement/SuperAdminUsers";
 
 type Tab =
   | "overview"
@@ -44,7 +45,8 @@ type Tab =
   | "masterOrders"
   | "companyOrders"
   | "payments"
-  | "profile";
+  | "profile"
+  | "superUsers";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -264,8 +266,11 @@ export default function AdminDashboard() {
           return <CategoryManagement />;
         case "subcategories":
           return <SubCategoryManagement />;
+        case "superUsers":
+          return <SuperAdminUsers />;
         case "companies":
           return <CompanyManagement />;
+
         default:
           return <Overview />;
       }
@@ -374,6 +379,15 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
           />
+           {showPlatformAdmin && (
+            <SidebarItem
+              icon={<Users className="h-5 w-5" />}
+              label="User Management"
+              active={activeTab === "superUsers"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("superUsers")}
+            />
+          )}
 
           <div
             className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
@@ -407,6 +421,8 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("products")}
           />
+          {/* Only for super admin (not viewer) */}
+         
 
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
@@ -418,7 +434,6 @@ export default function AdminDashboard() {
           />
           {/* )} */}
 
-          
           <SidebarItem
             icon={<User className="h-5 w-5" />}
             label="Profile"
@@ -443,11 +458,13 @@ export default function AdminDashboard() {
           </button> */}
         </nav>
 
-        <div className="mx-2 mb-2 p-2 flex justify-end"
-                  style={{
-            borderTop: '1px solid rgba(31, 41, 55, 0.5)',
-            borderRadius: '16px',
-          }}>
+        <div
+          className="mx-2 mb-2 p-2 flex justify-end"
+          style={{
+            borderTop: "1px solid rgba(31, 41, 55, 0.5)",
+            borderRadius: "16px",
+          }}
+        >
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
             className="p-2 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition"
@@ -458,7 +475,7 @@ export default function AdminDashboard() {
             ) : (
               <PanelLeftClose className="h-5 w-5" />
             )}
-          </button> 
+          </button>
         </div>
       </aside>
 
@@ -500,7 +517,6 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )}
-           
           </div>
 
           {/* Profile Dropdown */}

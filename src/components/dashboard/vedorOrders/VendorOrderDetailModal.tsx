@@ -65,6 +65,7 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
   </motion.div>
 );
 
+
 const StatusBadge = ({ status }: { status: string }) => {
   const s = status?.toLowerCase();
   const styles: Record<string, string> = {
@@ -77,6 +78,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     shipped: "bg-sky-100 text-sky-700 border-sky-200",
     approved: "bg-green-100 text-green-700 border-green-200",
     rejected: "bg-rose-100 text-rose-700 border-rose-200",
+
   };
 
   return (

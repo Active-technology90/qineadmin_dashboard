@@ -230,7 +230,7 @@ export function AddUserModal({
                       <UserAvatar user={user} size="sm" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">
-                          {user.first_name || "—"} {user.last_name || ""}
+                          {user.username}
                         </p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                         {user.phone_number && (

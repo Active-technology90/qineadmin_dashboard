@@ -124,7 +124,7 @@ export function CompanyUsersTable({
                         )}
                       </div>
                       <span className="text-sm font-medium text-gray-900">
-                        {user.first_name} {user.last_name}
+                        {user.username || `${user.first_name} ${user.last_name}`}
                       </span>
                     </div>
                   </td>

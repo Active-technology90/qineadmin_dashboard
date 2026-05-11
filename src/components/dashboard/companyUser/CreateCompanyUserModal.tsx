@@ -1,5 +1,3 @@
-
-
 import {
   X,
   Loader2,
@@ -13,9 +11,11 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Info,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+// ... keep the same props interface
 interface CreateCompanyUserModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,33 +60,29 @@ export function CreateCompanyUserModal({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Ethiopian phone number: 09 or +251 followed by 9 and 8 digits
   const phoneRegex = /^(\+251|0)?9\d{8}$/;
   const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
 
   const validate = () => {
     const newErrors: FormErrors = {};
 
-    // First Name
     if (!formData.first_name.trim()) {
       newErrors.first_name = "First name is required";
     } else if (formData.first_name.trim().length < 2) {
       newErrors.first_name = "Minimum 2 characters required";
     }
 
-    // Last Name
     if (!formData.last_name.trim()) {
       newErrors.last_name = "Last name is required";
     } else if (formData.last_name.trim().length < 2) {
       newErrors.last_name = "Minimum 2 characters required";
     }
 
-    // Username
     if (!formData.username.trim()) {
       newErrors.username = "Username is required";
     } else if (!usernameRegex.test(formData.username)) {
@@ -94,22 +90,20 @@ export function CreateCompanyUserModal({
         "3-20 characters. Letters, numbers & underscore only";
     }
 
-    // Email
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email address";
     }
 
-    // Phone
+    // Enhanced phone validation with clear hint
     if (!formData.phone_number.trim()) {
       newErrors.phone_number = "Phone number is required";
     } else if (!phoneRegex.test(formData.phone_number)) {
       newErrors.phone_number =
-        "Use valid Ethiopian phone number";
+        "Use Ethiopian format: 09XXXXXXXX or +2519XXXXXXXX";
     }
 
-    // Password
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
@@ -119,60 +113,37 @@ export function CreateCompanyUserModal({
       !/[0-9]/.test(formData.password) ||
       !/[^A-Za-z0-9]/.test(formData.password)
     ) {
-      newErrors.password =
-        "Include uppercase, number and special character";
+      newErrors.password = "Include uppercase, number and special character";
     }
 
-    // Confirm Password
     if (!formData.confirm_password) {
-      newErrors.confirm_password =
-        "Please confirm your password";
-    } else if (
-      formData.confirm_password !== formData.password
-    ) {
-      newErrors.confirm_password =
-        "Passwords do not match";
+      newErrors.confirm_password = "Please confirm your password";
+    } else if (formData.confirm_password !== formData.password) {
+      newErrors.confirm_password = "Passwords do not match";
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    field: keyof typeof formData,
-    value: string,
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const handleBlur = (field: string) => {
-    setTouched((prev) => ({
-      ...prev,
-      [field]: true,
-    }));
-
+    setTouched((prev) => ({ ...prev, [field]: true }));
     validate();
   };
 
   const passwordStrength = useMemo(() => {
     let score = 0;
-
     if (formData.password.length >= 8) score++;
     if (/[A-Z]/.test(formData.password)) score++;
     if (/[0-9]/.test(formData.password)) score++;
     if (/[^A-Za-z0-9]/.test(formData.password)) score++;
-
     return score;
   }, [formData.password]);
 
@@ -184,7 +155,6 @@ export function CreateCompanyUserModal({
 
   const handleSubmit = () => {
     const isValid = validate();
-
     if (!isValid) {
       setTouched({
         first_name: true,
@@ -195,10 +165,8 @@ export function CreateCompanyUserModal({
         password: true,
         confirm_password: true,
       });
-
       return;
     }
-
     onSubmit({
       first_name: formData.first_name,
       last_name: formData.last_name,
@@ -234,15 +202,11 @@ export function CreateCompanyUserModal({
         {/* HEADER */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Create User
-            </h2>
-
+            <h2 className="text-2xl font-bold text-gray-900">Create User</h2>
             <p className="text-sm text-gray-500 mt-1">
               Create and onboard a company user instantly
             </p>
           </div>
-
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-white/80 transition"
@@ -254,32 +218,25 @@ export function CreateCompanyUserModal({
         {/* BODY */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
             {/* FIRST NAME */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 First Name <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type="text"
                   placeholder="Abebe"
                   value={formData.first_name}
-                  onChange={(e) =>
-                    handleChange("first_name", e.target.value)
-                  }
+                  onChange={(e) => handleChange("first_name", e.target.value)}
                   onBlur={() => handleBlur("first_name")}
                   className={inputClass("first_name")}
                 />
               </div>
-
               {touched.first_name && errors.first_name && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.first_name}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.first_name}
                 </p>
               )}
             </div>
@@ -289,26 +246,20 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Last Name <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type="text"
                   placeholder="Bikila"
                   value={formData.last_name}
-                  onChange={(e) =>
-                    handleChange("last_name", e.target.value)
-                  }
+                  onChange={(e) => handleChange("last_name", e.target.value)}
                   onBlur={() => handleBlur("last_name")}
                   className={inputClass("last_name")}
                 />
               </div>
-
               {touched.last_name && errors.last_name && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.last_name}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.last_name}
                 </p>
               )}
             </div>
@@ -318,29 +269,22 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Username <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type="text"
                   placeholder="abebe123"
                   value={formData.username}
                   onChange={(e) =>
-                    handleChange(
-                      "username",
-                      e.target.value.replace(/\s/g, ""),
-                    )
+                    handleChange("username", e.target.value.replace(/\s/g, ""))
                   }
                   onBlur={() => handleBlur("username")}
                   className={inputClass("username")}
                 />
               </div>
-
               {touched.username && errors.username && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.username}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.username}
                 </p>
               )}
             </div>
@@ -350,55 +294,57 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Email <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type="email"
                   placeholder="abebe@example.com"
                   value={formData.email}
-                  onChange={(e) =>
-                    handleChange("email", e.target.value)
-                  }
+                  onChange={(e) => handleChange("email", e.target.value)}
                   onBlur={() => handleBlur("email")}
                   className={inputClass("email")}
                 />
               </div>
-
               {touched.email && errors.email && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.email}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.email}
                 </p>
               )}
             </div>
 
-            {/* PHONE */}
+            {/* PHONE – with restricted Ethiopian format hint */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Phone Number <span className="text-red-500">*</span>
+                <span className="text-xs text-gray-400 ml-1">
+                  (restricted to Ethiopian numbers)
+                </span>
               </label>
-
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type="text"
-                  placeholder="+251911000000"
+                  placeholder="09XXXXXXXX or +2519XXXXXXXX"
                   value={formData.phone_number}
-                  onChange={(e) =>
-                    handleChange("phone_number", e.target.value)
-                  }
+                  onChange={(e) => handleChange("phone_number", e.target.value)}
                   onBlur={() => handleBlur("phone_number")}
                   className={inputClass("phone_number")}
                 />
+                <div
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-help"
+                  title="Only Ethiopian mobile numbers are accepted"
+                >
+                  <Info className="h-4 w-4" />
+                </div>
               </div>
-
               {touched.phone_number && errors.phone_number && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.phone_number}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.phone_number}
+                </p>
+              )}
+              {!errors.phone_number && (
+                <p className="mt-1 text-xs text-gray-400">
+                  Example: +251911000000 or 0911000000
                 </p>
               )}
             </div>
@@ -408,15 +354,11 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Role
               </label>
-
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <select
                   value={formData.role}
-                  onChange={(e) =>
-                    handleChange("role", e.target.value)
-                  }
+                  onChange={(e) => handleChange("role", e.target.value)}
                   className="w-full appearance-none pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] outline-none transition"
                 >
                   <option value="admin">Admin</option>
@@ -432,26 +374,19 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Password <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Strong password..."
                   value={formData.password}
-                  onChange={(e) =>
-                    handleChange("password", e.target.value)
-                  }
+                  onChange={(e) => handleChange("password", e.target.value)}
                   onBlur={() => handleBlur("password")}
                   className={inputClass("password")}
                 />
-
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
@@ -461,27 +396,24 @@ export function CreateCompanyUserModal({
                   )}
                 </button>
               </div>
-
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-gray-500">
                       Password strength
                     </span>
-
                     <span
                       className={`text-xs font-medium ${
                         passwordStrength <= 1
                           ? "text-red-500"
                           : passwordStrength <= 3
-                          ? "text-yellow-500"
-                          : "text-green-600"
+                            ? "text-yellow-500"
+                            : "text-green-600"
                       }`}
                     >
                       {passwordStrengthText()}
                     </span>
                   </div>
-
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((level) => (
                       <div
@@ -491,8 +423,8 @@ export function CreateCompanyUserModal({
                             ? passwordStrength <= 1
                               ? "bg-red-500"
                               : passwordStrength <= 3
-                              ? "bg-yellow-500"
-                              : "bg-green-500"
+                                ? "bg-yellow-500"
+                                : "bg-green-500"
                             : "bg-gray-200"
                         }`}
                       />
@@ -500,11 +432,9 @@ export function CreateCompanyUserModal({
                   </div>
                 </div>
               )}
-
               {touched.password && errors.password && (
                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {errors.password}
+                  <AlertCircle className="h-3.5 w-3.5" /> {errors.password}
                 </p>
               )}
             </div>
@@ -514,35 +444,21 @@ export function CreateCompanyUserModal({
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Confirm Password <span className="text-red-500">*</span>
               </label>
-
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
                 <input
-                  type={
-                    showConfirmPassword ? "text" : "password"
-                  }
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm password..."
                   value={formData.confirm_password}
                   onChange={(e) =>
-                    handleChange(
-                      "confirm_password",
-                      e.target.value,
-                    )
+                    handleChange("confirm_password", e.target.value)
                   }
-                  onBlur={() =>
-                    handleBlur("confirm_password")
-                  }
+                  onBlur={() => handleBlur("confirm_password")}
                   className={inputClass("confirm_password")}
                 />
-
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(
-                      !showConfirmPassword,
-                    )
-                  }
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
@@ -552,14 +468,12 @@ export function CreateCompanyUserModal({
                   )}
                 </button>
               </div>
-
-              {touched.confirm_password &&
-                errors.confirm_password && (
-                  <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    {errors.confirm_password}
-                  </p>
-                )}
+              {touched.confirm_password && errors.confirm_password && (
+                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3.5 w-3.5" />{" "}
+                  {errors.confirm_password}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -572,7 +486,6 @@ export function CreateCompanyUserModal({
           >
             Cancel
           </button>
-
           <button
             onClick={handleSubmit}
             disabled={loading}
@@ -580,8 +493,7 @@ export function CreateCompanyUserModal({
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Creating...
+                <Loader2 className="h-4 w-4 animate-spin" /> Creating...
               </>
             ) : (
               <>
