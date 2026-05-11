@@ -268,6 +268,7 @@ export interface VendorOrder {
   subtotal: string;
   tax_amount: string;
   amount: string;
+  recipient_image: string;
   status: string;
   delivery_status?: string;
   delivery_notes?: string;

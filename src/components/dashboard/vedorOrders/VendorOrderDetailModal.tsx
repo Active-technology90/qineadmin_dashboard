@@ -16,6 +16,7 @@ import {
   Banknote,
   Loader2,
   Phone,
+  RefreshCw,
 } from "lucide-react";
 import type { VendorOrder } from "../../../types";
 import {
@@ -37,12 +38,14 @@ const formatDateTime = (dateString: string) =>
     minute: "2-digit",
   });
 
-const getInitials = (name: string) =>
+const getInitials = (name?: string) =>
   name
+    ?.trim()
     ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase() || "?";
+    ?.filter(Boolean)
+    ?.map((n) => n[0])
+    ?.join("")
+    ?.toUpperCase() || "?";
 
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
@@ -100,8 +103,16 @@ const CustomerCard = ({ order }: { order: VendorOrder }) => (
       <User className="h-4 w-4 text-[#6750A4]" /> Customer Information
     </h4>
     <div className="flex items-start gap-4">
-      <div className="w-14 h-14 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl flex-shrink-0">
-        {getInitials(order.recipient_name || "?")}
+      <div className="w-14 h-14 rounded-full overflow-hidden bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl flex-shrink-0 border border-[#6750A4]/10">
+        {order.recipient_image ? (
+          <img
+            src={order.recipient_image}
+            alt={order.recipient_name || "Customer"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          getInitials(order.recipient_name || "?")
+        )}
       </div>
       <div className="space-y-1 text-sm">
         <p className="font-bold text-gray-900 text-lg">
@@ -834,7 +845,7 @@ export function VendorOrderDetailModal({
   const [showTopShadow, setShowTopShadow] = useState(false);
   const [showBottomShadow, setShowBottomShadow] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     const el = scrollRef.current;
     const handleScroll = () => {
@@ -859,6 +870,16 @@ export function VendorOrderDetailModal({
   if (!order) return null;
 
   const handleLocalUpdate = () => onUpdate?.();
+  const handleRefresh = async () => {
+    if (!onUpdate) return;
+
+    try {
+      setRefreshing(true);
+      await Promise.resolve(onUpdate());
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -886,7 +907,7 @@ export function VendorOrderDetailModal({
               </h2>
               <CopyButton text={String(order.id)} />
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">
                   Order Status
@@ -898,6 +919,20 @@ export function VendorOrderDetailModal({
                   {order.status.replace(/_/g, " ")}
                 </span>
               </div>
+
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-[#6750A4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+                <span className="text-sm font-medium hidden sm:inline">
+                  Refresh
+                </span>
+              </button>
+
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-[#6750A4] p-2 rounded-full hover:bg-gray-100 transition"

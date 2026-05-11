@@ -488,7 +488,7 @@ export default function SubCategoryManagement() {
               </label>
               <input
                 type="text"
-                placeholder="auto-generated"
+                placeholder="e.g. beverages"
                 value={formData.slug}
                 onChange={(e) =>
                   setFormData({ ...formData, slug: e.target.value })
