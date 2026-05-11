@@ -79,10 +79,21 @@ export default function CompanyProducts() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [toastZIndex, setToastZIndex] = useState(50);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Increase toast z-index when modal is open
+  const showToastWithHigherZIndex = (type: "success" | "error", message: string) => {
+    setToastZIndex(100); // Higher z-index for modal visibility
+    setToast({ type, message });
+    setTimeout(() => {
+      setToast(null);
+      setToastZIndex(50); // Reset to normal after toast disappears
+    }, 3000);
   };
 
   // Handlers with permission checks (unchanged except we now use `companyRole`)
@@ -118,9 +129,16 @@ export default function CompanyProducts() {
       setDeleteTarget(null);
     }
   };
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: any, existingProductId?: number) => {
     // Permission checks...
     try {
+      // If we have an existingProductId passed from modal (for update after back button)
+      if (existingProductId) {
+        await updateProduct(existingProductId, data);
+        showToast("success", "Updated");
+        return { id: existingProductId };
+      }
+      // Normal edit mode
       if (editingProduct) {
         await updateProduct(editingProduct.id, data);
         showToast("success", "Updated");
@@ -166,8 +184,9 @@ export default function CompanyProducts() {
 
   // Normal content (identical to your last version)
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-      <Toast toast={toast} />
+    <>
+      <Toast toast={toast} zIndex={toastZIndex} />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.title || ""}
@@ -185,6 +204,7 @@ export default function CompanyProducts() {
         isStaff={companyRole === "staff"}
         canEditBasic={canEditBasic} // true for staff & admin
         canEditPricing={true} // let the isStaff logic handle edit restriction
+        onShowToast={showToastWithHigherZIndex}
       />
 
       <div className="p-6">
@@ -272,5 +292,6 @@ export default function CompanyProducts() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -727,7 +727,7 @@ export default function CompanyManagement() {
                 </p>
               )}
             </div>
-            <div>
+             <div>
               <select
                 value={formData.sub_category}
                 onChange={(e) =>
@@ -736,8 +736,9 @@ export default function CompanyManagement() {
                     sub_category: Number(e.target.value),
                   }))
                 }
-                className={`w-full border rounded-lg p-2 ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2 ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
                 disabled={!formData.category}
+                style={{ cursor: !formData.category ? "not-allowed" : "default" }}
               >
                 <option value={0}>Select Subcategory *</option>
                 {subcategories
@@ -766,10 +767,10 @@ export default function CompanyManagement() {
                 className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
               >
                 <option value="">Select Business Type *</option>
-                <option value="brand">Brand</option>
+                <option value="brand">Company</option>
                 <option value="store">Store</option>
                 <option value="service">Service</option>
-                <option value="factory">Factory</option>
+               
               </select>
               {formErrors.business_type && (
                 <p className="text-red-500 text-xs mt-1">
