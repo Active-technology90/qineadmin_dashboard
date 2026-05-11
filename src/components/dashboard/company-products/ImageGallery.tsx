@@ -16,7 +16,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Upload, Trash2, Star, Loader2, GripVertical, Download } from 'lucide-react';
+import { Upload, Trash2, Star, Loader2, GripVertical, Download, AlertCircle } from 'lucide-react';
 import type { ProductImage } from '../../../types';
 import { uploadProductImage, deleteProductImage, updateProductImage } from '../../../services/api';
 
@@ -27,6 +27,7 @@ interface ImageGalleryProps {
   onImagesChange: () => void;
   onError?: (message: string) => void;
   readOnly?: boolean;
+  onShowToast?: (type: "success" | "error", message: string) => void;
 }
 
 // ------------------------------------------------------------------
@@ -127,15 +128,17 @@ function SortableImageItem({
 // ------------------------------------------------------------------
 // Main ImageGallery component
 // ------------------------------------------------------------------
-export function ImageGallery({ images, productId, companySlug, onImagesChange, onError }: ImageGalleryProps) {
+export function ImageGallery({ images, productId, companySlug, onImagesChange, onError, onShowToast }: ImageGalleryProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [localImages, setLocalImages] = useState<ProductImage[]>(images);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Sync local images when prop changes (avoid infinite loop)
   useEffect(() => {
     setLocalImages(images);
@@ -206,17 +209,56 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
     if (file) await uploadFile(file);
   };
 
-  const handleDelete = async (imageId: number) => {
-    if (!confirm('Delete this image?')) return;
+   // Open confirmation modal instead of browser confirm
+  const requestDelete = (imageId: number) => {
+    setPendingDeleteId(imageId);
+    setShowConfirmModal(true);
+  };
+
+  // Close confirmation modal
+  const closeConfirmModal = () => {
+    setShowConfirmModal(false);
+    setPendingDeleteId(null);
+    setConfirmDeleteId(null);
+  };
+
+  // Confirm deletion - perform actual delete
+  const confirmDelete = async () => {
+    const imageId = pendingDeleteId;
+    if (!imageId) return;
+    
+    setShowConfirmModal(false);
+    await performDelete(imageId);
+  };
+
+  // Actual delete function with toast notifications
+  const performDelete = async (imageId: number) => {
     setDeletingId(imageId);
     try {
       await deleteProductImage(companySlug, productId, imageId);
       await onImagesChange();
-    } catch {
+      // Show success toast with higher priority
+      if (onShowToast) {
+        onShowToast('success', '✓ Image deleted successfully');
+        // Ensure toast is visible by triggering a re-render
+        setTimeout(() => {}, 100);
+      }
+    } catch (error) {
+      // Show error toast
+      if (onShowToast) {
+        onShowToast('error', '✗ Delete failed. Please try again.');
+      }
       onError?.('Delete failed');
+      console.error('Delete error:', error);
     } finally {
       setDeletingId(null);
+      setConfirmDeleteId(null);
     }
+  };
+
+  // Keep original handleDelete for compatibility
+  const handleDelete = (imageId: number) => {
+    requestDelete(imageId);
   };
 
   const handleSetPrimary = async (imageId: number) => {
@@ -264,7 +306,8 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
   );
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -273,25 +316,27 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
             Drag to reorder • First image will be shown in listings
           </p>
         </div>
-        <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm">
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          <span className="text-sm font-medium">{uploading ? 'Uploading...' : 'Upload Image'}</span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/jpg"
-            onChange={handleUpload}
-            disabled={uploading}
-            className="hidden"
-          />
-        </label>
+        {/* Upload Image button - temporarily disabled (text style only) */}
+        <div className="inline-flex items-center gap-2 text-secondary">
+          <Upload className="h-4 w-4 text-secondary" />
+          <span className="text-sm font-medium text-secondary">Upload Image</span>
+        </div>
+        {/* Hidden file input - shared by drag-drop and Add more tile (STILL WORKING) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/jpg"
+          onChange={handleUpload}
+          disabled={uploading}
+          className="hidden"
+        />
       </div>
 
       {/* Progress bar */}
       {uploading && uploadProgress > 0 && uploadProgress < 100 && (
         <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
           <div
-            className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300 ease-out"
+            className="bg-secondary h-1.5 rounded-full transition-all duration-300 ease-out"
             style={{ width: `${uploadProgress}%` }}
           />
         </div>
@@ -304,7 +349,7 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`rounded-xl transition-all duration-200 ${
-          isDragOver ? 'bg-indigo-50 ring-2 ring-indigo-400 ring-inset scale-[1.02]' : ''
+          isDragOver ? 'bg-secondary/5 ring-2 ring-secondary/40 ring-inset scale-[1.02]' : ''
         }`}
       >
         {localImages.length === 0 && !uploading ? (
@@ -312,7 +357,7 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
           <div
             className={`text-center py-12 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
               isDragOver
-                ? 'border-indigo-400 bg-indigo-50 scale-[1.02]'
+                ? 'border-secondary/40 bg-secondary/5 scale-[1.02]'
                 : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:scale-[1.01]'
             }`}
             onClick={() => fileInputRef.current?.click()}
@@ -334,7 +379,7 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
                     isUpdating={updatingId === img.id}
                     isDeleting={deletingId === img.id}
                     onSetPrimary={handleSetPrimary}
-                    onDelete={handleDelete}
+                    onDelete={requestDelete}
                   />
                 ))}
                 {/* "Add more" tile – subtle scale on hover */}
@@ -362,5 +407,42 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
         )}
       </div>
     </div>
+
+     {/* Custom Confirmation Modal */}
+    {showConfirmModal && (
+      <div 
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        onClick={(e) => e.target === e.currentTarget && closeConfirmModal()}
+      >
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Image</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this image? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeConfirmModal}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

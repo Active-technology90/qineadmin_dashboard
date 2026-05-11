@@ -179,8 +179,8 @@ export function ProductTable({
                   <td className="px-2 py-2 whitespace-nowrap">
                     <StockBadge stock={product.stock} />
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
-                    {product.unit}
+                   <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
+                    {product.unit === 'pc' ? 'pcs' : product.unit}
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">

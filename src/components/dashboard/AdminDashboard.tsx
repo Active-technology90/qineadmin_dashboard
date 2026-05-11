@@ -116,17 +116,6 @@ function OrdersMenu({
 
         {ordersMenuOpen && (
           <div className="ml-4 mt-1 space-y-1">
-            <button
-              onClick={() => onNavigate("companyOrders")}
-              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
-                activeTab === "companyOrders"
-                  ? "bg-white/20 text-white font-semibold"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <ListOrdered className="h-4 w-4" />
-              Company Orders
-            </button>
             {showMasterOrders && (
               <button
                 onClick={() => onNavigate("masterOrders")}
@@ -140,6 +129,17 @@ function OrdersMenu({
                 Master Orders
               </button>
             )}
+            <button
+              onClick={() => onNavigate("companyOrders")}
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
+                activeTab === "companyOrders"
+                  ? "bg-white/20 text-white font-semibold"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <ListOrdered className="h-4 w-4" />
+              Company Orders
+            </button>
           </div>
         )}
       </div>
@@ -161,20 +161,6 @@ function OrdersMenu({
 
       {collapsedOrdersOpen && (
         <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
-          <button
-            onClick={() => {
-              onNavigate("companyOrders");
-              setCollapsedOrdersOpen(false);
-            }}
-            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
-              activeTab === "companyOrders"
-                ? "bg-indigo-50 text-indigo-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Building2 className="h-4 w-4 text-gray-500" />
-            Company Orders
-          </button>
           {showMasterOrders && (
             <button
               onClick={() => {
@@ -191,6 +177,20 @@ function OrdersMenu({
               Master Orders
             </button>
           )}
+          <button
+            onClick={() => {
+              onNavigate("companyOrders");
+              setCollapsedOrdersOpen(false);
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
+              activeTab === "companyOrders"
+                ? "bg-indigo-50 text-indigo-700 font-medium"
+                : "text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <Building2 className="h-4 w-4 text-gray-500" />
+            Company Orders
+          </button>
         </div>
       )}
     </div>

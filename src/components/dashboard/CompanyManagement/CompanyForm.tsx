@@ -174,8 +174,12 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
+                : !formData.category
+                ? "bg-gray-100 text-gray-500 border-gray-200"
                 : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
-            } ${formErrors.sub_category ? "border-red-500" : ""}`}
+            } ${formErrors.sub_category ? "border-red-500" : ""} ${
+              !formData.category ? "cursor-not-allowed" : ""
+            }`}
           >
             <option value={0}>Select Subcategory</option>
             {filteredSubcategories.map((sub) => (
@@ -238,10 +242,9 @@ export default function CompanyForm({
             } ${formErrors.business_type ? "border-red-500" : ""}`}
           >
             <option value="">Select Business Type</option>
-            <option value="brand">Brand</option>
+            <option value="brand">Company</option>
             <option value="store">Store</option>
             <option value="service">Service</option>
-            <option value="factory">Factory</option>
           </select>
           {formErrors.business_type && (
             <p className="text-red-500 text-[10px] mt-0.5">

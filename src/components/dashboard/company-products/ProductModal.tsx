@@ -51,6 +51,8 @@ interface ProductModalProps {
    * In create mode, price & stock remain editable.
    */
   isStaff?: boolean;
+  /** Callback to show toast notifications from parent */
+  onShowToast?: (type: "success" | "error", message: string) => void;
 }
 
 export function ProductModal({
@@ -63,6 +65,7 @@ export function ProductModal({
   canEditBasic = true,
   canEditPricing = true,
   isStaff = false,
+  onShowToast,
 }: ProductModalProps) {
   const [step, setStep] = useState<'details' | 'gallery'>('details');
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -76,10 +79,10 @@ export function ProductModal({
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pc' },
+    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pcs' },
   });
 
-  // Reset form and step when editing product changes
+   // Reset form and step when editing product changes
   useEffect(() => {
     if (editingProduct) {
       reset({
@@ -92,11 +95,15 @@ export function ProductModal({
       setSavedProductId(editingProduct.id);
       setStep('details');
     } else {
-      reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pc' });
-      setSavedProductId(null);
-      setStep('details');
+      // Only reset form if we're not coming back from gallery with a saved product
+      // AND the modal is open (to prevent reset while modal is closed)
+      if (!savedProductId && isOpen) {
+        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+        setSavedProductId(null);
+        setStep('details');
+      }
     }
-  }, [editingProduct, reset]);
+  }, [editingProduct, reset, savedProductId, isOpen]);
 
   // Fetch images when on gallery step
   useEffect(() => {
@@ -127,14 +134,48 @@ export function ProductModal({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  const handleBackToDetails = () => setStep('details');
+  // Reset modal state when closing and reopening for a new product
+  useEffect(() => {
+    if (!isOpen) {
+      // When modal closes, reset all state for next time
+      setStep('details');
+      setSavedProductId(null);
+      if (!editingProduct) {
+        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+      }
+    }
+  }, [isOpen, editingProduct, reset]);
+
+  const handleBackToDetails = () => {
+    // When going back from gallery to details for a newly created product,
+    // we need to treat it as an editing product to prevent duplicate creation
+    if (step === 'gallery' && savedProductId && !editingProduct) {
+      // The product was created but we're going back to edit details
+      // We'll keep the savedProductId and let the form handle updates
+      setStep('details');
+    } else {
+      setStep('details');
+    }
+  };
 
   const onSubmitDetails = async (data: ProductFormData) => {
     // Allow submission only if basic editing is allowed (creates/updates product)
     if (!canEditBasic) return;
     try {
-      const saved = await onSave(data);
-      const productId = saved?.id || editingProduct?.id;
+      let productId = savedProductId;
+      
+      // If we have a savedProductId (product was created before), update it instead of creating new
+      if (savedProductId && !editingProduct) {
+        // This is a product that was created but we're going back to edit details
+        // We need to update the existing product - pass the savedProductId to onSave
+        await onSave(data, savedProductId);
+        productId = savedProductId;
+      } else {
+        // New product creation
+        const saved = await onSave(data);
+        productId = saved?.id || editingProduct?.id;
+      }
+      
       if (!productId) throw new Error('No product ID returned');
       setSavedProductId(productId);
       setStep('gallery');
@@ -195,27 +236,27 @@ export function ProductModal({
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                    step === 'details' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'
+                    step === 'details' ? 'bg-secondary text-white' : 'bg-secondary/10 text-secondary'
                   }`}>
                     {step === 'details' ? '1' : <CheckCircle className="h-4 w-4" />}
                   </div>
-                  <span className={`text-sm font-medium ${step === 'details' ? 'text-indigo-600' : 'text-gray-500'}`}>
+                  <span className={`text-sm font-medium ${step === 'details' ? 'text-secondary' : 'text-gray-500'}`}>
                     Details
                   </span>
                 </div>
                 <div className="flex-1 h-0.5 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-indigo-600 transition-all duration-300 ease-out"
+                    className="h-full bg-secondary transition-all duration-300 ease-out"
                     style={{ width: `${stepProgress}%` }}
                   />
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                    step === 'gallery' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'
+                    step === 'gallery' ? 'bg-secondary text-white' : 'bg-gray-100 text-gray-400'
                   }`}>
                     {step === 'gallery' ? '2' : <CheckCircle className="h-4 w-4" />}
                   </div>
-                  <span className={`text-sm font-medium ${step === 'gallery' ? 'text-indigo-600' : 'text-gray-400'}`}>
+                  <span className={`text-sm font-medium ${step === 'gallery' ? 'text-secondary' : 'text-gray-400'}`}>
                     Images
                   </span>
                 </div>
@@ -240,7 +281,7 @@ export function ProductModal({
                     className={`w-full px-4 py-2 rounded-lg border ${
                       errors.sku
                         ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
                     } transition-all outline-none ${
                       (!!editingProduct || isReadOnlyBasic) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                     }`}
@@ -264,7 +305,7 @@ export function ProductModal({
                     className={`w-full px-4 py-2 rounded-lg border ${
                       errors.title
                         ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
                     } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                     placeholder="Product name"
                     disabled={isSubmitting || isReadOnlyBasic}
@@ -287,7 +328,7 @@ export function ProductModal({
                       className={`w-full px-4 py-2 rounded-lg border ${
                         errors.price
                           ? 'border-red-500 focus:ring-red-100'
-                          : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                          : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
                       } transition-all outline-none ${
                         isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                       }`}
@@ -308,7 +349,7 @@ export function ProductModal({
                       className={`w-full px-4 py-2 rounded-lg border ${
                         errors.stock
                           ? 'border-red-500 focus:ring-red-100'
-                          : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+                          : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
                       } transition-all outline-none ${
                         isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                       }`}
@@ -328,12 +369,12 @@ export function ProductModal({
                   </label>
                   <select
                     {...register('unit')}
-                    className={`w-full px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none ${
+                    className={`w-full px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none ${
                       isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                     }`}
                     disabled={isSubmitting || isReadOnlyBasic}
                   >
-                    <option value="pc">Piece (pc)</option>
+                    <option value="pcs">Pieces (pcs)</option>
                     <option value="kg">Kilogram (kg)</option>
                     <option value="g">Gram (g)</option>
                     <option value="l">Liter (l)</option>
@@ -345,11 +386,11 @@ export function ProductModal({
               <div className="space-y-5">
                 {loadingImages ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                    <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                     <p className="text-sm text-gray-500 mt-3">Loading images...</p>
                   </div>
                 ) : (
-                  <ImageGallery
+                   <ImageGallery
                     images={images}
                     productId={savedProductId!}
                     companySlug={companySlug}
@@ -365,6 +406,14 @@ export function ProductModal({
                       }
                     }}
                     readOnly={isReadOnlyBasic}
+                    onError={(message) => {
+                      // Show toast notification for image errors
+                      if (onShowToast) {
+                        onShowToast('error', message);
+                      }
+                      console.error('Image error:', message);
+                    }}
+                    onShowToast={onShowToast}
                   />
                 )}
               </div>
@@ -398,7 +447,7 @@ export function ProductModal({
                   type="submit"
                   form="product-details-form"
                   disabled={isSubmitting}
-                  className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition flex items-center gap-2 shadow-sm disabled:opacity-50"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   Continue to Images <ChevronRight className="h-4 w-4" />

@@ -4,13 +4,17 @@ import type { ToastType } from '../../hooks/useToast';
 
 interface ToastProps {
   toast: { type: ToastType; message: string } | null;
+  zIndex?: number;
 }
 
-export function Toast({ toast }: ToastProps) {
+export function Toast({ toast, zIndex = 50 }: ToastProps) {
   if (!toast) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg transition-all animate-in slide-in-from-top-2">
+    <div 
+      className="fixed top-4 right-4 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg transition-all animate-in slide-in-from-top-2"
+      style={{ zIndex: zIndex }}
+    >
       <div
         className={`flex items-center gap-2 ${
           toast.type === 'success'

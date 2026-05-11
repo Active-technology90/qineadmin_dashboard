@@ -26,14 +26,14 @@ interface CompanySelectorProps {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-function AccessDenied({ onBack }: { onBack: () => void }) {
+function AccessDenied() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto overflow-hidden"
     >
-      <Header onBack={onBack} title="Company Selector" />
+      <Header title="Company Selector" />
       <div className="p-10 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <AlertCircle className="h-8 w-8 text-red-500" />
@@ -48,25 +48,16 @@ function AccessDenied({ onBack }: { onBack: () => void }) {
 }
 
 function Header({
-  onBack,
   title,
   subtitle,
 }: {
-  onBack: () => void;
   title: string;
   subtitle?: string;
 }) {
   return (
     <div className="flex items-center gap-4 px-6 py-2 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-      <button
-        onClick={onBack}
-        className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
-        aria-label="Go back"
-      >
-        <ArrowLeft className="h-5 w-5 text-gray-600" />
-      </button>
       <div>
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-xl font-bold text-secondary">{title}</h2>
         {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
       </div>
     </div>
@@ -85,7 +76,7 @@ function SearchInput({
     <div className="relative">
       <Search
         className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-          isFocused ? 'text-[#6750A4]' : 'text-gray-400'
+          isFocused ? 'text-secondary' : 'text-gray-400'
         }`}
       />
       <input
@@ -97,7 +88,7 @@ function SearchInput({
         placeholder="Search by name or type..."
         className="w-full pl-10 pr-10 py-2.5 rounded-xl border bg-gray-50 text-sm
           transition-all duration-200 outline-none
-          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+          focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary
           hover:border-gray-300"
         aria-label="Search companies"
       />
@@ -232,7 +223,7 @@ export function CompanySelector({
   const isSuperAdmin = !user?.memberships || user.memberships.length === 0;
   const hasAccess = isSuperAdmin || allowSwitch;
   if (!hasAccess) {
-    return <AccessDenied onBack={onBack} />;
+    return <AccessDenied />;
   }
 
   const filteredCompanies = companies.filter(
@@ -254,7 +245,6 @@ export function CompanySelector({
     >
       {/* Header – fixed at top */}
       <Header
-        onBack={onBack}
         title="Choose Company"
         subtitle={subtitle}
       />
