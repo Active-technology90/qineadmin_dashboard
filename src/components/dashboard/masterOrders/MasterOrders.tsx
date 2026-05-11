@@ -8,6 +8,7 @@ import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { OrderDetailModal } from "./OrderDetailModal";
 import { OrderFilters } from "./OrderFilters";
+import { TableControls } from "../../ui/TableControls";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -43,6 +44,7 @@ export default function Orders() {
     try {
       setLoading(true);
       setError(null);
+      console.log("Fetching orders with pageSize:", pageSize, "page:", page); // DEBUG
       const res = await getAdminMasterOrders({
         page,
         page_size: pageSize,
@@ -50,6 +52,7 @@ export default function Orders() {
         status: status || undefined,
         ordering: "-created_at",
       });
+      console.log("API response count:", res.data.count, "results length:", res.data.results.length); // DEBUG
       setOrders(res.data.results);
       setTotalCount(res.data.count);
     } catch (err: any) {
@@ -72,7 +75,7 @@ export default function Orders() {
     }
   }, [currentPage, statusFilter, pageSize]);
 
-  // --- Combined client‑side filters (search + delivery status) ---
+  // --- Combined client‑side filters (search + order status + delivery status) ---
   const filteredOrders = useMemo(() => {
     let result = orders;
 
@@ -88,6 +91,11 @@ export default function Orders() {
       });
     }
 
+    // Filter by order status (if any)
+    if (statusFilter) {
+      result = result.filter((order) => order.status === statusFilter);
+    }
+
     // Filter by delivery status (if any)
     if (deliveryStatusFilter) {
       result = result.filter((order) =>
@@ -98,11 +106,18 @@ export default function Orders() {
     }
 
     return result;
-  }, [orders, searchTerm, deliveryStatusFilter]);
+  }, [orders, searchTerm, statusFilter, deliveryStatusFilter]);
+
+  // Calculate paginated orders (client-side pagination after filtering)
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredOrders.slice(start, end);
+  }, [filteredOrders, currentPage, pageSize]);
 
   const totalPages = useMemo(
-    () => Math.ceil(totalCount / pageSize),
-    [totalCount, pageSize]
+    () => Math.ceil(filteredOrders.length / pageSize),
+    [filteredOrders.length, pageSize]
   );
 
   const goToPage = (page: number) => {
@@ -160,29 +175,40 @@ export default function Orders() {
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
 
-      {/* Filters – now search is purely client‑side */}
-      <OrderFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={(val) => {
-          setStatusFilter(val);
-          setCurrentPage(1);
-        }}
-        deliveryStatusFilter={deliveryStatusFilter}
-        onDeliveryStatusChange={setDeliveryStatusFilter}
+      {/* Title moved outside the border */}
+      <div className="mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Orders</h2>
+      </div>
+
+      {/* Filters – using TableControls for page size only */}
+      <TableControls
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
-        onClear={handleClearFilters}
-        showMobile={showMobileFilters}
-        onToggleMobile={() => setShowMobileFilters((prev) => !prev)}
-      />
+      >
+        {/* Hide the title from OrderFilters using CSS, keep filters visible */}
+        <div className="[&_.mb-6]:hidden">
+          <OrderFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusChange={(val) => {
+              setStatusFilter(val);
+              setCurrentPage(1);
+            }}
+            deliveryStatusFilter={deliveryStatusFilter}
+            onDeliveryStatusChange={setDeliveryStatusFilter}
+            onClear={handleClearFilters}
+            showMobile={showMobileFilters}
+            onToggleMobile={() => setShowMobileFilters((prev) => !prev)}
+          />
+        </div>
+      </TableControls>
 
       {/* Table – uses filterOrders (client‑side) */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <div key={pageSize} className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -220,8 +246,8 @@ export default function Orders() {
                   <p className="text-gray-500">No orders found</p>
                 </td>
               </tr>
-            ) : (
-              filteredOrders.map((order) => (
+                      ) : (
+              paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-indigo-600">#{order.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
