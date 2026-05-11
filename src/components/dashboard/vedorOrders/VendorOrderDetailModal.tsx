@@ -1,22 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X,
-  Package,
-  Truck,
-  Receipt,
-  Calendar,
-  MapPin,
-  Download,
-  Copy,
-  Check,
-  User,
-  Hash,
-  ImageIcon,
-  Banknote,
-  Loader2,
-  Phone,
-  RefreshCw,
+  X, Package, Truck, Receipt, Calendar, MapPin,
+  Download, Copy, Check, User, Hash, ImageIcon,
+  Banknote, Loader2, Phone, RefreshCw, ChevronRight,
+  CreditCard, Clock, Eye, AlertCircle, ShieldCheck,
+  PhoneCall
 } from "lucide-react";
 import type { VendorOrder } from "../../../types";
 import {
@@ -28,770 +17,75 @@ import {
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 
-// ---------- Helpers ----------
-const formatDateTime = (dateString: string) =>
-  new Date(dateString).toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// ---------- Animation Variants ----------
+const containerVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1, transition: { staggerChildren: 0.05 } }
+};
 
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 }
+};
+
+// ---------- Helpers ----------
 const getInitials = (name?: string) =>
-  name
-    ?.trim()
-    ?.split(" ")
-    ?.filter(Boolean)
-    ?.map((n) => n[0])
-    ?.join("")
-    ?.toUpperCase() || "?";
+  name?.trim().split(" ").filter(Boolean).map((n) => n[0]).join("").toUpperCase() || "?";
 
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
-
-  if (s === "completed" || s === "delivered")
-    return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-
+  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+  if (s === "completed" || s === "delivered" || s === "approved")
+    return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (s === "paid" || s === "out_for_delivery")
-    return "bg-violet-50 text-violet-700 border border-violet-200";
-
+    return base + "bg-violet-50 text-violet-700 border-violet-200";
   if (s === "pending")
-    return "bg-amber-50 text-amber-700 border border-amber-200";
-
-  if (s === "processing" || s === "shipped")
-    return "bg-sky-50 text-sky-700 border border-sky-200";
-
-  if (s === "approved" || s === "accepted")
-    return "bg-green-50 text-green-700 border border-green-200";
-
+    return base + "bg-amber-50 text-amber-700 border-amber-200";
   if (s === "rejected" || s === "cancelled")
-    return "bg-rose-50 text-rose-700 border border-rose-200";
-
-  return "bg-gray-50 text-gray-600 border border-gray-200";
+    return base + "bg-rose-50 text-rose-700 border-rose-200";
+  return base + "bg-gray-50 text-gray-600 border-gray-200";
 };
 
-interface OrderReceipt {
-  id: number;
-  status: string;
-  receipt_image: string;
-  bank_name: string;
-  amount: string;
-  uploaded_at: string;
-}
+// ---------- Sub-Components ----------
 
-interface StaffMember {
-  id: number;
-  name: string;
-  phone?: string;
-  user?: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  };
-  role?: string;
-}
-
-// ---------- Sub‑components ----------
-
-// Customer Card (unchanged)
-const CustomerCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <User className="h-4 w-4 text-[#6750A4]" /> Customer Information
-    </h4>
-    <div className="flex items-start gap-4">
-      <div className="w-14 h-14 rounded-full overflow-hidden bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl flex-shrink-0 border border-[#6750A4]/10">
-        {order.recipient_image ? (
-          <img
-            src={order.recipient_image}
-            alt={order.recipient_name || "Customer"}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          getInitials(order.recipient_name || "?")
-        )}
-      </div>
-      <div className="space-y-1 text-sm">
-        <p className="font-bold text-gray-900 text-lg">
-          {order.recipient_name || "N/A"}
-        </p>
-        <div className="flex items-center gap-2 text-gray-500">
-          <Phone className="h-3.5 w-3.5" />
-          <span>{order.shipping_phone || "No phone"}</span>
-          <CopyButton text={order.shipping_phone} />
+const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
+  <motion.div variants={itemVariants} className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm ${className}`}>
+    <div className="flex flex-row justify-between items-start">
+      <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
+        <div className="p-1.5 bg-[#6750A4]/10 rounded-lg">
+          <Icon className="h-4 w-4 text-[#6750A4]" />
         </div>
+        <h4 className="text-sm font-bold text-gray-800">{title}</h4>
       </div>
+      {status && <div className="flex justify-start">
+        <span className={getStatusBadge(status)}>{status?.replace(/_/g, " ")}</span>
+      </div>}
     </div>
-  </div>
+    {children}
+  </motion.div>
 );
 
-// Shipping Card (unchanged)
-const ShippingCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-blue-100 p-6 shadow-sm">
-    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <MapPin className="h-4 w-4 text-[#6750A4]" /> Shipping Address
-    </h4>
-    <div className="space-y-3 text-sm">
-      <div>
-        <span className="text-xs text-gray-500">Recipient</span>
-        <p className="font-medium text-gray-900">
-          {order.recipient_name || "N/A"}
-        </p>
-      </div>
-      <div>
-        <span className="text-xs text-gray-500">Phone</span>
-        <p className="font-medium text-gray-900">
-          {order.shipping_phone || "N/A"}
-        </p>
-      </div>
-      <div>
-        <span className="text-xs text-gray-500">Address</span>
-        <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-          {order.shipping_address_text?.replace(/, /g, "\n") || "N/A"}
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-// Delivery Card – now accepts readOnly prop
-const DeliveryCard = ({
-  order,
-  onUpdate,
-  readOnly,
-}: {
-  order: VendorOrder;
-  onUpdate: () => void;
-  readOnly: boolean;
-}) => {
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | "">("");
-  const [loadingStaff, setLoadingStaff] = useState(false);
-  const [assigning, setAssigning] = useState(false);
-  const [showAssignForm, setShowAssignForm] = useState(false);
-  const { showToast } = useToast();
-
-  const delivery = order.delivery;
-  const orderConfirmed = order.status?.toLowerCase() === "confirmed";
-  const canManage = !readOnly && orderConfirmed;
-
-  const formatStatus = (status?: string) => {
-    if (!status) return "";
-    return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  };
-
-  const getDisabledReason = (): string => {
-    if (readOnly) return "You are in view‑only mode.";
-    if (!orderConfirmed) {
-      return "Order status must be 'Confirmed' before a delivery person can be assigned.";
-    }
-    return "";
-  };
-
-  useEffect(() => {
-    if (!order.company?.slug) return;
-    const fetchStaff = async () => {
-      setLoadingStaff(true);
-      try {
-        const res = await getCompanyStaffByRole(
-          order.company.slug!,
-          "delivery",
-        );
-        const mappedStaff = (res.data.results || res.data).map(
-          (staff: any) => ({
-            id: staff.user.id,
-            name:
-              `${staff.user.first_name || ""} ${staff.user.last_name || ""}`.trim() ||
-              staff.user.username ||
-              staff.user.email,
-            phone: staff.user.phone_number,
-          }),
-        );
-        setStaffList(mappedStaff);
-      } finally {
-        setLoadingStaff(false);
-      }
-    };
-    fetchStaff();
-  }, [order.company?.slug]);
-
-  const handleAssign = async () => {
-    if (!selectedUserId) return;
-    setAssigning(true);
-    try {
-      if (delivery) {
-        const deliveryId = delivery.tracking_id;
-        if (!deliveryId) throw new Error("Delivery record has no ID.");
-        await updateDeliveryPerson(Number(deliveryId), selectedUserId);
-        showToast("success", "Delivery person updated");
-      } else {
-        await assignDelivery({
-          vendor_order: order.id,
-          delivery_person: selectedUserId,
-        });
-        showToast("success", "Delivery person assigned");
-      }
-      setSelectedUserId("");
-      setShowAssignForm(false);
-      onUpdate();
-    } catch (err: any) {
-      showToast(
-        "error",
-        err.response?.data?.detail || err.message || "Operation failed",
-      );
-    } finally {
-      setAssigning(false);
-    }
-  };
-
-  const handleOpenForm = () => {
-    if (assigning || readOnly) return;
-    if (delivery?.delivery_person) {
-      setSelectedUserId(delivery.delivery_person);
-    } else {
-      setSelectedUserId("");
-    }
-    setShowAssignForm(true);
-  };
-
-  const handleCancel = () => {
-    setShowAssignForm(false);
-    setSelectedUserId("");
-  };
-
-  const shouldHighlight = canManage && !order.delivery;
-
-  return (
-    <div
-      className={`bg-white rounded-xl border p-6 shadow-sm transition-all ${
-        shouldHighlight
-          ? "border-[#6750A4] ring-2 ring-[#6750A4]/20"
-          : "border-purple-100"
-      }`}
-    >
-      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-        <Truck className="h-4 w-4 text-[#6750A4]" /> Delivery Details
-        {shouldHighlight && (
-          <span className="text-xs text-[#6750A4] font-normal ml-2">
-            (next step)
-          </span>
-        )}
-      </h4>
-
-      {delivery && delivery.delivery_person_name ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4] font-bold text-xl">
-              {getInitials(delivery.delivery_person_name || "?")}
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-gray-900 text-lg">
-                {delivery.delivery_person_name || "N/A"}
-              </p>
-              {delivery.tracking_id && (
-                <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                  <Hash className="h-3.5 w-3.5" />
-                  <span>{delivery.tracking_id.split("-")[0]}</span>
-                  <CopyButton text={delivery.tracking_id.split("-")[0]} />
-                </div>
-              )}
-              {delivery.status && (
-                <span
-                  className={`inline-block mt-2 px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(delivery.status)}`}
-                >
-                  {formatStatus(delivery.status)}
-                </span>
-              )}
-            </div>
-
-            {canManage && !showAssignForm && (
-              <button
-                onClick={handleOpenForm}
-                disabled={assigning}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {assigning ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
-                    Processing...
-                  </>
-                ) : (
-                  "Change"
-                )}
-              </button>
-            )}
-
-            {!canManage && !showAssignForm && (
-              <button
-                disabled
-                title={getDisabledReason()}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-100 text-gray-400 bg-gray-50 cursor-not-allowed"
-              >
-                Change
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-4">
-          <p className="text-sm text-gray-500 mb-3">
-            No delivery person assigned yet
-          </p>
-          {canManage && !showAssignForm && (
-            <button
-              onClick={handleOpenForm}
-              disabled={assigning}
-              className="px-4 py-2 bg-[#6750A4] text-white text-sm font-medium rounded-lg hover:bg-[#59409A] transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {assigning ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin inline mr-1" />
-                  Assigning...
-                </>
-              ) : (
-                "Assign Delivery Person"
-              )}
-            </button>
-          )}
-
-          {!canManage && (
-            <button
-              disabled
-              title={getDisabledReason()}
-              className="px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
-            >
-              Assignment locked
-            </button>
-          )}
-        </div>
-      )}
-
-      {showAssignForm && canManage && (
-        <div className="mt-6 pt-4 border-t border-gray-100">
-          <p className="text-xs font-medium text-gray-600 mb-3">
-            {delivery ? "Select new delivery person" : "Select delivery person"}
-          </p>
-          {loadingStaff ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <select
-                value={selectedUserId}
-                onChange={(e) =>
-                  setSelectedUserId(parseInt(e.target.value) || "")
-                }
-                className="w-full text-sm border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent"
-              >
-                <option value="">-- Select a delivery person --</option>
-                {staffList.map((staff) => (
-                  <option key={staff.id} value={staff.id}>
-                    {staff.name} {staff.phone ? `(${staff.phone})` : ""}
-                  </option>
-                ))}
-              </select>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAssign}
-                  disabled={!selectedUserId || assigning}
-                  className="flex-1 py-2.5 bg-[#6750A4] text-white text-sm font-semibold rounded-lg hover:bg-[#59409A] disabled:opacity-60 transition flex items-center justify-center gap-2"
-                >
-                  {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {assigning ? "Assigning..." : delivery ? "Update" : "Assign"}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  disabled={assigning}
-                  className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Order Items Card (unchanged)
-const OrderItemsCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <Package className="h-4 w-4 text-[#6750A4]" /> Order Items (
-      {order.items.length})
-    </h4>
-    <div className="overflow-auto">
-      <table className="w-full text-sm">
-        <thead className="text-xs text-gray-500 uppercase border-b border-gray-100">
-          <tr>
-            <th className="text-left py-3 pr-4">Product</th>
-            <th className="text-left py-3 px-2">SKU</th>
-            <th className="text-right py-3 px-2">Qty</th>
-            <th className="text-right py-3 px-2">Unit Price</th>
-            <th className="text-right py-3 pl-2">Total</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {order.items.map((item) => (
-            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-              <td className="py-3 pr-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
-                    {item.product_image ? (
-                      <img
-                        src={item.product_image}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="h-5 w-5 text-gray-400 m-auto" />
-                    )}
-                  </div>
-                  <span className="font-medium text-gray-800 truncate">
-                    {item.title}
-                  </span>
-                </div>
-              </td>
-              <td className="py-3 px-2 text-gray-500 font-mono text-xs">
-                {item.sku || "—"}
-              </td>
-              <td className="py-3 px-2 text-right text-gray-700">{item.qty}</td>
-              <td className="py-3 px-2 text-right text-gray-700">
-                {Number(item.unit_price).toLocaleString()} ETB
-              </td>
-              <td className="py-3 pl-2 text-right font-semibold text-[#6750A4]">
-                {Number(item.line_total).toLocaleString()} ETB
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
-// Financial Card (unchanged)
-const FinancialCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-[#6750A4] text-white rounded-xl p-6 shadow-sm">
-    <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
-      <Receipt className="h-4 w-4" /> Order Summary
-    </h4>
-    <div className="space-y-3 text-sm">
-      <div className="flex justify-between">
-        <span className="text-white/70">Subtotal</span>
-        <span>{Number(order.subtotal).toLocaleString()} ETB</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-white/70">Tax</span>
-        <span>{Number(order.tax_amount).toLocaleString()} ETB</span>
-      </div>
-      {order.tax_invoice?.invoice_number && (
-        <div className="flex justify-between items-center">
-          <span className="text-white/70">Invoice #</span>
-          <span className="font-mono text-white">
-            {order.tax_invoice.invoice_number}
-          </span>
-        </div>
-      )}
-      <div className="border-t border-white/20 pt-3 flex justify-between text-base font-bold">
-        <span>Total Amount</span>
-        <span className="text-lg">
-          {Number(order.amount).toLocaleString()} ETB
-        </span>
-      </div>
-    </div>
-  </div>
-);
-
-// Timeline Card (unchanged)
-const TimelineCard = ({ order }: { order: VendorOrder }) => (
-  <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-    <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-      <Calendar className="h-4 w-4 text-[#6750A4]" /> Timeline
-    </h4>
-    <div className="space-y-4">
-      <div className="flex gap-3">
-        <div className="flex flex-col items-center">
-          <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1" />
-          <div className="w-px h-full bg-gray-200" />
-        </div>
-        <div className="pb-4">
-          <p className="text-xs text-gray-500">Order Created</p>
-          <p className="text-sm font-medium text-gray-800">
-            {formatDateTime(order.created_at)}
-          </p>
-        </div>
-      </div>
-      {order.tax_invoice && (
-        <div className="flex gap-3">
-          <div className="flex flex-col items-center">
-            <div className="w-2 h-2 rounded-full bg-[#6750A4] mt-1" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Invoice Issued</p>
-            <p className="text-sm font-medium text-gray-800">
-              {formatDateTime(order.tax_invoice.issued_at)}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-// Receipt Review Card – accepts readOnly prop
-const ReceiptReviewCard = ({
-  receipt,
-  paymentMethod,
-  onUpdate,
-  readOnly,
-}: {
-  receipt?: OrderReceipt | null;
-  paymentMethod?: string;
-  onUpdate: () => void;
-  readOnly: boolean;
-}) => {
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [showImage, setShowImage] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState<
-    "approved" | "rejected" | null
-  >(null);
-  const { showToast } = useToast();
-
-  if (paymentMethod === "chapa") {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Banknote className="h-5 w-5 text-indigo-600" />
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
-            Payment Information
-          </h4>
-        </div>
-        <div className="text-center py-6">
-          <p className="text-gray-700 text-sm">
-            Paid via <span className="font-semibold">Chapa</span>
-          </p>
-          <p className="text-gray-500 text-xs mt-1">
-            No receipt required for this payment method.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!receipt) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Banknote className="h-5 w-5 text-gray-400" />
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
-            Payment Receipt
-          </h4>
-        </div>
-        <div className="text-center py-6">
-          <p className="text-gray-500 text-sm">
-            No receipt uploaded for this order.
-          </p>
-          <p className="text-gray-400 text-xs mt-1">
-            Payment method: Bank Transfer
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const isAlreadyReviewed =
-    receipt.status === "approved" || receipt.status === "rejected";
-  const canReview = !readOnly && !isAlreadyReviewed;
-
-  const handleActionClick = (action: "approved" | "rejected") => {
-    if (!canReview) return;
-    setPendingAction(action);
-    setShowConfirm(true);
-  };
-
-  const handleConfirm = async () => {
-    if (!pendingAction) return;
-    setSubmitting(true);
-    try {
-      await reviewReceipt(receipt.id, {
-        status: pendingAction,
-        admin_notes: notes || undefined,
-      });
-      showToast("success", `Receipt ${pendingAction}`);
-      setNotes("");
-      setPendingAction(null);
-      onUpdate();
-    } catch (err: any) {
-      showToast("error", err.response?.data?.detail || "Review failed");
-    } finally {
-      setSubmitting(false);
-    }
+const StatusBadge = ({ status }: { status: string }) => {
+  const s = status?.toLowerCase();
+  const styles: Record<string, string> = {
+    completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    delivered: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    paid: "bg-violet-100 text-violet-700 border-violet-200",
+    out_for_delivery: "bg-violet-100 text-violet-700 border-violet-200",
+    pending: "bg-amber-100 text-amber-700 border-amber-200",
+    processing: "bg-sky-100 text-sky-700 border-sky-200",
+    shipped: "bg-sky-100 text-sky-700 border-sky-200",
+    approved: "bg-green-100 text-green-700 border-green-200",
+    rejected: "bg-rose-100 text-rose-700 border-rose-200",
   };
 
   return (
-    <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center gap-2 mb-4">
-        <Banknote className="h-5 w-5 text-indigo-600" />
-        <h4 className="text-sm sm:text-base font-semibold text-gray-800">
-          Payment Receipt
-        </h4>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-500">Status</p>
-          <span
-            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(receipt.status)}`}
-          >
-            {receipt.status}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <p className="text-xs text-gray-500">Bank</p>
-            <p className="font-semibold text-gray-900">{receipt.bank_name}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <p className="text-xs text-gray-500">Amount</p>
-            <p className="text-lg font-bold text-gray-900">
-              {Number(receipt.amount).toLocaleString()} ETB
-            </p>
-          </div>
-        </div>
-
-        {receipt.receipt_image && (
-          <div>
-            <p className="text-xs text-gray-500 mb-2">Receipt Image</p>
-            <div
-              onClick={() => setShowImage(true)}
-              className="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden border cursor-zoom-in group"
-            >
-              <img
-                src={receipt.receipt_image}
-                alt="Receipt"
-                className="w-full h-full object-cover group-hover:scale-105 transition"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
-            </div>
-          </div>
-        )}
-
-        {canReview && (
-          <div className="pt-2 space-y-3">
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => handleActionClick("approved")}
-                disabled={submitting}
-                className="px-3 py-1.5 text-xs rounded-lg border border-green-200 text-green-600 hover:bg-green-50 disabled:opacity-50"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleActionClick("rejected")}
-                disabled={submitting}
-                className="px-3 py-1.5 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
-              >
-                Reject
-              </button>
-            </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add admin notes (optional)"
-              rows={2}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4] transition"
-            />
-          </div>
-        )}
-
-        {isAlreadyReviewed && (
-          <div className="mt-2 space-y-2">
-            {receipt.status === "approved" ? (
-              <div className="flex items-start gap-2 text-sm">
-                <div className="p-1 rounded-full bg-green-100 text-green-700 mt-0.5">
-                  <Check className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">Payment approved</p>
-                  <p className="text-xs text-[#6750A4] mt-0.5">
-                    Next step: Assign a delivery person
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2 text-sm">
-                <div className="p-1 rounded-full bg-red-100 text-red-700 mt-0.5">
-                  <X className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">Payment rejected</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    The customer may upload a new receipt.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {showImage && receipt.receipt_image && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setShowImage(false)}
-        >
-          <div
-            className="relative max-w-6xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowImage(false)}
-              className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
-            >
-              <X className="h-5 w-5 text-gray-700" />
-            </button>
-            <img
-              src={receipt.receipt_image}
-              alt="Receipt Full"
-              className="w-full max-h-[90vh] object-contain rounded-xl"
-            />
-          </div>
-        </div>
-      )}
-
-      <ConfirmationModal
-        isOpen={showConfirm}
-        onClose={() => {
-          setShowConfirm(false);
-          setPendingAction(null);
-        }}
-        onConfirm={handleConfirm}
-        title={
-          pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"
-        }
-        description={
-          pendingAction === "approved"
-            ? "Are you sure you want to approve this payment receipt? This will mark the payment as verified."
-            : "Are you sure you want to reject this payment receipt? The customer will be notified and may need to upload another receipt."
-        }
-        confirmText={pendingAction === "approved" ? "Approve" : "Reject"}
-        confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
-      />
-    </div>
+    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
+      {status.replace(/_/g, " ")}
+    </span>
   );
 };
 
-// Copy Button (unchanged)
 const CopyButton = ({ text }: { text?: string | null }) => {
   const [copied, setCopied] = useState(false);
   if (!text) return null;
@@ -801,221 +95,524 @@ const CopyButton = ({ text }: { text?: string | null }) => {
     setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <button
-      onClick={handleCopy}
-      className="text-gray-400 hover:text-[#6750A4] transition-colors"
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" />
-      )}
+    <button onClick={handleCopy} className="text-gray-400 hover:text-[#6750A4] transition-colors">
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
   );
 };
 
-// Animation variants
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.96 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15 } },
+// ---------- REFINED DELIVERY CARD ----------
+const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
+  const [staffList, setStaffList] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | "">("");
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [showAssignForm, setShowAssignForm] = useState(false);
+  const { showToast } = useToast();
+
+  const delivery = order.delivery;
+  const canManage = !readOnly && order.status?.toLowerCase() === "confirmed";
+
+  useEffect(() => {
+    if (!order.company?.slug || !showAssignForm) return;
+    const fetchStaff = async () => {
+      setLoadingStaff(true);
+      try {
+        const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
+        const mapped = (res.data.results || res.data).map((s: any) => ({
+          id: s.user.id,
+          name: `${s.user.first_name || ""} ${s.user.last_name || ""}`.trim(),
+          phone: s.user.phone_number,
+        }));
+        setStaffList(mapped);
+      } finally { setLoadingStaff(false); }
+    };
+    fetchStaff();
+  }, [showAssignForm, order.company?.slug]);
+
+  const handleAssign = async () => {
+    if (!selectedUserId) return;
+    setAssigning(true);
+    try {
+      if (delivery) {
+        await updateDeliveryPerson(Number(delivery.tracking_id), selectedUserId);
+      } else {
+        await assignDelivery({ vendor_order: order.id, delivery_person: selectedUserId });
+      }
+      showToast("success", "Delivery person assigned successfully");
+      setShowAssignForm(false);
+      onUpdate();
+    } catch (err: any) {
+      showToast("error", "Failed to assign Delivery person");
+    } finally { setAssigning(false); }
+  };
+
+  return (
+    <Card title="Delivery Details" icon={Truck} status={delivery?.status} className={!delivery && canManage ? "ring-2 ring-purple-100 border-purple-200" : ""}>
+      <AnimatePresence mode="wait">
+        {!showAssignForm ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {delivery?.delivery_person_name ? (
+              <div className="flex items-center gap-4">
+                {delivery.delivery_person_image ?
+                  <img
+                    src={delivery.delivery_person_image}
+                    alt={delivery.delivery_person_name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  :
+                  <div className="w-12 h-12 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-100">
+                    {getInitials(delivery.delivery_person_name)}
+                  </div>
+                }                <div className="flex-1">
+                  <p className="font-bold text-gray-900 text-sm">{delivery.delivery_person_name}</p>
+                  <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                    <PhoneCall className="h-3 w-3" />
+                    <span>{delivery.delivery_person_phone}</span>
+                    <CopyButton text={delivery.delivery_person_phone} />
+                  </div>
+                  {/* <div className="mt-1">
+                    <span className={getStatusBadge(delivery.status)}>{delivery.status?.replace(/_/g, " ")}</span>
+                  </div> */}
+                </div>
+                {canManage && (
+                  <button onClick={() => setShowAssignForm(true)} className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors">
+                    Change
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-2">
+                <p className="text-xs text-gray-400 mb-3 italic">No delivery person assigned yet</p>
+                {canManage && (
+                  <button onClick={() => setShowAssignForm(true)} className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all">
+                    Assign Delivery person
+                  </button>
+                )}
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Delivery person</label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Choose from the list...</option>
+              {staffList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.phone || 'No Phone'})</option>)}
+            </select>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleAssign}
+                disabled={assigning || !selectedUserId}
+                className="flex-1 bg-[#6750A4] text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+              >
+                {assigning ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Confirm Assignment"}
+              </button>
+              <button onClick={() => setShowAssignForm(false)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-bold">
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  );
 };
-const backdropVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-  exit: { opacity: 0 },
+
+// ---------- REFINED RECEIPT REVIEW CARD ----------
+const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status }: any) => {
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [showImage, setShowImage] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"approved" | "rejected" | null>(null);
+  const { showToast } = useToast();
+
+  if (paymentMethod === "chapa") {
+    return (
+      <Card title="Payment Info" icon={CreditCard} status={status} className="bg-indigo-50/30 border-indigo-100">
+        <div className="flex flex-col items-center py-2">
+          <ShieldCheck className="h-8 w-8 text-indigo-500 mb-2" />
+          <div className="flex justify-center items-start">
+            <p className="text-sm mt-1 font-bold text-gray-800">Verified by </p>
+            
+            <img src="/chapa.png" alt="Chapa" className="h-8 w-20 text-indigo-500 mb-2" />
+          </div>
+          {/* <p className="text-[11px] text-gray-500">Digital transaction confirmed automatically.</p> */}
+        </div>
+      </Card>
+    );
+  }
+
+  if (paymentMethod === "cod") {
+    return (
+      <Card title="Payment Method" icon={Banknote} status={paymentMethod} className="bg-amber-50/30 border-amber-100">
+        <div className="flex flex-col items-center py-4 text-center">
+          <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-3">
+            <Truck className="h-6 w-6 text-amber-600" />
+          </div>
+          <p className="text-sm font-black text-gray-800 uppercase tracking-tight">Cash on Delivery</p>
+          <p className="text-[11px] text-gray-500 mt-1 max-w-[250px]">
+            Payment collection is handled by the delivery person upon physical delivery.
+          </p>
+          <div className="mt-4 px-3 py-1 bg-white border border-amber-200 rounded-lg shadow-sm">
+            <span className="text-[10px] font-black text-amber-700 uppercase">Awaiting Collection</span>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!receipt) {
+    return (
+      <Card title="Payment Receipt" icon={Banknote}>
+        <div className="text-center py-4 border-2 border-dashed border-gray-100 rounded-2xl">
+          <AlertCircle className="h-6 w-6 text-gray-300 mx-auto mb-2" />
+          <p className="text-xs text-gray-500">Waiting for customer to upload receipt...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  const isAlreadyReviewed = receipt.status === "approved" || receipt.status === "rejected";
+  const canReview = !readOnly && !isAlreadyReviewed;
+
+  const handleConfirm = async () => {
+    if (!pendingAction) return;
+    setSubmitting(true);
+    try {
+      await reviewReceipt(receipt.id, { status: pendingAction, admin_notes: notes || undefined });
+      showToast("success", `Receipt ${pendingAction}`);
+      setShowConfirm(false);
+      onUpdate();
+    } catch (err: any) {
+      showToast("error", "Review failed");
+    } finally { setSubmitting(false); }
+  };
+
+  return (
+    <Card title="Review Receipt" icon={Banknote}>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <span className={getStatusBadge(receipt.status)}>{receipt.status}</span>
+          <p className="text-sm font-black text-gray-900">{Number(receipt.amount).toLocaleString()} ETB</p>
+        </div>
+
+        {receipt.receipt_image && (
+          <div
+            onClick={() => setShowImage(true)}
+            className="group relative h-40 rounded-2xl overflow-hidden border border-gray-100 cursor-zoom-in shadow-inner bg-gray-50"
+          >
+            <img src={receipt.receipt_image} alt="Receipt" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Eye className="text-white h-6 w-6" />
+            </div>
+          </div>
+        )}
+
+        <div className="bg-gray-50 p-3 rounded-xl space-y-1">
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bank Details</p>
+          <p className="text-xs font-bold text-gray-700">{receipt.bank_name || "Not Specified"}</p>
+        </div>
+
+        {canReview && (
+          <div className="space-y-3 pt-2">
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add review notes..."
+              className="w-full text-xs rounded-xl border-gray-200 focus:ring-purple-500 resize-none p-3"
+              rows={2}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPendingAction("approved"); setShowConfirm(true); }}
+                className="flex-1 bg-emerald-500 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-100"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => { setPendingAction("rejected"); setShowConfirm(true); }}
+                className="flex-1 bg-rose-500 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-rose-100"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isAlreadyReviewed && (
+          <div className={`p-3 rounded-xl flex items-start gap-3 ${receipt.status === 'approved' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+            {receipt.status === 'approved' ? <ShieldCheck className="h-5 w-5 text-emerald-600" /> : <X className="h-5 w-5 text-rose-600" />}
+            <div>
+              <p className="text-xs font-bold text-gray-800">Verification {receipt.status}</p>
+              <p className="text-[10px] text-gray-500">{receipt.status === 'approved' ? 'Order is ready for dispatch.' : 'Customer must re-upload.'}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {showImage && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setShowImage(false)}
+          >
+            <button className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
+              <X className="h-6 w-6" />
+            </button>
+            <img src={receipt.receipt_image} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleConfirm}
+        title={`${pendingAction === 'approved' ? 'Approve' : 'Reject'} Payment`}
+        description="This action will notify the customer and update the order workflow. Are you sure?"
+        confirmText={submitting ? "Processing..." : "Confirm Action"}
+        confirmVariant={pendingAction === 'approved' ? 'primary' : 'danger'}
+      />
+    </Card>
+  );
 };
 
 // ════════════════════════════════════════
 // MAIN MODAL COMPONENT
 // ════════════════════════════════════════
-export function VendorOrderDetailModal({
-  order,
-  receipt,
-  onClose,
-  onUpdate,
-  readOnly = false,
-}: {
-  order: VendorOrder | null;
-  receipt?: OrderReceipt | null;
-  onClose: () => void;
-  onUpdate?: () => void;
-  readOnly?: boolean;
-}) {
-  const [showTopShadow, setShowTopShadow] = useState(false);
-  const [showBottomShadow, setShowBottomShadow] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  useEffect(() => {
-    const el = scrollRef.current;
-    const handleScroll = () => {
-      if (!el) return;
-      const { scrollTop, scrollHeight, clientHeight } = el;
-      setShowTopShadow(scrollTop > 8);
-      setShowBottomShadow(scrollTop + clientHeight < scrollHeight - 8);
-    };
-    el?.addEventListener("scroll", handleScroll);
-    handleScroll();
-    return () => el?.removeEventListener("scroll", handleScroll);
-  }, [order]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
+export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, readOnly = false }: any) {
   if (!order) return null;
-
-  const handleLocalUpdate = () => onUpdate?.();
-  const handleRefresh = async () => {
-    if (!onUpdate) return;
-
-    try {
-      setRefreshing(true);
-      await Promise.resolve(onUpdate());
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   return (
     <AnimatePresence>
-      <motion.div
-        variants={backdropVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6"
-        onClick={onClose}
-      >
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <motion.div
-          variants={modalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="bg-white rounded-3xl w-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl ring-1 ring-black/5 overflow-hidden"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+          onClick={onClose}
+        />
+
+        <motion.div
+          variants={containerVariants}
+          initial="hidden" animate="visible" exit="hidden"
+          className="relative bg-[#fff] w-full max-w-7xl max-h-[92vh] rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-8 py-5 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#6750A4] to-[#9B7DD4] bg-clip-text text-transparent">
-                Company Order #{order.id}
-              </h2>
-              <CopyButton text={String(order.id)} />
+          {/* Top Header */}
+          <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 py-5 flex justify-between items-center sticky top-0 z-20">
+            <div className="flex items-center gap-5">
+              <div className="h-12 w-12 bg-[#6750A4] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-100">
+                <Package className="text-white h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">Order #{order.id}</h2>
+                  <StatusBadge status={order.status} />
+                </div>
+                <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
+                  <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {new Date(order.created_at).toLocaleDateString()}</span>
+                  <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {order.company?.name}</span>
+                </div>
+              </div>
             </div>
+
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">
-                  Order Status
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(order.status)}`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  {order.status.replace(/_/g, " ")}
-                </span>
-              </div>
-
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-[#6750A4] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                />
-                <span className="text-sm font-medium hidden sm:inline">
-                  Refresh
-                </span>
+              <button onClick={onUpdate} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-xl transition-all font-bold text-xs text-gray-500 uppercase tracking-widest">
+                <RefreshCw className="h-4 w-4" /> Refresh
               </button>
-
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-[#6750A4] p-2 rounded-full hover:bg-gray-100 transition"
-              >
-                <X className="h-5 w-5" />
+              <button onClick={onClose} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all text-gray-400">
+                <X className="h-6 w-6" />
               </button>
             </div>
           </div>
 
-          {/* Scrollable Body */}
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden"
-          >
-            {showTopShadow && (
-              <div className="sticky top-0 h-5 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
-            )}
+          {/* Scrollable Content Grid */}
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="grid grid-cols-12 gap-8">
 
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Left column */}
-                <div className="xl:col-span-2 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <CustomerCard order={order} />
-                    <ShippingCard order={order} />
-                  </div>
-                  <DeliveryCard
-                    order={order}
-                    onUpdate={handleLocalUpdate}
-                    readOnly={readOnly}
-                  />
-                  <OrderItemsCard order={order} />
-                </div>
+              {/* Left Side: Order Composition & Shipping (8 cols) */}
+              <div className="col-span-12 lg:col-span-8 space-y-8">
 
-                {/* Right column */}
-                <div className="space-y-6">
-                  <ReceiptReviewCard
-                    receipt={receipt}
-                    paymentMethod={order.payment_method}
-                    onUpdate={handleLocalUpdate}
-                    readOnly={readOnly}
-                  />
-                  <TimelineCard order={order} />
-                  <FinancialCard order={order} />
-
-                  {order.tax_invoice && (
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
-                        <Receipt className="h-4 w-4 text-[#6750A4]" /> Tax
-                        Invoice
-                      </p>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {order.tax_invoice.invoice_number}
-                      </p>
-                      {order.tax_invoice.pdf_url && (
-                        <a
-                          href={order.tax_invoice.pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[#6750A4] hover:underline text-sm font-medium"
-                        >
-                          <Download size={14} /> Download PDF
-                        </a>
-                      )}
+                {/* 1. Customer Summary Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card title="Customer Profile" icon={User}>
+                    <div className="flex items-center gap-4">
+                      {order.recipient_image ?
+                        <img
+                          src={order.recipient_image}
+                          alt="Recipient"
+                          className="w-14 h-14 rounded-full"
+                        /> :
+                        <div className="w-14 h-14 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-700 font-black text-xl">
+                          {getInitials(order.recipient_name)}
+                        </div>}
+                      <div className="space-y-1">
+                        <p className="font-black text-gray-900">{order.recipient_name}</p>
+                        <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-lg w-fit">
+                          <PhoneCall className="h-3 w-3 text-green-600" />
+                          <span className="text-xs font-bold text-gray-600">{order.shipping_phone}</span>
+                          <CopyButton text={order.shipping_phone} />
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </Card>
+
+                  <Card title="Shipping Destination" icon={MapPin}>
+                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
+                     Recipient Name: <span className="text-sm text-green-600 font-bold">{order.recipient_name || "No recipient name provided."}</span> 
+                    </p>
+                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
+                     Recipient Phone Number: <span className="text-sm text-green-600 font-bold">  {order.shipping_phone || "No Phone Number provided."}</span>
+                    </p>
+                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
+                     Shipping Address: <span className="text-sm text-green-600 font-bold">{order.shipping_address_text || "No address provided."}</span>
+                    </p>
+                  </Card>
                 </div>
+
+                {/* 2. Main Order Table */}
+                <motion.div variants={itemVariants} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+                  <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Item List</h4>
+                    <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[10px] font-semibold text-purple-600 shadow-sm">
+                      {order.items.length} {order.items.length > 1 ? "ITEMS" : "ITEM"}
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                          <th className="px-6 py-4 text-left">Description</th>
+                          <th className="px-6 py-4 text-center">Qty</th>
+                          <th className="px-6 py-4 text-right">Unit Price</th>
+                          <th className="px-6 py-4 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {order.items.map((item: any) => (
+                          <tr key={item.id} className="group hover:bg-gray-50/80 transition-all">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-4">
+                                <div className="h-10 w-10 bg-gray-100 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
+                                  {item.product_image ? <img src={item.product_image} className="w-full h-full object-cover" /> : <ImageIcon className="h-5 w-5 text-gray-300" />}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-black text-gray-800 line-clamp-1">{item.title}</p>
+                                  <p className="text-[10px] font-bold text-gray-400 font-mono uppercase tracking-tighter">SKU: {item.sku || 'N/A'}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="px-3 py-1 bg-gray-100 rounded-lg text-xs font-black text-gray-600">x{item.qty}</span>
+                            </td>
+                            <td className="px-6 py-4 text-right text-xs font-bold text-gray-500">{Number(item.unit_price).toLocaleString()}</td>
+                            <td className="px-6 py-4 text-right font-black text-gray-900 text-sm">
+                              {Number(item.line_total).toLocaleString()} <span className="text-[9px] text-gray-400">ETB</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
               </div>
 
-              {(!order.items || order.items.length === 0) && (
-                <div className="text-center py-16 text-gray-500">
-                  <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>No items found in this order</p>
-                </div>
-              )}
-            </div>
+              {/* Right Side: Finances & Workflow (4 cols) */}
+              <div className="col-span-12 lg:col-span-4 space-y-8">
 
-            {showBottomShadow && (
-              <div className="sticky bottom-0 h-5 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
-            )}
+                {/* 3. Financial Summary Card */}
+                <motion.div variants={itemVariants} className="bg-[#6750A4] rounded-[32px] p-8 text-white shadow-2xl shadow-purple-100 relative overflow-hidden group">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-700" />
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-8">
+                      <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+                        <Receipt className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Total Amount</p>
+                        <h3 className="text-3xl font-black">{Number(order.amount).toLocaleString()} <span className="text-sm opacity-60">ETB</span></h3>
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-4 border-t border-white/10">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="opacity-60">Subtotal</span>
+                        <span>{Number(order.subtotal).toLocaleString()} ETB</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="opacity-60">VAT</span>
+                        <span>{Number(order.tax_amount).toLocaleString()} ETB</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="opacity-60">Delivery Fee</span>
+                        <span>0 ETB</span>
+                      </div>
+                      {/* {order.tax_invoice?.invoice_number && (
+                        <div className="flex justify-between text-xs font-bold p-2 bg-black/10 rounded-lg">
+                          <span className="opacity-60">Invoice #</span>
+                          <span className="font-mono">{order.tax_invoice.invoice_number}</span>
+                        </div>
+                      )} */}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* 4. Payment Receipt Review Card */}
+                <ReceiptReviewCard
+                  receipt={receipt}
+                  paymentMethod={order.payment_method}
+                  onUpdate={onUpdate}
+                  readOnly={readOnly}
+                  status={order.payment_status}
+                />
+
+                {/* 5. Delivery person Assignment Card */}
+                <DeliveryCard
+                  order={order}
+                  onUpdate={onUpdate}
+                  readOnly={readOnly}
+                />
+
+                {/* 6. Simple Timeline Sidebar */}
+                {/* <Card title="Activity Log" icon={Clock}>
+                   <div className="space-y-5 px-1">
+                      <div className="flex gap-4 relative">
+                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500 ring-4 ring-purple-50 mt-1.5" />
+                        <div className="absolute left-[2.5px] top-4 w-[1px] h-8 bg-gray-100" />
+                        <div className="text-[11px] leading-tight">
+                          <p className="font-black text-gray-800">Order Received</p>
+                          <p className="text-gray-400">{new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mt-1.5" />
+                        <div className="text-[11px] leading-tight">
+                          <p className="font-black text-gray-400 italic">Processing Verification...</p>
+                        </div>
+                      </div>
+                   </div>
+                </Card> */}
+              </div>
+            </div>
           </div>
+
+          {/* Static Bottom Bar */}
+          {/* <div className="bg-white px-8 py-5 border-t border-gray-100 flex justify-between items-center">
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]"></p>
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-2xl text-xs font-black shadow-lg shadow-gray-200 hover:bg-black transition-all">
+                <Download className="h-3.5 w-3.5" /> Download Invoice
+              </button>
+            </div>
+          </div> */}
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

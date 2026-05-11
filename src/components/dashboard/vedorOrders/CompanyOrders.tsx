@@ -6,6 +6,7 @@ import {
   User as UserIcon,
   RefreshCw,
   X,
+  Settings,
 } from "lucide-react";
 
 import { Pagination } from "../../ui/Pagination";
@@ -471,12 +472,12 @@ export default function CompanyOrders() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Delivery
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Delivery Person
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Payment Method
-                </th>
+                </th> */}
                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -519,7 +520,7 @@ export default function CompanyOrders() {
                         status={order.delivery?.status || "not assigned"}
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">
                         {order.delivery?.delivery_person_name ? (
                           <div className="flex items-center gap-2">
@@ -564,13 +565,13 @@ export default function CompanyOrders() {
                       {order.payment_method
                         ? order.payment_method.replace(/_/g, " ")
                         : "—"}
-                    </td>
+                    </td> */}
                     <td className="px-2 py-2 whitespace-nowrap text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-medium transition"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[#6750A4] hover:text-[#6750A4] hover:bg-[#6750A4]/10 text-xs font-medium transition"
                       >
-                        <Eye className="h-4 w-4" /> <span>View Detail</span>
+                        <Settings className="h-4 w-4" /> <span>Manage</span>
                       </button>
                     </td>
                   </tr>

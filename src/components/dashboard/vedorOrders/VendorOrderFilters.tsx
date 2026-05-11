@@ -181,7 +181,7 @@ export function VendorOrderFilters({
               <option value="">Payment Method</option>
               <option value="bank_transfer">Bank Transfer</option>
               <option value="chapa">Chapa</option>
-              <option value="other">Other</option>
+              <option value="cod">COD</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
