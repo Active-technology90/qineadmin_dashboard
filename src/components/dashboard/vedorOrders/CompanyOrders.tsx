@@ -5,7 +5,6 @@ import {
   Building2,
   User as UserIcon,
   RefreshCw,
-  X,
 } from "lucide-react";
 
 import { Pagination } from "../../ui/Pagination";
@@ -22,7 +21,7 @@ import { Toast } from "../../ui/Toast";
 import { VendorOrderFilters } from "./VendorOrderFilters";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
 import { DeliveryManager } from "./DeliveryManager";
-import { CompanySelector } from "../company-products/CompanySelector";
+// import { CompanySelector } from "../company-products/CompanySelector";
 import { useReadOnly } from "../AdminDashboard"; // 👈 viewer detection
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -123,31 +122,26 @@ export default function CompanyOrders() {
   const isSuperAdmin = !user?.memberships?.length;
   const isAdminLike = isSuperAdmin || readOnly; // viewers see all data like super admin
 
+  // For admin-like users, always fetch all orders – ignore any specific company context
+  const shouldFetchAll = isAdminLike;
+
+  // For non-admin users, determine the effective company slug
   const companySlug = company?.slug ?? null;
-  const companyName = company?.name ?? "";
-// Get logo from companies list (since CurrentCompany doesn't have logo)
-  const companyLogo = useMemo(() => {
-    if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: any) => c.slug === companySlug);
-    return foundCompany?.logo || null;
-  }, [companySlug, companies]);
-
-  // ---- Company selector overlay state ----
-  const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
-
-  // Effective slug for API calls (only used when not admin‑like)
   const effectiveSlug = useMemo(() => {
-    if (companySlug) return companySlug;
-    if (!isSuperAdmin && user?.memberships?.length && !readOnly) {
-      return user.memberships[0]?.company_slug || null;
+    if (!isAdminLike && user?.memberships?.length) {
+      return companySlug || user.memberships[0]?.company_slug || null;
     }
-    return null;
-  }, [companySlug, isSuperAdmin, user, readOnly]);
+    return null; // admin-like ignores this
+  }, [isAdminLike, companySlug, user]);
 
-  // Are we showing all orders (super admin or viewer)?
-  const isAdminView = isAdminLike && !companySlug;
-  // For non‑admin‑like, show only the selected company's orders
-  const shouldFetchAll = isAdminView || (readOnly && !companySlug);
+  const companyName = company?.name ?? "";
+
+  // Get logo from companies list (since CurrentCompany doesn't have logo)
+  const companyLogo = useMemo(() => {
+    if (!effectiveSlug || !companies.length) return null;
+    const foundCompany = companies.find((c: any) => c.slug === effectiveSlug);
+    return foundCompany?.logo || null;
+  }, [effectiveSlug, companies]);
 
   // ----- Filter state -----
   const [searchTerm, setSearchTerm] = useState("");
@@ -261,7 +255,7 @@ export default function CompanyOrders() {
     selectedCompanyId,
   ]);
 
-  // Client‑side filtering (same as before)
+  // Client‑side filtering
   const filteredOrders = useMemo(() => {
     let result = allOrders;
 
@@ -330,19 +324,25 @@ export default function CompanyOrders() {
 
   // Actions are disabled for viewers
   const canAssign = !readOnly;
-  // const canClearCompany = isSuperAdmin || readOnly;
-  const canSwitchCompany = isSuperAdmin || readOnly;
 
   const isAssignAllowed = (order: VendorOrder): boolean => {
     if (!canAssign) return false;
-    const orderConfirmed = order.status?.toLowerCase() === "confirmed";
-    return orderConfirmed;
+    return order.status?.toLowerCase() === "confirmed";
+  };
+
+  const isChangeAllowed = (order: VendorOrder): boolean => {
+    if (!canAssign) return false;
+    const orderConfirmed = order.status?.toLowerCase() !== "accepted";
+    return orderConfirmed && !order.delivery?.tracking_id;
   };
 
   const getDisabledReason = (order: VendorOrder): string => {
     if (!canAssign) return "You are in view‑only mode.";
     if (!order.status || order.status.toLowerCase() !== "confirmed") {
       return "Order status must be 'Confirmed' before a delivery person can be assigned.";
+    }
+    if (order.delivery?.tracking_id && !isChangeAllowed(order)) {
+      return "Order has already been assigned to a delivery person.";
     }
     return "";
   };
@@ -351,51 +351,43 @@ export default function CompanyOrders() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <Toast toast={toast} />
 
-       {/* Header */}
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
-          {!isAdminView && companySlug && companyLogo ? (
-            <img
-              src={companyLogo}
-              alt={companyName}
-              className="w-10 h-10 rounded-full object-cover border border-gray-200"
-            />
+          {!isAdminLike && effectiveSlug ? (
+            <>
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt={companyName}
+                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <Building2 className="w-8 h-8 text-gray-400" />
+              )}
+              <div>
+                <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
+                  {companyName}
+                </h2>
+                <p className="text-sm font-medium text-secondary">Orders</p>
+              </div>
+              {readOnly && (
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+                  View Only
+                </span>
+              )}
+            </>
           ) : (
-            !isAdminView && companySlug && <Building2 className="w-8 h-8 text-gray-400" />
-          )}
-          {!isAdminView && companySlug ? (
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
-              <p className="text-sm font-medium text-secondary">Orders</p>
+              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
+                All Orders
+              </h2>
+              <p className="text-sm font-medium text-secondary">
+                {isAdminLike
+                  ? "Viewing all company orders"
+                  : "No company selected"}
+              </p>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">
-              {isAdminView ? "Showing all company orders" : "Orders"}
-            </p>
-          )}
-          {readOnly && !isAdminView && companySlug && (
-            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-              View Only
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {isSuperAdmin && companySlug && (
-            <button
-              onClick={() => clearCompany()}
-              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
-            >
-              <X className="h-4 w-4" />
-              Clear Company
-            </button>
-          )}
-          {isSuperAdmin && (
-            <button
-              onClick={() => setIsCompanySelectorOpen(true)}
-              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
-            >
-              <RefreshCw className="h-4 w-4" /> Switch Company
-            </button>
           )}
         </div>
       </div>
@@ -424,29 +416,6 @@ export default function CompanyOrders() {
         }}
         onRefresh={fetchAllOrders}
       />
-
-      {/* Company selector overlay – accessible to viewers */}
-      {isCompanySelectorOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-4xl mx-4">
-            <CompanySelector
-              companies={companies}
-              isLoading={isLoadingCompanies}
-              onSelect={(slug, name) => {
-                const membership = user?.memberships?.find(
-                  (m: any) => m.company_slug === slug,
-                );
-                const role =
-                  membership?.role ?? (isSuperAdmin ? "admin" : "staff");
-                switchCompany({ slug, name, role });
-                setIsCompanySelectorOpen(false);
-              }}
-              onBack={() => setIsCompanySelectorOpen(false)}
-              allowSwitch={canSwitchCompany}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Orders Table */}
       {error ? (
@@ -534,7 +503,7 @@ export default function CompanyOrders() {
                           </span>
                         )}
                         <div>
-                          {isAssignAllowed(order) ? (
+                          {isChangeAllowed(order) && isAssignAllowed(order) ? (
                             <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10">
                               <DeliveryManager
                                 orderId={order.id}
@@ -590,10 +559,6 @@ export default function CompanyOrders() {
             totalPages={totalPages}
             onPageChange={goToPage}
             pageSize={pageSize}
-            // onPageSizeChange={(size) => {
-            //   setPageSize(size);
-            //   setCurrentPage(1);
-            // }}
             enableUrlSync={true}
             className="rounded-2xl border border-gray-100"
           />

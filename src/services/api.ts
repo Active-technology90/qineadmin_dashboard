@@ -19,6 +19,8 @@ import type {
   VendorOrder,
   Delivery,
   AnalyticsOverviewResponse,
+  UsersResponse,
+  UserRole,
 } from "../types";
 
 const API_URL = "https://backend-qine.activetechet.com/api/v1";
@@ -121,7 +123,31 @@ api.interceptors.response.use(
 export const login = async (username: string, password: string) =>
   api.post("/auth/jwt/create/", { username, password });
 
-export const getAllUsers = async () => api.get<User[]>("users/admin/all-users/");
+export const getAllUsers = async (
+  page: number = 1,
+  pageSize: number = 10,
+  search: string = "",
+  role: string = "all"
+): Promise<UsersResponse> => {
+  const response = await api.get<UsersResponse>("users/admin/all-users/", {
+    params: {
+      page,
+      page_size: pageSize,   // 👈 important for backend pagination
+      search: search || undefined, // send only if exists
+      role: role !== "all" ? role : undefined, // backend filter
+    },
+  });
+
+  return response.data;
+};
+// ========== ADMIN USER MANAGEMENT ==========
+export const updateUser = async (userId: number, data: Partial<User>) => {
+  return api.patch<User>(`/users/admin/users/${userId}/`, data);
+};
+
+export const deleteUser = async (userId: number) => {
+  return api.delete(`/users/admin/users/${userId}/`);
+};
 export const registerUser = async (data: {
   email: string;
   username: string;
@@ -239,6 +265,31 @@ export const getCompanies = async (params?: {
   ordering?: string;
 }) => api.get<PaginatedResponse<CompanyListItem>>("/companies/", { params });
 
+// ========== MEMBERSHIP MANAGEMENT ==========
+// Get all companies for assignment (reuse existing getCompanies)
+export const getAvailableCompanies = async () => {
+  const response = await getCompanies({ page_size: 100 }); // adjust page size as needed
+  return response.data.results.map(c => ({ id: c.id, name: c.name, slug: c.slug }));
+};
+
+// Update user's role in a specific company
+// Add user to a company (placeholder)
+export const addUserToCompany = async (userId: number, companySlug: string, role: UserRole) => {
+  // TODO: replace with real POST /users/admin/companies/${companySlug}/staff/
+  console.log("Add user to company", { userId, companySlug, role });
+  return new Promise((resolve) => setTimeout(resolve, 500));
+};
+
+// Update user's role in a specific company
+export const updateUserCompanyRole = async (companySlug: string, userId: number, role: UserRole) => {
+  console.log({ companySlug, userId, role }); 
+  return api.patch(`/users/admin/companies/${companySlug}/staff/${userId}/profile/`, { role });
+};
+
+// Remove user from a company
+export const removeUserFromCompany = async (companySlug: string, userId: number) => {
+  return api.delete(`/users/admin/companies/${companySlug}/staff/${userId}/profile/`);
+};
 export const getCompanyDetail = async (slug: string) =>
   api.get<Company>(`/companies/${slug}/`);
 

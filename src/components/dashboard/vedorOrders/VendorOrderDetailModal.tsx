@@ -488,8 +488,12 @@ const FinancialCard = ({ order }: { order: VendorOrder }) => (
         <span>{Number(order.subtotal).toLocaleString()} ETB</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-white/70">Tax</span>
+        <span className="text-white/70">VAT</span>
         <span>{Number(order.tax_amount).toLocaleString()} ETB</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-white/70">Delivery Fee</span>
+        <span>{Number(order.delivery_fee).toLocaleString()} ETB</span>
       </div>
       {order.tax_invoice?.invoice_number && (
         <div className="flex justify-between items-center">
