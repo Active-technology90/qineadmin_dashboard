@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, createContext, useContext } from "react";
+import { RefreshButton } from "../ui/RefreshButton";
 import {
   LayoutDashboard,
   Users,
@@ -209,7 +210,13 @@ export default function AdminDashboard() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const { company } = useCurrentCompany();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companiesList, setCompaniesList] = useState<any[]>([]);
+   const [isScrolled, setIsScrolled] = useState(false);
+ const mainContentRef = useRef<HTMLDivElement>(null);
+ const scrollableRef = useRef<HTMLDivElement>(null);
   // ── Core identity flags ────────────────────────────────
   const isSuperAdmin = !user?.memberships?.length;
   const isViewer = !isSuperAdmin && company?.role === "viewer";
@@ -241,38 +248,94 @@ export default function AdminDashboard() {
     setShowLogoutConfirm(false);
     logout();
   };
+  // Handle refresh data - refresh current tab only
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Increment refreshKey to force re-render of current component
+      setRefreshKey(prev => prev + 1);
+      // Small delay to show animation
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
+    // Fetch companies list to get company logo
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { getCompanies } = await import("../../services/api");
+        const response = await getCompanies({ page_size: 100 });
+        setCompaniesList(response.data.results || []);
+      } catch (error) {
+        console.error("Failed to fetch companies:", error);
+      }
+    };
+    fetchCompanies();
+  }, []);
+
+  // Update company logo when company changes
+  useEffect(() => {
+    if (!company?.slug || !companiesList.length) {
+      setCompanyLogo(null);
+      return;
+    }
+    const foundCompany = companiesList.find((c: any) => c.slug === company.slug);
+    setCompanyLogo(foundCompany?.logo || null);
+  }, [company, companiesList]);
+
+  // Handle scroll event for header color change
+  useEffect(() => {
+    const scrollableElement = scrollableRef.current;
+    if (!scrollableElement) return;
+    
+    const handleScroll = () => {
+      if (scrollableElement.scrollTop > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    
+    scrollableElement.addEventListener("scroll", handleScroll);
+    return () => scrollableElement.removeEventListener("scroll", handleScroll);
+  }, []);
   const renderContent = () => {
     const companyKey = company?.slug || "super";
+    // Create a unique key that changes on refresh to force re-render
+    const componentKey = `${companyKey}-${refreshKey}`;
 
     // Wrap each content component with ReadOnlyContext provider
     const content = (() => {
       switch (activeTab) {
         case "overview":
-          return <Overview onNavigate={navigateFromOverview} />;
+          return <Overview key={componentKey} onNavigate={navigateFromOverview} />;
         case "products":
-          return <CompanyProducts />;
+          return <CompanyProducts key={componentKey} />;
         case "users":
-          return <CompanyUsers />;
+          return <CompanyUsers key={componentKey} />;
         case "masterOrders":
-          return <MasterOrders />;
+          return <MasterOrders key={componentKey} />;
         case "companyOrders":
-          return <CompanyOrders />;
+          return <CompanyOrders key={componentKey} />;
         case "payments":
-          return <Payments />;
+          return <Payments key={componentKey} />;
         case "profile":
-          return <AdminProfile />;
+          return <AdminProfile key={componentKey} />;
         case "categories":
-          return <CategoryManagement />;
+          return <CategoryManagement key={componentKey} />;
         case "subcategories":
-          return <SubCategoryManagement />;
+          return <SubCategoryManagement key={componentKey} />;
         case "superUsers":
-          return <SuperAdminUsers />;
+          return <SuperAdminUsers key={componentKey} />;
         case "companies":
-          return <CompanyManagement />;
+          return <CompanyManagement key={componentKey} />;
 
         default:
-          return <Overview />;
+          return <Overview key={componentKey} onNavigate={navigateFromOverview} />;
       }
     })();
 
@@ -479,10 +542,14 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-white ">
-        <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
-          <div className="flex items-center gap-4">
+       {/* Main Content */}
+      <main className="flex-1 flex flex-col bg-white overflow-hidden">
+         <header className={`h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
+          isScrolled
+            ? "bg-purple-100/90 shadow-xl border-b border-purple-200"
+            : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
+        }`}>
+           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen((prev) => !prev)}
               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
@@ -506,21 +573,56 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-            {/* Company name – show for non‑super‑admin (including viewer) */}
+             {/* Company name – show for non‑super‑admin (including viewer) */}
             {company && !isSuperAdmin && (
-              <div className="hidden sm:block">
-                <p className="text-sm font-black text-indigo-700">
-                  {company.name}{" "}
-                  <span className="text-indigo-500 font-bold">
-                    ({company.role})
-                  </span>
-                </p>
+              <div className="hidden sm:flex sm:items-center sm:gap-2.5 group cursor-default">
+                <div className="relative flex-shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shadow-sm border border-indigo-100">
+                    {companyLogo ? (
+                      <img
+                        src={companyLogo}
+                        alt={company.name}
+                        className="w-7 h-7 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-indigo-500" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-extrabold text-indigo-700 truncate max-w-[180px] md:max-w-[240px] lg:max-w-[300px]" title={company.name}>
+                      {company.name}
+                    </p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${
+                      company.role === "admin"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : company.role === "staff"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : company.role === "viewer"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-gray-50 text-gray-600 border-gray-200"
+                    }`}>
+                      {company.role}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 tracking-wide uppercase">
+                    Current Company
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Profile Dropdown */}
-          <div className="relative">
+          {/* Right side buttons */}
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <RefreshButton 
+              onRefresh={handleRefresh}
+              isLoading={isRefreshing}
+            />
+            {/* Profile Dropdown */}
+             <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gray-100 rounded p-4 ${profileDropdownOpen ? "bg-gray-100" : ""}`}
@@ -535,8 +637,18 @@ export default function AdminDashboard() {
                   </p>
                 </div>
               </div>
-              <div className="h-10 w-10 rounded-full bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300">
-                {user?.first_name?.[0] || "A"}
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/30 group-hover:scale-110 group-hover:ring-4 group-hover:ring-indigo-300 transition-all duration-300 overflow-hidden">
+                {user?.profile_image ? (
+                  <img 
+                    src={user.profile_image} 
+                    alt={user?.username || "User"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="uppercase">
+                    {user?.username?.[0] || user?.first_name?.[0] || "A"}
+                  </span>
+                )}
               </div>
             </button>
 
@@ -605,11 +717,14 @@ export default function AdminDashboard() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </header>
-        {/* add div and padding */}
+        {/* add div and padding - scrollable content area */}
 
-        <div className="p-6 lg:p-8">{renderContent()}</div>
+        <div ref={scrollableRef} className="flex-1 overflow-y-auto p-6 lg:p-8">
+          {renderContent()}
+        </div>
       </main>
 
       {/* Logout Confirmation Modal */}

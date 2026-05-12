@@ -162,13 +162,13 @@ const UserFilters: React.FC<FiltersProps> = ({
         </select>
         <Filter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
       </div>
-      <button
+      {/* <button
         onClick={onRefresh}
         className="p-2.5 rounded-xl border border-gray-200 bg-white/50 hover:bg-white transition-colors"
         title="Refresh"
       >
         <RefreshCw className="h-5 w-5 text-gray-600" />
-      </button>
+      </button> */}
     </div>
   </>
 );

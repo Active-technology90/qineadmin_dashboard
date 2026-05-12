@@ -379,7 +379,7 @@ export default function CompanyOrders() {
           setPageSize(size);
           setCurrentPage(1);
         }}
-        onRefresh={fetchAllOrders}
+        // onRefresh={fetchAllOrders}
       />
 
       {/* Orders Table */}
