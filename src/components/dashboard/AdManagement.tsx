@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
   Plus,
   Trash2,
-  ExternalLink,
   Pencil,
   X,
   Search,
@@ -23,11 +22,12 @@ import {
   CircleCheck,
   CircleAlert,
   Info,
-  GripVertical,
 } from "lucide-react";
+import { useReadOnly } from "./AdminDashboard";
+
 
 // ----------------------------------------------------------------------
-// Types
+// Types – matches the system’s expected ad structure
 // ----------------------------------------------------------------------
 interface Ad {
   id: number;
@@ -47,7 +47,7 @@ interface ToastState {
 }
 
 // ----------------------------------------------------------------------
-// Toast System (Self-contained)
+// Toast System (self-contained)
 // ----------------------------------------------------------------------
 const useToast = () => {
   const [toast, setToast] = useState<ToastState>({
@@ -121,9 +121,9 @@ const Toast = ({
 };
 
 // ----------------------------------------------------------------------
-// Dummy API (Bright, No external dependencies)
+// MOCK API – will be replaced with real backend calls later
+// (keeps component independent, but data shape matches real system)
 // ----------------------------------------------------------------------
-const USE_REAL_API = false;
 let dummyAds: Ad[] = [
   {
     id: 1,
@@ -159,7 +159,7 @@ const mockCreateAd = async (formData: FormData) => {
   const title = formData.get("title") as string;
   const isActive = formData.get("is_active") === "true";
   const targetPages = JSON.parse(
-    (formData.get("target_pages") as string) || "[]",
+    (formData.get("target_pages") as string) || "[]"
   );
   const targetLink = (formData.get("target_link") as string) || "";
   let image = "";
@@ -184,7 +184,7 @@ const mockUpdateAd = async (id: number, formData: FormData) => {
   const title = formData.get("title") as string;
   const isActive = formData.get("is_active") === "true";
   const targetPages = JSON.parse(
-    (formData.get("target_pages") as string) || "[]",
+    (formData.get("target_pages") as string) || "[]"
   );
   const targetLink = (formData.get("target_link") as string) || "";
   let image = dummyAds[index].image;
@@ -205,29 +205,16 @@ const mockDeleteAd = async (id: number) => {
   dummyAds = dummyAds.filter((ad) => ad.id !== id);
 };
 
-const getAds = USE_REAL_API
-  ? () => {
-      throw new Error("Real API not configured");
-    }
-  : mockGetAds;
-const createAd = USE_REAL_API
-  ? () => {
-      throw new Error("Real API not configured");
-    }
-  : mockCreateAd;
-const updateAd = USE_REAL_API
-  ? () => {
-      throw new Error("Real API not configured");
-    }
-  : mockUpdateAd;
-const deleteAd = USE_REAL_API
-  ? () => {
-      throw new Error("Real API not configured");
-    }
-  : mockDeleteAd;
+// ----------------------------------------------------------------------
+// API hooks – replace these with your real API service when ready
+// ----------------------------------------------------------------------
+const getAds = mockGetAds;
+const createAd = mockCreateAd;
+const updateAd = mockUpdateAd;
+const deleteAd = mockDeleteAd;
 
 // ----------------------------------------------------------------------
-// Page Options
+// Constants
 // ----------------------------------------------------------------------
 const PAGE_OPTIONS = [
   { value: "home", label: "Home" },
@@ -239,7 +226,7 @@ const PAGE_OPTIONS = [
 const ITEMS_PER_PAGE = 6;
 
 // ----------------------------------------------------------------------
-// Reusable UI Components (Inline)
+// Reusable UI Components (inline, uses dashboard color #6750A4)
 // ----------------------------------------------------------------------
 const Button: React.FC<{
   children: React.ReactNode;
@@ -264,7 +251,7 @@ const Button: React.FC<{
     "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
   const variants = {
     primary:
-      "bg-[#6750A4] text-white shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500",
+      "bg-[#6750A4] text-white shadow-md hover:shadow-lg focus:ring-[#6750A4]",
     secondary:
       "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
     outline:
@@ -317,7 +304,9 @@ const Input: React.FC<{
       onChange={onChange}
       placeholder={placeholder}
       required={required}
-      className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"}`}
+      className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition-all ${
+        error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+      }`}
     />
     {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
   </div>
@@ -342,7 +331,7 @@ const Badge: React.FC<{
 };
 
 // ----------------------------------------------------------------------
-// Stat Card with Animation
+// Stat Card
 // ----------------------------------------------------------------------
 const StatCard: React.FC<{
   title: string;
@@ -369,7 +358,7 @@ const StatCard: React.FC<{
 );
 
 // ----------------------------------------------------------------------
-// Multi-Select Pages Dropdown
+// Multi‑select dropdown for target pages
 // ----------------------------------------------------------------------
 const MultiSelectPages: React.FC<{
   value: string[];
@@ -405,19 +394,19 @@ const MultiSelectPages: React.FC<{
             selectedLabels.map((label) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-full"
+                className="inline-flex items-center gap-1 bg-[#6750A4]/10 text-[#6750A4] text-xs px-2.5 py-1 rounded-full"
               >
                 {label}
                 <X
-                  className="w-3 h-3 cursor-pointer hover:text-indigo-900"
+                  className="w-3 h-3 cursor-pointer hover:text-[#6750A4]"
                   onClick={(e) => {
                     e.stopPropagation();
                     onChange(
                       value.filter(
                         (v) =>
                           PAGE_OPTIONS.find((p) => p.value === v)?.label !==
-                          label,
-                      ),
+                          label
+                      )
                     );
                   }}
                 />
@@ -425,7 +414,9 @@ const MultiSelectPages: React.FC<{
             ))
           )}
           <ChevronDown
-            className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
           />
         </div>
         <AnimatePresence>
@@ -439,7 +430,7 @@ const MultiSelectPages: React.FC<{
               <div className="p-2 border-b border-gray-100">
                 <button
                   onClick={toggleAll}
-                  className="text-xs text-indigo-600 hover:underline"
+                  className="text-xs text-[#6750A4] hover:underline"
                 >
                   Select All / Clear
                 </button>
@@ -451,7 +442,11 @@ const MultiSelectPages: React.FC<{
                   className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <div
-                    className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${value.includes(option.value) ? "bg-indigo-600 border-indigo-600" : "border-gray-300"}`}
+                    className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${
+                      value.includes(option.value)
+                        ? "bg-[#6750A4] border-[#6750A4]"
+                        : "border-gray-300"
+                    }`}
                   >
                     {value.includes(option.value) && (
                       <Check className="w-3 h-3 text-white" />
@@ -469,7 +464,7 @@ const MultiSelectPages: React.FC<{
 };
 
 // ----------------------------------------------------------------------
-// Drag & Drop Image Uploader with Large Preview
+// Image Uploader with drag & drop and preview
 // ----------------------------------------------------------------------
 const ImageUploader: React.FC<{
   onFileChange: (file: File | null) => void;
@@ -477,7 +472,7 @@ const ImageUploader: React.FC<{
   existingImage?: string;
 }> = ({ onFileChange, previewUrl, existingImage }) => {
   const [preview, setPreview] = useState<string | null>(
-    previewUrl || existingImage || null,
+    previewUrl || existingImage || null
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -519,11 +514,17 @@ const ImageUploader: React.FC<{
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-indigo-500 ring-offset-2 bg-indigo-50" : ""}`}
+        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${
+          isDragging ? "ring-2 ring-[#6750A4] ring-offset-2 bg-[#6750A4]/5" : ""
+        }`}
       >
         {!preview ? (
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${isDragging ? "border-indigo-400 bg-indigo-50" : "border-gray-200"}`}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${
+              isDragging
+                ? "border-[#6750A4] bg-[#6750A4]/5"
+                : "border-gray-200"
+            }`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="mx-auto h-10 w-10 text-gray-400" />
@@ -553,13 +554,13 @@ const ImageUploader: React.FC<{
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-white/90 p-2 rounded-full text-gray-800 hover:bg-white"
               >
-               Replace
+                Replace
               </button>
               <button
                 onClick={clearImage}
                 className="bg-white/90 p-2 rounded-full text-red-600 hover:bg-white"
               >
-              Delete
+                Delete
               </button>
             </div>
           </div>
@@ -577,7 +578,8 @@ const AdCard: React.FC<{
   onEdit: (ad: Ad) => void;
   onDelete: (ad: Ad) => void;
   getImageUrl: (url: string) => string;
-}> = ({ ad, onEdit, onDelete, getImageUrl }) => {
+  isReadOnly: boolean;
+}> = ({ ad, onEdit, onDelete, getImageUrl, isReadOnly }) => {
   const pageCount = ad.target_pages.length;
   const isAllPages = pageCount === PAGE_OPTIONS.length;
 
@@ -606,8 +608,8 @@ const AdCard: React.FC<{
             {isAllPages
               ? "All Pages"
               : pageCount === 0
-                ? "No Pages"
-                : `${pageCount} page${pageCount > 1 ? "s" : ""}`}
+              ? "No Pages"
+              : `${pageCount} page${pageCount > 1 ? "s" : ""}`}
           </span>
         </div>
       </div>
@@ -620,14 +622,19 @@ const AdCard: React.FC<{
             href={ad.target_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-indigo-600 hover:underline gap-1 mb-4"
+            className="inline-flex items-center text-sm text-[#6750A4] hover:underline gap-1 mb-4"
           >
             <Globe className="w-3.5 h-3.5" />{" "}
             {ad.target_link.replace(/^https?:\/\//, "")}
           </a>
         )}
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(ad)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(ad)}
+            disabled={isReadOnly}
+          >
             <Pencil className="w-4 h-4 mr-1" /> Edit
           </Button>
           <Button
@@ -635,6 +642,7 @@ const AdCard: React.FC<{
             size="sm"
             onClick={() => onDelete(ad)}
             className="text-red-600 hover:bg-red-50"
+            disabled={isReadOnly}
           >
             <Trash2 className="w-4 h-4 mr-1" /> Delete
           </Button>
@@ -701,7 +709,7 @@ const DeleteModal: React.FC<{
 );
 
 // ----------------------------------------------------------------------
-// Create/Edit Modal (Beautiful Form Modal)
+// Create/Edit Modal
 // ----------------------------------------------------------------------
 const FormModal: React.FC<{
   isOpen: boolean;
@@ -772,7 +780,7 @@ const SearchFilterBar: React.FC<{
           placeholder="Search campaigns by title..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition-all"
         />
       </div>
       <div className="flex gap-2">
@@ -790,8 +798,8 @@ const SearchFilterBar: React.FC<{
             {status === "all"
               ? "All"
               : status === "active"
-                ? "Active"
-                : "Inactive"}
+              ? "Active"
+              : "Inactive"}
           </motion.button>
         ))}
       </div>
@@ -836,7 +844,10 @@ const Pagination: React.FC<{
 // ----------------------------------------------------------------------
 // Empty State
 // ----------------------------------------------------------------------
-const EmptyState: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }) => (
+const EmptyState: React.FC<{ onCreateNew: () => void; isReadOnly: boolean }> = ({
+  onCreateNew,
+  isReadOnly,
+}) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -849,11 +860,13 @@ const EmptyState: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }) => (
     <p className="mt-1 text-sm text-gray-500">
       Launch your first campaign to reach more customers.
     </p>
-    <div className="mt-6">
-      <Button onClick={onCreateNew}>
-        <Plus className="w-4 h-4 mr-2" /> Create Campaign
-      </Button>
-    </div>
+    {!isReadOnly && (
+      <div className="mt-6">
+        <Button onClick={onCreateNew}>
+          <Plus className="w-4 h-4 mr-2" /> Create Campaign
+        </Button>
+      </div>
+    )}
   </motion.div>
 );
 
@@ -882,9 +895,10 @@ const LoadingSkeleton: React.FC = () => (
 );
 
 // ----------------------------------------------------------------------
-// Main Component
+// MAIN COMPONENT
 // ----------------------------------------------------------------------
 export default function AdManagement() {
+  const isReadOnly = useReadOnly(); // respects viewer mode from dashboard
   const { toast, showToast, hideToast } = useToast();
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -929,12 +943,13 @@ export default function AdManagement() {
   };
 
   const handleDeleteClick = (ad: Ad) => {
+    if (isReadOnly) return;
     setAdToDelete(ad);
     setDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (adToDelete) {
+    if (adToDelete && !isReadOnly) {
       try {
         await deleteAd(adToDelete.id);
         setAds(ads.filter((ad) => ad.id !== adToDelete.id));
@@ -949,6 +964,7 @@ export default function AdManagement() {
   };
 
   const openCreateModal = () => {
+    if (isReadOnly) return;
     setEditingId(null);
     setTitle("");
     setTargetLink("");
@@ -960,6 +976,7 @@ export default function AdManagement() {
   };
 
   const openEditModal = (ad: Ad) => {
+    if (isReadOnly) return;
     setEditingId(ad.id);
     setTitle(ad.title);
     setTargetLink(ad.target_link || "");
@@ -981,6 +998,7 @@ export default function AdManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     if (!validateForm()) return;
     setIsSubmitting(true);
     const formData = new FormData();
@@ -1016,21 +1034,21 @@ export default function AdManagement() {
       filterStatus === "all"
         ? true
         : filterStatus === "active"
-          ? ad.is_active
-          : !ad.is_active;
+        ? ad.is_active
+        : !ad.is_active;
     return matchesSearch && matchesStatus;
   });
   const totalPages = Math.ceil(filteredAds.length / ITEMS_PER_PAGE);
   const paginatedAds = filteredAds.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   const totalCount = ads.length;
   const activeCount = ads.filter((ad) => ad.is_active).length;
   const totalPagesTargeted = ads.reduce(
     (sum, ad) => sum + ad.target_pages.length,
-    0,
+    0
   );
 
   const getImageUrl = (image: string) => {
@@ -1056,9 +1074,11 @@ export default function AdManagement() {
                 Manage placements across your platform
               </p>
             </div>
-            <Button onClick={openCreateModal} size="lg" className="shadow-sm">
-              <Plus className="w-5 h-5" /> New Campaign
-            </Button>
+            {!isReadOnly && (
+              <Button onClick={openCreateModal} size="lg" className="shadow-sm">
+                <Plus className="w-5 h-5" /> New Campaign
+              </Button>
+            )}
           </div>
         </motion.div>
 
@@ -1102,7 +1122,7 @@ export default function AdManagement() {
         {isLoading ? (
           <LoadingSkeleton />
         ) : paginatedAds.length === 0 ? (
-          <EmptyState onCreateNew={openCreateModal} />
+          <EmptyState onCreateNew={openCreateModal} isReadOnly={isReadOnly} />
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1113,6 +1133,7 @@ export default function AdManagement() {
                   onEdit={openEditModal}
                   onDelete={handleDeleteClick}
                   getImageUrl={getImageUrl}
+                  isReadOnly={isReadOnly}
                 />
               ))}
             </div>
@@ -1124,16 +1145,18 @@ export default function AdManagement() {
           </>
         )}
 
-        {/* Floating Mobile Action Button */}
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={openCreateModal}
-          className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xl flex items-center justify-center z-40"
-        >
-          <Plus className="w-6 h-6" />
-        </motion.button>
+        {/* Floating Mobile Action Button (only if not read-only) */}
+        {!isReadOnly && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={openCreateModal}
+            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-[#6750A4] text-white shadow-xl flex items-center justify-center z-40"
+          >
+            <Plus className="w-6 h-6" />
+          </motion.button>
+        )}
 
         {/* Modals */}
         <DeleteModal
@@ -1165,7 +1188,7 @@ export default function AdManagement() {
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                className="w-4 h-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4]"
               />
               <label
                 htmlFor="isActive"
