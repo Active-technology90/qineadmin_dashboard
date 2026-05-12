@@ -13,7 +13,7 @@ import {
   updateUserCompanyRole,
 } from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
-import type { User, CompanyListItem } from "../../../types";
+import type { User, CompanyListItem, UserRole } from "../../../types";
 import { UserPlus, Building2 } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
@@ -102,7 +102,7 @@ export default function CompanyUsers() {
 
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [newRole, setNewRole] = useState<"admin" | "staff" | "viewer">("staff");
+  // const [newRole, setNewRole] = useState<"admin" | "staff" | "viewer">("staff");
   const [updating, setUpdating] = useState(false);
 
   // Delete modal state

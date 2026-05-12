@@ -18,7 +18,7 @@ export default function Orders() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  // const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState("");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
@@ -51,7 +51,7 @@ export default function Orders() {
         ordering: "-created_at",
       });
       setOrders(res.data.results);
-      setTotalCount(res.data.count);
+      // setTotalCount(res.data.count);
     } catch (err: any) {
       const message =
         err.message === "SESSION_EXPIRED"
