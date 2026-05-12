@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import {
-  Package,
-  Building2,
-  Settings,
-} from "lucide-react";
+import { Package, Building2, Settings } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 
 import {
@@ -24,6 +20,20 @@ const DEFAULT_PAGE_SIZE = 10;
 
 /* ---------- Reusable sub‑components ---------- */
 const StatusBadge = ({ status }: { status: string }) => {
+  // Backend -> Frontend display mapping
+  const statusLabels: Record<string, string> = {
+    // Order status
+    processing: "Prepared",
+    shipped: "In Transit",
+    fulfilled: "Delivered",
+    contacted: "Confirmed",
+
+    // Delivery status
+    pending: "Assigned",
+    out_for_delivery: "In Transit",
+    delivered: "Completed",
+  };
+
   const colors: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
     delivered: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -41,17 +51,23 @@ const StatusBadge = ({ status }: { status: string }) => {
     fulfilled: "bg-green-100 text-green-800 border border-green-200",
     payment_rejected: "bg-red-50 text-red-700 border border-red-200",
   };
-  const color = colors[status.toLowerCase()] || "bg-gray-100 text-gray-600";
+
+  const normalizedStatus = status?.toLowerCase?.() || "";
+
+  const displayLabel =
+    statusLabels[normalizedStatus] || normalizedStatus.replace(/_/g, " ");
+
+  const color = colors[normalizedStatus] || "bg-gray-100 text-gray-600";
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {status.replace(/_/g, " ")}
+      {displayLabel}
     </span>
   );
 };
-
 const CompanyAvatar = ({
   logo,
   name,

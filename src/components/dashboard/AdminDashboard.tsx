@@ -34,6 +34,7 @@ import MasterOrders from "./masterOrders/MasterOrders";
 import AdminProfile from "./AdminProfile";
 import CompanyManagement from "./CompanyManagement/CompanyManagement";
 import SuperAdminUsers from "./UserManagement/SuperAdminUsers";
+import AdManagement from "./AdManagement";
 
 type Tab =
   | "overview"
@@ -46,6 +47,7 @@ type Tab =
   | "companyOrders"
   | "payments"
   | "profile"
+  | "add advertisment"
   | "superUsers";
 
 // ─────────────────────────────────────────────────────────────
@@ -268,6 +270,8 @@ export default function AdminDashboard() {
           return <SubCategoryManagement />;
         case "superUsers":
           return <SuperAdminUsers />;
+         case "add advertisment":
+          return <AdManagement />;
         case "companies":
           return <CompanyManagement />;
 
@@ -386,6 +390,15 @@ export default function AdminDashboard() {
               active={activeTab === "superUsers"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("superUsers")}
+            />
+          )}
+          {showPlatformAdmin && (
+            <SidebarItem
+              icon={<Users className="h-5 w-5" />}
+              label="Add Advertisement"
+              active={activeTab === "add advertisment"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("add advertisment")}
             />
           )}
 

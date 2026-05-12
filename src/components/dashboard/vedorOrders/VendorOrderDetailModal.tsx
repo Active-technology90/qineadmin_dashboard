@@ -31,19 +31,43 @@ const itemVariants = {
 const getInitials = (name?: string) =>
   name?.trim().split(" ").filter(Boolean).map((n) => n[0]).join("").toUpperCase() || "?";
 
+const getDisplayStatus = (status: string) => {
+  const statusMap: Record<string, string> = {
+    contacted: "Confirmed",
+
+    processing: "Prepared",
+    shipped: "In Transit",
+    fulfilled: "Delivered",
+
+    pending: "Assigned",
+    out_for_delivery: "In Transit",
+    delivered: "Completed",
+  };
+
+  return statusMap[status?.toLowerCase()] || status;
+};
+
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
-  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+
+  const base =
+    "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+
   if (s === "completed" || s === "delivered" || s === "approved")
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
+
   if (s === "paid" || s === "out_for_delivery")
     return base + "bg-violet-50 text-violet-700 border-violet-200";
+
   if (s === "pending")
     return base + "bg-amber-50 text-amber-700 border-amber-200";
+
   if (s === "rejected" || s === "cancelled")
     return base + "bg-rose-50 text-rose-700 border-rose-200";
+
   return base + "bg-gray-50 text-gray-600 border-gray-200";
 };
+
 
 // ---------- Sub-Components ----------
 
@@ -57,7 +81,9 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
         <h4 className="text-sm font-bold text-gray-800">{title}</h4>
       </div>
       {status && <div className="flex justify-start">
-        <span className={getStatusBadge(status)}>{status?.replace(/_/g, " ")}</span>
+    <span className={getStatusBadge(status)}>
+  {getDisplayStatus(status)}
+</span>
       </div>}
     </div>
     {children}
@@ -67,22 +93,33 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
 
 const StatusBadge = ({ status }: { status: string }) => {
   const s = status?.toLowerCase();
+
   const styles: Record<string, string> = {
     completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
     delivered: "bg-emerald-100 text-emerald-700 border-emerald-200",
+
     paid: "bg-violet-100 text-violet-700 border-violet-200",
     out_for_delivery: "bg-violet-100 text-violet-700 border-violet-200",
+
     pending: "bg-amber-100 text-amber-700 border-amber-200",
+
     processing: "bg-sky-100 text-sky-700 border-sky-200",
     shipped: "bg-sky-100 text-sky-700 border-sky-200",
-    approved: "bg-green-100 text-green-700 border-green-200",
-    rejected: "bg-rose-100 text-rose-700 border-rose-200",
 
+    approved: "bg-green-100 text-green-700 border-green-200",
+
+    rejected: "bg-rose-100 text-rose-700 border-rose-200",
   };
 
+  const displayStatus = getDisplayStatus(status);
+
   return (
-    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
-      {status.replace(/_/g, " ")}
+    <span
+      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
+        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      }`}
+    >
+      {displayStatus}
     </span>
   );
 };
@@ -294,7 +331,7 @@ const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status 
 
   return (
     <Card title="Review Receipt" icon={Banknote}>
-      <div className="space-y-4">
+      <div className="space-y-2">
         <div className="flex justify-between items-center">
           <span className={getStatusBadge(receipt.status)}>{receipt.status}</span>
           <p className="text-sm font-black text-gray-900">{Number(receipt.amount).toLocaleString()} ETB</p>
@@ -303,7 +340,7 @@ const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status 
         {receipt.receipt_image && (
           <div
             onClick={() => setShowImage(true)}
-            className="group relative h-40 rounded-2xl overflow-hidden border border-gray-100 cursor-zoom-in shadow-inner bg-gray-50"
+            className="group relative h-28 rounded-2xl overflow-hidden border border-gray-100 cursor-zoom-in shadow-inner bg-gray-50"
           >
             <img src={receipt.receipt_image} alt="Receipt" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -318,13 +355,13 @@ const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status 
         </div>
 
         {canReview && (
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2 pt-1">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add review notes..."
-              className="w-full text-xs rounded-xl border-gray-200 focus:ring-purple-500 resize-none p-3"
-              rows={2}
+              className="w-full text-[11px] rounded-xl border-gray-200 focus:ring-purple-500 resize-none p-3"
+            rows={1}
             />
             <div className="flex gap-2">
               <button
@@ -524,13 +561,13 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
               </div>
 
               {/* Right Side: Finances & Workflow (4 cols) */}
-              <div className="col-span-12 lg:col-span-4 space-y-8">
+              <div className="col-span-12 lg:col-span-4 space-y-4">
 
                 {/* 3. Financial Summary Card */}
-                <motion.div variants={itemVariants} className="bg-[#6750A4] rounded-[32px] p-8 text-white shadow-2xl shadow-purple-100 relative overflow-hidden group">
+                <motion.div variants={itemVariants} className="bg-[#6750A4] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-100 relative overflow-hidden group">
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-700" />
                   <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-8">
+                    <div className="flex justify-between items-start mb-5">
                       <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
                         <Receipt className="h-5 w-5" />
                       </div>
@@ -539,7 +576,7 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
                         <h3 className="text-3xl font-black">{Number(order.amount).toLocaleString()} <span className="text-sm opacity-60">ETB</span></h3>
                       </div>
                     </div>
-                    <div className="space-y-4 pt-4 border-t border-white/10">
+                    <div className="space-y-3 pt-2 border-t border-white/10">
                       <div className="flex justify-between text-xs font-bold">
                         <span className="opacity-60">Subtotal</span>
                         <span>{Number(order.subtotal).toLocaleString()} ETB</span>

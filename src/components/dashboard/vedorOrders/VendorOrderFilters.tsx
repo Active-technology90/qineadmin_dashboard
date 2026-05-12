@@ -21,7 +21,7 @@ interface VendorOrderFiltersProps {
 
   pageSize: number;
   onPageSizeChange?: (size: number) => void;
-   onRefresh?: () => void;
+  onRefresh?: () => void;
 
   onClear: () => void;
 
@@ -58,6 +58,17 @@ export function VendorOrderFilters({
     !!paymentMethodFilter ||
     (!!selectedCompanyId && !hideCompanyFilter);
 
+  const ORDER_STATUS_LABELS: Record<string, string> = {
+    contacted: "Confirmed",
+
+    processing: "Prepared",
+    shipped: "In Transit",
+    fulfilled: "Delivered",
+
+    pending: "Assigned",
+    out_for_delivery: "In Transit",
+    delivered: "Completed",
+  };
   return (
     <div
       className={`${
@@ -99,19 +110,19 @@ export function VendorOrderFilters({
 
       {/* Body – search + filters + page size inline */}
       <div className="p-5 space-y-5">
-         {/* Search with Refresh Button */}
+        {/* Search with Refresh Button */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by order ID, customer name, or company..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+            <input
+              type="text"
+              placeholder="Search by order ID, customer name, or company..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50
                        focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                        outline-none transition text-sm"
-          />
+            />
           </div>
           {onRefresh && (
             <button
@@ -124,7 +135,6 @@ export function VendorOrderFilters({
             </button>
           )}
         </div>
-        
 
         {/* Filters + Page Size – all in one grid row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -138,11 +148,15 @@ export function VendorOrderFilters({
                          text-sm pr-8 outline-none transition"
             >
               <option value="">Order Status</option>
-              <option value="pending">Pending</option>
-              <option value="contacted">Contacted</option>
-              <option value="processing">Processing</option>
-              <option value="fulfilled">Fulfilled</option>
-              <option value="shipped">Shipped</option>
+
+              <option value="pending">{ORDER_STATUS_LABELS.pending}</option>
+              <option value="contacted">{ORDER_STATUS_LABELS.contacted}</option>
+              <option value="processing">
+                {ORDER_STATUS_LABELS.processing}
+              </option>
+              <option value="fulfilled">{ORDER_STATUS_LABELS.fulfilled}</option>
+              <option value="shipped">{ORDER_STATUS_LABELS.shipped}</option>
+
               <option value="payment_rejected">Payment Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -159,11 +173,16 @@ export function VendorOrderFilters({
                          text-sm pr-8 outline-none transition"
             >
               <option value="">Delivery Status</option>
-              <option value="pending">Pending</option>
+
+              <option value="pending">{ORDER_STATUS_LABELS.pending}</option>
               <option value="accepted">Accepted</option>
               <option value="picked_up">Picked Up</option>
-              <option value="out_for_delivery">Out for Delivery</option>
-              <option value="delivered">Delivered</option>
+
+              <option value="out_for_delivery">
+                {ORDER_STATUS_LABELS.out_for_delivery}
+              </option>
+
+              <option value="delivered">{ORDER_STATUS_LABELS.delivered}</option>
               <option value="failed">Failed</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
