@@ -18,12 +18,13 @@ import {
   Minus,
 } from "lucide-react";
 import {
-  addUserToCompany,
+
   deleteUser,
   getAllUsers,
   getAvailableCompanies,
   removeUserFromCompany,
   updateUser,
+  updateUserCompanyRole,
   // updateUserCompanyRole,
 } from "../../../services/api";
 import type { User, UserRole, Membership } from "../../../types";
@@ -34,7 +35,7 @@ import EditUserModal from "./EditUserModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ManageMembershipsModal from "./ManageMembershipsModal";
 import ViewUserModal from "./ViewUserModal";
-import { useUpdateUserRole } from "../../../hooks/useUpdateUserRole";
+
 
 // ============================================================
 // TableControls – simple wrapper for the top filter bar
@@ -512,7 +513,7 @@ const SuperAdminUsers: React.FC = () => {
   const [availableCompanies, setAvailableCompanies] = useState<
     Array<{ id: number; name: string; slug: string }>
   >([]);
-  const { updateUserRole } = useUpdateUserRole();
+
   // Helper: recursively fetch all users
   const fetchAllUsers = useCallback(async (): Promise<User[]> => {
     let page = 1;
@@ -542,6 +543,13 @@ const SuperAdminUsers: React.FC = () => {
     };
     loadUsers();
   }, [fetchAllUsers]);
+  
+  useEffect(() => {
+  if (managingUser && allUsers.length) {
+    const updated = allUsers.find(u => u.id === managingUser.id);
+    if (updated) setManagingUser(updated);
+  }
+}, [allUsers, managingUser]);
 
   // Filter users based on search term and role (client‑side)
   const filteredUsers = useMemo(() => {
@@ -598,28 +606,46 @@ const SuperAdminUsers: React.FC = () => {
   }, [filteredUsers]);
 
   // Handlers
-  const handleRefresh = () => {
-    setSearchTerm("");
-    setRoleFilter("all");
-    setCurrentPage(1);
-  };
+ // Inside SuperAdminUsers component
 
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setRoleFilter("all");
-  };
+const handleRefresh = async () => {
+  setSearchTerm("");
+  setRoleFilter("all");
+  setCurrentPage(1);
+  await refreshAllUsers(); // 👈 fetch latest data from API
+};
 
+ const handleResetFilters = async () => {
+  setSearchTerm("");
+  setRoleFilter("all");
+  setCurrentPage(1);
+  await refreshAllUsers();
+};
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
 
-  const refreshAllUsers = async () => {
-    const users = await fetchAllUsers();
-    setAllUsers(users);
-  };
-
+ const refreshAllUsers = async () => {
+  const users = await fetchAllUsers();
+  setAllUsers(users);
+  
+  // If a user is currently being managed, update that state with fresh data
+  if (managingUser) {
+    const updatedUser = users.find(u => u.id === managingUser.id);
+    if (updatedUser) setManagingUser(updatedUser);
+  }
+  // Similarly, update other selected user states if needed (e.g., selectedUser, editingUser)
+  if (selectedUser) {
+    const updatedUser = users.find(u => u.id === selectedUser.id);
+    if (updatedUser) setSelectedUser(updatedUser);
+  }
+  if (editingUser) {
+    const updatedUser = users.find(u => u.id === editingUser.id);
+    if (updatedUser) setEditingUser(updatedUser);
+  }
+};
   // View user
   const handleView = (user: User) => {
     setSelectedUser(user);
@@ -801,31 +827,24 @@ const SuperAdminUsers: React.FC = () => {
         onConfirm={handleConfirmDelete}
       />
 
-      {/* Manage Memberships Modal */}
-      <ManageMembershipsModal
-        isOpen={isMembershipModalOpen}
-        onClose={() => setIsMembershipModalOpen(false)}
-        user={managingUser}
-        availableCompanies={availableCompanies}
-        onAddMembership={async (userId, companyId, role) => {
-          const company = availableCompanies.find((c) => c.id === Number(companyId));
-          if (!company) throw new Error("Company not found");
-          await addUserToCompany(userId, company.slug, role);
-          await refreshAllUsers();
-        }}
-        onUpdateRole={async (userId, companyId, role) => {
-          const company = availableCompanies.find((c) => c.id === Number(companyId));
-          if (!company) throw new Error("Company not found");
-          await updateUserRole(company.slug, userId, role); // ✅ now it gets a real slug
-          await refreshAllUsers();
-        }}
-        onRemoveMembership={async (userId, companyId) => {
-          const company = availableCompanies.find((c) => c.id === Number(companyId));
-          if (!company) throw new Error("Company not found");
-          await removeUserFromCompany(company.slug, userId);
-          await refreshAllUsers();
-        }}
-      />
+
+<ManageMembershipsModal
+  isOpen={isMembershipModalOpen}
+  onClose={() => setIsMembershipModalOpen(false)}
+  user={managingUser}
+  availableCompanies={availableCompanies}
+  onUpdateRole={async (userId, companySlug, role) => {
+    await updateUserCompanyRole(companySlug, userId, role);
+    await refreshAllUsers();
+  }}
+  onRemoveMembership={async (userId, companyId) => {
+    const company = availableCompanies.find(c => c.id === companyId);
+    if (!company) throw new Error("Company not found");
+    await removeUserFromCompany(company.slug, userId);
+    await refreshAllUsers();
+  }}
+  onRefresh={refreshAllUsers}  // <-- will refresh after add
+/>
     </>
   );
 };

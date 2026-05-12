@@ -284,7 +284,7 @@ export const addUserToCompany = async (userId: number, companySlug: string, role
 // Update user's role in a specific company
 export const updateUserCompanyRole = async (companySlug: string, userId: number, role: UserRole) => {
   console.log({ companySlug, userId, role }); 
-  return api.patch(`/users/admin/companies/${companySlug}/staff/${userId}/profile/`, { role });
+  return api.put(`/users/admin/companies/${companySlug}/staff/${userId}/profile/`, { role });
 };
 
 // Remove user from a company

@@ -5,9 +5,13 @@ import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { useCompanyUsers } from "../../../hooks/useCompanyUsers";
 import { useAddCompanyUser } from "../../../hooks/useAddCompanyUser";
-import { useUpdateUserRole } from "../../../hooks/useUpdateUserRole";
-import { useDeleteCompanyUser } from "../../../hooks/useDeleteCompanyUser";
-import { onboardCompanyStaff, searchUsers } from "../../../services/api";
+
+import {
+  onboardCompanyStaff,
+  removeUserFromCompany,
+  searchUsers,
+  updateUserCompanyRole,
+} from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
 import type { User, CompanyListItem } from "../../../types";
 import { UserPlus, Building2 } from "lucide-react";
@@ -31,10 +35,12 @@ export default function CompanyUsers() {
   // Company from context
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
-// Get logo from companies list (since CurrentCompany doesn't have logo)
+  // Get logo from companies list (since CurrentCompany doesn't have logo)
   const companyLogo = useMemo(() => {
     if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
+    const foundCompany = companies.find(
+      (c: CompanyListItem) => c.slug === companySlug,
+    );
     return foundCompany?.logo || null;
   }, [companySlug, companies]);
 
@@ -81,8 +87,6 @@ export default function CompanyUsers() {
   );
 
   const { addUser } = useAddCompanyUser();
-  const { updateUserRole } = useUpdateUserRole();
-  const { deleteUser } = useDeleteCompanyUser();
 
   // Add user modal state
   const [searchTerm, setSearchTerm] = useState("");
@@ -159,26 +163,52 @@ export default function CompanyUsers() {
       setCreatingUser(false);
     }
   };
+ const handleEditUser = async (updatedUser: {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  username: string;
+  role: string;
+}) => {
+  if (!companySlug) return;
 
-  const handleEditUser = async () => {
-    if (!companySlug || !editingUser) return;
-    setUpdating(true);
-    try {
-      await updateUserRole(companySlug, editingUser.user_id, newRole);
-      setEditingUser(null);
-      await refetch();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUpdating(false);
-    }
-  };
+  setUpdating(true);
 
+  try {
+    const userId = editingUser?.user_id || Number(updatedUser.id);
+
+    console.log(
+      `Updating role for user ${userId} in ${companySlug} to ${updatedUser.role}`
+    );
+
+    await updateUserCompanyRole(
+      companySlug,
+      userId,
+      updatedUser.role as UserRole
+    );
+
+    setEditingUser(null);
+    await refetch();
+  } catch (err: any) {
+    console.error("Role update error:", err);
+
+    const errorMessage =
+      err.response?.data?.detail ||
+      err.response?.data?.user_role?.[0] ||
+      err.response?.data?.role?.[0] ||
+      "Failed to update role.";
+
+    alert(errorMessage);
+  } finally {
+    setUpdating(false);
+  }
+};
   const handleDeleteUser = async () => {
     if (!companySlug || !deletingUser) return;
     setDeleting(true);
     try {
-      await deleteUser(companySlug, deletingUser.user_id);
+      await removeUserFromCompany(companySlug, deletingUser.user_id);
       setDeletingUser(null);
       await refetch();
     } catch (err) {
@@ -232,7 +262,7 @@ export default function CompanyUsers() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex items-center gap-3">
           {companyLogo ? (
             <img
@@ -244,7 +274,9 @@ export default function CompanyUsers() {
             <Building2 className="w-8 h-8 text-gray-400" />
           )}
           <div>
-            <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
+            <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
+              {companyName}
+            </h2>
             <p className="text-sm font-medium text-secondary">Users</p>
           </div>
         </div>
@@ -266,18 +298,17 @@ export default function CompanyUsers() {
               <UserPlus className="h-4 w-4" /> Add Team Member
             </button>
           )}
-           {canManageUsers && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-full border border-[#6750A4]/20 text-[#6750A4] hover:bg-[#6750A4]/5 flex items-center gap-2 shadow-sm transition"
-          >
-            <UserPlus className="h-4 w-4" />
-            Create User
+          {canManageUsers && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 rounded-full border border-[#6750A4]/20 text-[#6750A4] hover:bg-[#6750A4]/5 flex items-center gap-2 shadow-sm transition"
+            >
+              <UserPlus className="h-4 w-4" />
+              Create User
             </button>
           )}
         </div>
       </div>
-
       <CompanyUsersTable
         users={paginatedUsers}
         loading={loading}
@@ -293,13 +324,14 @@ export default function CompanyUsers() {
         }}
         isAdmin={canManageUsers} // edit/delete controls only for managers
         currentUser={currentUser}
-        onEdit={(user) => {
-          setEditingUser(user);
-          setNewRole(user.role || "staff");
-        }}
+      onEdit={(user) => {
+  setEditingUser({
+    ...user,
+    user_id: user.id,
+  });
+}}
         onDelete={setDeletingUser}
       />
-
       <AddUserModal
         isOpen={showAddModal}
         onClose={() => {
@@ -319,20 +351,19 @@ export default function CompanyUsers() {
         onAdd={handleAddUser}
       />
       <CreateCompanyUserModal
-  isOpen={showCreateModal}
-  onClose={() => setShowCreateModal(false)}
-  loading={creatingUser}
-  onSubmit={handleCreateUser}
-/>
-
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        loading={creatingUser}
+        onSubmit={handleCreateUser}
+      />
+     
       <EditUserModal
         isOpen={!!editingUser}
         user={editingUser}
         updating={updating}
         onClose={() => setEditingUser(null)}
-        onSave={handleEditUser}
+        onSave={handleEditUser} // now receives the updated data
       />
-
       <DeleteUserModal
         isOpen={!!deletingUser}
         user={deletingUser}
@@ -340,7 +371,6 @@ export default function CompanyUsers() {
         onClose={() => setDeletingUser(null)}
         onConfirm={handleDeleteUser}
       />
-
       {totalPages > 1 && (
         <div className="mt-4">
           <Pagination

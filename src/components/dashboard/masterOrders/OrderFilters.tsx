@@ -1,7 +1,6 @@
 // src/components/dashboard/orders/OrderFilters.tsx
 import { Search, X, Filter } from "lucide-react";
 
-
 interface OrderFiltersProps {
   searchTerm: string;
   onSearchChange: (val: string) => void;
@@ -9,6 +8,10 @@ interface OrderFiltersProps {
   onStatusChange: (val: string) => void;
   deliveryStatusFilter: string;
   onDeliveryStatusChange: (val: string) => void;
+  paymentStatusFilter: string;          // NEW: payment status filter
+  onPaymentStatusChange: (val: string) => void; // NEW: handler for payment status
+  fulfillmentTypeFilter: string;        // NEW: fulfillment type filter
+  onFulfillmentTypeChange: (val: string) => void; // NEW: handler for fulfillment type
   // pageSize: number;
   // onPageSizeChange: (size: number) => void;
   onClear: () => void;
@@ -23,13 +26,17 @@ export function OrderFilters({
   onStatusChange,
   deliveryStatusFilter,
   onDeliveryStatusChange,
-  // pageSize,
-  // onPageSizeChange,
+  paymentStatusFilter,           // NEW
+  onPaymentStatusChange,
+  fulfillmentTypeFilter,
+  
+  onFulfillmentTypeChange,
   onClear,
   showMobile,
   onToggleMobile,
 }: OrderFiltersProps) {
-  const hasFilters = !!searchTerm || !!statusFilter || !!deliveryStatusFilter;
+  // Include paymentStatusFilter in "hasFilters"
+  const hasFilters = !!searchTerm || !!statusFilter || !!deliveryStatusFilter || !!paymentStatusFilter || !!fulfillmentTypeFilter ;
 
   return (
     <>
@@ -49,7 +56,7 @@ export function OrderFilters({
         </button>
       </div>
 
-           <div className={`${showMobile ? "block" : "hidden md:block"}`}>
+      <div className={`${showMobile ? "block" : "hidden md:block"}`}>
         <div className="bg-transparent">
           <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
             {/* Search */}
@@ -64,7 +71,7 @@ export function OrderFilters({
               />
             </div>
 
-            {/* Order Status */}
+            {/* Order Status (main order status) */}
             <select
               value={statusFilter}
               onChange={(e) => onStatusChange(e.target.value)}
@@ -92,8 +99,39 @@ export function OrderFilters({
               <option value="failed">Failed</option>
             </select>
 
-                       {/* Rows per page - Now handled by TableControls component in parent */}
-            <div className="hidden"></div>
+            {/* NEW: Payment Status Filter */}
+            <select
+              value={paymentStatusFilter}
+              onChange={(e) => onPaymentStatusChange(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+            >
+              <option value="">All Payment Statuses</option>
+              <option value="Paid">Paid</option>
+              <option value="Verifying Receipt">Verifying Receipt</option>
+              <option value="Pay on Delivery">Pay on Delivery</option>
+              <option value="Checkout Initiated">Checkout Initiated</option>
+              <option value="Awaiting Bank Transfer">Awaiting Bank Transfer</option>
+            </select>
+
+            <select
+              value={fulfillmentTypeFilter}
+              onChange={(e) => onFulfillmentTypeChange(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+            >
+              <option value="">All Fulfillment Types</option>
+              <option value="delivery">Delivery</option>
+              <option value="pickup">Pickup</option>
+            </select>
+
+            {/* 
+              PROFESSIONAL NOTE: 
+              To add another filter (e.g., "Fulfillment Type", "Vendor Name", etc.):
+              1. Add new prop to OrderFiltersProps (e.g., fulfillmentFilter, onFulfillmentChange)
+              2. Destructure it in the function arguments
+              3. Update hasFilters condition
+              4. Add a new <select> or other input element below this comment.
+              All existing filters follow the same pattern.
+            */}
 
             {/* Clear Button */}
             {hasFilters && (
@@ -102,7 +140,7 @@ export function OrderFilters({
                 className="flex items-center gap-1 px-4 py-2.5 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition"
               >
                 <X size={14} />
-                Close
+                Clear
               </button>
             )}
           </div>
