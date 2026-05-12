@@ -262,6 +262,7 @@ export const getCompanies = async (params?: {
   featured?: string;
   search?: string;
   page?: number;
+  page_size?: number;
   ordering?: string;
 }) => api.get<PaginatedResponse<CompanyListItem>>("/companies/", { params });
 

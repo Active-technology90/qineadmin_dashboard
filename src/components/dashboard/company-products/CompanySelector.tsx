@@ -50,12 +50,23 @@ function AccessDenied() {
 function Header({
   title,
   subtitle,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
+  onBack?: () => void;
 }) {
   return (
     <div className="flex items-center gap-4 px-6 py-2 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      )}
       <div>
         <h2 className="text-xl font-bold text-secondary">{title}</h2>
         {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
@@ -247,6 +258,7 @@ export function CompanySelector({
       <Header
         title="Choose Company"
         subtitle={subtitle}
+        onBack={onBack}
       />
 
       {/* Scrollable content area (search + grid) */}

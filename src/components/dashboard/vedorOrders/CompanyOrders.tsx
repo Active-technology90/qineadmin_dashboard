@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
-  Eye,
   Package,
   Building2,
-  User as UserIcon,
-  RefreshCw,
-  X,
   Settings,
-
 } from "lucide-react";
-
 import { Pagination } from "../../ui/Pagination";
+
 import {
   getAdminVendorOrders,
   getCompanyVendorOrders,
@@ -21,11 +16,9 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { Toast } from "../../ui/Toast";
-import { VendorOrderFilters } from "./VendorOrderFilters";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
-import { DeliveryManager } from "./DeliveryManager";
-// import { CompanySelector } from "../company-products/CompanySelector";
-import { useReadOnly } from "../AdminDashboard"; // 👈 viewer detection
+import { VendorOrderFilters } from "./VendorOrderFilters";
+import { useReadOnly } from "../AdminDashboard";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -77,7 +70,7 @@ const CompanyAvatar = ({
 
 const SkeletonRow = () => (
   <tr className="animate-pulse">
-    {[...Array(8)].map((_, i) => (
+    {[...Array(6)].map((_, i) => (
       <td key={i} className="px-6 py-4">
         <div className="h-4 bg-gray-200 rounded w-20" />
       </td>
@@ -87,7 +80,7 @@ const SkeletonRow = () => (
 
 const EmptyState = () => (
   <tr>
-    <td colSpan={8} className="text-center py-16">
+    <td colSpan={6} className="text-center py-16">
       <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
       <p className="text-gray-500 font-medium">No vendor orders found</p>
       <p className="text-sm text-gray-400 mt-1">Try adjusting your filters</p>
@@ -103,7 +96,7 @@ const ErrorState = ({
   onRetry: () => void;
 }) => (
   <tr>
-    <td colSpan={8} className="text-center py-12">
+    <td colSpan={6} className="text-center py-12">
       <div className="text-red-600 mb-4">{error}</div>
       <button
         onClick={onRetry}
@@ -118,35 +111,31 @@ const ErrorState = ({
 /* ---------- Main Component ---------- */
 export default function CompanyOrders() {
   const { user } = useAuth();
-  const { company, switchCompany, clearCompany } = useCurrentCompany();
-  const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
-  const readOnly = useReadOnly(); // true for viewers
+  const { company } = useCurrentCompany();
+  const { companies } = useCompaniesList();
+  const readOnly = useReadOnly();
 
   const isSuperAdmin = !user?.memberships?.length;
-  const isAdminLike = isSuperAdmin || readOnly; // viewers see all data like super admin
+  const isAdminLike = isSuperAdmin || readOnly;
 
-  // For admin-like users, always fetch all orders – ignore any specific company context
   const shouldFetchAll = isAdminLike;
 
-  // For non-admin users, determine the effective company slug
   const companySlug = company?.slug ?? null;
   const effectiveSlug = useMemo(() => {
     if (!isAdminLike && user?.memberships?.length) {
       return companySlug || user.memberships[0]?.company_slug || null;
     }
-    return null; // admin-like ignores this
+    return null;
   }, [isAdminLike, companySlug, user]);
 
   const companyName = company?.name ?? "";
 
-  // Get logo from companies list (since CurrentCompany doesn't have logo)
   const companyLogo = useMemo(() => {
     if (!effectiveSlug || !companies.length) return null;
     const foundCompany = companies.find((c: any) => c.slug === effectiveSlug);
     return foundCompany?.logo || null;
   }, [effectiveSlug, companies]);
 
-  // ----- Filter state -----
   const [searchTerm, setSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
@@ -162,7 +151,6 @@ export default function CompanyOrders() {
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // ----- Fetch orders based on user role / company selection -----
   const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
     const token = localStorage.getItem("access");
     if (!token) {
@@ -236,14 +224,6 @@ export default function CompanyOrders() {
     }
   }, [shouldFetchAll, effectiveSlug, showToast]);
 
-  const handleModalUpdate = useCallback(async () => {
-    const freshOrders = await fetchAllOrders();
-    if (selectedOrder) {
-      const updated = freshOrders.find((o) => o.id === selectedOrder.id);
-      if (updated) setSelectedOrder(updated);
-    }
-  }, [fetchAllOrders, selectedOrder]);
-
   useEffect(() => {
     fetchAllOrders();
   }, [fetchAllOrders]);
@@ -258,7 +238,6 @@ export default function CompanyOrders() {
     selectedCompanyId,
   ]);
 
-  // Client‑side filtering
   const filteredOrders = useMemo(() => {
     let result = allOrders;
 
@@ -313,9 +292,6 @@ export default function CompanyOrders() {
     currentPage * pageSize,
   );
 
-  const goToPage = (page: number) =>
-    setCurrentPage(Math.min(Math.max(1, page), totalPages));
-
   const clearFilters = () => {
     setSearchTerm("");
     setOrderStatusFilter("");
@@ -325,30 +301,16 @@ export default function CompanyOrders() {
     setCurrentPage(1);
   };
 
-  // Actions are disabled for viewers
-  const canAssign = !readOnly;
+  const goToPage = (page: number) =>
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
 
-  const isAssignAllowed = (order: VendorOrder): boolean => {
-    if (!canAssign) return false;
-    return order.status?.toLowerCase() === "confirmed";
-  };
-
-  const isChangeAllowed = (order: VendorOrder): boolean => {
-    if (!canAssign) return false;
-    const orderConfirmed = order.status?.toLowerCase() !== "accepted";
-    return orderConfirmed && !order.delivery?.tracking_id;
-  };
-
-  const getDisabledReason = (order: VendorOrder): string => {
-    if (!canAssign) return "You are in view‑only mode.";
-    if (!order.status || order.status.toLowerCase() !== "confirmed") {
-      return "Order status must be 'Confirmed' before a delivery person can be assigned.";
+  const handleModalUpdate = useCallback(async () => {
+    const freshOrders = await fetchAllOrders();
+    if (selectedOrder) {
+      const updated = freshOrders.find((o) => o.id === selectedOrder.id);
+      if (updated) setSelectedOrder(updated);
     }
-    if (order.delivery?.tracking_id && !isChangeAllowed(order)) {
-      return "Order has already been assigned to a delivery person.";
-    }
-    return "";
-  };
+  }, [fetchAllOrders, selectedOrder]);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">

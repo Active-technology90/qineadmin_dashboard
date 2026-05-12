@@ -15,7 +15,6 @@ import {
   UserMinus,
   Shield,
   Package,
-  UserMinus2,
   Minus,
 } from "lucide-react";
 import {
@@ -771,7 +770,6 @@ const SuperAdminUsers: React.FC = () => {
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
               pageSizeOptions={[10, 25, 50, 100]}
-              totalItems={filteredUsers.length}
               enableUrlSync={false}
             />
           </>
@@ -810,19 +808,19 @@ const SuperAdminUsers: React.FC = () => {
         user={managingUser}
         availableCompanies={availableCompanies}
         onAddMembership={async (userId, companyId, role) => {
-          const company = availableCompanies.find((c) => c.id === companyId);
+          const company = availableCompanies.find((c) => c.id === Number(companyId));
           if (!company) throw new Error("Company not found");
           await addUserToCompany(userId, company.slug, role);
           await refreshAllUsers();
         }}
         onUpdateRole={async (userId, companyId, role) => {
-          const company = availableCompanies.find((c) => c.id === companyId);
+          const company = availableCompanies.find((c) => c.id === Number(companyId));
           if (!company) throw new Error("Company not found");
           await updateUserRole(company.slug, userId, role); // ✅ now it gets a real slug
           await refreshAllUsers();
         }}
         onRemoveMembership={async (userId, companyId) => {
-          const company = availableCompanies.find((c) => c.id === companyId);
+          const company = availableCompanies.find((c) => c.id === Number(companyId));
           if (!company) throw new Error("Company not found");
           await removeUserFromCompany(company.slug, userId);
           await refreshAllUsers();

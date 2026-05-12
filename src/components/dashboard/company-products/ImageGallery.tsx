@@ -135,7 +135,6 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [localImages, setLocalImages] = useState<ProductImage[]>(images);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -219,7 +218,6 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
   const closeConfirmModal = () => {
     setShowConfirmModal(false);
     setPendingDeleteId(null);
-    setConfirmDeleteId(null);
   };
 
   // Confirm deletion - perform actual delete
@@ -252,13 +250,7 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
       console.error('Delete error:', error);
     } finally {
       setDeletingId(null);
-      setConfirmDeleteId(null);
     }
-  };
-
-  // Keep original handleDelete for compatibility
-  const handleDelete = (imageId: number) => {
-    requestDelete(imageId);
   };
 
   const handleSetPrimary = async (imageId: number) => {

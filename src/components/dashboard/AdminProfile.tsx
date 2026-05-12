@@ -32,7 +32,6 @@ type PasswordForm = {
   confirmPassword: string;
 };
 
-const BRAND_COLOR = "#6750A4";
 
 // Professional phone number validation function
 const isValidPhoneNumber = (phone: string): boolean => {
@@ -57,7 +56,7 @@ export default function AdminProfile() {
   console.log(user);
 
   const [avatar, setAvatar] = useState<string | null>(
-    user?.profile_image || user?.image || null,
+    user?.profile_image || null,
   );
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);

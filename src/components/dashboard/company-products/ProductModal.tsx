@@ -35,7 +35,7 @@ interface ProductModalProps {
   } | null;
   companySlug: string;
   onClose: () => void;
-  onSave: (data: ProductFormData) => Promise<any>;
+  onSave: (data: ProductFormData, existingProductId?: number) => Promise<any>;
   onProductUpdated?: () => void;
   /** If false, disables SKU, title, unit, and image management */
   canEditBasic?: boolean;

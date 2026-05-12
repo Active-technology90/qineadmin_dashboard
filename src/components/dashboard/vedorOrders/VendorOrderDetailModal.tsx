@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Package, Truck, Receipt, Calendar, MapPin,
-  Download, Copy, Check, User, Hash, ImageIcon,
-  Banknote, Loader2, Phone, RefreshCw, ChevronRight,
-  CreditCard, Clock, Eye, AlertCircle, ShieldCheck,
+  Copy, Check, User, ImageIcon,
+  Banknote, Loader2, RefreshCw,
+  CreditCard, Eye, AlertCircle, ShieldCheck,
   PhoneCall
 } from "lucide-react";
-import type { VendorOrder } from "../../../types";
 import {
   getCompanyStaffByRole,
   reviewReceipt,
@@ -107,7 +106,6 @@ const CopyButton = ({ text }: { text?: string | null }) => {
 const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [staffList, setStaffList] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
-  const [loadingStaff, setLoadingStaff] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const { showToast } = useToast();
@@ -118,7 +116,6 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   useEffect(() => {
     if (!order.company?.slug || !showAssignForm) return;
     const fetchStaff = async () => {
-      setLoadingStaff(true);
       try {
         const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
         const mapped = (res.data.results || res.data).map((s: any) => ({
@@ -127,7 +124,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
           phone: s.user.phone_number,
         }));
         setStaffList(mapped);
-      } finally { setLoadingStaff(false); }
+      } finally { }
     };
     fetchStaff();
   }, [showAssignForm, order.company?.slug]);

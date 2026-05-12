@@ -328,8 +328,6 @@ export default function CompanyUsers() {
       <EditUserModal
         isOpen={!!editingUser}
         user={editingUser}
-        newRole={newRole}
-        onRoleChange={setNewRole}
         updating={updating}
         onClose={() => setEditingUser(null)}
         onSave={handleEditUser}

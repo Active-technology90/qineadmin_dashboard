@@ -5,8 +5,8 @@ import {
   Users,
   ShoppingBag,
   TrendingUp,
-  DollarSign,
   Building2,
+  DollarSign,
 } from "lucide-react";
 import {
   BarChart,
@@ -32,6 +32,8 @@ const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   selected_company: null,
   available_companies: [],
   summary: {
+    company_total_count: 0,
+    company_active_count: 0,
     products: 0,
     users: 0,
     orders: 0,
@@ -279,6 +281,8 @@ export default function Overview({
         conversionRate: analytics.summary.success_rate,
       }
     : {
+        company_total_count: 0,
+        company_active_count: 0,
         products: analytics.summary.products,
         users: analytics.summary.users,
         orders: analytics.summary.orders,
@@ -365,13 +369,15 @@ export default function Overview({
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            <SummaryCard
-              title="Total Companies"
-              value={summaryData.company_total_count}
-              icon={Building2}
-              bgLight="bg-blue-50"
-              textColor="text-blue-600"
-            />
+            {isSuperAdmin && (
+              <SummaryCard
+                title="Total Companies"
+                value={summaryData.company_total_count.toString()}
+                icon={Building2}
+                bgLight="bg-blue-50"
+                textColor="text-blue-600"
+              />
+            )}
             {/* <SummaryCard
               title="Active Companies"
               value={summaryData.company_active_count.toLocaleString()}
@@ -401,13 +407,13 @@ export default function Overview({
               bgLight="bg-purple-50"
               textColor="text-purple-600"
             />
-            {/* <SummaryCard
+            { !isSuperAdmin && <SummaryCard
               title="Total Payments"
               value={formatCurrency(summaryData.payments.total)}
               icon={DollarSign}
               bgLight="bg-amber-50"
               textColor="text-amber-600"
-            /> */}
+            />}
           </>
         )}
       </div>
@@ -753,7 +759,7 @@ export default function Overview({
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
                           <p className="text-sm font-medium  truncate" style={{ color: product.color }}>
-                            {product.product_name}
+                            {product.name}
                           </p>
                           <span className="text-sm font-semibold text-gray-900">
                             {formatCurrency(product.sales)}
@@ -841,7 +847,7 @@ export default function Overview({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {recentOrders.map((order, idx) => (
+                    {recentOrders.map((order) => (
                       <tr
                         key={order.id}
                         className="hover:bg-gray-50/50 transition-colors"

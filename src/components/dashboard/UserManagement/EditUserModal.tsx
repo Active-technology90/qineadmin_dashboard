@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -6,11 +6,9 @@ import {
   AlertCircle,
   Mail,
   Phone,
-  Camera,
   UserIcon,
   User2Icon,
   UserCircle,
-  Briefcase,
 } from "lucide-react";
 import type { User } from "../../../types";
 
@@ -337,7 +335,6 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
 
       is_active: true,
     });
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -352,7 +349,6 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
           username: user.username,
           is_active: Boolean(user.is_active),
         });
-        setAvatarFile(null);
         setFieldErrors({});
       }
     }, [user]);
