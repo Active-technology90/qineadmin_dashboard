@@ -29,7 +29,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     contacted: "Confirmed",
 
     // Delivery status
-    pending: "Assigned",
+    pending: "Pending",
     out_for_delivery: "In Transit",
     delivered: "Completed",
   };
@@ -68,6 +68,40 @@ const StatusBadge = ({ status }: { status: string }) => {
     </span>
   );
 };
+
+// Helper component for formatted date display
+const OrderDate = ({ dateString }: { dateString?: string }) => {
+  if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
+  
+  const formatTime = date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
+  
+  const formatDate = date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-sm font-medium text-gray-900">
+        {isToday ? 'Today' : isYesterday ? 'Yesterday' : formatDate}
+      </span>
+      <span className="text-xs text-gray-500 font-mono">
+        {formatTime}
+      </span>
+    </div>
+  );
+};
+
 const CompanyAvatar = ({
   logo,
   name,
@@ -427,6 +461,14 @@ export default function CompanyOrders() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Payment Method
                 </th> */}
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Date & Time</span>
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -515,12 +557,16 @@ export default function CompanyOrders() {
                         ? order.payment_method.replace(/_/g, " ")
                         : "—"}
                     </td> */}
-                    <td className="px-2 py-2 whitespace-nowrap text-right">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <OrderDate dateString={order.created_at} />
+                    </td>
+                    <td className="px-6 py-2 whitespace-nowrap text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[#6750A4] hover:text-[#6750A4] hover:bg-[#6750A4]/10 text-xs font-medium transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[#6750A4] hover:text-[#6750A4] hover:bg-[#6750A4]/10 text-sm font-medium transition-all duration-200 group"
                       >
-                        <Settings className="h-4 w-4" /> <span>Manage</span>
+                        <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" /> 
+                        <span>Manage</span>
                       </button>
                     </td>
                   </tr>

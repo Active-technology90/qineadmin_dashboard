@@ -5,7 +5,7 @@ import {
   Copy, Check, User, ImageIcon,
   Banknote, Loader2, RefreshCw,
   CreditCard, Eye, AlertCircle, ShieldCheck,
-  PhoneCall
+  PhoneCall, ZoomIn
 } from "lucide-react";
 import {
   getCompanyStaffByRole,
@@ -72,13 +72,15 @@ const getStatusBadge = (status: string) => {
 // ---------- Sub-Components ----------
 
 const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
-  <motion.div variants={itemVariants} className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm ${className}`}>
+  <motion.div variants={itemVariants} className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}>
     <div className="flex flex-row justify-between items-start">
-      <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
-        <div className="p-1.5 bg-[#6750A4]/10 rounded-lg">
+      <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
+        <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
           <Icon className="h-4 w-4 text-[#6750A4]" />
         </div>
-        <h4 className="text-sm font-bold text-gray-800">{title}</h4>
+        <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">{title}</h4>
+        {/* Decorative gradient line under header */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
       </div>
       {status && <div className="flex justify-start">
     <span className={getStatusBadge(status)}>
@@ -145,10 +147,19 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
   const [assigning, setAssigning] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [usernameMap, setUsernameMap] = useState<Map<string, string>>(new Map());
   const { showToast } = useToast();
+  const [showFullscreenImage, setShowFullscreenImage] = useState(false);
 
   const delivery = order.delivery;
   const canManage = !readOnly && order.status?.toLowerCase() === "confirmed";
+  
+  // DEBUG: Log the delivery object to see what fields are available
+  console.log('Delivery object:', delivery);
+  if (delivery?.delivery_person_name) {
+    console.log('Delivery person name:', delivery.delivery_person_name);
+    console.log('All delivery keys:', Object.keys(delivery));
+  }
 
   useEffect(() => {
     if (!order.company?.slug || !showAssignForm) return;
@@ -157,10 +168,20 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
         const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
         const mapped = (res.data.results || res.data).map((s: any) => ({
           id: s.user.id,
-          name: `${s.user.first_name || ""} ${s.user.last_name || ""}`.trim(),
+          name: `${s.user.username || s.user.first_name || ""}`.trim(),
           phone: s.user.phone_number,
+          username: s.user.username,
         }));
         setStaffList(mapped);
+        
+        // Create a map of phone number -> username for lookups
+        const map = new Map();
+        mapped.forEach((staff: any) => {
+          if (staff.phone && staff.username) {
+            map.set(staff.phone, staff.username);
+          }
+        });
+        setUsernameMap(map);
       } finally { }
     };
     fetchStaff();
@@ -184,27 +205,44 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   };
 
   return (
-    <Card title="Delivery Details" icon={Truck} status={delivery?.status} className={!delivery && canManage ? "ring-2 ring-purple-100 border-purple-200" : ""}>
+    <>
+      <Card title="Delivery Details" icon={Truck} status={delivery?.status} className={!delivery && canManage ? "ring-2 ring-purple-100 border-purple-200" : ""}>
       <AnimatePresence mode="wait">
         {!showAssignForm ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             {delivery?.delivery_person_name ? (
               <div className="flex items-center gap-4">
                 {delivery.delivery_person_image ?
-                  <img
-                    src={delivery.delivery_person_image}
-                    alt={delivery.delivery_person_name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <div 
+                    className="relative group cursor-pointer" 
+                    onClick={() => setShowFullscreenImage(true)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowFullscreenImage(true); }}
+                  >
+                    <img
+                      src={delivery.delivery_person_image}
+                      alt={delivery.delivery_person_username || delivery.delivery_person_name}
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                      <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-1 shadow-md">
+                      <div className="h-2 w-2 rounded-full bg-white"></div>
+                    </div>
+                  </div>
                   :
-                  <div className="w-12 h-12 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-100">
-                    {getInitials(delivery.delivery_person_name)}
+                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
+                    {getInitials(usernameMap.get(delivery.delivery_person_phone) || delivery.delivery_person_name)}
                   </div>
                 }                <div className="flex-1">
-                  <p className="font-bold text-gray-900 text-sm">{delivery.delivery_person_name}</p>
-                  <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                    <PhoneCall className="h-3 w-3" />
-                    <span>{delivery.delivery_person_phone}</span>
+                  <p className="font-bold text-gray-900 text-sm">
+                    {usernameMap.get(delivery.delivery_person_phone) || delivery.delivery_person_name}
+                  </p>
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200">
+                    <PhoneCall className="h-3 w-3 text-blue-600" />
+                    <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight">{delivery.delivery_person_phone}</span>
                     <CopyButton text={delivery.delivery_person_phone} />
                   </div>
                   {/* <div className="mt-1">
@@ -215,7 +253,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                   <button onClick={() => setShowAssignForm(true)} className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors">
                     Change
                   </button>
-                )}
+                    )}
               </div>
             ) : (
               <div className="text-center py-2">
@@ -227,6 +265,8 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 )}
               </div>
             )}
+            
+
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
@@ -255,6 +295,42 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
         )}
       </AnimatePresence>
     </Card>
+    
+    {/* Fullscreen Modal - moved outside to avoid animation conflicts */}
+    <AnimatePresence>
+      {showFullscreenImage && delivery?.delivery_person_image && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4"
+          onClick={() => setShowFullscreenImage(false)}
+        >
+          <button
+            onClick={() => setShowFullscreenImage(false)}
+            className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 backdrop-blur-sm z-10"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white/70 text-xs font-medium flex items-center gap-2">
+            <ZoomIn className="h-3.5 w-3.5" />
+            <span>Click anywhere to close</span>
+          </div>
+          
+          <motion.img
+            src={delivery.delivery_person_image}
+            alt="Delivery Person"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 };
 
@@ -349,9 +425,9 @@ const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status 
           </div>
         )}
 
-        <div className="bg-gray-50 p-3 rounded-xl space-y-1">
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bank Details</p>
-          <p className="text-xs font-bold text-gray-700">{receipt.bank_name || "Not Specified"}</p>
+        <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-3 rounded-xl space-y-1 border border-purple-100">
+          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest">Bank Details</p>
+          <p className="text-xs font-bold bg-gradient-to-r from-gray-700 to-[#6750A4] bg-clip-text text-transparent">{receipt.bank_name || "Not Specified"}</p>
         </div>
 
         {canReview && (
@@ -381,11 +457,11 @@ const ReceiptReviewCard = ({ receipt, paymentMethod, onUpdate, readOnly, status 
         )}
 
         {isAlreadyReviewed && (
-          <div className={`p-3 rounded-xl flex items-start gap-3 ${receipt.status === 'approved' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+          <div className={`p-3 rounded-xl flex items-start gap-3 ${receipt.status === 'approved' ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}>
             {receipt.status === 'approved' ? <ShieldCheck className="h-5 w-5 text-emerald-600" /> : <X className="h-5 w-5 text-rose-600" />}
             <div>
-              <p className="text-xs font-bold text-gray-800">Verification {receipt.status}</p>
-              <p className="text-[10px] text-gray-500">{receipt.status === 'approved' ? 'Order is ready for dispatch.' : 'Customer must re-upload.'}</p>
+              <p className="text-xs font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">Verification {receipt.status}</p>
+              <p className="text-[10px] text-gray-600">{receipt.status === 'approved' ? 'Order is ready for dispatch.' : 'Customer must re-upload.'}</p>
             </div>
           </div>
         )}
@@ -438,23 +514,28 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
         <motion.div
           variants={containerVariants}
           initial="hidden" animate="visible" exit="hidden"
-          className="relative bg-[#fff] w-full max-w-7xl max-h-[92vh] rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white"
+          className="relative bg-gradient-to-br from-white via-white to-gray-50/50 w-full max-w-7xl max-h-[92vh] rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white/20 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top Header */}
-          <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 py-5 flex justify-between items-center sticky top-0 z-20">
+           {/* Top Header */}
+          <div className="bg-gradient-to-r from-white via-white/95 to-purple-50/30 backdrop-blur-md border-b border-purple-100/30 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
             <div className="flex items-center gap-5">
-              <div className="h-12 w-12 bg-[#6750A4] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-100">
-                <Package className="text-white h-6 w-6" />
+              <div className="h-12 w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20">
+                <Package className="text-white h-6 w-6 drop-shadow-sm" />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">Order #{order.id}</h2>
+                  <h2 className="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">Order #{order.id}</h2>
                   <StatusBadge status={order.status} />
                 </div>
-                <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                  <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {new Date(order.created_at).toLocaleDateString()}</span>
-                  <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {order.company?.name}</span>
+                <div className="flex items-center gap-4 text-xs font-bold">
+                  <span className="flex items-center gap-2 bg-[#6750A4]/10 px-4 py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
+                    <Calendar className="h-3.5 w-3.5 text-[#6750A4]" />
+                    <span className="font-mono text-[12px] font-semibold text-gray-700 tracking-tight">
+                      {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} <span className="text-[#6750A4] mx-0.5">•</span> {new Date(order.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-gray-600"><User className="h-3.5 w-3.5 text-gray-400" /> <span className="font-medium">{order.company?.name}</span></span>
                 </div>
               </div>
             </div>
@@ -469,8 +550,8 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
             </div>
           </div>
 
-          {/* Scrollable Content Grid */}
-          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+           {/* Scrollable Content Grid */}
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-gray-100">
             <div className="grid grid-cols-12 gap-8">
 
               {/* Left Side: Order Composition & Shipping (8 cols) */}
@@ -484,16 +565,16 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
                         <img
                           src={order.recipient_image}
                           alt="Recipient"
-                          className="w-14 h-14 rounded-full"
+                          className="w-14 h-14 rounded-full ring-2 ring-purple-200"
                         /> :
-                        <div className="w-14 h-14 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-700 font-black text-xl">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-xl">
                           {getInitials(order.recipient_name)}
                         </div>}
                       <div className="space-y-1">
-                        <p className="font-black text-gray-900">{order.recipient_name}</p>
-                        <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-lg w-fit">
-                          <PhoneCall className="h-3 w-3 text-green-600" />
-                          <span className="text-xs font-bold text-gray-600">{order.shipping_phone}</span>
+                        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">{order.recipient_name}</p>
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-3 py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
+                          <PhoneCall className="h-3.5 w-3.5 text-blue-600" />
+                          <span className="text-xs font-mono font-bold text-blue-700 tracking-tight">{order.shipping_phone}</span>
                           <CopyButton text={order.shipping_phone} />
                         </div>
                       </div>
@@ -501,15 +582,24 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
                   </Card>
 
                   <Card title="Shipping Destination" icon={MapPin}>
-                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
-                     Recipient Name: <span className="text-sm text-green-600 font-bold">{order.recipient_name || "No recipient name provided."}</span> 
-                    </p>
-                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
-                     Recipient Phone Number: <span className="text-sm text-green-600 font-bold">  {order.shipping_phone || "No Phone Number provided."}</span>
-                    </p>
-                    <p className="text-xs font-bold text-gray-600 leading-relaxed italic">
-                     Shipping Address: <span className="text-sm text-green-600 font-bold">{order.shipping_address_text || "No address provided."}</span>
-                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">Recipient Name:</span>
+                        <span className="text-sm font-bold text-[#6750A4]">{order.recipient_name || "No recipient name provided."}</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/30 border-l-4 border-blue-500">
+                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">Recipient Phone:</span>
+                        <div className="flex items-center gap-2">
+                          <PhoneCall className="h-3.5 w-3.5 text-blue-600" />
+                          <span className="text-sm font-mono font-bold text-blue-700 tracking-tight">{order.shipping_phone || "No Phone Number provided."}</span>
+                          <CopyButton text={order.shipping_phone} />
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">Shipping Address:</span>
+                        <span className="text-sm font-bold text-[#6750A4]">{order.shipping_address_text || "No address provided."}</span>
+                      </div>
+                    </div>
                   </Card>
                 </div>
 
@@ -564,8 +654,9 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
               <div className="col-span-12 lg:col-span-4 space-y-4">
 
                 {/* 3. Financial Summary Card */}
-                <motion.div variants={itemVariants} className="bg-[#6750A4] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-100 relative overflow-hidden group">
-                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-700" />
+                 <motion.div variants={itemVariants} className="bg-gradient-to-br from-[#6750A4] via-[#7B5CB5] to-[#9370DB] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-white/5 rounded-full blur-2xl" />
                   <div className="relative z-10">
                     <div className="flex justify-between items-start mb-5">
                       <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
