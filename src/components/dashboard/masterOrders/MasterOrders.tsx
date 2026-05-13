@@ -199,8 +199,9 @@ export default function Orders() {
 };
   function getOrderDeliveryStatus(order: MasterOrder): string {
     const statuses =
-      order.vendor_orders?.map((vo) => vo.delivery_status).filter(Boolean) ||
-      [];
+      order.vendor_orders
+        ?.map((vo) => vo.delivery_status)
+        .filter((s): s is string => !!s) || [];
     if (statuses.length === 0) return "N/A";
     const unique = [...new Set(statuses)];
     if (unique.length === 1) return unique[0];
