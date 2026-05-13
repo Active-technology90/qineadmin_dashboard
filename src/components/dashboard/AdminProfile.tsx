@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useCompaniesList } from "../../hooks/useCompaniesList";
 import { useForm, Controller } from "react-hook-form";
 import { updateProfile, changePassword, getMe } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -52,6 +53,7 @@ const isValidPhoneNumber = (phone: string): boolean => {
 export default function AdminProfile() {
   const { user, setUser, logout } = useAuth();
   const { company, switchCompany } = useCurrentCompany();
+  const { companies } = useCompaniesList();
   const isSuperAdmin = !user?.memberships?.length;
   console.log(user);
 
@@ -249,6 +251,12 @@ export default function AdminProfile() {
   // Determine if a membership is currently selected
   const isCurrentCompany = (membership: any) => {
     return company?.slug === membership.company_slug;
+  };
+   // Get logo from companies list (same as CompanyProducts)
+  const getCompanyLogo = (companySlug: string) => {
+    if (!companySlug || !companies.length) return null;
+    const foundCompany = companies.find((c: any) => c.slug === companySlug);
+    return foundCompany?.logo || null;
   };
 
   return (
@@ -667,31 +675,58 @@ export default function AdminProfile() {
                         }`}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3">
                             <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden shadow-md ${
                                 isActive
-                                  ? "bg-[#6750A4] text-white"
-                                  : "bg-[#6750A4]/10 text-[#6750A4]"
+                                  ? "bg-gradient-to-br from-[#6750A4] to-purple-700 ring-2 ring-[#6750A4]/30"
+                                  : "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-[#6750A4]/10 group-hover:to-purple-100"
                               }`}
                             >
-                              <Building className="h-5 w-5" />
+                              {(() => {
+                                const logo = getCompanyLogo(membership.company_slug);
+                                if (logo) {
+                                  return (
+                                    <img
+                                      src={logo}
+                                      alt={membership.company_name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  );
+                                }
+                                return <Building className={`h-6 w-6 transition-all duration-300 ${
+                                  isActive ? "text-white" : "text-gray-500 group-hover:text-[#6750A4]"
+                                }`} />;
+                              })()}
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <p
-                                className={`font-medium transition-colors ${
+                                className={`font-semibold transition-all duration-300 ${
                                   isActive
-                                    ? "text-[#6750A4]"
-                                    : "text-gray-800 group-hover:text-[#6750A4]"
+                                    ? "text-[#6750A4] text-lg"
+                                    : "text-gray-800 group-hover:text-[#6750A4] text-base"
                                 }`}
                               >
                                 {membership.company_name}
                               </p>
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                {isActive
-                                  ? "Currently active"
-                                  : "Click to switch"}
-                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                  membership.role === "admin"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : membership.role === "staff"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : membership.role === "viewer"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}>
+                                  {membership.role}
+                                </span>
+                                {isActive && (
+                                  <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                    Active
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
