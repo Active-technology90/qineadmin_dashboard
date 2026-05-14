@@ -229,6 +229,7 @@ export default function Overview({
   const [error, setError] = useState<string>("");
   const [analytics, setAnalytics] =
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
+    const [companiesList, setCompaniesList] = useState<any[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -265,6 +266,19 @@ export default function Overview({
       active = false;
     };
   }, [period, selectedCompanySlug]);
+   // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { getCompanies } = await import("../../services/api");
+        const response = await getCompanies({ page_size: 100 });
+        setCompaniesList(response.data.results || []);
+      } catch (error) {
+        console.error("Failed to fetch companies:", error);
+      }
+    };
+    fetchCompanies();
+  }, []);
 
   const currentData = analytics.revenue_series;
   const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
@@ -307,13 +321,26 @@ export default function Overview({
     ? Object.keys(productTrendData[0]).filter((key) => key !== "month")
     : [];
 
+  // Helper function to get logo from companiesList
+  const getCompanyLogoFromList = (slug: string) => {
+    const found = companiesList.find((c: any) => c.slug === slug);
+    return found?.logo || null;
+  };
+
   const scopeOptions = [
-    { value: "", label: "All Companies" },
+    { value: "", label: "All Companies", logo: null },
     ...analytics.available_companies.map((c) => ({
       value: c.slug,
       label: c.name,
+      logo: getCompanyLogoFromList(c.slug),
     })),
   ];
+  // Get the selected company name and logo for display
+  const selectedCompany = selectedCompanySlug
+    ? scopeOptions.find(opt => opt.value === selectedCompanySlug)
+    : null;
+  const selectedCompanyName = selectedCompany?.label || "All Companies";
+  const selectedCompanyLogo = selectedCompany?.logo || null;
 
   const hasRevenueData =
     currentData.length > 0 &&
@@ -331,31 +358,68 @@ export default function Overview({
     productSalesData.length > 0 &&
     productSalesData.some((product) => product.sales > 0);
   const hasRecentOrdersData = recentOrders.length > 0;
+  
+  // Determine if company dropdown should be shown
+  // Hide dropdown when user has access to only ONE company (including super admin with no companies)
+  const shouldShowCompanyDropdown = (() => {
+    // For super admin: ALWAYS show dropdown (they need to filter across all companies)
+    if (isSuperAdmin) {
+      return true;
+    }
+    // For company users: show only if they have access to 2 or more companies
+    return analytics.available_companies.length >= 2;
+  })();
 
   return (
     <div className="space-y-8">
-      {/* Scope selector */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Scope:</span>
-          <select
-            value={selectedCompanySlug}
-            onChange={(e) => setSelectedCompanySlug(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent"
-          >
-            {scopeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+      {/* Scope selector - only show when user has access to multiple companies */}
+      {shouldShowCompanyDropdown && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          {/* Selected Company Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              {selectedCompanyLogo && selectedCompanySlug ? (
+                <img
+                  src={selectedCompanyLogo}
+                  alt={selectedCompanyName}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-[#6750A4]/20 shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-sm">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Currently Overview</p>
+                <h2 className="text-xl font-extrabold bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent">
+                  {selectedCompanyName}
+                </h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Select Company:</span>
+                <select
+                  value={selectedCompanySlug}
+                  onChange={(e) => setSelectedCompanySlug(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent font-medium"
+                >
+                  {scopeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {readOnly && (
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+                  View Only
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-        {readOnly && (
-          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-            View Only
-          </span>
-        )}
-      </div>
+      )}
 
       {!!error && (
         <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-3 text-sm">

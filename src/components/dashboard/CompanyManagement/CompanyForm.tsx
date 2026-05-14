@@ -372,25 +372,7 @@ export default function CompanyForm({
           </p>
         </div>
 
-        {/* Action Buttons */}
-        {isEditingActive && (
-          <div className="flex flex-row gap-4 items-center justify-center pt-2 border-t border-gray-100">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full cursor-pointer bg-gradient-to-r from-[#6750A4] to-[#7c63b8] text-white px-2 py-1.5 rounded-md text-xs font-semibold hover:from-[#5b4694] hover:to-[#6b55a8] transition-all duration-300 disabled:opacity-50 shadow-sm"
-            >
-              {submitting ? "Saving..." : editingSlug ? "Update" : "Create"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full cursor-pointer border border-gray-300 rounded-md px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
+        {/* Action Buttons - Moved to NonSuperAdminView */}
 
         {/* View only message */}
         {!isEditingActive && (

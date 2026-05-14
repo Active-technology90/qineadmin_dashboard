@@ -55,37 +55,120 @@ export default function NonSuperAdminView({
       </div>
 
       {/* Right: Inline form */}
-      <div className="lg:w-2/3 w-full bg-white rounded-xl border border-gray-200 shadow-md sticky top-6 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-          <div className="flex items-center justify-between w-full">
+          <div className="lg:w-2/3 w-full flex flex-col gap-3 sticky top-6">
+        {/* Action Buttons - Edit, Update, Cancel on same line */}
+        {companies.length > 0 && (
+          <div className="flex justify-between items-center gap-3">
+            {/* Update & Cancel Buttons - only show when editing is active */}
+            {isEditingActive ? (
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  onClick={onSubmit}
+                  disabled={submitting}
+                  className="cursor-pointer bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-extrabold tracking-wide transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center gap-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34" />
+                    <polygon points="18 2 22 6 12 16 8 16 8 12 18 2" />
+                  </svg>
+                  {submitting ? "Saving..." : "Update"}
+                </button>
+                <button
+                  type="button"
+                  onClick={onCloseForm}
+                  className="cursor-pointer bg-white border-2 border-gray-300 rounded-xl px-6 py-2.5 text-sm font-extrabold text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              /* View Only Badge - clean text-only with lock icon */
+              <div className="flex items-center gap-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-amber-500"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span className="text-sm font-medium text-amber-600">View Only Mode</span>
+                <span className="text-xs text-gray-400 italic">• Click "Edit Company" to make changes</span>
+              </div>
+            )}
+            
+            {/* Edit Button */}
             <button
-              onClick={onCloseForm}
-              className="text-[#6750A4] hover:text-[#5b4694] hover:bg-gray-100 p-1 rounded-md transition-colors flex items-center gap-1"
+              onClick={() => onEdit(companies[0])}
+              disabled={
+                userCompanyRole !== "owner" &&
+                userCompanyRole !== "admin" &&
+                userCompanyRole !== "super_admin"
+              }
+              className={`px-6 py-2.5 rounded-xl flex items-center gap-2 text-sm font-extrabold tracking-wide transition-all duration-300 shadow-md
+                ${
+                  userCompanyRole === "owner" ||
+                  userCompanyRole === "admin" ||
+                  userCompanyRole === "super_admin"
+                     ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer hover:scale-[1.02]"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed shadow-none"
+                }
+              `}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M15 18l-6-6 6-6" />
+                <path d="M17 3l4 4-7 7H10v-4l7-7z" />
+                <path d="M4 20h16" />
               </svg>
-              <span className="text-[14px] font-medium">Back</span>
+              Edit Company
             </button>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-0.5 bg-[#6750A4] rounded-full"></div>
-              <h3 className="pr-5 text-xs font-bold text-[#6750A4] uppercase tracking-wide">
-                Company Details
-              </h3>
-            </div>
           </div>
-        </div>
+        )}
+
+        {/* Header */}
+        {/* Form Container - Header removed */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
 
         {/* Loading state */}
         {companies.length === 0 && (
@@ -110,8 +193,9 @@ export default function NonSuperAdminView({
             onSubmit={onSubmit}
             onClose={onCloseForm}
           />
-        )}
+                 )}
+          </div>
+        </div>
       </div>
-    </div>
   );
 }

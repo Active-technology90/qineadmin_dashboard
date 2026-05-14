@@ -137,6 +137,7 @@ export default function CompanyManagement() {
     logo: null,
     cover_image: null,
   });
+  const [originalFormData, setOriginalFormData] = useState<CompanyFormData | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -445,6 +446,40 @@ export default function CompanyManagement() {
     e.preventDefault();
     e.stopPropagation();
     if (!validateBasicInfo()) return;
+    
+    // Check if any changes were made (for update operations)
+    if (editingSlug && originalFormData) {
+      const hasChanges = () => {
+        // Check text fields
+        if (formData.name !== originalFormData.name) return true;
+        if (formData.name_am !== originalFormData.name_am) return true;
+        if (formData.category !== originalFormData.category) return true;
+        if (formData.sub_category !== originalFormData.sub_category) return true;
+        if (formData.business_type !== originalFormData.business_type) return true;
+        if (formData.description !== originalFormData.description) return true;
+        if (formData.minimum_order_total !== originalFormData.minimum_order_total) return true;
+        if (formData.is_active !== originalFormData.is_active) return true;
+        if (formData.is_featured !== originalFormData.is_featured) return true;
+        // Check file uploads
+        if (formData.logo !== null) return true;
+        if (formData.cover_image !== null) return true;
+        return false;
+      };
+      
+      if (!hasChanges()) {
+        showToast("info", "No changes detected. Update canceled.");
+        // Close edit mode without submitting
+        if (!isSuperAdmin) {
+          setIsEditingActive(false);
+          resetForm();
+        } else {
+          setModalOpen(false);
+        }
+        setSubmitting(false);
+        return;
+      }
+    }
+    
     setSubmitting(true);
     try {
       const payload: any = {
@@ -599,6 +634,7 @@ export default function CompanyManagement() {
       logo: null,
       cover_image: null,
     });
+        setOriginalFormData(null);
     setLogoPreview(null);
     setCoverPreview(null);
     setFormErrors({});
@@ -611,7 +647,7 @@ export default function CompanyManagement() {
         return;
       }
       setEditingSlug(company.slug);
-      setFormData({
+      const newFormData = {
         name: company.name,
         name_am: company.name_am || "",
         slug: company.slug,
@@ -624,7 +660,10 @@ export default function CompanyManagement() {
         is_featured: company.is_featured,
         logo: null,
         cover_image: null,
-      });
+      };
+      setFormData(newFormData);
+      // Save original data for change detection
+      setOriginalFormData({ ...newFormData });
       if (company.logo) setLogoPreview(company.logo);
       if (company.cover_image) setCoverPreview(company.cover_image);
       if (isSuperAdmin) {
@@ -874,10 +913,11 @@ export default function CompanyManagement() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-[#6750A4]">
-            {isSuperAdmin ? "Companies" : "Company Profile"}
+            {isSuperAdmin ? "Companies" : "Company Detail"}
           </h2>
           {!isSuperAdmin && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-[#6750A4]"></span>
               Manage your company details and settings
             </p>
           )}
