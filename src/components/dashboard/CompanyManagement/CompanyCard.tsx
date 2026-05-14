@@ -1,5 +1,5 @@
 // src/components/admin/CompanyManagement/CompanyCard.tsx
-import { Building2, Edit3, Tag } from "lucide-react";
+import { Building2, Tag } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
 
 interface CompanyCardProps {
@@ -122,36 +122,7 @@ export default function CompanyCard({
           </div>
         </div>
 
-        {/* Edit Button */}
-        <button
-          onClick={() => onEdit(company)}
-          disabled={
-            userRole !== "owner" &&
-            userRole !== "admin" &&
-            userRole !== "super_admin"
-          }
-          className={`absolute bottom-3 right-4 z-20 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all duration-300 group/btn
-            ${
-              userRole === "owner" ||
-              userRole === "admin" ||
-              userRole === "super_admin"
-                ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
-            }
-          `}
-        >
-          <Edit3
-            size={24}
-            className={`transition-transform ${
-              userRole === "owner" ||
-              userRole === "admin" ||
-              userRole === "super_admin"
-                ? "group-hover/btn:rotate-12"
-                : ""
-            }`}
-          />
-          Edit Company
-        </button>
+         {/* Edit Button - Removed, now located at top of form */}
       </div>
     </div>
   );

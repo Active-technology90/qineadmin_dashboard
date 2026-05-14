@@ -75,6 +75,37 @@ function OrdersMenu({
   ordersMenuOpen: boolean;
   onToggleOrdersMenu: () => void;
 }) {
+  // If user only has Company Orders (no Master Orders), show simple single button without dropdown
+  if (!showMasterOrders) {
+    if (!collapsed) {
+      return (
+        <button
+          onClick={() => onNavigate("companyOrders")}
+          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+            activeTab === "companyOrders"
+              ? "bg-white/40 text-white shadow-lg"
+              : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <ShoppingBag className="h-5 w-5" />
+          <span>Orders</span>
+        </button>
+      );
+    } else {
+      return (
+        <button
+          onClick={() => onNavigate("companyOrders")}
+          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+            activeTab === "companyOrders"
+              ? "bg-white/40 text-white shadow-lg"
+              : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <ShoppingBag className="h-5 w-5" />
+        </button>
+      );
+    }
+  }
   const [collapsedOrdersOpen, setCollapsedOrdersOpen] = useState(false);
   const ordersRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +172,7 @@ function OrdersMenu({
               }`}
             >
               <ListOrdered className="h-4 w-4" />
-              Company Orders
+              All Orders
             </button>
           </div>
         )}
@@ -441,7 +472,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<Building2 className="h-5 w-5" />}
-            label={!user?.memberships?.length ? "Companies" : "Company Profile"}
+            label={!user?.memberships?.length ? "Companies" : "Company Detail"}
             active={activeTab === "companies"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
@@ -492,7 +523,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<Package className="h-5 w-5" />}
-            label="Company Products"
+            label="All Products"
             active={activeTab === "products"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("products")}
@@ -503,7 +534,7 @@ export default function AdminDashboard() {
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
             icon={<Users className="h-5 w-5" />}
-            label="Company Users"
+            label="All Users"
             active={activeTab === "users"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("users")}
@@ -588,23 +619,29 @@ export default function AdminDashboard() {
             )}
              {/* Company name – show for non‑super‑admin (including viewer) */}
             {company && !isSuperAdmin && (
-              <div className="hidden sm:flex sm:items-center sm:gap-2.5 group cursor-default">
+              <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
                 <div className="relative flex-shrink-0">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shadow-sm border border-indigo-100">
+                  {/* Animated ring border - secondary color */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#6750A4] to-[#9b87f5] animate-pulse opacity-75"></div>
+                  <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-lg border-2 border-[#6750A4] p-0.5">
                     {companyLogo ? (
                       <img
                         src={companyLogo}
                         alt={company.name}
-                        className="w-7 h-7 rounded-lg object-cover"
+                        className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      <Building2 className="w-4 h-4 text-indigo-500" />
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-white" />
+                      </div>
                     )}
                   </div>
+                  {/* Online status indicator */}
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="text-sm font-extrabold text-indigo-700 truncate max-w-[180px] md:max-w-[240px] lg:max-w-[300px]" title={company.name}>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <p className="text-sm font-extrabold text-indigo-700 truncate max-w-[180px] md:max-w-[240px] lg:max-w-[300px]" title={company.name}>
                       {company.name}
                     </p>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${
@@ -619,9 +656,12 @@ export default function AdminDashboard() {
                       {company.role}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400 tracking-wide uppercase">
-                    Current Company
-                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#6750A4]"></div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Active Company
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
