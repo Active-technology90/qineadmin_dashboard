@@ -178,13 +178,13 @@ export default function CompanyOrders() {
     return null;
   }, [isAdminLike, companySlug, user]);
 
-  const companyName = company?.name ?? "";
+  // const companyName = company?.name ?? "";
 
-  const companyLogo = useMemo(() => {
-    if (!effectiveSlug || !companies.length) return null;
-    const foundCompany = companies.find((c: any) => c.slug === effectiveSlug);
-    return foundCompany?.logo || null;
-  }, [effectiveSlug, companies]);
+  // const companyLogo = useMemo(() => {
+  //   if (!effectiveSlug || !companies.length) return null;
+  //   const foundCompany = companies.find((c: any) => c.slug === effectiveSlug);
+  //   return foundCompany?.logo || null;
+  // }, [effectiveSlug, companies]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("");
@@ -371,7 +371,7 @@ export default function CompanyOrders() {
         <div className="flex items-center gap-3">
           {!isAdminLike && effectiveSlug ? (
             <>
-              {companyLogo ? (
+              {/* {companyLogo ? (
                 <img
                   src={companyLogo}
                   alt={companyName}
@@ -379,13 +379,13 @@ export default function CompanyOrders() {
                 />
               ) : (
                 <Building2 className="w-8 h-8 text-gray-400" />
-              )}
-              <div>
+              )} */}
+              {/* <div>
                 <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
                   {companyName}
                 </h2>
                 <p className="text-sm font-medium text-secondary">Orders</p>
-              </div>
+              </div> */}
               {readOnly && (
                 <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
                   View Only
@@ -449,18 +449,20 @@ export default function CompanyOrders() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Delivery
-                </th>
-                {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Delivery Person
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Payment Method
+                </th> 
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Order Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Delivery Status
+                </th>
+                 {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Delivery Person
                 </th> */}
+
+               
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,6 +505,11 @@ export default function CompanyOrders() {
                       {Number(order.amount).toLocaleString()}{" "}
                       <span className="text-xs text-gray-500">ETB</span>
                     </td>
+                     <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.payment_method
+                        ? order.payment_method.replace(/_/g, " ")
+                        : "—"}
+                    </td> 
                     <td className="px-6 py-4">
                       <StatusBadge status={order.status} />
                     </td>
@@ -552,11 +559,8 @@ export default function CompanyOrders() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.payment_method
-                        ? order.payment_method.replace(/_/g, " ")
-                        : "—"}
-                    </td> */}
+                    */}
+                   
                     <td className="px-6 py-4 whitespace-nowrap">
                       <OrderDate dateString={order.created_at} />
                     </td>

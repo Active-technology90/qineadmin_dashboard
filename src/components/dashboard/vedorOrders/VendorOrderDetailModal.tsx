@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   PhoneCall,
   ZoomIn,
- 
   CheckCircle,
 } from "lucide-react";
 import {
@@ -53,7 +52,10 @@ const getInitials = (name?: string) =>
     .join("")
     .toUpperCase() || "?";
 
-const getDisplayStatus = (status: string) => {
+const getDisplayStatus = (
+  status: string,
+  customLabels?: Record<string, string>,
+) => {
   const statusMap: Record<string, string> = {
     contacted: "Confirmed",
 
@@ -64,6 +66,8 @@ const getDisplayStatus = (status: string) => {
     pending: "Assigned",
     out_for_delivery: "In Transit",
     delivered: "Completed",
+
+    ...customLabels, // override default labels
   };
 
   return statusMap[status?.toLowerCase()] || status;
@@ -93,7 +97,6 @@ const getStatusBadge = (status: string) => {
 // ---------- Sub-Components ----------
 
 const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
-
   <motion.div
     variants={itemVariants}
     className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}
@@ -122,7 +125,13 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
   </motion.div>
 );
 
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({
+  status,
+  customLabels,
+}: {
+  status: string;
+  customLabels?: Record<string, string>;
+}) => {
   const s = status?.toLowerCase();
 
   const styles: Record<string, string> = {
@@ -142,7 +151,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     rejected: "bg-rose-100 text-rose-700 border-rose-200",
   };
 
-  const displayStatus = getDisplayStatus(status);
+  const displayStatus = getDisplayStatus(status, customLabels);
 
   return (
     <span
@@ -154,7 +163,6 @@ const StatusBadge = ({ status }: { status: string }) => {
     </span>
   );
 };
-
 const CopyButton = ({ text }: { text?: string | null }) => {
   const [copied, setCopied] = useState(false);
   if (!text) return null;
@@ -191,10 +199,10 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
 
   const delivery = order.delivery;
-  const canManage = !readOnly && order.status?.toLowerCase() === "confirmed";
+  const canManage = !readOnly && order.status?.toLowerCase() === "processing";
 
   const cod = order.payment_method === "cod";
-  const deliveryStatus = delivery?.status?.toLowerCase() === "pending";
+  const deliveryStatus = delivery?.status?.toLowerCase() === "picked_up";
   console.log(deliveryStatus);
   // DEBUG: Log the delivery object to see what fields are available
   console.log("Delivery object:", delivery);
@@ -227,7 +235,6 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
           }
         });
         setUsernameMap(map);
-
       } finally {
       }
     };
@@ -266,7 +273,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
         icon={Truck}
         status={delivery?.status}
         className={
-          !delivery && deliveryStatus || (canManage || cod)
+          (!delivery && deliveryStatus) || canManage || cod
             ? "ring-2 ring-purple-100 border-purple-200"
             : ""
         }
@@ -330,29 +337,30 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     <span className={getStatusBadge(delivery.status)}>{delivery.status?.replace(/_/g, " ")}</span>
                   </div> */}
                   </div>
-                  {deliveryStatus  || (canManage || cod) && (
-                    <button
-                      onClick={() => setShowAssignForm(true)}
-                      className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors"
-                    >
-                      Change
-                    </button>
-                  )}
+                  {deliveryStatus ||
+                    ((canManage || cod) && (
+                      <button
+                        onClick={() => setShowAssignForm(true)}
+                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors"
+                      >
+                        Change
+                      </button>
+                    ))}
                 </div>
-
               ) : (
                 <div className="text-center py-2">
                   <p className="text-xs text-gray-400 mb-3 italic">
                     No delivery person assigned yet
                   </p>
-                  {deliveryStatus || (canManage || cod) && (
-                    <button
-                      onClick={() => setShowAssignForm(true)}
-                      className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
-                    >
-                      Assign Delivery person
-                    </button>
-                  )}
+                  {deliveryStatus ||
+                    ((canManage || cod) && (
+                      <button
+                        onClick={() => setShowAssignForm(true)}
+                        className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
+                      >
+                        Assign Delivery person
+                      </button>
+                    ))}
                 </div>
               )}
             </motion.div>
@@ -460,50 +468,50 @@ const ReceiptReviewCard = ({
   const [codConfirming, setCodConfirming] = useState(false);
   const { showToast } = useToast();
   const [zoom, setZoom] = useState(1);
-const [position, setPosition] = useState({ x: 0, y: 0 });
-const [dragging, setDragging] = useState(false);
-const [start, setStart] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [start, setStart] = useState({ x: 0, y: 0 });
 
-const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 5));
-const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 1));
+  const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 5));
+  const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 1));
 
-const resetView = () => {
-  setZoom(1);
-  setPosition({ x: 0, y: 0 });
-};
+  const resetView = () => {
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  };
 
-const handleWheel = (e: React.WheelEvent) => {
-  e.preventDefault();
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
 
-  if (e.deltaY < 0) {
-    setZoom((z) => Math.min(z + 0.2, 5));
-  } else {
-    setZoom((z) => Math.max(z - 0.2, 1));
-  }
-};
+    if (e.deltaY < 0) {
+      setZoom((z) => Math.min(z + 0.2, 5));
+    } else {
+      setZoom((z) => Math.max(z - 0.2, 1));
+    }
+  };
 
-const handleMouseDown = (e: React.MouseEvent) => {
-  if (zoom <= 1) return;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom <= 1) return;
 
-  setDragging(true);
-  setStart({
-    x: e.clientX - position.x,
-    y: e.clientY - position.y,
-  });
-};
+    setDragging(true);
+    setStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
 
-const handleMouseMove = (e: React.MouseEvent) => {
-  if (!dragging) return;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragging) return;
 
-  setPosition({
-    x: e.clientX - start.x,
-    y: e.clientY - start.y,
-  });
-};
+    setPosition({
+      x: e.clientX - start.x,
+      y: e.clientY - start.y,
+    });
+  };
 
-const handleMouseUp = () => {
-  setDragging(false);
-};
+  const handleMouseUp = () => {
+    setDragging(false);
+  };
 
   // COD confirmation handler (replace with your actual API endpoint)
   const handleConfirmCOD = async () => {
@@ -673,7 +681,6 @@ const handleMouseUp = () => {
         )}
 
         <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-3 rounded-xl space-y-1 border border-purple-100">
-
           <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest">
             Bank Details
           </p>
@@ -715,7 +722,6 @@ const handleMouseUp = () => {
         )}
 
         {isAlreadyReviewed && (
-
           <div
             className={`p-3 rounded-xl flex items-start gap-3 ${receipt.status === "approved" ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
           >
@@ -738,102 +744,102 @@ const handleMouseUp = () => {
         )}
       </div>
 
-    <AnimatePresence>
-  {showImage && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden"
-      onClick={() => {
-        setShowImage(false);
-        resetView();
-      }}
-    >
-      {/* Top Controls */}
-      <div className="absolute top-5 right-5 z-50 flex items-center gap-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            zoomOut();
-          }}
-          className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
-        >
-          −
-        </button>
+      <AnimatePresence>
+        {showImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden"
+            onClick={() => {
+              setShowImage(false);
+              resetView();
+            }}
+          >
+            {/* Top Controls */}
+            <div className="absolute top-5 right-5 z-50 flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomOut();
+                }}
+                className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
+              >
+                −
+              </button>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            zoomIn();
-          }}
-          className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
-        >
-          +
-        </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomIn();
+                }}
+                className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
+              >
+                +
+              </button>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            resetView();
-          }}
-          className="px-4 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold backdrop-blur-md border border-white/10 transition-all"
-        >
-          Reset
-        </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetView();
+                }}
+                className="px-4 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold backdrop-blur-md border border-white/10 transition-all"
+              >
+                Reset
+              </button>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowImage(false);
-            resetView();
-          }}
-          className="h-11 w-11 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center shadow-xl transition-all"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowImage(false);
+                  resetView();
+                }}
+                className="h-11 w-11 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center shadow-xl transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-      {/* Bottom Hint */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white/80 text-xs border border-white/10">
-        Scroll to zoom • Drag to move
-      </div>
+            {/* Bottom Hint */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white/80 text-xs border border-white/10">
+              Scroll to zoom • Drag to move
+            </div>
 
-      {/* Image Container */}
-      <div
-        className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
-        onClick={(e) => e.stopPropagation()}
-        onWheel={handleWheel}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <motion.img
-          src={receipt.receipt_image}
-          alt="Receipt"
-          drag={zoom > 1}
-          dragMomentum={false}
-          onMouseDown={handleMouseDown}
-          animate={{
-            scale: zoom,
-            x: position.x,
-            y: position.y,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 250,
-            damping: 30,
-          }}
-          className="max-w-[92vw] max-h-[92vh] object-contain rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] select-none"
-          style={{
-            userSelect: "none",
-            pointerEvents: "auto",
-          }}
-        />
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+            {/* Image Container */}
+            <div
+              className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+              onClick={(e) => e.stopPropagation()}
+              onWheel={handleWheel}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <motion.img
+                src={receipt.receipt_image}
+                alt="Receipt"
+                drag={zoom > 1}
+                dragMomentum={false}
+                onMouseDown={handleMouseDown}
+                animate={{
+                  scale: zoom,
+                  x: position.x,
+                  y: position.y,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 250,
+                  damping: 30,
+                }}
+                className="max-w-[92vw] max-h-[92vh] object-contain rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] select-none"
+                style={{
+                  userSelect: "none",
+                  pointerEvents: "auto",
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ConfirmationModal
         isOpen={showConfirm}
@@ -873,7 +879,6 @@ export function VendorOrderDetailModal({
 
         <motion.div
           variants={containerVariants}
-
           initial="hidden"
           animate="visible"
           exit="hidden"
@@ -888,16 +893,22 @@ export function VendorOrderDetailModal({
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-
                   <h2 className="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">
                     Order #{order.id}
                   </h2>
-                  <StatusBadge status={order.status} />
+                  <StatusBadge
+                    status={order.status}
+                    customLabels={{
+                      pending: "Pending",
+                    }}
+                  />
                 </div>
                 <div className="flex items-center gap-4 text-xs font-bold">
                   <span className="flex items-center gap-2 bg-[#6750A4]/10 px-4 py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
                     <Calendar className="h-3.5 w-3.5 text-[#6750A4]" />
-                    <span className="font-mono text-[12px] font-semibold text-gray-700 tracking-tight">              {new Date(order.created_at).toLocaleDateString("en-US", {
+                    <span className="font-mono text-[12px] font-semibold text-gray-700 tracking-tight">
+                      {" "}
+                      {new Date(order.created_at).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
@@ -934,7 +945,6 @@ export function VendorOrderDetailModal({
             </div>
           </div>
 
-
           {/* Scrollable Content Grid */}
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-gray-100">
             <div className="grid grid-cols-12 gap-8">
@@ -949,7 +959,6 @@ export function VendorOrderDetailModal({
                           src={order.recipient_image}
                           alt="Recipient"
                           className="w-14 h-14 rounded-full ring-2 ring-purple-200"
-
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-xl">
@@ -957,7 +966,6 @@ export function VendorOrderDetailModal({
                         </div>
                       )}
                       <div className="space-y-1">
-
                         <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
                           {order.recipient_name}
                         </p>
@@ -975,7 +983,6 @@ export function VendorOrderDetailModal({
                   <Card title="Shipping Destination" icon={MapPin}>
                     <div className="space-y-3">
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
-
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Recipient Name:
                         </span>
@@ -998,7 +1005,6 @@ export function VendorOrderDetailModal({
                         </div>
                       </div>
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
-
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Shipping Address:
                         </span>
