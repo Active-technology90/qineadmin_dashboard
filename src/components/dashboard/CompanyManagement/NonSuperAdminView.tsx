@@ -130,8 +130,13 @@ export default function NonSuperAdminView({
             )}
             
             {/* Edit Button */}
+            {/* Edit Button */}
             <button
-              onClick={() => onEdit(companies[0])}
+              onClick={() => {
+                if (userCompanyRole === "owner" || userCompanyRole === "admin" || userCompanyRole === "super_admin") {
+                  onEdit(companies[0]);
+                }
+              }}
               disabled={
                 userCompanyRole !== "owner" &&
                 userCompanyRole !== "admin" &&
