@@ -584,8 +584,13 @@ export const getAdminAnalyticsOverview = async (params?: {
 export const assignDelivery = async (data: { vendor_order: number; delivery_person: number }) =>
   api.post("/deliveries/", data);
 
-export const updateDeliveryPerson = async (deliveryId: number, deliveryPersonId: number) =>
-  api.patch(`/deliveries/${deliveryId}/`, { delivery_person: deliveryPersonId });
+export const updateDeliveryPerson = async (
+  deliveryId: string,
+  deliveryPersonId: number
+) =>
+  api.patch(`/deliveries/${deliveryId}/`, {
+    delivery_person: deliveryPersonId,
+  });
 export const getDeliveries = async (params?: {
   vendor_order?: number;
   delivery_person?: number;

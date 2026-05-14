@@ -245,11 +245,12 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     if (!selectedUserId) return;
     setAssigning(true);
     try {
+      console.log("delivery",delivery)
       if (delivery) {
-        await updateDeliveryPerson(
-          Number(delivery.tracking_id),
-          selectedUserId,
-        );
+       await updateDeliveryPerson(
+  delivery.tracking_id,
+  selectedUserId,
+);
       } else {
         await assignDelivery({
           vendor_order: order.id,
