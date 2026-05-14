@@ -199,7 +199,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
 
   const delivery = order.delivery;
-  const canManage = !readOnly && order.status?.toLowerCase() === "processing";
+  const canManage = !readOnly && order.status?.toLowerCase() === "confirmed";
 
   const cod = order.payment_method === "cod";
   const deliveryStatus = delivery?.status?.toLowerCase() === "picked_up";

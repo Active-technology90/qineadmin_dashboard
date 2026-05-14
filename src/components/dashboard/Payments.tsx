@@ -162,10 +162,10 @@ export default function Payments() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#6750A4]">
+          {/* <h2 className="text-xl font-bold text-[#6750A4]">
             {isAllPayouts ? "All Payouts" : `Payouts – ${companyName}`}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          </h2> */}
+          <p className=" text-xl font-bold text-[#6750A4] mt-1">
             {isAllPayouts
               ? "Showing payouts across all companies"
               : `Payouts for ${companyName}`}
