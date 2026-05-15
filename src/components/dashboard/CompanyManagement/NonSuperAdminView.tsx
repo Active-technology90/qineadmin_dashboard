@@ -129,7 +129,7 @@ export default function NonSuperAdminView({
               </div>
             )}
             
-            {/* Edit Button */}
+             {/* Edit Button */}
             {/* Edit Button */}
             <button
               onClick={() => {
@@ -142,13 +142,20 @@ export default function NonSuperAdminView({
                 userCompanyRole !== "admin" &&
                 userCompanyRole !== "super_admin"
               }
+              title={
+                userCompanyRole !== "owner" &&
+                userCompanyRole !== "admin" &&
+                userCompanyRole !== "super_admin"
+                  ? "You don't have permission to edit this company"
+                  : "Edit Company"
+              }
               className={`px-6 py-2.5 rounded-xl flex items-center gap-2 text-sm font-extrabold tracking-wide transition-all duration-300 shadow-md
                 ${
                   userCompanyRole === "owner" ||
                   userCompanyRole === "admin" ||
                   userCompanyRole === "super_admin"
                      ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer hover:scale-[1.02]"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed shadow-none"
+                      : "bg-gray-300 text-gray-400 cursor-not-allowed shadow-none"
                 }
               `}
             >

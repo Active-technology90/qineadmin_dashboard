@@ -88,7 +88,7 @@ function OrdersMenu({
           }`}
         >
           <ShoppingBag className="h-5 w-5" />
-          <span>Orders</span>
+          <span>All Orders</span>
         </button>
       );
     } else {

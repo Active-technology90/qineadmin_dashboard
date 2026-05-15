@@ -30,6 +30,7 @@ import { useToast } from "../../../hooks/useToast";
 import { usePagination } from "../../../hooks/usePagination";
 import { useSorting } from "../../../hooks/useSorting";
 import { useAuth } from "../../../hooks/useAuth";
+import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import type { Column } from "../../ui/DataTable";
 import { ImageIcon } from "lucide-react";
 
@@ -68,7 +69,8 @@ const getPrimaryMembership = (memberships: any[] | undefined) => {
 
 export default function CompanyManagement() {
   const [pageSize, setPageSize] = useState(10);
-  const { user } = useAuth();
+   const { user } = useAuth();
+  const { company: currentCompany } = useCurrentCompany();
 
   // Permission flags
   const isSuperAdmin = !user?.memberships?.length;
@@ -78,6 +80,16 @@ export default function CompanyManagement() {
     : null;
   const userCompanySlug = primaryMembership?.company_slug ?? null;
   const userCompanyRole = primaryMembership?.role ?? null;
+
+  // Get role for currently selected company
+  const getCurrentCompanyRole = () => {
+    if (isSuperAdmin) return "super_admin";
+    if (!currentCompany?.slug || !memberships.length) return userCompanyRole;
+    const membership = memberships.find(m => m.company_slug === currentCompany.slug);
+    return membership?.role || userCompanyRole;
+  };
+
+  const currentCompanyRole = getCurrentCompanyRole();
 
   const canAddCompany = isSuperAdmin;
   const canDeleteCompany = isSuperAdmin;
@@ -335,8 +347,8 @@ export default function CompanyManagement() {
     try {
       setLoading(true);
       setError(null);
-      if (!isSuperAdmin && userCompanySlug) {
-        const companyRes = await getCompanyDetail(userCompanySlug);
+      if (!isSuperAdmin && currentCompany?.slug) {
+        const companyRes = await getCompanyDetail(currentCompany.slug);
         const company = companyRes.data as Company;
         const companyListItem: CompanyListItem = {
           id: company.id,
@@ -424,7 +436,7 @@ export default function CompanyManagement() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentCompany?.slug]);
 
   // --- Form handlers ---
   const validateBasicInfo = () => {
@@ -981,7 +993,7 @@ export default function CompanyManagement() {
       ) : (
         <NonSuperAdminView
           companies={companies}
-          userCompanyRole={userCompanyRole}
+          userCompanyRole={currentCompanyRole}
           onEdit={openEdit}
           formData={formData}
           setFormData={setFormData}
