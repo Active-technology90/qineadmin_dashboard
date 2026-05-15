@@ -264,7 +264,7 @@ export default function CompanyUsers() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex items-center gap-3">
-          {companyLogo ? (
+          {/* {companyLogo ? (
             <img
               src={companyLogo}
               alt={companyName}
@@ -272,12 +272,12 @@ export default function CompanyUsers() {
             />
           ) : (
             <Building2 className="w-8 h-8 text-gray-400" />
-          )}
+          )} */}
           <div>
             <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
-              {companyName}
+              {/* {companyName} */} All Users
             </h2>
-            <p className="text-sm font-medium text-secondary">Users</p>
+            {/* <p className="text-sm font-medium text-secondary">Users</p> */}
           </div>
         </div>
 

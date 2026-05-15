@@ -149,7 +149,7 @@ export function VendorOrderFilters({
             >
               <option value="">Order Status</option>
 
-              <option value="pending">{ORDER_STATUS_LABELS.pending}</option>
+              <option value="pending">Pending</option>
               <option value="contacted">{ORDER_STATUS_LABELS.contacted}</option>
               <option value="processing">
                 {ORDER_STATUS_LABELS.processing}

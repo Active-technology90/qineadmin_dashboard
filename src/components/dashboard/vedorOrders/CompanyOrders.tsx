@@ -380,12 +380,12 @@ export default function CompanyOrders() {
               ) : (
                 <Building2 className="w-8 h-8 text-gray-400" />
               )} */}
-              {/* <div>
+              <div>
                 <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
-                  {companyName}
+                  {/* {companyName} */} All Orders
                 </h2>
-                <p className="text-sm font-medium text-secondary">Orders</p>
-              </div> */}
+                {/* <p className="text-sm font-medium text-secondary">Orders</p> */}
+              </div>
               {readOnly && (
                 <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
                   View Only
@@ -442,10 +442,12 @@ export default function CompanyOrders() {
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Order ID
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Company
-                </th>
+                  </th>
+                  {isAdminLike && (
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Company
+                    </th>
+                  )}
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
@@ -490,17 +492,19 @@ export default function CompanyOrders() {
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                       #{order.id}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <CompanyAvatar
-                          logo={order.company?.logo}
-                          name={order.company?.name || "Unknown"}
-                        />
-                        <span className="text-sm font-medium text-gray-700">
-                          {order.company?.name || "Unknown"}
-                        </span>
-                      </div>
-                    </td>
+                    {isAdminLike && (
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <CompanyAvatar
+                            logo={order.company?.logo}
+                            name={order.company?.name || "Unknown"}
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {order.company?.name || "Unknown"}
+                          </span>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                       {Number(order.amount).toLocaleString()}{" "}
                       <span className="text-xs text-gray-500">ETB</span>
