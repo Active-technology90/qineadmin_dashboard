@@ -237,12 +237,23 @@ export default function Overview({
       setLoading(true);
       setError("");
       try {
+        // Convert empty string to undefined for API
+        const companyParam = selectedCompanySlug && selectedCompanySlug !== "" 
+          ? selectedCompanySlug 
+          : undefined;
+        
         const { data } = await getAdminAnalyticsOverview({
           period,
-          company_slug: selectedCompanySlug || undefined,
+          company_slug: companyParam,
         });
         if (!active) return;
-        setAnalytics(data);
+        
+        // Ensure we always have valid data
+        if (data && data.summary) {
+          setAnalytics(data);
+        } else {
+          setAnalytics(EMPTY_ANALYTICS);
+        }
       } catch (err: unknown) {
         if (!active) return;
         let detail = "Failed to load analytics.";
@@ -257,6 +268,7 @@ export default function Overview({
             .response?.data?.detail as string;
         }
         setError(detail);
+        // Keep existing data on error
       } finally {
         if (active) setLoading(false);
       }
@@ -281,7 +293,7 @@ export default function Overview({
   }, []);
 
   const currentData = analytics.revenue_series;
-  const totalRevenue = currentData.reduce((s, d) => s + d.revenue, 0);
+    const totalRevenue = currentData?.reduce((s, d) => s + (d?.revenue || 0), 0) || 0;
 
   const summaryData = isSuperAdmin
     ? {
@@ -323,6 +335,7 @@ export default function Overview({
 
   // Helper function to get logo from companiesList
   const getCompanyLogoFromList = (slug: string) => {
+    if (!slug || slug === "") return null;
     const found = companiesList.find((c: any) => c.slug === slug);
     return found?.logo || null;
   };
@@ -335,10 +348,12 @@ export default function Overview({
       logo: getCompanyLogoFromList(c.slug),
     })),
   ];
+  
   // Get the selected company name and logo for display
-  const selectedCompany = selectedCompanySlug
+  // Handle both empty string and null/undefined cases
+  const selectedCompany = (selectedCompanySlug && selectedCompanySlug !== "")
     ? scopeOptions.find(opt => opt.value === selectedCompanySlug)
-    : null;
+    : scopeOptions.find(opt => opt.value === "");
   const selectedCompanyName = selectedCompany?.label || "All Companies";
   const selectedCompanyLogo = selectedCompany?.logo || null;
 
@@ -374,49 +389,87 @@ export default function Overview({
     <div className="space-y-8">
       {/* Scope selector - only show when user has access to multiple companies */}
       {shouldShowCompanyDropdown && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          {/* Selected Company Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              {selectedCompanyLogo && selectedCompanySlug ? (
-                <img
-                  src={selectedCompanyLogo}
-                  alt={selectedCompanyName}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-[#6750A4]/20 shadow-sm"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-sm">
-                  <Building2 className="h-5 w-5 text-white" />
-                </div>
-              )}
+        <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-xl py-2.5 px-4 shadow-md border border-gray-100/80">
+          {/* Selected Company Banner - Modern UI */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            {/* Left Section - Company Info */}
+            <div className="flex items-center gap-4">
+              {/* Logo with gradient ring */}
+               <div className="relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
+                <div className="absolute inset-0 rounded-full shadow-inner"></div>
+                {selectedCompanyLogo && selectedCompanySlug ? (
+                                  <div className="relative w-12 h-12 rounded-full bg-white p-0.5 shadow-lg">
+                    <img
+                      src={selectedCompanyLogo}
+                      alt={selectedCompanyName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                ) : (
+                                   <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
+                                        <Building2 className="h-6 w-6 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Company Info */}
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Currently Overview</p>
-                <h2 className="text-xl font-extrabold bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Currently Viewing</p>
+                </div>
+                               <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent">
                   {selectedCompanyName}
                 </h2>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                  <p className="text-[9px] font-medium text-gray-400">Active Dashboard</p>
+                </div>
               </div>
             </div>
+
+            {/* Right Section - Selector */}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Select Company:</span>
-                <select
-                  value={selectedCompanySlug}
-                  onChange={(e) => setSelectedCompanySlug(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#6750A4] focus:border-transparent font-medium"
-                >
-                  {scopeOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {readOnly && (
-                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-                  View Only
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-secondary uppercase tracking-wider">
+                  <Building2 className="h-3 w-3" />
+                  Select Company
                 </span>
-              )}
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4]" />
+                  <select
+                    value={selectedCompanySlug}
+                    onChange={(e) => {
+                      console.log("Selected company slug:", e.target.value);
+                      setSelectedCompanySlug(e.target.value);
+                    }}
+                    className="pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer appearance-none min-w-[200px]"
+                  >
+                    {scopeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              
+              {/* {readOnly && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                  <span className="text-xs font-medium text-amber-600">View Only</span>
+                </div>
+              )} */}
             </div>
+          </div>
+          
+          {/* Decorative divider */}
+          <div className="mt-3">
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
           </div>
         </div>
       )}
@@ -436,7 +489,7 @@ export default function Overview({
             {isSuperAdmin && (
               <SummaryCard
                 title="Total Companies"
-                value={summaryData.company_total_count.toString()}
+                value={summaryData?.company_total_count?.toString() || "0"}
                 icon={Building2}
                 bgLight="bg-blue-50"
                 textColor="text-blue-600"
@@ -451,14 +504,14 @@ export default function Overview({
             />   */}
             <SummaryCard
               title="Company Users"
-              value={summaryData.users.toLocaleString()}
+              value={summaryData?.users?.toLocaleString() || "0"}
               icon={Users}
               bgLight="bg-emerald-50"
               textColor="text-emerald-600"
             />
             <SummaryCard
               title="Total Products"
-              value={summaryData.products.toLocaleString()}
+              value={summaryData?.products?.toLocaleString() || "0"}
               icon={Package}
               bgLight="bg-blue-50"
               textColor="text-blue-600"
@@ -466,14 +519,14 @@ export default function Overview({
 
             <SummaryCard
               title="Total Orders"
-              value={summaryData.orders.toLocaleString()}
+              value={summaryData?.orders?.toLocaleString() || "0"}
               icon={ShoppingBag}
               bgLight="bg-purple-50"
               textColor="text-purple-600"
             />
             { !isSuperAdmin && <SummaryCard
               title="Total Payments"
-              value={formatCurrency(summaryData.payments.total)}
+              value={summaryData?.payments?.total ? formatCurrency(summaryData.payments.total) : formatCurrency(0)}
               icon={DollarSign}
               bgLight="bg-amber-50"
               textColor="text-amber-600"
