@@ -96,12 +96,12 @@ export default function CompanyManagement() {
   const canEditCompany = useCallback(
     (companySlug: string) => {
       if (isSuperAdmin) return true;
-      return (
-        (userCompanyRole === "owner" || userCompanyRole === "admin") &&
-        userCompanySlug === companySlug
-      );
+      // Get the role for the specific company being edited
+      const membershipForCompany = memberships.find(m => m.company_slug === companySlug);
+      const roleForCompany = membershipForCompany?.role;
+      return roleForCompany === "owner" || roleForCompany === "admin";
     },
-    [isSuperAdmin, userCompanyRole, userCompanySlug],
+    [isSuperAdmin, memberships],
   );
 
   // Data states
