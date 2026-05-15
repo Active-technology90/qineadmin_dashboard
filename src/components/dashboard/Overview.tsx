@@ -183,33 +183,50 @@ const SummaryCard = ({
   bgLight,
   textColor,
 }: SummaryCardProps) => (
-  <div className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-    <div className="flex items-start justify-between">
-      <div
-        className={`${bgLight} w-11 h-11 rounded-xl flex items-center justify-center transition-colors group-hover:bg-opacity-80`}
-      >
-        <Icon className={`h-6 w-6 ${textColor}`} />
+  <div className="group relative bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-2xl p-5 shadow-md border border-white/50 hover:shadow-lg hover:border-[#6750A4]/30 transition-all duration-300">
+    {/* Animated gradient background on hover */}
+    <div className="absolute inset-0 bg-gradient-to-br from-[#6750A4]/0 via-[#6750A4]/0 to-[#9b87f5]/0 group-hover:from-[#6750A4]/5 group-hover:via-[#6750A4]/3 group-hover:to-[#9b87f5]/8 rounded-2xl transition-all duration-500"></div>
+    
+    <div className="relative z-10">
+      {/* Top row with icon and subtle indicator */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="relative">
+          {/* Icon background glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#6750A4]/20 to-[#9b87f5]/20 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div
+            className={`relative ${bgLight} w-12 h-12 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300`}
+          >
+            <Icon className={`h-6 w-6 ${textColor} group-hover:scale-110 transition-transform duration-300`} />
+          </div>
+        </div>
+        
+        {/* Subtle stat badge */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-50/50 border border-gray-100/50 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+          <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Live</span>
+        </div>
       </div>
-      {/* {trend !== undefined && (
-        <span
-          className={`flex items-center text-xs font-semibold ${trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
-        >
-          {trend >= 0 ? (
-            <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
-          ) : (
-            <ArrowDownRight className="h-3.5 w-3.5 mr-1" />
-          )}
-          {Math.abs(trend)}%
-          {trendLabel && (
-            <span className="ml-1 text-gray-400 font-normal">{trendLabel}</span>
-          )}
-        </span>
-      )} */}
+
+      {/* Title with modern accent line */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
+          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-[#6750A4] transition-colors duration-300">
+            {title}
+          </h3>
+        </div>
+        
+        {/* Value with modern number styling */}
+        <div className="flex items-baseline gap-1">
+          <span className="text-3xl font-black text-gray-800 tracking-tight group-hover:bg-gradient-to-r group-hover:from-[#6750A4] group-hover:to-[#7c63b8] group-hover:bg-clip-text group-hover:text-transparent transition-all duration-500">
+            {value}
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom accent bar */}
+      <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-transparent via-gray-200 to-transparent group-hover:via-[#6750A4] transition-all duration-500 rounded-full"></div>
     </div>
-    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-3">
-      {title}
-    </h3>
-    <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
   </div>
 );
 
@@ -230,6 +247,7 @@ export default function Overview({
   const [analytics, setAnalytics] =
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
     const [companiesList, setCompaniesList] = useState<any[]>([]);
+  const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
 
   useEffect(() => {
     let active = true;
@@ -237,22 +255,76 @@ export default function Overview({
       setLoading(true);
       setError("");
       try {
-        // Convert empty string to undefined for API
-        const companyParam = selectedCompanySlug && selectedCompanySlug !== "" 
-          ? selectedCompanySlug 
-          : undefined;
+        // If "All Companies" is selected and user is not super admin, aggregate data
+        const isAllCompanies = !selectedCompanySlug || selectedCompanySlug === "";
         
-        const { data } = await getAdminAnalyticsOverview({
-          period,
-          company_slug: companyParam,
-        });
-        if (!active) return;
-        
-        // Ensure we always have valid data
-        if (data && data.summary) {
-          setAnalytics(data);
+        if (!isSuperAdmin && isAllCompanies && analytics.available_companies.length > 0) {
+          // Fetch data for each company and aggregate
+          let aggregated = {
+            products: 0,
+            users: 0,
+            orders: 0,
+            payments_total: 0,
+            revenue_series: [] as any[],
+          };
+          
+          // Fetch first company to get structure, then aggregate
+          for (const company of analytics.available_companies) {
+            try {
+              const { data } = await getAdminAnalyticsOverview({
+                period,
+                company_slug: company.slug,
+              });
+              if (data && data.summary) {
+                aggregated.products += data.summary.products || 0;
+                aggregated.users += data.summary.users || 0;
+                aggregated.orders += data.summary.orders || 0;
+                aggregated.payments_total += data.summary.payments_total || 0;
+              }
+            } catch (err) {
+              console.error(`Failed to fetch data for ${company.slug}:`, err);
+            }
+          }
+          
+          if (!active) return;
+          
+          // Use the last fetched company for structure (charts need the structure)
+          const lastCompanyRes = await getAdminAnalyticsOverview({
+            period,
+            company_slug: analytics.available_companies[0]?.slug,
+          });
+          
+          if (lastCompanyRes.data && lastCompanyRes.data.summary) {
+            // Create modified analytics with aggregated summary
+            const modifiedAnalytics = { ...lastCompanyRes.data };
+            modifiedAnalytics.summary = {
+              ...modifiedAnalytics.summary,
+              products: aggregated.products,
+              users: aggregated.users,
+              orders: aggregated.orders,
+              payments_total: aggregated.payments_total,
+            };
+            setAnalytics(modifiedAnalytics);
+          }
+          setAggregatedSummary(aggregated);
         } else {
-          setAnalytics(EMPTY_ANALYTICS);
+          // Normal flow for single company
+          const companyParam = selectedCompanySlug && selectedCompanySlug !== "" 
+            ? selectedCompanySlug 
+            : undefined;
+          
+          const { data } = await getAdminAnalyticsOverview({
+            period,
+            company_slug: companyParam,
+          });
+          if (!active) return;
+          
+          if (data && data.summary) {
+            setAnalytics(data);
+            setAggregatedSummary(null);
+          } else {
+            setAnalytics(EMPTY_ANALYTICS);
+          }
         }
       } catch (err: unknown) {
         if (!active) return;
@@ -268,7 +340,6 @@ export default function Overview({
             .response?.data?.detail as string;
         }
         setError(detail);
-        // Keep existing data on error
       } finally {
         if (active) setLoading(false);
       }
@@ -277,7 +348,7 @@ export default function Overview({
     return () => {
       active = false;
     };
-  }, [period, selectedCompanySlug]);
+  }, [period, selectedCompanySlug, analytics.available_companies.length]);
    // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
   useEffect(() => {
     const fetchCompanies = async () => {

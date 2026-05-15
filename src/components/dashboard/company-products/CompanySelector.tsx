@@ -258,7 +258,6 @@ export function CompanySelector({
       <Header
         title="Choose Company"
         subtitle={subtitle}
-        onBack={onBack}
       />
 
       {/* Scrollable content area (search + grid) */}
