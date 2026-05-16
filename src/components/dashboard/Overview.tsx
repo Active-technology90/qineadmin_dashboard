@@ -174,6 +174,7 @@ type SummaryCardProps = {
   icon: ComponentType<{ className?: string }>;
   bgLight: string;
   textColor: string;
+  onClick?: () => void;
 };
 
 const SummaryCard = ({
@@ -182,8 +183,12 @@ const SummaryCard = ({
   icon: Icon,
   bgLight,
   textColor,
+  onClick,
 }: SummaryCardProps) => (
-  <div className="group relative bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-2xl p-5 shadow-md border border-white/50 hover:shadow-lg hover:border-[#6750A4]/30 transition-all duration-300">
+  <div 
+    onClick={onClick}
+    className="group relative bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-2xl p-5 shadow-md border border-white/50 hover:shadow-lg hover:border-[#6750A4]/30 transition-all duration-300"
+  >
     {/* Animated gradient background on hover */}
     <div className="absolute inset-0 bg-gradient-to-br from-[#6750A4]/0 via-[#6750A4]/0 to-[#9b87f5]/0 group-hover:from-[#6750A4]/5 group-hover:via-[#6750A4]/3 group-hover:to-[#9b87f5]/8 rounded-2xl transition-all duration-500"></div>
     
@@ -230,7 +235,7 @@ const SummaryCard = ({
   </div>
 );
 
-type DashboardTab = "products" | "masterOrders" | "companyOrders";
+type DashboardTab = "products" | "masterOrders" | "companyOrders" | "payments" | "companies" | "allOrders" | "companyUser";
 
 export default function Overview({
   onNavigate,
@@ -515,7 +520,7 @@ export default function Overview({
                       console.log("Selected company slug:", e.target.value);
                       setSelectedCompanySlug(e.target.value);
                     }}
-                    className="pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer appearance-none min-w-[200px]"
+                    className="pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer appearance-none w-[360px]"
                   >
                     {scopeOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -552,19 +557,24 @@ export default function Overview({
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          Array.from({ length: isSuperAdmin && !selectedCompanySlug ? 4 : 3 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            {isSuperAdmin && (
-              <SummaryCard
-                title="Total Companies"
-                value={summaryData?.company_total_count?.toString() || "0"}
-                icon={Building2}
-                bgLight="bg-blue-50"
-                textColor="text-blue-600"
-              />
+            {isSuperAdmin && !selectedCompanySlug && (
+              <div 
+                onClick={() => onNavigate?.("companies")} 
+                className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <SummaryCard
+                  title="Total Companies"
+                  value={summaryData?.company_total_count?.toString() || "0"}
+                  icon={Building2}
+                  bgLight="bg-blue-50"
+                  textColor="text-blue-600"
+                />
+              </div>
             )}
             {/* <SummaryCard
               title="Active Companies"
@@ -573,35 +583,57 @@ export default function Overview({
               bgLight="bg-blue-50"
               textColor="text-blue-600"
             />   */}
-            <SummaryCard
-              title="Company Users"
-              value={summaryData?.users?.toLocaleString() || "0"}
-              icon={Users}
-              bgLight="bg-emerald-50"
-              textColor="text-emerald-600"
-            />
-            <SummaryCard
-              title="Total Products"
-              value={summaryData?.products?.toLocaleString() || "0"}
-              icon={Package}
-              bgLight="bg-blue-50"
-              textColor="text-blue-600"
-            />
+            <div 
+              onClick={() => onNavigate?.("users")} 
+              className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <SummaryCard
+                title="Company Users"
+                value={summaryData?.users?.toLocaleString() || "0"}
+                icon={Users}
+                bgLight="bg-emerald-50"
+                textColor="text-emerald-600"
+              />
+            </div>
+            <div 
+              onClick={() => onNavigate?.("products")} 
+              className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <SummaryCard
+                title="Total Products"
+                value={summaryData?.products?.toLocaleString() || "0"}
+                icon={Package}
+                bgLight="bg-blue-50"
+                textColor="text-blue-600"
+              />
+            </div>
 
-            <SummaryCard
-              title="Total Orders"
-              value={summaryData?.orders?.toLocaleString() || "0"}
-              icon={ShoppingBag}
-              bgLight="bg-purple-50"
-              textColor="text-purple-600"
-            />
-            { !isSuperAdmin && <SummaryCard
-              title="Total Payments"
-              value={summaryData?.payments?.total ? formatCurrency(summaryData.payments.total) : formatCurrency(0)}
-              icon={DollarSign}
-              bgLight="bg-amber-50"
-              textColor="text-amber-600"
-            />}
+            <div 
+              onClick={() => onNavigate?.("companyOrders")}
+              className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <SummaryCard
+                title="Total Orders"
+                value={summaryData?.orders?.toLocaleString() || "0"}
+                icon={ShoppingBag}
+                bgLight="bg-purple-50"
+                textColor="text-purple-600"
+              />
+            </div>
+            { !isSuperAdmin && (
+              <div 
+                onClick={() => onNavigate?.("payments")} 
+                className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <SummaryCard
+                  title="Total Payments"
+                  value={summaryData?.payments?.total ? formatCurrency(summaryData.payments.total) : formatCurrency(0)}
+                  icon={DollarSign}
+                  bgLight="bg-amber-50"
+                  textColor="text-amber-600"
+                />
+              </div>
+            )}
           </>
         )}
       </div>

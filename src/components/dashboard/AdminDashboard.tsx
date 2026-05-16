@@ -399,11 +399,11 @@ export default function AdminDashboard() {
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
-        {/* Logo & title */}
+       {/* Logo & title */}
         <div
-          className={`mx-2 mt-2 p-6 border-b border-gray-800 flex items-center gap-3 rounded-2xl ${sidebarCollapsed ? "justify-center p-4" : ""}`}
+          className={`mx-2 mt-2 px-6 py-2 border-b border-gray-800 flex-col items-center gap-3 rounded-2xl ${sidebarCollapsed ? "justify-center p-4" : ""}`}
         >
-          <div className="bg-white/10 p-1 w-12 h-12 rounded-lg backdrop-blur-sm flex-shrink-0">
+          <div className={`bg-white/10 p-1 rounded-full backdrop-blur-sm flex-shrink-0 ${sidebarCollapsed ? "w-12 h-12" : "w-20 h-20 ml-18"}`}>
             <img
               src="/qinemartethio.jpeg"
               alt="Qine Logo"
@@ -411,19 +411,43 @@ export default function AdminDashboard() {
             />
           </div>
           {!sidebarCollapsed && (
-            <div className="flex-1">
-              <span className="block text-lg font-bold tracking-wide">
+            <div className="flex-1 text-center">
+              {/* Role Chip */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${isSuperAdmin ? "bg-emerald-400 animate-pulse" : "bg-blue-400"}`}></div>
+                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">
+                  {isSuperAdmin
+                    ? "Super Admin"
+                    : isViewer
+                      ? "Viewer"
+                      : company?.role === "admin"
+                        ? "Company Admin"
+                        : "Staff"}
+                </span>
+              </div>
+              {/* Main Title */}
+              <span className="block text-sm font-black tracking-wide">
                 {isSuperAdmin
-                  ? "Super Admin Panel"
+                  ? "Full Control"
                   : isViewer
-                    ? "Viewer Panel (Read‑Only)"
+                    ? "Read Only"
                     : company?.role === "admin"
-                      ? "Company Admin Panel"
-                      : "Company Staff Panel"}
+                      ? "Company Management"
+                      : "Limited Access"}
               </span>
-              <span className="block text-xs text-indigo-300 mt-0.5">
-                Dashboard
-              </span>
+             {/* App Branding - Subtle Horizontal */}
+                <div className="mt-3 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/15 shadow-md">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#9b87f5] to-[#6750A4]"></div>
+                    <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
+                      ACTIVE MART
+                    </span>
+                    <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
+                      Administration Panel
+                    </span>
+                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
+                  </div>
+                </div> 
             </div>
           )}
           <button
@@ -489,7 +513,7 @@ export default function AdminDashboard() {
           {showPlatformAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
-              label="Add Advertisement"
+              label="Ads Management"
               active={activeTab === "add advertisment"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("add advertisment")}
