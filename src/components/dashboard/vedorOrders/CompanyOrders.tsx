@@ -436,7 +436,7 @@ export default function CompanyOrders() {
       {error ? (
         <ErrorState error={error} onRetry={fetchAllOrders} />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-3">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>

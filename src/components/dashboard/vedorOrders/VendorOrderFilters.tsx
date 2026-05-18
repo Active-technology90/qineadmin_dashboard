@@ -79,11 +79,11 @@ export function VendorOrderFilters({
       <div className="flex items-center justify-between px-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           {/* <h2 className="text-lg font-semibold text-gray-800">Filters</h2> */}
-          {hasFilters && (
+          {/* {hasFilters && (
             <span className="text-xs bg-[#6750A4]/10 text-[#6750A4] px-2 py-0.5 rounded-full font-medium">
               Active
             </span>
-          )}
+          )} */}
         </div>
 
         <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export function VendorOrderFilters({
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                          text-sm pr-8 outline-none transition"
             >
-              <option value="">Order Status</option>
+              <option value="">All Order Status</option>
 
               <option value="pending">Pending</option>
               <option value="contacted">{ORDER_STATUS_LABELS.contacted}</option>
@@ -172,7 +172,7 @@ export function VendorOrderFilters({
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                          text-sm pr-8 outline-none transition"
             >
-              <option value="">Delivery Status</option>
+              <option value="">All Delivery Status</option>
 
               <option value="pending">{ORDER_STATUS_LABELS.pending}</option>
               <option value="accepted">Accepted</option>
@@ -197,7 +197,7 @@ export function VendorOrderFilters({
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                          text-sm pr-8 outline-none transition"
             >
-              <option value="">Payment Method</option>
+              <option value="">All Payment Method</option>
               <option value="bank_transfer">Bank Transfer</option>
               <option value="chapa">Chapa</option>
               <option value="cod">COD</option>
@@ -215,7 +215,7 @@ export function VendorOrderFilters({
                            focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
                            text-sm pr-8 outline-none transition"
               >
-                <option value="">Company</option>
+                <option value=""> All Companies</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
