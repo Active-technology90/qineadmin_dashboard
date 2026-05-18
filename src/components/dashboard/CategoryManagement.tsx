@@ -242,6 +242,30 @@ export default function CategoryManagement() {
     e.preventDefault();
     if (readOnly) return;
     if (!validateForm()) return;
+    
+    // For edit mode, check if any data actually changed
+    if (editingId) {
+      const originalCategory = categories.find(c => c.id === editingId);
+      if (originalCategory) {
+        const hasChanges = 
+          originalCategory.name !== formData.name ||
+          (originalCategory.name_am || "") !== (formData.name_am || "") ||
+          originalCategory.slug !== formData.slug ||
+          (originalCategory.code || "") !== (formData.code || "") ||
+          (originalCategory.description || "") !== (formData.description || "") ||
+          (originalCategory.order || 0) !== formData.order ||
+          (originalCategory.is_active ?? true) !== formData.is_active ||
+          formData.icon !== null; // If new icon uploaded, consider as change
+        
+        if (!hasChanges) {
+          showToast("info", "No changes detected");
+          setModalOpen(false);
+          resetForm();
+          return;
+        }
+      }
+    }
+    
     setSubmitting(true);
     try {
       const fd = new FormData();

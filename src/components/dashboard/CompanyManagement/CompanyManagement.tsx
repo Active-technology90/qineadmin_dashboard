@@ -710,7 +710,7 @@ export default function CompanyManagement() {
     () => [
       {
         id: "basic",
-        title: "Basic Information",
+        title: <span className="text-[#6750A4]">Basic Information</span>,
         content: (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -849,7 +849,7 @@ export default function CompanyManagement() {
       },
       {
         id: "images",
-        title: "Images & Status",
+         title: <span className="text-[#6750A4]">Images & Status</span>,
         content: (
           <div className="space-y-6 ">
             <div className="w-72">

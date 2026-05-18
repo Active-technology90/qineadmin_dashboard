@@ -26,6 +26,7 @@ import { getAdminAnalyticsOverview } from "../../services/api";
 import type { AnalyticsOverviewResponse } from "../../types";
 // import { useReadOnly } from "./AdminDashboard";
 import { useAuth } from "../../hooks/useAuth";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
 const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   scope: "company",
@@ -246,7 +247,7 @@ export default function Overview({
   const { user } = useAuth();
   const isSuperAdmin = !user?.memberships?.length;
   const [period, setPeriod] = useState<Period>("week");
-  const [selectedCompanySlug, setSelectedCompanySlug] = useState<string>("");
+ const { company, switchCompany } = useCurrentCompany();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [analytics, setAnalytics] =
@@ -262,34 +263,74 @@ export default function Overview({
       setLoading(true);
       setError("");
       try {
-        // If "All Companies" is selected and user is not super admin, aggregate data
-        const isAllCompanies = !selectedCompanySlug || selectedCompanySlug === "";
+        // If "All Companies" is selected, aggregate data for ALL users (including non-super admin with multiple companies)
+        const isAllCompanies = !company?.slug;
         
-        if (!isSuperAdmin && isAllCompanies && analytics.available_companies.length > 0) {
+        // For Super Admin, if no companies loaded yet, fetch them first
+        if (isAllCompanies && isSuperAdmin && analytics.available_companies.length === 0) {
+          try {
+            const { data } = await getAdminAnalyticsOverview({
+              period,
+              company_slug: undefined,
+            });
+            if (data && data.available_companies) {
+              setAnalytics(prev => ({
+                ...prev,
+                available_companies: data.available_companies,
+              }));
+              // Continue with aggregation after setting companies
+            } else {
+              return;
+            }
+          } catch (err) {
+            console.error("Failed to fetch companies:", err);
+            return;
+          }
+        }
+        
+        if (isAllCompanies && analytics.available_companies.length > 0) {
           // Fetch data for each company and aggregate
           let aggregated = {
             products: 0,
             users: 0,
             orders: 0,
             payments_total: 0,
+            company_total_count: 0,
             revenue_series: [] as any[],
           };
           
-          // Fetch first company to get structure, then aggregate
-          for (const company of analytics.available_companies) {
+          // Fetch all companies in parallel for better performance
+          const fetchPromises = analytics.available_companies.map(async (company) => {
             try {
               const { data } = await getAdminAnalyticsOverview({
                 period,
                 company_slug: company.slug,
               });
               if (data && data.summary) {
-                aggregated.products += data.summary.products || 0;
-                aggregated.users += data.summary.users || 0;
-                aggregated.orders += data.summary.orders || 0;
-                aggregated.payments_total += data.summary.payments_total || 0;
+                return {
+                  products: data.summary.products || 0,
+                  users: data.summary.users || 0,
+                  orders: data.summary.orders || 0,
+                  payments_total: data.summary.payments_total || 0,
+                  success: true,
+                };
               }
+              return { success: false, products: 0, users: 0, orders: 0, payments_total: 0 };
             } catch (err) {
               console.error(`Failed to fetch data for ${company.slug}:`, err);
+              return { success: false, products: 0, users: 0, orders: 0, payments_total: 0 };
+            }
+          });
+          
+          const results = await Promise.all(fetchPromises);
+          
+          for (const result of results) {
+            if (result.success) {
+              aggregated.products += result.products;
+              aggregated.users += result.users;
+              aggregated.orders += result.orders;
+              aggregated.payments_total += result.payments_total;
+              aggregated.company_total_count += 1;
             }
           }
           
@@ -310,15 +351,14 @@ export default function Overview({
               users: aggregated.users,
               orders: aggregated.orders,
               payments_total: aggregated.payments_total,
+              company_total_count: aggregated.company_total_count,
             };
             setAnalytics(modifiedAnalytics);
           }
           setAggregatedSummary(aggregated);
         } else {
           // Normal flow for single company
-          const companyParam = selectedCompanySlug && selectedCompanySlug !== "" 
-            ? selectedCompanySlug 
-            : undefined;
+          const companyParam = company?.slug || undefined;
           
           const { data } = await getAdminAnalyticsOverview({
             period,
@@ -355,7 +395,7 @@ export default function Overview({
     return () => {
       active = false;
     };
-  }, [period, selectedCompanySlug, analytics.available_companies.length]);
+  }, [period, company, analytics.available_companies.length]);
    // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -369,6 +409,29 @@ export default function Overview({
     };
     fetchCompanies();
   }, []);
+
+  // For Super Admin: Fetch available companies when component mounts
+  useEffect(() => {
+    if (isSuperAdmin && analytics.available_companies.length === 0) {
+      const fetchAvailableCompanies = async () => {
+        try {
+          const { data } = await getAdminAnalyticsOverview({
+            period,
+            company_slug: undefined,
+          });
+          if (data && data.available_companies) {
+            setAnalytics(prev => ({
+              ...prev,
+              available_companies: data.available_companies,
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch available companies for super admin:", error);
+        }
+      };
+      fetchAvailableCompanies();
+    }
+  }, [isSuperAdmin, period]);
 
   const currentData = analytics.revenue_series;
     const totalRevenue = currentData?.reduce((s, d) => s + (d?.revenue || 0), 0) || 0;
@@ -429,11 +492,8 @@ export default function Overview({
   
   // Get the selected company name and logo for display
   // Handle both empty string and null/undefined cases
-  const selectedCompany = (selectedCompanySlug && selectedCompanySlug !== "")
-    ? scopeOptions.find(opt => opt.value === selectedCompanySlug)
-    : scopeOptions.find(opt => opt.value === "");
-  const selectedCompanyName = selectedCompany?.label || "All Companies";
-  const selectedCompanyLogo = selectedCompany?.logo || null;
+  const selectedCompanyName = company?.name || "All Companies";
+  const selectedCompanyLogo = company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
 
   const hasRevenueData =
     currentData.length > 0 &&
@@ -463,6 +523,29 @@ export default function Overview({
     return analytics.available_companies.length >= 2;
   })();
 
+  // Handle company selection - update global context
+  // Handle company selection - update global context
+  const handleCompanyChange = (selectedSlug: string) => {
+    if (selectedSlug === "") {
+      // "All Companies" selected - set company to empty to show aggregated data for ALL users
+      switchCompany({
+        slug: "",
+        name: "All Companies",
+        role: "",
+      });
+    } else {
+      const selected = analytics.available_companies.find(c => c.slug === selectedSlug);
+      if (selected) {
+        const membership = user?.memberships?.find((m: any) => m.company_slug === selectedSlug);
+        switchCompany({
+          slug: selected.slug,
+          name: selected.name,
+          role: membership?.role || "viewer",
+        });
+      }
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Scope selector - only show when user has access to multiple companies */}
@@ -476,7 +559,7 @@ export default function Overview({
                <div className="relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
                 <div className="absolute inset-0 rounded-full shadow-inner"></div>
-                {selectedCompanyLogo && selectedCompanySlug ? (
+                {selectedCompanyLogo && company?.slug ? (
                                   <div className="relative w-12 h-12 rounded-full bg-white p-0.5 shadow-lg">
                     <img
                       src={selectedCompanyLogo}
@@ -517,10 +600,10 @@ export default function Overview({
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4]" />
                   <select
-                    value={selectedCompanySlug}
+                    value={company?.slug || ""}
                     onChange={(e) => {
                       console.log("Selected company slug:", e.target.value);
-                      setSelectedCompanySlug(e.target.value);
+                      handleCompanyChange(e.target.value);
                     }}
                     className="pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer appearance-none w-[360px]"
                   >
@@ -561,10 +644,10 @@ export default function Overview({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
         {loading ? (
-          Array.from({ length: isSuperAdmin && !selectedCompanySlug ? 4 : 3 }).map((_, i) => <SkeletonCard key={i} />)
+          Array.from({ length: isSuperAdmin && !company?.slug ? 4 : 3 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            {isSuperAdmin && !selectedCompanySlug && (
+            {isSuperAdmin && !company?.slug && (
               <div 
                 onClick={() => onNavigate?.("companies")} 
                 className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
@@ -586,15 +669,15 @@ export default function Overview({
               textColor="text-blue-600"
             />   */}
             <div 
-              onClick={() => onNavigate?.("users")} 
+              onClick={() => onNavigate?.("companyOrders")}
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard
-                title="Company Users"
-                value={summaryData?.users?.toLocaleString() || "0"}
-                icon={Users}
-                bgLight="bg-emerald-50"
-                textColor="text-emerald-600"
+                title="Total Orders"
+                value={summaryData?.orders?.toLocaleString() || "0"}
+                icon={ShoppingBag}
+                bgLight="bg-purple-50"
+                textColor="text-purple-600"
               />
             </div>
             <div 
@@ -611,15 +694,15 @@ export default function Overview({
             </div>
 
             <div 
-              onClick={() => onNavigate?.("companyOrders")}
+              onClick={() => onNavigate?.("users")} 
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard
-                title="Total Orders"
-                value={summaryData?.orders?.toLocaleString() || "0"}
-                icon={ShoppingBag}
-                bgLight="bg-purple-50"
-                textColor="text-purple-600"
+                title="Company Users"
+                value={summaryData?.users?.toLocaleString() || "0"}
+                icon={Users}
+                bgLight="bg-emerald-50"
+                textColor="text-emerald-600"
               />
             </div>
             { !isSuperAdmin && (

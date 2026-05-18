@@ -163,6 +163,31 @@ export default function SubCategoryManagement() {
     e.preventDefault();
     if (readOnly) return;
     if (!validateForm()) return;
+    
+    // For edit mode, check if any data actually changed
+    if (editingId) {
+      const originalSubCategory = subs.find(s => s.id === editingId);
+      if (originalSubCategory) {
+        const hasChanges = 
+          originalSubCategory.name !== formData.name ||
+          (originalSubCategory.name_am || "") !== (formData.name_am || "") ||
+          originalSubCategory.slug !== formData.slug ||
+          originalSubCategory.category !== formData.category ||
+          (originalSubCategory.item_code || "") !== (formData.item_code || "") ||
+          (originalSubCategory.description || "") !== (formData.description || "") ||
+          (originalSubCategory.order || 0) !== formData.order ||
+          (originalSubCategory.is_active ?? true) !== formData.is_active ||
+          formData.icon !== null; // If new icon uploaded, consider as change
+        
+        if (!hasChanges) {
+          showToast("info", "No changes detected");
+          setModalOpen(false);
+          resetForm();
+          return;
+        }
+      }
+    }
+    
     setSubmitting(true);
     try {
       const fd = new FormData();
