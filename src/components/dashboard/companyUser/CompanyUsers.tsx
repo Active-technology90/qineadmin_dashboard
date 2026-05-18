@@ -234,8 +234,11 @@ export default function CompanyUsers() {
     return (
       <CompanySelector
         companies={companies}
+        title="All Users"
         subtitle="Select a company to manage users"
+        searchPlaceholder="Search companies by name..."
         isLoading={isLoadingCompanies}
+        disableProductSearch={true}
         onSelect={(slug, name) => {
           const membership = currentUser?.memberships?.find(
             (m: any) => m.company_slug === slug,

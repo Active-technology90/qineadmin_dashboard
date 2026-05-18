@@ -23,7 +23,11 @@ interface CompanySelectorProps {
   onBack: () => void;
   allowSwitch?: boolean; 
    subtitle?: string;
+   disableProductSearch?: boolean;
+   title?: string;
+  searchPlaceholder?: string
 }
+
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -80,9 +84,11 @@ function Header({
 function SearchInput({
   value,
   onChange,
+  placeholder = "Search by name or type..."
 }: {
   value: string;
   onChange: (val: string) => void;
+  placeholder?: string;
 }) {
   const [isFocused, setIsFocused] = useState(false);
   return (
@@ -98,7 +104,7 @@ function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder="Search by name or type..."
+        placeholder={placeholder}
         className="w-full pl-10 pr-10 py-2.5 rounded-xl border bg-gray-50 text-sm
           transition-all duration-200 outline-none
           focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary
@@ -227,7 +233,9 @@ export function CompanySelector({
   onSelect,
   // onBack,
   allowSwitch = false,
-  subtitle = "Select a company to manage its products"
+subtitle = "Select a company to manage its products", disableProductSearch = false, title = "Choose Company", searchPlaceholder = "Search by name or type..."
+
+
 }: CompanySelectorProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -247,8 +255,14 @@ export function CompanySelector({
       c.business_type?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Search products whenever searchTerm changes
+  // Search products whenever searchTerm changes (only if product search is enabled)
   useEffect(() => {
+    if (disableProductSearch) {
+      setProductResults([]);
+      setSearchingProducts(false);
+      return;
+    }
+    
     const fetchProducts = async () => {
       if (!searchTerm.trim()) {
         setProductResults([]);
@@ -268,7 +282,7 @@ export function CompanySelector({
     
     const timer = setTimeout(fetchProducts, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, disableProductSearch]);
 
   const handleImageError = useCallback((companyId: number) => {
     setImageErrors((prev) => ({ ...prev, [companyId]: true }));
@@ -283,7 +297,7 @@ export function CompanySelector({
     >
       {/* Header – fixed at top */}
       <Header
-        title="Choose Company"
+        title={title}
         subtitle={subtitle}
       />
 
@@ -291,7 +305,7 @@ export function CompanySelector({
       <div className="flex-1 overflow-y-auto">
         {/* Sticky search */}
         <div className="sticky top-0 z-10 px-5 pt-3 pb-2 bg-white">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} />
+<SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={searchPlaceholder} />
           <div className="mt-3 border-b border-gray-100" />
         </div>
 
@@ -335,8 +349,8 @@ export function CompanySelector({
                 </>
               )}
 
-              {/* Products Section */}
-              {productResults.length > 0 && (
+              {/* Products Section - Only show if product search is enabled */}
+              {!disableProductSearch && productResults.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mb-3 mt-2">
                     <Package className="h-4 w-4 text-[#6750A4]" />

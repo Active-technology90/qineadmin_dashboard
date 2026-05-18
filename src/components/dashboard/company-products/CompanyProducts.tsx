@@ -160,6 +160,8 @@ export default function CompanyProducts() {
       <CompanySelector
         companies={companies} // ✅ now populated
         isLoading={isLoadingCompanies}
+        title="All Products"
+        searchPlaceholder="Search products and companies by name..."
         onSelect={(slug, name) => {
           // If the user has NO memberships, they are a super admin → role = "admin"
           const membership = user?.memberships?.find(
