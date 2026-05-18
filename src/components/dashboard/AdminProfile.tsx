@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useCompaniesList } from "../../hooks/useCompaniesList";
 import { useForm, Controller } from "react-hook-form";
 import { updateProfile, changePassword, getMe } from "../../services/api";

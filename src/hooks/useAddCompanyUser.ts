@@ -1,10 +1,11 @@
 import api from "../services/api";
+import type { UserRole } from "../types";
 
 export function useAddCompanyUser() {
   const addUser = async (
     companySlug: string,
     email: string,
-    role: "admin" | "staff" | "viewer" | "delivery"
+    role: UserRole
   ) => {
     try {
         console.log("ADDING USER:", {

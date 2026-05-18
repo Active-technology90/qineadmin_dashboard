@@ -31,7 +31,8 @@ interface ManageMembershipsModalProps {
 const roleOptions: UserRole[] = ["admin", "staff", "viewer", "delivery"];
 
 const getRoleBadgeClass = (role: UserRole) => {
-  const classes = {
+  const classes: Record<UserRole, string> = {
+    owner: "bg-rose-100 text-rose-800 border-rose-200",
     admin: "bg-purple-100 text-purple-800 border-purple-200",
     staff: "bg-blue-100 text-blue-800 border-blue-200",
     viewer: "bg-amber-100 text-amber-800 border-amber-200",

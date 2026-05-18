@@ -78,7 +78,7 @@ export default function CompanyManagement() {
   const primaryMembership = !isSuperAdmin
     ? getPrimaryMembership(memberships)
     : null;
-  const userCompanySlug = primaryMembership?.company_slug ?? null;
+  // const userCompanySlug = primaryMembership?.company_slug ?? null;
   const userCompanyRole = primaryMembership?.role ?? null;
 
   // Get role for currently selected company

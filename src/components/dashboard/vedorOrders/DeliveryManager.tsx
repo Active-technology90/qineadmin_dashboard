@@ -139,7 +139,7 @@ export function DeliveryManager({
     try {
       if (currentDelivery) {
         // updateDeliveryPerson expects (deliveryId, userId)
-        await updateDeliveryPerson(currentDelivery.id, selectedPersonId);
+        await updateDeliveryPerson(String(currentDelivery.id), selectedPersonId);
         showToast("success", "Delivery person updated");
       } else {
         await assignDelivery({

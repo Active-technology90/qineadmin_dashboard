@@ -41,10 +41,10 @@ export default function CompanyForm({
   logoPreview,
   coverPreview,
   isEditingActive,
-  submitting,
-  editingSlug,
+  // submitting,
+  // editingSlug,
   onSubmit,
-  onClose,
+  // onClose,
 }: CompanyFormProps) {
   const filteredSubcategories = subcategories.filter(
     (sub) => sub.category === formData.category,

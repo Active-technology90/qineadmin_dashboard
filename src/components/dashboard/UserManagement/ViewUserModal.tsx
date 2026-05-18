@@ -45,6 +45,7 @@ interface ExtendedUser extends User {
 
 // Helper: get role style
 const roleStyles: Record<UserRole, string> = {
+  owner: "bg-rose-100 text-rose-700 border-rose-200",
   admin: "bg-purple-100 text-purple-700 border-purple-200",
   staff: "bg-blue-100 text-blue-700 border-blue-200",
   viewer: "bg-amber-100 text-amber-700 border-amber-200",

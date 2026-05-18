@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { getAdminAnalyticsOverview } from "../../services/api";
 import type { AnalyticsOverviewResponse } from "../../types";
-import { useReadOnly } from "./AdminDashboard";
+// import { useReadOnly } from "./AdminDashboard";
 import { useAuth } from "../../hooks/useAuth";
 
 const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
@@ -201,10 +201,10 @@ const SummaryCard = ({
         </div>
         
         {/* Subtle stat badge */}
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-50/50 border border-gray-100/50 opacity-0 group-hover:opacity-100 transition-all duration-300">
+        {/* <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-50/50 border border-gray-100/50 opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
           <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Live</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Title with modern accent line */}
@@ -237,7 +237,7 @@ export default function Overview({
 }: {
   onNavigate?: (tab: DashboardTab) => void;
 }) {
-  const readOnly = useReadOnly();
+  // const readOnly = useReadOnly();
   const { user } = useAuth();
   const isSuperAdmin = !user?.memberships?.length;
   const [period, setPeriod] = useState<Period>("week");
@@ -248,6 +248,8 @@ export default function Overview({
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
     const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
+
+  console.log(aggregatedSummary, "summary")
 
   useEffect(() => {
     let active = true;

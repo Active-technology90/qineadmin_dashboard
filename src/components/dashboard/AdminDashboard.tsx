@@ -248,7 +248,7 @@ export default function AdminDashboard() {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companiesList, setCompaniesList] = useState<any[]>([]);
    const [isScrolled, setIsScrolled] = useState(false);
- const mainContentRef = useRef<HTMLDivElement>(null);
+//  const mainContentRef = useRef<HTMLDivElement>(null);
  const scrollableRef = useRef<HTMLDivElement>(null);
   // ── Core identity flags ────────────────────────────────
   const isSuperAdmin = !user?.memberships?.length;
@@ -418,8 +418,8 @@ export default function AdminDashboard() {
                   : isViewer
                     ? "Viewer Panel (Read‑Only)"
                     : company?.role === "admin"
-                      ? "Company Admin Panel"
-                      : "Company Staff Panel"}
+                      ? "Admin Panel"
+                      : "Staff Panel"}
               </span>
               <span className="block text-xs text-indigo-300 mt-0.5">
                 Dashboard

@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 // User & Membership (matching backend serializer)
 // ─────────────────────────────────────────────────────────────
-export type UserRole = "admin" | "staff" | "viewer" | "delivery";
+export type UserRole = "owner" | "admin" | "staff" | "viewer" | "delivery";
 export interface Membership {
   company_id: number;
   company_name: string;

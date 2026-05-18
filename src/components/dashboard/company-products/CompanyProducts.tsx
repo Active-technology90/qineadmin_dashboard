@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { Plus, RefreshCw, Search, Building2 } from "lucide-react";
-import type { CompanyListItem } from "../../../types";
+import { Plus, RefreshCw, Search } from "lucide-react";
+// import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
 import { useCompanyProducts } from "../../../hooks/useCompanyProducts";
@@ -22,13 +22,13 @@ export default function CompanyProducts() {
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
 
   const companySlug = company?.slug ?? null;
-  const companyName = company?.name ?? "";
+  // const companyName = company?.name ?? "";
   // Get logo from companies list (since CurrentCompany doesn't have logo)
-  const companyLogo = useMemo(() => {
-    if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
-    return foundCompany?.logo || null;
-  }, [companySlug, companies]);
+  // const companyLogo = useMemo(() => {
+  //   if (!companySlug || !companies.length) return null;
+  //   const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
+  //   return foundCompany?.logo || null;
+  // }, [companySlug, companies]);
 
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -224,7 +224,7 @@ export default function CompanyProducts() {
               <p className="text-2xl font-extrabold text-secondary tracking-tight">All Products</p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 ">
             {isSuperAdmin && (
               <button
                 onClick={clearCompany}
@@ -236,16 +236,16 @@ export default function CompanyProducts() {
             {canEditBasic && (
               <button
                 onClick={handleAdd}
-                className="px-4 py-2 rounded-full bg-secondary text-white hover:bg-secondary flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 rounded-full mt-2  bg-secondary text-white hover:bg-secondary flex items-center gap-2 shadow-sm"
               >
-                <Plus className="h-4 w-4" /> Add
+                <Plus className="h-4 w-4" /> Add Product
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="mt-3 px-6 py-1">
+      <div className="mt-1 px-6 py-1">
         <TableControls
           pageSize={pageSize}
           onPageSizeChange={(size) => {

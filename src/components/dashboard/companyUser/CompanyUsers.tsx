@@ -13,8 +13,8 @@ import {
   updateUserCompanyRole,
 } from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
-import type { User, CompanyListItem, UserRole } from "../../../types";
-import { UserPlus, Building2 } from "lucide-react";
+import type { User, UserRole } from "../../../types";
+import { UserPlus } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
 import { CompanyUsersTable } from "./CompanyUsersTable";
@@ -34,15 +34,15 @@ export default function CompanyUsers() {
   const [creatingUser, setCreatingUser] = useState(false);
   // Company from context
   const companySlug = company?.slug ?? null;
-  const companyName = company?.name ?? "";
+  // const companyName = company?.name ?? "";
   // Get logo from companies list (since CurrentCompany doesn't have logo)
-  const companyLogo = useMemo(() => {
-    if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find(
-      (c: CompanyListItem) => c.slug === companySlug,
-    );
-    return foundCompany?.logo || null;
-  }, [companySlug, companies]);
+  // const companyLogo = useMemo(() => {
+  //   if (!companySlug || !companies.length) return null;
+  //   const foundCompany = companies.find(
+  //     (c: CompanyListItem) => c.slug === companySlug,
+  //   );
+  //   return foundCompany?.logo || null;
+  // }, [companySlug, companies]);
 
   const isSuperAdmin = !currentUser?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;

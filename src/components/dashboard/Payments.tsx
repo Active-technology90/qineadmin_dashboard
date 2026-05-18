@@ -9,6 +9,7 @@ import { useAuth } from "../../context/authContext";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../hooks/useCompaniesList";
 import { CompanySelector } from "./company-products/CompanySelector";
+import type { VendorOrder } from "../../types";
 
 interface Payout {
   id: number;
@@ -23,6 +24,7 @@ interface Payout {
   scheduled_at: string;
   paid_at: string | null;
   reference: string | null;
+  vendor_order_details: VendorOrder;
 }
 
 export default function Payments() {
@@ -172,20 +174,22 @@ export default function Payments() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {isSuperAdmin && companySlug && (
-            <button
-              onClick={() => clearCompany()}
-              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
-            >
-              <X className="h-4 w-4" /> Clear Company
-            </button>
-          )}
+
           {isSuperAdmin && (
             <button
               onClick={() => setIsCompanySelectorOpen(true)}
               className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
             >
-              <RefreshCw className="h-4 w-4" /> Switch Company
+              <RefreshCw className="h-4 w-4" /> Select Company
+            </button>
+          )}
+          {isSuperAdmin && companySlug && (
+            <button
+              onClick={() => clearCompany()}
+              className="px p-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+            >
+              <X className="h-4 w-4" />
+              {/* Clear Company */}
             </button>
           )}
         </div>
@@ -288,7 +292,10 @@ export default function Payments() {
                 Status
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Scheduled Date
+                Payment Method
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payout Date
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -338,12 +345,16 @@ export default function Payments() {
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {Number(payout.net_amount).toLocaleString()}
                   </td>
+
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payout.status)}`}
                     >
                       {payout.status}
                     </span>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                    {payout?.vendor_order_details?.payment_method?.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || 'N/A'}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {new Date(payout.scheduled_at).toLocaleDateString()}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
-  RefreshCw,
   MoreVertical,
   Eye,
   Edit,
@@ -65,6 +64,7 @@ const getInitials = (
 };
 
 const roleStyles: Record<UserRole, string> = {
+  owner: "bg-rose-100 text-rose-700 border-rose-200",
   admin: "bg-purple-100 text-purple-700 border-purple-200",
   staff: "bg-blue-100 text-blue-700 border-blue-200",
   viewer: "bg-amber-100 text-amber-700 border-amber-200",
@@ -72,6 +72,7 @@ const roleStyles: Record<UserRole, string> = {
 };
 
 const roleBadgeStyles: Record<UserRole, string> = {
+  owner: "bg-rose-600 text-white",
   admin: "bg-purple-600 text-white",
   staff: "bg-blue-600 text-white",
   viewer: "bg-amber-600 text-white",
@@ -134,7 +135,7 @@ const UserFilters: React.FC<FiltersProps> = ({
   setSearchTerm,
   roleFilter,
   setRoleFilter,
-  onRefresh,
+  // onRefresh,
 }) => (
   <>
     <div className="relative flex-1 max-w-md">

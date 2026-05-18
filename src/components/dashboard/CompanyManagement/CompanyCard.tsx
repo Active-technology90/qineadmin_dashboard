@@ -5,13 +5,13 @@ import type { CompanyListItem } from "../../../types";
 interface CompanyCardProps {
   company: CompanyListItem;
   onEdit: (company: CompanyListItem) => void;
-  userRole: string | null;
+  userRole?: string | null;
 }
 
 export default function CompanyCard({
   company,
-  onEdit,
-  userRole,
+  // onEdit,
+  // userRole,
 }: CompanyCardProps) {
   return (
     <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group h-fit">

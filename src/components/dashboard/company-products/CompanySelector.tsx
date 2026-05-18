@@ -223,7 +223,7 @@ export function CompanySelector({
   companies,
   isLoading,
   onSelect,
-  onBack,
+  // onBack,
   allowSwitch = false,
   subtitle = "Select a company to manage its products"
 }: CompanySelectorProps) {
