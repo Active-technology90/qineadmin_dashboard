@@ -81,11 +81,10 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-            activeTab === "companyOrders"
-              ? "bg-white/40 text-white shadow-lg"
-              : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${activeTab === "companyOrders"
+            ? "bg-white/40 text-white shadow-lg"
+            : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
         >
           <ShoppingBag className="h-5 w-5" />
           <span>All Orders</span>
@@ -95,11 +94,10 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-            activeTab === "companyOrders"
-              ? "bg-white/40 text-white shadow-lg"
-              : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "companyOrders"
+            ? "bg-white/40 text-white shadow-lg"
+            : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
         >
           <ShoppingBag className="h-5 w-5" />
         </button>
@@ -131,11 +129,10 @@ function OrdersMenu({
       <div>
         <button
           onClick={onToggleOrdersMenu}
-          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-            isActive
-              ? "bg-white/40 text-white shadow-lg"
-              : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
+            ? "bg-white/40 text-white shadow-lg"
+            : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
         >
           <div className="flex items-center gap-3.5">
             <ShoppingBag className="h-5 w-5" />
@@ -153,11 +150,10 @@ function OrdersMenu({
             {showMasterOrders && (
               <button
                 onClick={() => onNavigate("masterOrders")}
-                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
-                  activeTab === "masterOrders"
-                    ? "bg-white/20 text-white font-semibold"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white"
-                }`}
+                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "masterOrders"
+                  ? "bg-white/20 text-white font-semibold"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }`}
               >
                 <FileText className="h-4 w-4" />
                 Master Orders
@@ -165,11 +161,10 @@ function OrdersMenu({
             )}
             <button
               onClick={() => onNavigate("companyOrders")}
-              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
-                activeTab === "companyOrders"
-                  ? "bg-white/20 text-white font-semibold"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white"
-              }`}
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "companyOrders"
+                ? "bg-white/20 text-white font-semibold"
+                : "text-gray-300 hover:bg-white/5 hover:text-white"
+                }`}
             >
               <ListOrdered className="h-4 w-4" />
               All Orders
@@ -184,11 +179,10 @@ function OrdersMenu({
     <div className="relative" ref={ordersRef}>
       <button
         onClick={() => setCollapsedOrdersOpen(!collapsedOrdersOpen)}
-        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-          activeTab === "masterOrders" || activeTab === "companyOrders"
-            ? "bg-white/40 text-white shadow-lg"
-            : "text-gray-300 hover:bg-white/5 hover:text-white"
-        }`}
+        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "masterOrders" || activeTab === "companyOrders"
+          ? "bg-white/40 text-white shadow-lg"
+          : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
       >
         <ShoppingBag className="h-5 w-5" />
       </button>
@@ -201,11 +195,10 @@ function OrdersMenu({
                 onNavigate("masterOrders");
                 setCollapsedOrdersOpen(false);
               }}
-              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
-                activeTab === "masterOrders"
-                  ? "bg-indigo-50 text-indigo-700 font-medium"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "masterOrders"
+                ? "bg-indigo-50 text-indigo-700 font-medium"
+                : "text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <FileText className="h-4 w-4 text-gray-500" />
               Master Orders
@@ -216,11 +209,10 @@ function OrdersMenu({
               onNavigate("companyOrders");
               setCollapsedOrdersOpen(false);
             }}
-            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
-              activeTab === "companyOrders"
-                ? "bg-indigo-50 text-indigo-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "companyOrders"
+              ? "bg-indigo-50 text-indigo-700 font-medium"
+              : "text-gray-700 hover:bg-gray-50"
+              }`}
           >
             <Building2 className="h-4 w-4 text-gray-500" />
             Company Orders
@@ -247,9 +239,9 @@ export default function AdminDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companiesList, setCompaniesList] = useState<any[]>([]);
-   const [isScrolled, setIsScrolled] = useState(false);
-//  const mainContentRef = useRef<HTMLDivElement>(null);
- const scrollableRef = useRef<HTMLDivElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  //  const mainContentRef = useRef<HTMLDivElement>(null);
+  const scrollableRef = useRef<HTMLDivElement>(null);
   // ── Core identity flags ────────────────────────────────
   const isSuperAdmin = !user?.memberships?.length;
   const isViewer = !isSuperAdmin && company?.role === "viewer";
@@ -296,7 +288,7 @@ export default function AdminDashboard() {
     }
   };
 
-    // Fetch companies list to get company logo
+  // Fetch companies list to get company logo
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -324,7 +316,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const scrollableElement = scrollableRef.current;
     if (!scrollableElement) return;
-    
+
     const handleScroll = () => {
       if (scrollableElement.scrollTop > 10) {
         setIsScrolled(true);
@@ -332,7 +324,7 @@ export default function AdminDashboard() {
         setIsScrolled(false);
       }
     };
-    
+
     scrollableElement.addEventListener("scroll", handleScroll);
     return () => scrollableElement.removeEventListener("scroll", handleScroll);
   }, []);
@@ -364,7 +356,7 @@ export default function AdminDashboard() {
           return <SubCategoryManagement key={componentKey} />;
         case "superUsers":
           return <SuperAdminUsers />;
-         case "add advertisment":
+        case "add advertisment":
           return <AdManagement />;
         case "companies":
           return <CompanyManagement key={componentKey} />;
@@ -399,7 +391,7 @@ export default function AdminDashboard() {
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
-       {/* Logo & title */}
+        {/* Logo & title */}
         <div
           className={`mx-2 mt-2 px-6 py-2 border-b border-gray-800 flex-col items-center gap-3 rounded-2xl ${sidebarCollapsed ? "justify-center p-4" : ""}`}
         >
@@ -432,30 +424,22 @@ export default function AdminDashboard() {
                   : isViewer
                     ? "Read Only"
                     : company?.role === "admin"
-<<<<<<< HEAD
-                      ? "Admin Panel"
-                      : "Staff Panel"}
-              </span>
-              <span className="block text-xs text-indigo-300 mt-0.5">
-                Dashboard
-=======
                       ? "Company Management"
                       : "Limited Access"}
->>>>>>> origin/feature/overview-Category
               </span>
-             {/* App Branding - Subtle Horizontal */}
-                <div className="mt-3 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/15 shadow-md">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#9b87f5] to-[#6750A4]"></div>
-                    <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
-                      ACTIVE MART
-                    </span>
-                    <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
-                      Administration Panel
-                    </span>
-                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
-                  </div>
-                </div> 
+              {/* App Branding - Subtle Horizontal */}
+              <div className="mt-3 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/15 shadow-md">
+                <div className="flex items-center justify-center gap-1.5">
+                  <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#9b87f5] to-[#6750A4]"></div>
+                  <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
+                    ACTIVE MART
+                  </span>
+                  <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
+                    Administration Panel
+                  </span>
+                  <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
+                </div>
+              </div>
             </div>
           )}
           <button
@@ -479,9 +463,8 @@ export default function AdminDashboard() {
           {showPlatformAdmin && (
             <>
               <div
-                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
-                  sidebarCollapsed ? "hidden" : ""
-                }`}
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
+                  }`}
               >
                 Platform Admin
               </div>
@@ -509,7 +492,7 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
           />
-           {showPlatformAdmin && (
+          {showPlatformAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
               label="User Management"
@@ -529,9 +512,8 @@ export default function AdminDashboard() {
           )}
 
           <div
-            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
-              sidebarCollapsed ? "hidden" : ""
-            }`}
+            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
+              }`}
           >
             Management
           </div>
@@ -561,7 +543,7 @@ export default function AdminDashboard() {
             onClick={() => navigate("products")}
           />
           {/* Only for super admin (not viewer) */}
-         
+
 
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
@@ -618,14 +600,13 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-       {/* Main Content */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden">
-         <header className={`h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
-          isScrolled
-            ? "bg-purple-100/90 shadow-xl border-b border-purple-200"
-            : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
-        }`}>
-           <div className="flex items-center gap-4 flex-1">
+        <header className={`h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${isScrolled
+          ? "bg-purple-100/90 shadow-xl border-b border-purple-200"
+          : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
+          }`}>
+          <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen((prev) => !prev)}
               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
@@ -649,16 +630,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-             {/* Company name – show for non‑super‑admin (including viewer) */}
+            {/* Company name – show for non‑super‑admin (including viewer) */}
             {company && !isSuperAdmin && (
               <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
                 <div className="relative flex-shrink-0 group">
                   {/* Outer glow effect */}
-                                               <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#6750A4] via-[#9b87f5] to-[#6750A4] opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>
+                  <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#6750A4] via-[#9b87f5] to-[#6750A4] opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>
                   {/* Animated gradient border */}
-                   <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#6750A4] via-[#c4b5fd] to-[#6750A4] animate-spin-slow" style={{ animationDuration: '3s' }}></div>
+                  <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#6750A4] via-[#c4b5fd] to-[#6750A4] animate-spin-slow" style={{ animationDuration: '3s' }}></div>
                   {/* Logo container - Modern Squircle */}
-                                                                     <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm flex items-center justify-center shadow-2xl border-2 border-[#6750A4]/50 shadow-[0_0_10px_rgba(103,80,164,0.3)] p-1">
+                  <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm flex items-center justify-center shadow-2xl border-2 border-[#6750A4]/50 shadow-[0_0_10px_rgba(103,80,164,0.3)] p-1">
                     {companyLogo ? (
                       <img
                         src={companyLogo}
@@ -673,19 +654,18 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-lg font-black text-indigo-700 truncate max-w-[180px] md:max-w-[240px] lg:max-w-[300px] tracking-tight" title={company.name}>
                       {company.name}
                     </p>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${
-                      company.role === "admin"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : company.role === "staff"
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${company.role === "admin"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : company.role === "staff"
                         ? "bg-blue-50 text-blue-700 border-blue-200"
                         : company.role === "viewer"
-                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : "bg-gray-50 text-gray-600 border-gray-200"
-                    }`}>
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-gray-50 text-gray-600 border-gray-200"
+                      }`}>
                       {company.role}
                     </span>
                   </div>
@@ -703,86 +683,86 @@ export default function AdminDashboard() {
           {/* Right side buttons */}
           <div className="flex items-center gap-3">
             {/* Refresh Button */}
-            <RefreshButton 
+            <RefreshButton
               onRefresh={handleRefresh}
               isLoading={isRefreshing}
             />
             {/* Profile Dropdown */}
-             <div className="relative">
-             <button
-              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gradient-to-r hover:from-[#6750A4]/5 hover:to-transparent rounded-xl p-4 transition-all duration-300 ${profileDropdownOpen ? "bg-gradient-to-r from-[#6750A4]/10 to-transparent" : ""}`}
-            >
-              <div className="text-right hidden md:block">
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">
-                    Welcome,
-                  </span>
-                  <p className="text-base font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
-                    {user?.username || user?.email?.split("@")[0] || "User"}
-                  </p>
-                </div>
-              </div>
-              <div className="relative">
-                {/* Pulsing ring effect */}
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#6750A4] to-[#9b87f5] opacity-75 blur-sm animate-pulse"></div>
-                {/* Outer ring - secondary color */}
-                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] opacity-100"></div>
-                {/* Avatar container */}
-                <div className="relative h-11 w-11 rounded-full bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-xl border-2 border-[#6750A4] p-0.5 group-hover:scale-110 transition-all duration-300">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-[#6750A4] to-[#7c63b8]">
-                    {user?.profile_image ? (
-                      <img 
-                        src={user.profile_image} 
-                        alt={user?.username || "User"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-white font-bold text-sm uppercase">
-                          {user?.username?.[0] || user?.first_name?.[0] || "A"}
-                        </span>
-                      </div>
-                    )}
+            <div className="relative">
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gradient-to-r hover:from-[#6750A4]/5 hover:to-transparent rounded-xl p-4 transition-all duration-300 ${profileDropdownOpen ? "bg-gradient-to-r from-[#6750A4]/10 to-transparent" : ""}`}
+              >
+                <div className="text-right hidden md:block">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">
+                      Welcome,
+                    </span>
+                    <p className="text-base font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
+                      {user?.username || user?.email?.split("@")[0] || "User"}
+                    </p>
                   </div>
                 </div>
-                
-              </div>
-            </button>
-
-            {profileDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setProfileDropdownOpen(false)}
-                />
-                <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-transparent">
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                    {company && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
-                        <p className="text-xs font-medium text-indigo-700">
-                          Role: {company.role}
-                        </p>
-                      </div>
-                    )}
+                <div className="relative">
+                  {/* Pulsing ring effect */}
+                  <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#6750A4] to-[#9b87f5] opacity-75 blur-sm animate-pulse"></div>
+                  {/* Outer ring - secondary color */}
+                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] opacity-100"></div>
+                  {/* Avatar container */}
+                  <div className="relative h-11 w-11 rounded-full bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-xl border-2 border-[#6750A4] p-0.5 group-hover:scale-110 transition-all duration-300">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-[#6750A4] to-[#7c63b8]">
+                      {user?.profile_image ? (
+                        <img
+                          src={user.profile_image}
+                          alt={user?.username || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm uppercase">
+                            {user?.username?.[0] || user?.first_name?.[0] || "A"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => navigate("profile")}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors group cursor-pointer"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                      <Users className="h-4 w-4 text-indigo-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold">My Profile</p>
-                    </div>
-                  </button>
+                </div>
+              </button>
 
-                  {/* Switch Back – always visible when a company is selected */}
-                  {/* {company && !isSuperAdmin && (
+              {profileDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setProfileDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-transparent">
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                      {company && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                          <p className="text-xs font-medium text-indigo-700">
+                            Role: {company.role}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => navigate("profile")}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors group cursor-pointer"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                        <Users className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold">My Profile</p>
+                      </div>
+                    </button>
+
+                    {/* Switch Back – always visible when a company is selected */}
+                    {/* {company && !isSuperAdmin && (
                     <button
                       onClick={() => {
                         clearCompany();
@@ -801,20 +781,20 @@ export default function AdminDashboard() {
                     </button>
                   )} */}
 
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors group border-t border-gray-100 mt-1 cursor-pointer"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                      <LogOut className="h-4 w-4 text-red-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold">Sign Out</p>
-                    </div>
-                  </button>
-                </div>
-              </>
-            )}
+                    <button
+                      onClick={handleLogoutClick}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors group border-t border-gray-100 mt-1 cursor-pointer"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                        <LogOut className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold">Sign Out</p>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -873,11 +853,10 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-        active
-          ? "bg-white/40 text-white shadow-lg"
-          : "text-gray-300 hover:bg-white/5 hover:text-white"
-      } ${collapsed ? "justify-center px-2" : ""}`}
+      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${active
+        ? "bg-white/40 text-white shadow-lg"
+        : "text-gray-300 hover:bg-white/5 hover:text-white"
+        } ${collapsed ? "justify-center px-2" : ""}`}
     >
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && <span>{label}</span>}
