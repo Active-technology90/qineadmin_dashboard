@@ -166,14 +166,14 @@ export const FormModal: React.FC<FormModalProps> = ({
             `}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
-              <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-gray-900">
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100 sticky top-0 bg-[#F3E8FF] z-10 rounded-t-2xl">
+              <h2 id="modal-title" className="text-lg sm:text-xl font-bold text-[#6750A4]">
                 {title}
               </h2>
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition"
                   aria-label="Close modal"
                 >
                   <X size={20} />
@@ -188,7 +188,7 @@ export const FormModal: React.FC<FormModalProps> = ({
               className="flex flex-col flex-1 overflow-hidden"
             >
               {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
+              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5 ">
                 {children}
               </div>
 
