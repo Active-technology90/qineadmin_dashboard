@@ -71,6 +71,7 @@ export function ProductModal({
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [savedProductId, setSavedProductId] = useState<number | null>(null);
+  
 
   const {
     register,
@@ -205,10 +206,10 @@ export function ProductModal({
     >
       <div className="bg-white rounded-2xl shadow-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4">
+        <div className="sticky top-0 z-10 bg-[#6750A4]/20 backdrop-blur-sm border-b border-[#6750A4]/20 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
                 {editingProduct ? 'Product Details' : 'New Product'}
                 {isReadOnlyBasic && <span className="ml-2 text-sm font-normal text-amber-600">(View only)</span>}
                 {!isReadOnlyBasic && isPricingDisabled && isEditMode && (
@@ -223,7 +224,7 @@ export function ProductModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="p-2 rounded-full text-gray-400 hover:text-[#6750A4] hover:bg-[#6750A4]/10 transition"
               aria-label="Close"
             >
               <X className="h-5 w-5" />

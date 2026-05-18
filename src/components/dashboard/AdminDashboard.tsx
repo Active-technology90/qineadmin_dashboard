@@ -606,9 +606,11 @@ export default function AdminDashboard() {
                       : user?.role || "Super Admin"}
                   </span>
                   <div className="w-px h-4 bg-indigo-200 mx-1"></div>
-                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
-                    Full Control
-                  </span>
+                  <div className="flex items-center">
+                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shadow-sm">
+                      Full Control
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
