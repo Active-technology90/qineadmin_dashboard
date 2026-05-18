@@ -272,9 +272,11 @@ export default function Payments() {
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Company Order ID
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company
-              </th>
+              {isAllPayouts && (
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Company
+                </th>
+              )}
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Gross (ETB)
               </th>
@@ -315,6 +317,7 @@ export default function Payments() {
                   <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     {payout.vendor_order}
                   </td>
+                      {isAllPayouts && (
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       {payout.company_logo ? (
@@ -329,6 +332,7 @@ export default function Payments() {
                       <span>{payout.company_name}</span>
                     </div>
                   </td>
+                    )}
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {Number(payout.gross_amount).toLocaleString()}
                   </td>

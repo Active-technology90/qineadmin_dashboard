@@ -1,5 +1,4 @@
-// src/components/dashboard/orders/OrderFilters.tsx
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, ChevronDown, RefreshCw } from "lucide-react";
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -8,12 +7,13 @@ interface OrderFiltersProps {
   onStatusChange: (val: string) => void;
   deliveryStatusFilter: string;
   onDeliveryStatusChange: (val: string) => void;
-  paymentStatusFilter: string;          // NEW: payment status filter
-  onPaymentStatusChange: (val: string) => void; // NEW: handler for payment status
-  fulfillmentTypeFilter: string;        // NEW: fulfillment type filter
-  onFulfillmentTypeChange: (val: string) => void; // NEW: handler for fulfillment type
-  // pageSize: number;
-  // onPageSizeChange: (size: number) => void;
+  paymentStatusFilter: string;
+  onPaymentStatusChange: (val: string) => void;
+  fulfillmentTypeFilter: string;
+  onFulfillmentTypeChange: (val: string) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
+  onRefresh?: () => void;
   onClear: () => void;
   showMobile: boolean;
   onToggleMobile: () => void;
@@ -26,126 +26,211 @@ export function OrderFilters({
   onStatusChange,
   deliveryStatusFilter,
   onDeliveryStatusChange,
-  paymentStatusFilter,           // NEW
+  paymentStatusFilter,
   onPaymentStatusChange,
   fulfillmentTypeFilter,
-  
   onFulfillmentTypeChange,
+  pageSize,
+  onPageSizeChange,
+  onRefresh,
   onClear,
   showMobile,
   onToggleMobile,
 }: OrderFiltersProps) {
-  // Include paymentStatusFilter in "hasFilters"
-  const hasFilters = !!searchTerm || !!statusFilter || !!deliveryStatusFilter || !!paymentStatusFilter || !!fulfillmentTypeFilter ;
+  const hasFilters =
+    !!searchTerm ||
+    !!statusFilter ||
+    !!deliveryStatusFilter ||
+    !!paymentStatusFilter ||
+    !!fulfillmentTypeFilter;
+
+  const orderStatusLabels: Record<string, string> = {
+    pending: "Pending",
+    paid: "Paid",
+    completed: "Completed",
+    cancelled: "Cancelled",
+  };
+
+  const deliveryStatusLabels: Record<string, string> = {
+    pending: "Pending Assignment",
+    accepted: "Accepted by Driver",
+    picked_up: "Picked Up",
+    out_for_delivery: "Out for Delivery",
+    delivered: "Delivered",
+    failed: "Failed",
+  };
+
+  const paymentStatusLabels: Record<string, string> = {
+    Paid: "Paid",
+    "Verifying Receipt": "Verifying Receipt",
+    "Pay on Delivery": "Pay on Delivery",
+    "Checkout Initiated": "Checkout Initiated",
+    "Awaiting Bank Transfer": "Awaiting Bank Transfer",
+  };
+
+  const fulfillmentLabels: Record<string, string> = {
+    delivery: "Delivery",
+    pickup: "Pickup",
+  };
 
   return (
-    <>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Orders</h2>
-        <button
-          onClick={onToggleMobile}
-          className="md:hidden flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white shadow-sm"
-        >
-          <Filter size={16} />
-          Filters
+    <div
+      className={`${
+        showMobile ? "block" : "hidden md:block"
+      } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
+    >
+      {/* Header – only utility buttons (no title) */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          {/* No title – matches company filter style */}
+        </div>
+        <div className="flex items-center gap-2">
           {hasFilters && (
-            <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-full">
-              Active
-            </span>
+            <button
+              onClick={onClear}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium
+                         border border-red-200 text-red-600 hover:bg-red-50 transition"
+            >
+              <X size={14} />
+              Clear
+            </button>
           )}
-        </button>
+          <button
+            onClick={onToggleMobile}
+            className="md:hidden inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium
+                       border border-gray-200 rounded-xl bg-white shadow-sm"
+          >
+            <Filter size={14} />
+            Filters
+          </button>
+        </div>
       </div>
 
-      <div className={`${showMobile ? "block" : "hidden md:block"}`}>
-        <div className="bg-transparent">
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by order ID, customer name..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 outline-none transition text-sm"
-              />
-            </div>
+      {/* Body */}
+      <div className="p-5 space-y-5">
+        {/* Search + Refresh */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by order ID, customer name, phone, or address..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         outline-none transition text-sm"
+            />
+          </div>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
+                         hover:bg-white hover:border-[#6750A4] transition-all duration-200 group flex-shrink-0"
+              title="Refresh orders"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4] group-hover:rotate-180 transition-all duration-300" />
+            </button>
+          )}
+        </div>
 
-            {/* Order Status (main order status) */}
+        {/* Filters Grid – 5 columns (order status, delivery status, payment status, fulfillment type, page size) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {/* Order Status */}
+          <div className="relative">
             <select
               value={statusFilter}
               onChange={(e) => onStatusChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">All Order Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              {Object.entries(orderStatusLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* Delivery Status */}
+          {/* Delivery Status */}
+          <div className="relative">
             <select
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">All Delivery Statuses</option>
-              <option value="pending">Pending Assignment</option>
-              <option value="accepted">Accepted by Driver</option>
-              <option value="picked_up">Picked Up</option>
-              <option value="out_for_delivery">Out for Delivery</option>
-              <option value="delivered">Delivered</option>
-              <option value="failed">Failed</option>
+              {Object.entries(deliveryStatusLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* NEW: Payment Status Filter */}
+          {/* Payment Status */}
+          <div className="relative">
             <select
               value={paymentStatusFilter}
               onChange={(e) => onPaymentStatusChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">All Payment Statuses</option>
-              <option value="Paid">Paid</option>
-              <option value="Verifying Receipt">Verifying Receipt</option>
-              <option value="Pay on Delivery">Pay on Delivery</option>
-              <option value="Checkout Initiated">Checkout Initiated</option>
-              <option value="Awaiting Bank Transfer">Awaiting Bank Transfer</option>
+              {Object.entries(paymentStatusLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
+          {/* Fulfillment Type */}
+          <div className="relative">
             <select
               value={fulfillmentTypeFilter}
               onChange={(e) => onFulfillmentTypeChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 text-sm"
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
             >
               <option value="">All Fulfillment Types</option>
-              <option value="delivery">Delivery</option>
-              <option value="pickup">Pickup</option>
+              {Object.entries(fulfillmentLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
 
-            {/* 
-              PROFESSIONAL NOTE: 
-              To add another filter (e.g., "Fulfillment Type", "Vendor Name", etc.):
-              1. Add new prop to OrderFiltersProps (e.g., fulfillmentFilter, onFulfillmentChange)
-              2. Destructure it in the function arguments
-              3. Update hasFilters condition
-              4. Add a new <select> or other input element below this comment.
-              All existing filters follow the same pattern.
-            */}
-
-            {/* Clear Button */}
-            {hasFilters && (
-              <button
-                onClick={onClear}
-                className="flex items-center gap-1 px-4 py-2.5 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition"
-              >
-                <X size={14} />
-                Clear
-              </button>
-            )}
+          {/* Page Size (native select, matches company style) */}
+          <div className="relative">
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         text-sm pr-8 outline-none transition"
+            >
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={15}>15 / page</option>
+              <option value={30}>30 / page</option>
+              <option value={60}>60 / page</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

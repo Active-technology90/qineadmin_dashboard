@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -26,6 +26,7 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
+    getDeliveries, // ADD THIS
   updateDeliveryPerson,
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
@@ -184,8 +185,6 @@ const CopyButton = ({ text }: { text?: string | null }) => {
     </button>
   );
 };
-
-// ---------- REFINED DELIVERY CARD ----------
 const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [staffList, setStaffList] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
@@ -447,9 +446,9 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     </>
   );
 };
-
 // ---------- REFINED RECEIPT REVIEW CARD ----------
 // ---------- REFINED RECEIPT REVIEW CARD (with COD confirm button) ----------
+// Receipt Review Card – accepts readOnly prop
 const ReceiptReviewCard = ({
   receipt,
   paymentMethod,
@@ -457,403 +456,412 @@ const ReceiptReviewCard = ({
   readOnly,
   status,
   orderId,
-}: any) => {
+}: {
+  receipt?: OrderReceipt | null;
+  paymentMethod?: string;
+  onUpdate: () => void;
+  readOnly: boolean;
+  status?: string;
+  orderId?: string;
+}) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // image modal (KEEP SECOND UI)
   const [showImage, setShowImage] = useState(false);
+
+  // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     "approved" | "rejected" | null
   >(null);
+
+  // COD confirmation
   const [showCODConfirm, setShowCODConfirm] = useState(false);
   const [codConfirming, setCodConfirming] = useState(false);
+
   const { showToast } = useToast();
-  const [zoom, setZoom] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const [start, setStart] = useState({ x: 0, y: 0 });
 
-  const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 5));
-  const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 1));
-
-  const resetView = () => {
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-
-    if (e.deltaY < 0) {
-      setZoom((z) => Math.min(z + 0.2, 5));
-    } else {
-      setZoom((z) => Math.max(z - 0.2, 1));
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoom <= 1) return;
-
-    setDragging(true);
-    setStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return;
-
-    setPosition({
-      x: e.clientX - start.x,
-      y: e.clientY - start.y,
-    });
-  };
-
-  const handleMouseUp = () => {
-    setDragging(false);
-  };
-
-  // COD confirmation handler (replace with your actual API endpoint)
+  // =========================================================
+  // COD CONFIRMATION
+  // =========================================================
   const handleConfirmCOD = async () => {
     setCodConfirming(true);
-    try {
-      // TODO: Replace with your actual API call
-      // Example: await axios.post(`/api/v1/orders/${orderId}/confirm-cod/`);
-      // Or if you have a service function: await confirmCODPayment(orderId);
-      console.log(`Confirming COD payment for order ${orderId}`);
 
-      // Simulate API call (remove this when you add real API)
+    try {
+      // Replace with real API
+      // await confirmCODPayment(orderId);
+
+      console.log("Confirm COD:", orderId);
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       showToast("success", "COD payment confirmed successfully");
-      onUpdate(); // Refresh parent component to update order status
+
+      setShowCODConfirm(false);
+
+      onUpdate();
     } catch (err: any) {
-      const errorMsg =
+      showToast(
+        "error",
         err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment";
-      showToast("error", errorMsg);
+          err.message ||
+          "Failed to confirm COD payment",
+      );
     } finally {
       setCodConfirming(false);
-      setShowCODConfirm(false);
     }
   };
 
-  // Chapa payment (automatic)
+  // =========================================================
+  // CHAPA
+  // =========================================================
   if (paymentMethod === "chapa") {
     return (
       <Card
-        title="Payment Info"
+        title="Payment Information"
         icon={CreditCard}
-        status={status}
-        className="bg-indigo-50/30 border-indigo-100"
+        status="approved"
+        className="ring-1 ring-indigo-100"
       >
-        <div className="flex flex-col items-center py-2">
-          <ShieldCheck className="h-8 w-8 text-indigo-500 mb-2" />
-          <div className="flex justify-center items-start">
-            <p className="text-sm mt-1 font-bold text-gray-800">Verified by </p>
-            <img
-              src="/chapa.png"
-              alt="Chapa"
-              className="h-8 w-20 text-indigo-500 mb-2"
-            />
+        <div className="flex flex-col items-center py-4">
+        
+          <div className="flex items-center gap-2 bg-white px-4 py-2 ">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-4 shadow-inner">
+            <ShieldCheck className="h-8 w-8 text-indigo-600" />
+          </div>
+
+            <p className="text-sm font-semibold text-gray-700">Verified by</p>
+
+            <img src="/chapa.png" alt="Chapa" className="h-8 object-contain" />
+          </div>
+
+          <p className="text-xs text-gray-500 mt-4 text-center max-w-xs leading-relaxed">
+            This payment was automatically verified through secure online
+            payment confirmation.
+          </p>
+
+          <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+            Payment Verified
           </div>
         </div>
       </Card>
     );
   }
 
-  // Cash on Delivery – show confirm button
+  // =========================================================
+  // COD
+  // =========================================================
   if (paymentMethod === "cod") {
     return (
-      <Card
-        title="Payment Method"
-        icon={Banknote}
-        status={paymentMethod}
-        className="bg-amber-50/30 border-amber-100"
-      >
-        <div className="flex flex-col items-center py-4 text-center">
-          <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-3">
-            <Truck className="h-6 w-6 text-amber-600" />
-          </div>
-          <p className="text-sm font-black text-gray-800 uppercase tracking-tight">
-            Cash on Delivery
-          </p>
-          <p className="text-[11px] text-gray-500 mt-1 max-w-[250px]">
-            Payment collection is handled by the delivery person upon physical
-            delivery.
-          </p>
-          <div className="mt-4 px-3 py-1 bg-white border border-amber-200 rounded-lg shadow-sm">
-            <span className="text-[10px] font-black text-amber-700 uppercase">
+      <>
+        <Card
+          title="Cash on Delivery"
+          icon={Banknote}
+          status="pending"
+          className="ring-1 ring-amber-100"
+        >
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center mb-4 shadow-inner">
+              <Truck className="h-8 w-8 text-amber-600" />
+            </div>
+
+            <p className="text-sm font-black text-gray-800 uppercase tracking-wide">
               Awaiting Collection
-            </span>
+            </p>
+
+            <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
+              Payment collection is handled by the delivery person during
+              physical delivery.
+            </p>
+
+            <div className="mt-4 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+              Pending Payment
+            </div>
+
+            {!readOnly && (
+              <button
+                onClick={() => setShowCODConfirm(true)}
+                className="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Confirm Payment Collected
+              </button>
+            )}
           </div>
+        </Card>
 
-          {/* Confirm payment button (only if not read-only) */}
-          {!readOnly && (
-            <button
-              onClick={() => setShowCODConfirm(true)}
-              className="mt-5 w-full py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Confirm Payment Collected
-            </button>
-          )}
-        </div>
-
-        {/* Confirmation Modal for COD */}
         <ConfirmationModal
           isOpen={showCODConfirm}
           onClose={() => setShowCODConfirm(false)}
           onConfirm={handleConfirmCOD}
           title="Confirm COD Payment"
-          description="Are you sure you have collected the payment for this order? This action will mark the order as paid and cannot be undone."
+          description="Are you sure you have collected the payment for this order?"
           confirmText={codConfirming ? "Processing..." : "Yes, Confirm Payment"}
           confirmVariant="primary"
         />
-      </Card>
+      </>
     );
   }
 
-  // No receipt uploaded yet
+  // =========================================================
+  // NO RECEIPT
+  // =========================================================
   if (!receipt) {
     return (
-      <Card title="Payment Receipt" icon={Banknote}>
-        <div className="text-center py-4 border-2 border-dashed border-gray-100 rounded-2xl">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Banknote className="h-5 w-5 text-gray-400" />
+
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+            Payment Receipt
+          </h4>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+        <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl">
           <AlertCircle className="h-6 w-6 text-gray-300 mx-auto mb-2" />
-          <p className="text-xs text-gray-500">
+
+          <p className="text-gray-500 text-sm">
             Waiting for customer to upload receipt...
           </p>
         </div>
-      </Card>
+      </div>
     );
   }
 
-  // Receipt review logic (approved/rejected)
+  // =========================================================
+  // REVIEW LOGIC
+  // =========================================================
   const isAlreadyReviewed =
     receipt.status === "approved" || receipt.status === "rejected";
+
   const canReview = !readOnly && !isAlreadyReviewed;
+
+  const handleActionClick = (action: "approved" | "rejected") => {
+    if (!canReview) return;
+
+    setPendingAction(action);
+
+    setShowConfirm(true);
+  };
 
   const handleConfirm = async () => {
     if (!pendingAction) return;
+
     setSubmitting(true);
+
     try {
       await reviewReceipt(receipt.id, {
         status: pendingAction,
         admin_notes: notes || undefined,
       });
+
       showToast("success", `Receipt ${pendingAction}`);
+
+      setNotes("");
+
+      setPendingAction(null);
+
       setShowConfirm(false);
+
       onUpdate();
     } catch (err: any) {
-      showToast("error", "Review failed");
+      showToast("error", err.response?.data?.detail || "Review failed");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Card title="Review Receipt" icon={Banknote}>
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className={getStatusBadge(receipt.status)}>
+    <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
+          <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+            <Banknote className="h-4 w-4 text-[#6750A4]" />
+          </div>
+
+          <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            Payment Receipt
+          </h4>
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+          {/* <div className="flex flex-row justify-between items-start">
+      <div className="flex items-center gap-2 mb-4 pb-3 w-full relative"> */}
+          {/* <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-[#6750A4]" />
+        </div> */}
+
+          {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+          {title}
+        </h4> */}
+          {/* Decorative gradient line under header */}
+          {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+              </div> */}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {/* STATUS + AMOUNT */}
+        <div className="flex items-center justify-between">
+          <span
+            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(
+              receipt.status,
+            )}`}
+          >
             {receipt.status}
           </span>
-          <p className="text-sm font-black text-gray-900">
+
+          <p className="text-lg font-bold text-gray-900">
             {Number(receipt.amount).toLocaleString()} ETB
           </p>
         </div>
 
+        {/* IMAGE */}
         {receipt.receipt_image && (
-          <div
-            onClick={() => setShowImage(true)}
-            className="group relative h-28 rounded-2xl overflow-hidden border border-gray-100 cursor-zoom-in shadow-inner bg-gray-50"
-          >
-            <img
-              src={receipt.receipt_image}
-              alt="Receipt"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Eye className="text-white h-6 w-6" />
+          <div>
+            {/* <p className="text-xs text-gray-500 mb-2">Receipt Image</p> */}
+
+            <div
+              onClick={() => setShowImage(true)}
+              className="relative w-full h-28 sm:h-28 rounded-xl overflow-hidden border cursor-zoom-in group"
+            >
+              <img
+                src={receipt.receipt_image}
+                alt="Receipt"
+                className="w-full h-full object-cover group-hover:scale-105 transition"
+              />
+
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
+                <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition" />
+              </div>
             </div>
           </div>
         )}
-
-        <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-3 rounded-xl space-y-1 border border-purple-100">
-          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest">
+        {/* BANK */}
+        <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-4 rounded-xl border border-purple-100">
+          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest mb-1">
             Bank Details
           </p>
-          <p className="text-xs font-bold bg-gradient-to-r from-gray-700 to-[#6750A4] bg-clip-text text-transparent">
+
+          <p className="font-semibold text-sm text-gray-900">
             {receipt.bank_name || "Not Specified"}
           </p>
         </div>
 
+        {/* REVIEW ACTIONS */}
         {canReview && (
-          <div className="space-y-2 pt-1">
+          <div className="pt-2 space-y-3">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add review notes..."
-              className="w-full text-[11px] rounded-xl border-gray-200 focus:ring-purple-500 resize-none p-3"
-              rows={1}
+              rows={2}
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4] transition resize-none"
             />
+
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setPendingAction("approved");
-                  setShowConfirm(true);
-                }}
-                className="flex-1 bg-emerald-500 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-100"
+                onClick={() => handleActionClick("approved")}
+                disabled={submitting}
+                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50"
               >
                 Approve
               </button>
+
               <button
-                onClick={() => {
-                  setPendingAction("rejected");
-                  setShowConfirm(true);
-                }}
-                className="flex-1 bg-rose-500 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-rose-100"
+                onClick={() => handleActionClick("rejected")}
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
+             py-2.5 rounded-xl text-sm font-bold
+             shadow-md shadow-rose-200
+             hover:from-rose-600 hover:to-red-700
+             active:scale-[0.98]
+             transition-all duration-200
+             disabled:opacity-50 disabled:cursor-not-allowed
+             flex items-center justify-center gap-2"
               >
+                
                 Reject
               </button>
             </div>
           </div>
         )}
 
+        {/* REVIEWED STATE */}
         {isAlreadyReviewed && (
           <div
-            className={`p-3 rounded-xl flex items-start gap-3 ${receipt.status === "approved" ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
+            className={`p-4 rounded-xl flex items-start gap-3 ${
+              receipt.status === "approved"
+                ? "bg-emerald-50 border border-emerald-200"
+                : "bg-rose-50 border border-rose-200"
+            }`}
           >
             {receipt.status === "approved" ? (
               <ShieldCheck className="h-5 w-5 text-emerald-600" />
             ) : (
               <X className="h-5 w-5 text-rose-600" />
             )}
+
             <div>
-              <p className="text-xs font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
+              <p className="text-sm font-semibold text-green-600">
                 Verification {receipt.status}
               </p>
-              <p className="text-[10px] text-gray-600">
+
+              <p className="text-xs text-gray-500 mt-1">
                 {receipt.status === "approved"
                   ? "Order is ready for dispatch."
-                  : "Customer must re-upload."}
+                  : "Customer must upload another receipt."}
               </p>
             </div>
           </div>
         )}
       </div>
 
-      <AnimatePresence>
-        {showImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden"
-            onClick={() => {
-              setShowImage(false);
-              resetView();
-            }}
+      {/* KEEP SECOND IMAGE VIEWER */}
+      {showImage && receipt.receipt_image && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 border border-blac"
+          onClick={() => setShowImage(false)}
+        >
+          <div
+            className="relative max-w-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Top Controls */}
-            <div className="absolute top-5 right-5 z-50 flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  zoomOut();
-                }}
-                className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
-              >
-                −
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  zoomIn();
-                }}
-                className="h-11 w-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
-              >
-                +
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  resetView();
-                }}
-                className="px-4 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold backdrop-blur-md border border-white/10 transition-all"
-              >
-                Reset
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowImage(false);
-                  resetView();
-                }}
-                className="h-11 w-11 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center shadow-xl transition-all"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Bottom Hint */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white/80 text-xs border border-white/10">
-              Scroll to zoom • Drag to move
-            </div>
-
-            {/* Image Container */}
-            <div
-              className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
-              onClick={(e) => e.stopPropagation()}
-              onWheel={handleWheel}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+            <button
+              onClick={() => setShowImage(false)}
+              className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
             >
-              <motion.img
-                src={receipt.receipt_image}
-                alt="Receipt"
-                drag={zoom > 1}
-                dragMomentum={false}
-                onMouseDown={handleMouseDown}
-                animate={{
-                  scale: zoom,
-                  x: position.x,
-                  y: position.y,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 30,
-                }}
-                className="max-w-[92vw] max-h-[92vh] object-contain rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] select-none"
-                style={{
-                  userSelect: "none",
-                  pointerEvents: "auto",
-                }}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <X className="h-5 w-5 text-gray-700" />
+            </button>
 
-      <ConfirmationModal
+            <img
+              src={receipt.receipt_image}
+              alt="Receipt Full"
+              className="w-full max-h-[90vh] object-contain rounded-xl"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* REVIEW CONFIRMATION */}
+         <ConfirmationModal
         isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
+        onClose={() => {
+          setShowConfirm(false);
+          setPendingAction(null);
+        }}
         onConfirm={handleConfirm}
-        title={`${pendingAction === "approved" ? "Approve" : "Reject"} Payment`}
+        title={
+          pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"
+        }
         description="This action will notify the customer and update the order workflow. Are you sure?"
         confirmText={submitting ? "Processing..." : "Confirm Action"}
         confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
       />
-    </Card>
+   
+    </div>
   );
 };
+
 // ════════════════════════════════════════
 // MAIN MODAL COMPONENT
 // ════════════════════════════════════════
@@ -866,7 +874,16 @@ export function VendorOrderDetailModal({
   readOnly = false,
 }: any) {
   if (!order) return null;
+  const [refreshing, setRefreshing] = useState(false);
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await onUpdate();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -930,18 +947,35 @@ export function VendorOrderDetailModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* REFRESH */}
               <button
-                onClick={onUpdate}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-xl transition-all font-bold text-xs text-gray-500 uppercase tracking-widest"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white
+               hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100
+               active:scale-95 transition-all duration-200
+               disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
               >
-                <RefreshCw className="h-4 w-4" /> Refresh
+                {refreshing ? (
+                  <Loader2 className="h-4 w-4 text-[#6750A4] animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
+                )}
+
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
+                  {refreshing ? "Refreshing..." : "Refresh"}
+                </span>
               </button>
+
+              {/* CLOSE */}
               <button
                 onClick={onClose}
-                className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all text-gray-400"
+                className="group p-3 rounded-xl bg-white border border-gray-200 shadow-sm
+               hover:bg-rose-50 hover:border-rose-200
+               active:scale-95 transition-all duration-200"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
               </button>
             </div>
           </div>
@@ -971,8 +1005,8 @@ export function VendorOrderDetailModal({
                           {order.recipient_name}
                         </p>
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-3 py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
-                          <PhoneCall className="h-3.5 w-3.5 text-blue-600" />
-                          <span className="text-xs font-mono font-bold text-blue-700 tracking-tight">
+                          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-xs font-mono font-bold text-green-700 tracking-tight">
                             {order.shipping_phone}
                           </span>
                           <CopyButton text={order.shipping_phone} />
@@ -992,13 +1026,13 @@ export function VendorOrderDetailModal({
                             "No recipient name provided."}
                         </span>
                       </div>
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/30 border-l-4 border-blue-500">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/30 border-l-4 border-green-500">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Recipient Phone:
                         </span>
                         <div className="flex items-center gap-2">
-                          <PhoneCall className="h-3.5 w-3.5 text-blue-600" />
-                          <span className="text-sm font-mono font-bold text-blue-700 tracking-tight">
+                          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-sm font-mono font-bold text-green-700 tracking-tight">
                             {order.shipping_phone ||
                               "No Phone Number provided."}
                           </span>
@@ -1133,6 +1167,10 @@ export function VendorOrderDetailModal({
                         <span className="opacity-60">Delivery Fee</span>
                         <span>0 ETB</span>
                       </div>
+                        <div className="flex justify-between text-xs font-bold">
+                        <span className="opacity-60">Discount Fee</span>
+                        <span>0 ETB</span>
+                      </div>
                       {/* {order.tax_invoice?.invoice_number && (
                         <div className="flex justify-between text-xs font-bold p-2 bg-black/10 rounded-lg">
                           <span className="opacity-60">Invoice #</span>
@@ -1150,7 +1188,7 @@ export function VendorOrderDetailModal({
                   onUpdate={onUpdate}
                   readOnly={readOnly}
                   status={order.payment_status}
-                  orderId={order.id} // ← ADD THIS LINE
+                  orderId={order.id}
                 />
 
                 {/* 5. Delivery person Assignment Card */}
