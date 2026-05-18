@@ -380,9 +380,9 @@ export default function Orders() {
       {/* Pagination */}
       {!loading && !error && filteredOrders.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-          <div className="text-sm text-gray-500">
+          {/* <div className="text-sm text-gray-500">
             Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredOrders.length)} of {filteredOrders.length} orders
-          </div>
+          </div> */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
