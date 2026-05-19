@@ -87,6 +87,9 @@ export interface Company {
   created_at?: string;
   chapa_sub_account_id?: string;
   minimum_order_total?: string;
+  latitude?: string;
+  longitude?: string;
+  delivery_fee_per_km?: string;
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
@@ -105,6 +108,9 @@ export interface CompanyListItem {
   sub_category_name: string;
   business_type: string;
   minimum_order_total?: string;
+  latitude?: string;
+  longitude?: string;
+  delivery_fee_per_km?: string;
   is_active: boolean;
   is_featured: boolean;
   description?: string;

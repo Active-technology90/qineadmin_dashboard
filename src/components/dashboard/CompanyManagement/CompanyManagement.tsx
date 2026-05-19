@@ -144,6 +144,9 @@ export default function CompanyManagement() {
     business_type: "",
     description: "",
     minimum_order_total: "0.00",
+    latitude: "",
+    longitude: "",
+    delivery_fee_per_km: "0.00",
     is_active: true,
     is_featured: false,
     logo: null,
@@ -363,6 +366,9 @@ export default function CompanyManagement() {
           sub_category_name: company.sub_category_name,
           business_type: company.business_type,
           minimum_order_total: company.minimum_order_total || "0.00",
+          latitude: company.latitude || "",
+          longitude: company.longitude || "",
+          delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
           is_active: company.is_active,
           is_featured: company.is_featured,
           description: company.description || "",
@@ -379,6 +385,9 @@ export default function CompanyManagement() {
           business_type: companyListItem.business_type,
           description: companyListItem.description || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
+          latitude: companyListItem.latitude || "",
+          longitude: companyListItem.longitude || "",
+          delivery_fee_per_km: companyListItem.delivery_fee_per_km || "0.00",
           is_active: companyListItem.is_active,
           is_featured: companyListItem.is_featured,
           logo: null,
@@ -410,6 +419,9 @@ export default function CompanyManagement() {
             business_type: first.business_type,
             description: first.description || "",
             minimum_order_total: first.minimum_order_total || "0.00",
+            latitude: first.latitude || "",
+            longitude: first.longitude || "",
+            delivery_fee_per_km: first.delivery_fee_per_km || "0.00",
             is_active: first.is_active,
             is_featured: first.is_featured,
             logo: null,
@@ -470,6 +482,9 @@ export default function CompanyManagement() {
         if (formData.business_type !== originalFormData.business_type) return true;
         if (formData.description !== originalFormData.description) return true;
         if (formData.minimum_order_total !== originalFormData.minimum_order_total) return true;
+        if (formData.latitude !== originalFormData.latitude) return true;
+        if (formData.longitude !== originalFormData.longitude) return true;
+        if (formData.delivery_fee_per_km !== originalFormData.delivery_fee_per_km) return true;
         if (formData.is_active !== originalFormData.is_active) return true;
         if (formData.is_featured !== originalFormData.is_featured) return true;
         // Check file uploads
@@ -504,6 +519,9 @@ export default function CompanyManagement() {
         description: formData.description || undefined,
         minimum_order_total:
           formData.minimum_order_total || "0.00",
+        latitude: formData.latitude || undefined,
+        longitude: formData.longitude || undefined,
+        delivery_fee_per_km: formData.delivery_fee_per_km || "0.00",
         is_active: formData.is_active,
         is_featured: formData.is_featured,
       };
@@ -548,6 +566,17 @@ export default function CompanyManagement() {
         formPayload.append(
           "minimum_order_total",
           formData.minimum_order_total || "0.00"
+        );
+
+        if (formData.latitude) {
+          formPayload.append("latitude", formData.latitude);
+        }
+        if (formData.longitude) {
+          formPayload.append("longitude", formData.longitude);
+        }
+        formPayload.append(
+          "delivery_fee_per_km",
+          formData.delivery_fee_per_km || "0.00"
         );
 
         formPayload.append(
@@ -641,6 +670,9 @@ export default function CompanyManagement() {
       business_type: "",
       description: "",
       minimum_order_total: "0.00",
+      latitude: "",
+      longitude: "",
+      delivery_fee_per_km: "0.00",
       is_active: true,
       is_featured: false,
       logo: null,
@@ -668,6 +700,9 @@ export default function CompanyManagement() {
         business_type: company.business_type,
         description: company.description || "",
         minimum_order_total: company.minimum_order_total || "0.00",
+        latitude: company.latitude || "",
+        longitude: company.longitude || "",
+        delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
         is_active: company.is_active,
         is_featured: company.is_featured,
         logo: null,

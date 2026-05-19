@@ -23,8 +23,8 @@ import type {
   UserRole,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
-// const API_URL = "http://localhost:8000/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
+const API_URL = "http://localhost:8000/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -193,7 +193,7 @@ export const onboardCompanyStaff = (
     email: string;
     phone_number: string;
     password: string;
-  
+
     role: "admin" | "staff" | "viewer" | "delivery";
   },
 ) => {
@@ -283,7 +283,7 @@ export const addUserToCompany = async (userId: number, companySlug: string, role
 
 // Update user's role in a specific company
 export const updateUserCompanyRole = async (companySlug: string, userId: number, role: UserRole) => {
-  console.log({ companySlug, userId, role }); 
+  console.log({ companySlug, userId, role });
   return api.put(`/users/admin/companies/${companySlug}/staff/${userId}/profile/`, { role });
 };
 
@@ -580,7 +580,7 @@ export const getAdminAnalyticsOverview = async (params?: {
   period?: "week" | "month" | "year";
   company_slug?: string;
 }) => api.get<AnalyticsOverviewResponse>("/orders/admin/analytics/overview/", { params });
-  // ========== DELIVERIES ==========
+// ========== DELIVERIES ==========
 export const assignDelivery = async (data: { vendor_order: number; delivery_person: number }) =>
   api.post("/deliveries/", data);
 
@@ -622,4 +622,31 @@ export const reviewReceipt = async (
   }
 ) =>
   api.patch(`/payments/receipts/${receiptId}/review/`, data);
+
+// ========== ADS MANAGEMENT (SuperAdmin only) ==========
+export const getAds = async (params?: {
+  search?: string;
+  is_active?: boolean;
+}) => api.get("/ads/admin/", { params });
+
+export const createAd = async (data: FormData) => {
+  return api.post("/ads/admin/", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const updateAd = async (id: number, data: FormData) => {
+  return api.patch(`/ads/admin/${id}/`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteAd = async (id: number) => api.delete(`/ads/admin/${id}/`);
+
+export const prepareVendorOrder = async (companySlug: string, orderId: number) =>
+  api.post(`/orders/company/${companySlug}/${orderId}/prepare/`);
+
+export const confirmCODPayment = async (companySlug: string, orderId: number) =>
+  api.post(`/orders/company/${companySlug}/${orderId}/confirm-cod/`);
+
 export default api;

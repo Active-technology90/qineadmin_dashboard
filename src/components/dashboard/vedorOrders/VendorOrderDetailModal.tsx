@@ -26,8 +26,10 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
-    getDeliveries, // ADD THIS
+  getDeliveries, // ADD THIS
   updateDeliveryPerson,
+  prepareVendorOrder,
+  confirmCODPayment,
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
@@ -456,6 +458,7 @@ const ReceiptReviewCard = ({
   readOnly,
   status,
   orderId,
+  companySlug,
 }: {
   receipt?: OrderReceipt | null;
   paymentMethod?: string;
@@ -463,6 +466,7 @@ const ReceiptReviewCard = ({
   readOnly: boolean;
   status?: string;
   orderId?: string;
+  companySlug?: string;
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -486,20 +490,13 @@ const ReceiptReviewCard = ({
   // COD CONFIRMATION
   // =========================================================
   const handleConfirmCOD = async () => {
+    if (!companySlug || !orderId) return;
     setCodConfirming(true);
 
     try {
-      // Replace with real API
-      // await confirmCODPayment(orderId);
-
-      console.log("Confirm COD:", orderId);
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await confirmCODPayment(companySlug, Number(orderId));
       showToast("success", "COD payment confirmed successfully");
-
       setShowCODConfirm(false);
-
       onUpdate();
     } catch (err: any) {
       showToast(
@@ -862,6 +859,97 @@ const ReceiptReviewCard = ({
   );
 };
 
+
+// ---------- PREPARATION CARD ----------
+const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const { showToast } = useToast();
+
+  const status = order.status?.toLowerCase();
+
+  const handlePrepare = async () => {
+    setPreparing(true);
+    try {
+      await prepareVendorOrder(order.company.slug, order.id);
+      showToast("success", "Order has been marked as Prepared!");
+      setShowConfirm(false);
+      onUpdate();
+    } catch (err: any) {
+      showToast(
+        "error",
+        err.response?.data?.detail || err.message || "Failed to mark order as prepared"
+      );
+    } finally {
+      setPreparing(false);
+    }
+  };
+
+  if (status !== "confirmed" && status !== "processing") {
+    return null;
+  }
+
+  return (
+    <>
+      <Card
+        title="Order Preparation"
+        icon={Package}
+        status={status}
+        className={status === "confirmed" ? "ring-2 ring-purple-100 border-purple-200" : ""}
+      >
+        <div className="flex flex-col items-center text-center py-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-4 shadow-inner">
+            <Package className="h-8 w-8 text-purple-600" />
+          </div>
+
+          {status === "confirmed" ? (
+            <>
+              <p className="text-sm font-black text-gray-800 uppercase tracking-wide">
+                Ready for Preparation
+              </p>
+              <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
+                The payment/order is confirmed. Please prepare the items so they are ready for delivery assignment.
+              </p>
+              {!readOnly && (
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  className="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-[#6750A4] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Mark as Prepared
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-black text-emerald-700 uppercase tracking-wide">
+                Prepared & Ready
+              </p>
+              <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
+                This order has been prepared. The next step is assigning a delivery driver to dispatch it.
+              </p>
+              <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+                Ready for Dispatch
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handlePrepare}
+        title="Mark Order as Prepared"
+        description="Are you sure you want to mark this order as prepared and ready for dispatch?"
+        confirmText={preparing ? "Marking..." : "Yes, Prepared"}
+        confirmVariant="primary"
+      />
+    </>
+  );
+};
+
+
 // ════════════════════════════════════════
 // MAIN MODAL COMPONENT
 // ════════════════════════════════════════
@@ -1165,9 +1253,11 @@ export function VendorOrderDetailModal({
                       </div>
                       <div className="flex justify-between text-xs font-bold">
                         <span className="opacity-60">Delivery Fee</span>
-                        <span>0 ETB</span>
+                        <span>
+                          {Number(order.delivery_fee || 0).toLocaleString()} ETB
+                        </span>
                       </div>
-                        <div className="flex justify-between text-xs font-bold">
+                      <div className="flex justify-between text-xs font-bold">
                         <span className="opacity-60">Discount Fee</span>
                         <span>0 ETB</span>
                       </div>
@@ -1189,6 +1279,14 @@ export function VendorOrderDetailModal({
                   readOnly={readOnly}
                   status={order.payment_status}
                   orderId={order.id}
+                  companySlug={order.company?.slug}
+                />
+
+                {/* Preparation Card */}
+                <PreparationCard
+                  order={order}
+                  onUpdate={onUpdate}
+                  readOnly={readOnly}
                 />
 
                 {/* 5. Delivery person Assignment Card */}

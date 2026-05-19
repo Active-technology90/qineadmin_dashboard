@@ -121,97 +121,9 @@ const Toast = ({
 };
 
 // ----------------------------------------------------------------------
-// MOCK API – will be replaced with real backend calls later
-// (keeps component independent, but data shape matches real system)
+// API Integration
 // ----------------------------------------------------------------------
-let dummyAds: Ad[] = [
-  {
-    id: 1,
-    title: "Summer Sale Spectacular",
-    image: "https://picsum.photos/id/20/800/600",
-    target_link: "https://example.com/summer",
-    target_pages: ["home", "buy"],
-    is_active: true,
-  },
-  {
-    id: 2,
-    title: "New Luxury Properties",
-    image: "https://picsum.photos/id/26/800/600",
-    target_link: "https://example.com/new",
-    target_pages: ["rent", "developments"],
-    is_active: true,
-  },
-  {
-    id: 3,
-    title: "Exclusive Early Bird",
-    image: "https://picsum.photos/id/29/800/600",
-    target_link: "https://example.com/early",
-    target_pages: ["buy"],
-    is_active: false,
-  },
-];
-let nextId = 4;
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const mockGetAds = async () => ({ data: [...dummyAds] });
-const mockCreateAd = async (formData: FormData) => {
-  await delay();
-  const title = formData.get("title") as string;
-  const isActive = formData.get("is_active") === "true";
-  const targetPages = JSON.parse(
-    (formData.get("target_pages") as string) || "[]"
-  );
-  const targetLink = (formData.get("target_link") as string) || "";
-  let image = "";
-  const imageFile = formData.get("image") as File;
-  if (imageFile) image = URL.createObjectURL(imageFile);
-  else image = "https://picsum.photos/id/1/800/600";
-  const newAd: Ad = {
-    id: nextId++,
-    title,
-    image,
-    target_link: targetLink,
-    target_pages: targetPages,
-    is_active: isActive,
-  };
-  dummyAds.push(newAd);
-  return { data: newAd };
-};
-const mockUpdateAd = async (id: number, formData: FormData) => {
-  await delay();
-  const index = dummyAds.findIndex((ad) => ad.id === id);
-  if (index === -1) throw new Error("Ad not found");
-  const title = formData.get("title") as string;
-  const isActive = formData.get("is_active") === "true";
-  const targetPages = JSON.parse(
-    (formData.get("target_pages") as string) || "[]"
-  );
-  const targetLink = (formData.get("target_link") as string) || "";
-  let image = dummyAds[index].image;
-  const imageFile = formData.get("image") as File;
-  if (imageFile) image = URL.createObjectURL(imageFile);
-  dummyAds[index] = {
-    ...dummyAds[index],
-    title,
-    image,
-    target_link: targetLink,
-    target_pages: targetPages,
-    is_active: isActive,
-  };
-  return { data: dummyAds[index] };
-};
-const mockDeleteAd = async (id: number) => {
-  await delay();
-  dummyAds = dummyAds.filter((ad) => ad.id !== id);
-};
-
-// ----------------------------------------------------------------------
-// API hooks – replace these with your real API service when ready
-// ----------------------------------------------------------------------
-const getAds = mockGetAds;
-const createAd = mockCreateAd;
-const updateAd = mockUpdateAd;
-const deleteAd = mockDeleteAd;
+import { getAds, createAd, updateAd, deleteAd } from "../../services/api";
 
 // ----------------------------------------------------------------------
 // Constants
@@ -247,35 +159,35 @@ const Button: React.FC<{
   className = "",
   disabled = false,
 }) => {
-  const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
-  const variants = {
-    primary:
-      "bg-[#6750A4] text-white shadow-md hover:shadow-lg focus:ring-[#6750A4]",
-    secondary:
-      "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
-    outline:
-      "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
-    ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    const base =
+      "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
+    const variants = {
+      primary:
+        "bg-[#6750A4] text-white shadow-md hover:shadow-lg focus:ring-[#6750A4]",
+      secondary:
+        "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
+      outline:
+        "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+      ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
+      danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    };
+    const sizes = {
+      sm: "px-3 py-1.5 text-sm",
+      md: "px-4 py-2 text-sm",
+      lg: "px-5 py-2.5 text-base",
+    };
+    return (
+      <button
+        type={type}
+        onClick={onClick}
+        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+        disabled={disabled || isLoading}
+      >
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {children}
+      </button>
+    );
   };
-  const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-5 py-2.5 text-base",
-  };
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
-    >
-      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-      {children}
-    </button>
-  );
-};
 
 const Input: React.FC<{
   label?: string;
@@ -294,23 +206,22 @@ const Input: React.FC<{
   required,
   error,
 }) => (
-  <div className="space-y-1.5">
-    {label && (
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-    )}
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={required}
-      className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition-all ${
-        error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
-      }`}
-    />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-  </div>
-);
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">{label}</label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+          }`}
+      />
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
 
 const Badge: React.FC<{
   children: React.ReactNode;
@@ -414,9 +325,8 @@ const MultiSelectPages: React.FC<{
             ))
           )}
           <ChevronDown
-            className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
           />
         </div>
         <AnimatePresence>
@@ -442,11 +352,10 @@ const MultiSelectPages: React.FC<{
                   className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <div
-                    className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${
-                      value.includes(option.value)
+                    className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${value.includes(option.value)
                         ? "bg-[#6750A4] border-[#6750A4]"
                         : "border-gray-300"
-                    }`}
+                      }`}
                   >
                     {value.includes(option.value) && (
                       <Check className="w-3 h-3 text-white" />
@@ -472,10 +381,33 @@ const ImageUploader: React.FC<{
   existingImage?: string;
 }> = ({ onFileChange, previewUrl, existingImage }) => {
   const [preview, setPreview] = useState<string | null>(
-    previewUrl || existingImage || null
+    previewUrl ||
+      (existingImage
+        ? existingImage.startsWith("http") || existingImage.startsWith("blob:")
+          ? existingImage
+          : existingImage.startsWith("/")
+          ? `https://backend-qine.activetechet.com${existingImage}`
+          : `https://backend-qine.activetechet.com/media/${existingImage}`
+        : null)
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (previewUrl) {
+      setPreview(previewUrl);
+    } else if (existingImage) {
+      if (existingImage.startsWith("http") || existingImage.startsWith("blob:")) {
+        setPreview(existingImage);
+      } else if (existingImage.startsWith("/")) {
+        setPreview(`https://backend-qine.activetechet.com${existingImage}`);
+      } else {
+        setPreview(`https://backend-qine.activetechet.com/media/${existingImage}`);
+      }
+    } else {
+      setPreview(null);
+    }
+  }, [previewUrl, existingImage]);
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -514,17 +446,15 @@ const ImageUploader: React.FC<{
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${
-          isDragging ? "ring-2 ring-[#6750A4] ring-offset-2 bg-[#6750A4]/5" : ""
-        }`}
+        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-[#6750A4] ring-offset-2 bg-[#6750A4]/5" : ""
+          }`}
       >
         {!preview ? (
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${
-              isDragging
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${isDragging
                 ? "border-[#6750A4] bg-[#6750A4]/5"
                 : "border-gray-200"
-            }`}
+              }`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="mx-auto h-10 w-10 text-gray-400" />
@@ -602,7 +532,7 @@ const AdCard: React.FC<{
             {ad.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
-        <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-gray-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+        {/* <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-gray-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
           <Target className="w-3 h-3" />
           <span className="font-medium">
             {isAllPages
@@ -611,7 +541,7 @@ const AdCard: React.FC<{
               ? "No Pages"
               : `${pageCount} page${pageCount > 1 ? "s" : ""}`}
           </span>
-        </div>
+        </div> */}
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-xl text-gray-900 mb-1 truncate">
@@ -789,17 +719,16 @@ const SearchFilterBar: React.FC<{
             key={status}
             whileTap={{ scale: 0.97 }}
             onClick={() => onFilterChange(status)}
-            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${
-              filterStatus === status
+            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${filterStatus === status
                 ? "bg-[#6750A4] text-white shadow-md"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
+              }`}
           >
             {status === "all"
               ? "All"
               : status === "active"
-              ? "Active"
-              : "Inactive"}
+                ? "Active"
+                : "Inactive"}
           </motion.button>
         ))}
       </div>
@@ -934,7 +863,27 @@ export default function AdManagement() {
     try {
       setIsLoading(true);
       const response = await getAds();
-      setAds(response.data);
+      const adsList = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+      
+      console.log("--- Ads Fetched Successfully ---");
+      console.table(
+        adsList.map((ad: Ad) => ({
+          ID: ad.id,
+          Title: ad.title,
+          "Raw Image Path": ad.image,
+          "Resolved Image URL": ad.image
+            ? ad.image.startsWith("http") || ad.image.startsWith("blob:")
+              ? ad.image
+              : ad.image.startsWith("/")
+              ? `https://backend-qine.activetechet.com${ad.image}`
+              : `https://backend-qine.activetechet.com/media/${ad.image}`
+            : "",
+        }))
+      );
+
+      setAds(adsList);
     } catch (error) {
       showToast("error", "Failed to load advertisements");
     } finally {
@@ -1034,8 +983,8 @@ export default function AdManagement() {
       filterStatus === "all"
         ? true
         : filterStatus === "active"
-        ? ad.is_active
-        : !ad.is_active;
+          ? ad.is_active
+          : !ad.is_active;
     return matchesSearch && matchesStatus;
   });
   const totalPages = Math.ceil(filteredAds.length / ITEMS_PER_PAGE);
@@ -1052,8 +1001,12 @@ export default function AdManagement() {
   );
 
   const getImageUrl = (image: string) => {
+    if (!image) return "";
     if (image.startsWith("http") || image.startsWith("blob:")) return image;
-    return image;
+    if (image.startsWith("/")) {
+      return `https://backend-qine.activetechet.com${image}`;
+    }
+    return `https://backend-qine.activetechet.com/media/${image}`;
   };
 
   return (
@@ -1198,14 +1151,14 @@ export default function AdManagement() {
               </label>
             </div>
           </div>
-          <Input
-            label="Target Link (optional)"
-            type="url"
-            value={targetLink}
-            onChange={(e) => setTargetLink(e.target.value)}
-            placeholder="https://example.com/offer"
-          />
-          <MultiSelectPages value={targetPages} onChange={setTargetPages} />
+          {/* <Input
+              label="Target Link (optional)"
+              type="url"
+              value={targetLink}
+              onChange={(e) => setTargetLink(e.target.value)}
+              placeholder="https://example.com/offer"
+            />
+            <MultiSelectPages value={targetPages} onChange={setTargetPages} /> */}
           <ImageUploader
             onFileChange={setImageFile}
             previewUrl={imageFile ? URL.createObjectURL(imageFile) : null}

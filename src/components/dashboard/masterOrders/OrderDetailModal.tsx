@@ -170,9 +170,16 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(vendorOrder.status)}`}>
           {vendorOrder.status}
         </span>
-        <span className="text-lg font-bold text-[#6750A4] tracking-tight">
-          {Number(vendorOrder.amount).toLocaleString()} ETB
-        </span>
+        <div className="text-right">
+          <span className="text-lg font-bold text-[#6750A4] tracking-tight block">
+            {Number(vendorOrder.amount).toLocaleString()} ETB
+          </span>
+          {Number(vendorOrder.delivery_fee) > 0 && (
+            <span className="text-[10px] font-medium text-gray-500 block">
+              Incl. {Number(vendorOrder.delivery_fee).toLocaleString()} ETB Delivery
+            </span>
+          )}
+        </div>
       </div>
     </div>
 
@@ -479,6 +486,19 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
           <span>Tax</span>
           <span>{Number(order.tax_total).toLocaleString()} ETB</span>
         </div>
+        {/* Render each vendor order's delivery fee separately */}
+        {order.vendor_orders?.map((vo) => (
+          <div key={vo.id} className="flex justify-between text-xs font-medium text-white/70 pl-3 border-l border-white/20">
+            <span className="opacity-80">{vo.company?.name || "Vendor"} Delivery</span>
+            <span>{Number(vo.delivery_fee || 0).toLocaleString()} ETB</span>
+          </div>
+        ))}
+        {Number(order.delivery_fee) > 0 && (
+          <div className="flex justify-between text-xs font-bold text-white pt-1 border-t border-white/10">
+            <span>Total Delivery Fee</span>
+            <span>{Number(order.delivery_fee).toLocaleString()} ETB</span>
+          </div>
+        )}
       </div>
     </div>
     <Sparkles className="absolute bottom-3 right-3 h-6 w-6 text-white/10" />

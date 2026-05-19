@@ -11,6 +11,9 @@ export interface CompanyFormData {
   business_type: string;
   description: string;
   minimum_order_total: string;
+  latitude: string;
+  longitude: string;
+  delivery_fee_per_km: string;
   is_active: boolean;
   is_featured: boolean;
   logo: File | null;
@@ -301,6 +304,82 @@ export default function CompanyForm({
           <p className="text-[10px] text-gray-400 mt-0.5">
             0 means no minimum for this company.
           </p>
+        </div>
+
+        {/* Coordinates (Latitude & Longitude) */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+              Latitude
+            </label>
+            <input
+              type="number"
+              step="any"
+              placeholder="e.g. 9.03"
+              value={formData.latitude}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  latitude: e.target.value,
+                }))
+              }
+              disabled={!isEditingActive}
+              className={`w-full border rounded-md p-1.5 text-xs ${
+                !isEditingActive
+                  ? "bg-gray-50 border-gray-200"
+                  : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+              }`}
+            />
+          </div>
+          <div>
+            <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+              Longitude
+            </label>
+            <input
+              type="number"
+              step="any"
+              placeholder="e.g. 38.74"
+              value={formData.longitude}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  longitude: e.target.value,
+                }))
+              }
+              disabled={!isEditingActive}
+              className={`w-full border rounded-md p-1.5 text-xs ${
+                !isEditingActive
+                  ? "bg-gray-50 border-gray-200"
+                  : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Delivery Fee per KM */}
+        <div>
+          <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+            Delivery Fee per KM (ETB)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={formData.delivery_fee_per_km}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                delivery_fee_per_km: e.target.value,
+              }))
+            }
+            disabled={!isEditingActive}
+            className={`w-full border rounded-md p-1.5 text-xs ${
+              !isEditingActive
+                ? "bg-gray-50 border-gray-200"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+            }`}
+          />
         </div>
 
         {/* Status Checkboxes */}
