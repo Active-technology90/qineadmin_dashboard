@@ -14,7 +14,7 @@ import {
 } from "../../../services/api";
 import { useDebounce } from "../../../hooks/useDebounce";
 import type { User, UserRole } from "../../../types";
-import { UserPlus } from "lucide-react";
+import { Building2, UserPlus } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
 import { CompanyUsersTable } from "./CompanyUsersTable";
@@ -34,15 +34,15 @@ export default function CompanyUsers() {
   const [creatingUser, setCreatingUser] = useState(false);
   // Company from context
   const companySlug = company?.slug ?? null;
-  // const companyName = company?.name ?? "";
+  const companyName = company?.name ?? "";
   // Get logo from companies list (since CurrentCompany doesn't have logo)
-  // const companyLogo = useMemo(() => {
-  //   if (!companySlug || !companies.length) return null;
-  //   const foundCompany = companies.find(
-  //     (c: CompanyListItem) => c.slug === companySlug,
-  //   );
-  //   return foundCompany?.logo || null;
-  // }, [companySlug, companies]);
+  const companyLogo = useMemo(() => {
+    if (!companySlug || !companies.length) return null;
+    const foundCompany = companies.find(
+      (c: CompanyListItem) => c.slug === companySlug,
+    );
+    return foundCompany?.logo || null;
+  }, [companySlug, companies]);
 
   const isSuperAdmin = !currentUser?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -266,8 +266,9 @@ export default function CompanyUsers() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        {isSuperAdmin ? (
         <div className="flex items-center gap-3">
-          {/* {companyLogo ? (
+          {companyLogo ? (
             <img
               src={companyLogo}
               alt={companyName}
@@ -275,14 +276,19 @@ export default function CompanyUsers() {
             />
           ) : (
             <Building2 className="w-8 h-8 text-gray-400" />
-          )} */}
+          )}
           <div>
             <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
-              {/* {companyName} */} All Users
+              {companyName} 
             </h2>
-            {/* <p className="text-sm font-medium text-secondary">Users</p> */}
+            <p className="text-sm font-medium text-secondary">Users</p>
           </div>
         </div>
+        ) : (
+          <h2 className="text-2xl font-extrabold text-secondary tracking-tight">
+          All Users
+          </h2>
+        )}
 
         <div className="flex items-center gap-2">
           {isSuperAdmin && (

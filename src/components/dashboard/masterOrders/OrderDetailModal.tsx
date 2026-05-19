@@ -42,35 +42,77 @@ const getInitials = (name: string) =>
     .join("")
     .toUpperCase() || "?";
 
+// =============================================================================
+// 1. ORDER STATUS BADGE (for MasterOrder.status)
+// =============================================================================
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
-  const base =
-    "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
 
+  // Display text mapping (order status only)
+  let displayStatus = status;
+  if (s === "processing") displayStatus = "Prepared";
+  else if (s === "shipped") displayStatus = "In Transit";
+  else if (s === "fulfilled" || s === "fullfilled") displayStatus = "Delivered";
+  else if (s === "contacted") displayStatus = "Confirmed";
+  else if (s === "approved" || s === "accepted") displayStatus = "Approved";
+  else if (s === "rejected" || s === "cancelled") displayStatus = "Cancelled";
+  else displayStatus = status; // keep original for pending, completed, etc.
+
+  // Color logic (unchanged)
   if (s === "completed" || s === "delivered")
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (s === "paid" || s === "out_for_delivery")
     return base + "bg-violet-50 text-violet-700 border-violet-200";
-  if (s === "pending") return base + "bg-amber-50 text-amber-700 border-amber-200";
+  if (s === "pending")
+    return base + "bg-amber-50 text-amber-700 border-amber-200";
   if (s === "processing" || s === "shipped")
     return base + "bg-sky-50 text-sky-700 border-sky-200";
   if (s === "approved" || s === "accepted")
     return base + "bg-green-50 text-green-700 border-green-200";
   if (s === "rejected" || s === "cancelled")
     return base + "bg-rose-50 text-rose-700 border-rose-200";
+  if (s === "contacted")
+    return base + "bg-blue-50 text-blue-700 border-blue-200";
+  if (s === "fulfilled" || s === "fullfilled")
+    return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
   return base + "bg-gray-50 text-gray-600 border-gray-200";
 };
 
-const getPaymentStatusColor = (ps?: string) => {
-  const p = ps?.toLowerCase();
-  if (p === "paid") return "bg-green-50 text-green-700 border-green-200";
-  if (p === "verifying receipt")
-    return "bg-orange-50 text-orange-700 border-orange-200";
-  if (p === "checkout initiated")
-    return "bg-gray-50 text-gray-700 border-gray-200";
-  if (p === "cancelled") return "bg-red-50 text-red-700 border-red-200";
-  return "bg-gray-50 text-gray-700 border-gray-200";
+// =============================================================================
+// 2. DELIVERY STATUS BADGE (for vendorOrder.delivery.status)
+// =============================================================================
+const getDeliveryStatusBadge = (status: string) => {
+  const s = status?.toLowerCase();
+  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+
+  let displayStatus = status;
+  if (s === "pending") displayStatus = "Assigned";
+  else if (s === "out_for_delivery") displayStatus = "In Transit";
+  else if (s === "delivered") displayStatus = "Completed";
+  else displayStatus = status;
+
+  // Color logic (reuse same colors as order status)
+  if (s === "delivered")
+    return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (s === "out_for_delivery")
+    return base + "bg-violet-50 text-violet-700 border-violet-200";
+  if (s === "pending")
+    return base + "bg-amber-50 text-amber-700 border-amber-200";
+  return base + "bg-gray-50 text-gray-600 border-gray-200";
 };
+
+// const getPaymentStatusColor = (ps?: string) => {
+//   const p = ps?.toLowerCase();
+//   if (p === "paid") return "bg-green-50 text-green-700 border-green-200";
+//   if (p === "verifying receipt")
+//     return "bg-orange-50 text-orange-700 border-orange-200";
+//   if (p === "checkout initiated")
+//     return "bg-gray-50 text-gray-700 border-gray-200";
+//   if (p === "cancelled") return "bg-red-50 text-red-700 border-red-200";
+//   return "bg-gray-50 text-gray-700 border-gray-200";
+// };
+
 
 // -----------------------------------------------------------------------------
 // Reusable Subcomponents
@@ -168,7 +210,22 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
       </div>
       <div className="flex items-center gap-3">
         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(vendorOrder.status)}`}>
-          {vendorOrder.status}
+          {vendorOrder.status === "processing"
+            ? "Prepared"
+            : vendorOrder.status === "shipped"
+              ? "In Transit"
+              : vendorOrder.status === "fulfilled" ||
+                vendorOrder.status === "fullfilled"
+                ? "Delivered"
+                : vendorOrder.status === "contacted"
+                  ? "Confirmed"
+                  : vendorOrder.status === "approved" ||
+                    vendorOrder.status === "accepted"
+                    ? "Approved"
+                    : vendorOrder.status === "rejected" ||
+                      vendorOrder.status === "cancelled"
+                      ? "Cancelled"
+                      : vendorOrder.status}
         </span>
         <div className="text-right">
           <span className="text-lg font-bold text-[#6750A4] tracking-tight block">
@@ -180,10 +237,11 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
             </span>
           )}
         </div>
+
       </div>
     </div>
 
-    {/* Delivery tracking (if exists) */}
+    {/* Delivery tracking (if exists) – NOW USING getDeliveryStatusBadge */}
     {vendorOrder.delivery && (
       <div className="bg-gradient-to-r from-purple-50/40 to-transparent px-6 py-3 border-b border-purple-100/50">
         <div className="flex items-center gap-2 text-xs font-semibold text-[#6750A4] mb-2">
@@ -208,91 +266,101 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
             </div>
           )}
           {vendorOrder.delivery.status && (
-            <div className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getStatusBadge(vendorOrder.delivery.status)}`}>
-              {vendorOrder.delivery.status}
+            <div
+              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getDeliveryStatusBadge(
+                vendorOrder.delivery.status
+              )}`}
+            >
+              {vendorOrder.delivery.status === "pending"
+                ? "Assigned"
+                : vendorOrder.delivery.status === "out_for_delivery"
+                  ? "In Transit"
+                  : vendorOrder.delivery.status === "delivered"
+                    ? "Completed"
+                    : vendorOrder.delivery.status}
             </div>
           )}
         </div>
       </div>
     )}
 
-  {vendorOrder.items.length > 0 && (
-  <div className="px-5 py-6 sm:px-6">
-    {/* ===================================================== */}
-    {/* Header */}
-    {/* ===================================================== */}
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm">
-          <Package className="h-4 w-4 text-[#6750A4]" />
+    {vendorOrder.items.length > 0 && (
+      <div className="px-5 py-6 sm:px-6">
+        {/* ===================================================== */}
+        {/* Header */}
+        {/* ===================================================== */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm">
+              <Package className="h-4 w-4 text-[#6750A4]" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
+                Order Items
+              </p>
+
+              <h3 className="mt-1 text-sm font-bold text-gray-900">
+                {vendorOrder.items.length} Product
+                {vendorOrder.items.length > 1 ? "s" : ""}
+              </h3>
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-2 self-start rounded-2xl border border-[#6750A4]/10 bg-[#6750A4]/5 px-3 py-2">
+            <div className="h-2 w-2 rounded-full bg-[#6750A4] animate-pulse" />
+
+            <span className="text-[11px] font-bold tracking-wide text-[#6750A4]">
+              Vendor Products
+            </span>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
-            Order Items
-          </p>
+        {/* ===================================================== */}
+        {/* Premium Container */}
+        {/* ===================================================== */}
+        <div className="overflow-hidden rounded-[26px] border border-gray-200/80 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.04)]">
+          {/* Desktop Header */}
+          <div className="hidden md:grid grid-cols-12 gap-4 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white px-6 py-4">
+            <div className="col-span-6">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Product
+              </span>
+            </div>
 
-          <h3 className="mt-1 text-sm font-bold text-gray-900">
-            {vendorOrder.items.length} Product
-            {vendorOrder.items.length > 1 ? "s" : ""}
-          </h3>
-        </div>
-      </div>
+            <div className="col-span-2 text-center">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Qty
+              </span>
+            </div>
 
-      <div className="inline-flex items-center gap-2 self-start rounded-2xl border border-[#6750A4]/10 bg-[#6750A4]/5 px-3 py-2">
-        <div className="h-2 w-2 rounded-full bg-[#6750A4] animate-pulse" />
+            <div className="col-span-2 text-right">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Unit Price
+              </span>
+            </div>
 
-        <span className="text-[11px] font-bold tracking-wide text-[#6750A4]">
-          Vendor Products
-        </span>
-      </div>
-    </div>
+            <div className="col-span-2 text-right">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Total
+              </span>
+            </div>
+          </div>
 
-    {/* ===================================================== */}
-    {/* Premium Container */}
-    {/* ===================================================== */}
-    <div className="overflow-hidden rounded-[26px] border border-gray-200/80 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.04)]">
-      {/* Desktop Header */}
-      <div className="hidden md:grid grid-cols-12 gap-4 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white px-6 py-4">
-        <div className="col-span-6">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            Product
-          </span>
-        </div>
-
-        <div className="col-span-2 text-center">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            Qty
-          </span>
-        </div>
-
-        <div className="col-span-2 text-right">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            Unit Price
-          </span>
-        </div>
-
-        <div className="col-span-2 text-right">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            Total
-          </span>
-        </div>
-      </div>
-
-      {/* ===================================================== */}
-      {/* Items */}
-      {/* ===================================================== */}
-      <div className="divide-y divide-gray-100">
-        {vendorOrder.items.map((item, idx) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.25,
-              delay: idx * 0.04,
-            }}
-            className="
+          {/* ===================================================== */}
+          {/* Items */}
+          {/* ===================================================== */}
+          <div className="divide-y divide-gray-100">
+            {vendorOrder.items.map((item, idx) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.25,
+                  delay: idx * 0.04,
+                }}
+                className="
               group
               grid
               grid-cols-1
@@ -308,15 +376,15 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
               hover:from-violet-50/40
               hover:to-transparent
             "
-          >
-            {/* ===================================================== */}
-            {/* Product */}
-            {/* ===================================================== */}
-            <div className="md:col-span-6 min-w-0">
-              <div className="flex items-center gap-4 min-w-0">
-                {/* Image */}
-                <div
-                  className="
+              >
+                {/* ===================================================== */}
+                {/* Product */}
+                {/* ===================================================== */}
+                <div className="md:col-span-6 min-w-0">
+                  <div className="flex items-center gap-4 min-w-0">
+                    {/* Image */}
+                    <div
+                      className="
                     relative
                     h-16
                     w-16
@@ -330,12 +398,12 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                     to-gray-100
                     shadow-sm
                   "
-                >
-                  {item.product_image ? (
-                    <img
-                      src={item.product_image}
-                      alt={item.title}
-                      className="
+                    >
+                      {item.product_image ? (
+                        <img
+                          src={item.product_image}
+                          alt={item.title}
+                          className="
                         h-full
                         w-full
                         object-cover
@@ -343,46 +411,46 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                         duration-500
                         group-hover:scale-105
                       "
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <ImageIcon className="h-5 w-5 text-gray-300" />
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <ImageIcon className="h-5 w-5 text-gray-300" />
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/[0.03] to-transparent" />
                     </div>
-                  )}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/[0.03] to-transparent" />
-                </div>
+                    {/* Details */}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate text-sm font-bold leading-tight text-gray-900">
+                        {item.title}
+                      </h4>
 
-                {/* Details */}
-                <div className="min-w-0 flex-1">
-                  <h4 className="truncate text-sm font-bold leading-tight text-gray-900">
-                    {item.title}
-                  </h4>
+                      <div className="mt-2 flex items-center gap-2 min-w-0">
+                        <span className="inline-flex flex-shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                          SKU
+                        </span>
 
-                  <div className="mt-2 flex items-center gap-2 min-w-0">
-                    <span className="inline-flex flex-shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                      SKU
-                    </span>
-
-                    <span className="truncate font-mono text-[11px] text-gray-400">
-                      {item.sku || "N/A"}
-                    </span>
+                        <span className="truncate font-mono text-[11px] text-gray-400">
+                          {item.sku || "N/A"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* ===================================================== */}
-            {/* Qty */}
-            {/* ===================================================== */}
-            <div className="md:col-span-2 flex md:justify-center items-center">
-              <div className="w-full md:w-auto flex items-center justify-between md:block">
-                <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
-                  Qty
-                </span>
+                {/* ===================================================== */}
+                {/* Qty */}
+                {/* ===================================================== */}
+                <div className="md:col-span-2 flex md:justify-center items-center">
+                  <div className="w-full md:w-auto flex items-center justify-between md:block">
+                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                      Qty
+                    </span>
 
-                <div
-                  className="
+                    <div
+                      className="
                     inline-flex
                     h-10
                     min-w-[54px]
@@ -397,61 +465,61 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                     px-4
                     shadow-sm
                   "
-                >
-                  <span className="text-sm font-black text-[#6750A4]">
-                    ×{item.qty}
-                  </span>
+                    >
+                      <span className="text-sm font-black text-[#6750A4]">
+                        ×{item.qty}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* ===================================================== */}
-            {/* Unit Price */}
-            {/* ===================================================== */}
-            <div className="md:col-span-2 flex md:justify-end items-center">
-              <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
-                <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
-                  Unit Price
-                </span>
+                {/* ===================================================== */}
+                {/* Unit Price */}
+                {/* ===================================================== */}
+                <div className="md:col-span-2 flex md:justify-end items-center">
+                  <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
+                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                      Unit Price
+                    </span>
 
-                <div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">
-                    {Number(item.unit_price).toLocaleString()}
-                  </p>
+                    <div>
+                      <p className="text-sm font-bold tracking-tight text-gray-700">
+                        {Number(item.unit_price).toLocaleString()}
+                      </p>
 
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
-                    ETB
-                  </p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+                        ETB
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* ===================================================== */}
-            {/* Total */}
-            {/* ===================================================== */}
-            <div className="md:col-span-2 flex md:justify-end items-center">
-              <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
-                <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
-                  Total
-                </span>
+                {/* ===================================================== */}
+                {/* Total */}
+                {/* ===================================================== */}
+                <div className="md:col-span-2 flex md:justify-end items-center">
+                  <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
+                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                      Total
+                    </span>
 
-                <div>
-                  <p className="text-base font-black tracking-tight text-gray-900">
-                    {Number(item.line_total).toLocaleString()}
-                  </p>
+                    <div>
+                      <p className="text-base font-black tracking-tight text-gray-900">
+                        {Number(item.line_total).toLocaleString()}
+                      </p>
 
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6750A4]">
-                    ETB
-                  </p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6750A4]">
+                        ETB
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-)}
+    )}
   </motion.div>
 ));
 VendorOrderCard.displayName = "VendorOrderCard";

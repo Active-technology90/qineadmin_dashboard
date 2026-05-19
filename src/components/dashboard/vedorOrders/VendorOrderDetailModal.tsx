@@ -521,10 +521,10 @@ const ReceiptReviewCard = ({
         status="approved"
         className="ring-1 ring-indigo-100"
       >
-        <div className="flex flex-col items-center py-4">
+        <div className="flex flex-col items-center ">
         
-          <div className="flex items-center gap-2 bg-white px-4 py-2 ">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-4 shadow-inner">
+          <div className="flex items-center gap-2 bg-white px-4 ">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
             <ShieldCheck className="h-8 w-8 text-indigo-600" />
           </div>
 
@@ -538,9 +538,9 @@ const ReceiptReviewCard = ({
             payment confirmation.
           </p>
 
-          <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+          {/* <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
             Payment Verified
-          </div>
+          </div> */}
         </div>
       </Card>
     );

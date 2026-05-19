@@ -44,19 +44,24 @@ export function OrderFilters({
     !!paymentStatusFilter ||
     !!fulfillmentTypeFilter;
 
+  // Order status: backend keys → frontend labels
   const orderStatusLabels: Record<string, string> = {
     pending: "Pending",
-    paid: "Paid",
-    completed: "Completed",
+    contacted: "Confirmed",
+    processing: "Prepared",
+    fulfilled: "Delivered",
+    shipped: "In Transit",
+    payment_rejected: "Payment Rejected",
     cancelled: "Cancelled",
   };
 
+  // Delivery status: backend keys → frontend labels
   const deliveryStatusLabels: Record<string, string> = {
-    pending: "Pending Assignment",
-    accepted: "Accepted by Driver",
+    pending: "Assigned",
+    accepted: "Accepted",
     picked_up: "Picked Up",
-    out_for_delivery: "Out for Delivery",
-    delivered: "Delivered",
+    out_for_delivery: "In Transit",
+    delivered: "Completed",
     failed: "Failed",
   };
 
@@ -79,11 +84,9 @@ export function OrderFilters({
         showMobile ? "block" : "hidden md:block"
       } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
     >
-      {/* Header – only utility buttons (no title) */}
+      {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          {/* No title – matches company filter style */}
-        </div>
+        <div className="flex items-center gap-2" />
         <div className="flex items-center gap-2">
           {hasFilters && (
             <button
@@ -134,7 +137,7 @@ export function OrderFilters({
           )}
         </div>
 
-        {/* Filters Grid – 5 columns (order status, delivery status, payment status, fulfillment type, page size) */}
+        {/* Filters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Order Status */}
           <div className="relative">
@@ -212,7 +215,7 @@ export function OrderFilters({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Page Size (native select, matches company style) */}
+          {/* Page Size */}
           <div className="relative">
             <select
               value={pageSize}

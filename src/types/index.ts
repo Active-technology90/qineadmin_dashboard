@@ -313,6 +313,7 @@ export interface MasterOrder {
   vendor_orders: VendorOrder[];
   vendor_count: number;
   payment_status: string;
+  delivery_fee: string;
 }
 
 export interface ShippingAddress {
