@@ -42,22 +42,63 @@ const getInitials = (name: string) =>
     .join("")
     .toUpperCase() || "?";
 
+// =============================================================================
+// 1. ORDER STATUS BADGE (for MasterOrder.status)
+// =============================================================================
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
-  const base =
-    "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
 
+  // Display text mapping (order status only)
+  let displayStatus = status;
+  if (s === "processing") displayStatus = "Prepared";
+  else if (s === "shipped") displayStatus = "In Transit";
+  else if (s === "fulfilled" || s === "fullfilled") displayStatus = "Delivered";
+  else if (s === "contacted") displayStatus = "Confirmed";
+  else if (s === "approved" || s === "accepted") displayStatus = "Approved";
+  else if (s === "rejected" || s === "cancelled") displayStatus = "Cancelled";
+  else displayStatus = status; // keep original for pending, completed, etc.
+
+  // Color logic (unchanged)
   if (s === "completed" || s === "delivered")
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (s === "paid" || s === "out_for_delivery")
     return base + "bg-violet-50 text-violet-700 border-violet-200";
-  if (s === "pending") return base + "bg-amber-50 text-amber-700 border-amber-200";
+  if (s === "pending")
+    return base + "bg-amber-50 text-amber-700 border-amber-200";
   if (s === "processing" || s === "shipped")
     return base + "bg-sky-50 text-sky-700 border-sky-200";
   if (s === "approved" || s === "accepted")
     return base + "bg-green-50 text-green-700 border-green-200";
   if (s === "rejected" || s === "cancelled")
     return base + "bg-rose-50 text-rose-700 border-rose-200";
+  if (s === "contacted")
+    return base + "bg-blue-50 text-blue-700 border-blue-200";
+  if (s === "fulfilled" || s === "fullfilled")
+    return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
+  return base + "bg-gray-50 text-gray-600 border-gray-200";
+};
+
+// =============================================================================
+// 2. DELIVERY STATUS BADGE (for vendorOrder.delivery.status)
+// =============================================================================
+const getDeliveryStatusBadge = (status: string) => {
+  const s = status?.toLowerCase();
+  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+
+  let displayStatus = status;
+  if (s === "pending") displayStatus = "Assigned";
+  else if (s === "out_for_delivery") displayStatus = "In Transit";
+  else if (s === "delivered") displayStatus = "Completed";
+  else displayStatus = status;
+
+  // Color logic (reuse same colors as order status)
+  if (s === "delivered")
+    return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (s === "out_for_delivery")
+    return base + "bg-violet-50 text-violet-700 border-violet-200";
+  if (s === "pending")
+    return base + "bg-amber-50 text-amber-700 border-amber-200";
   return base + "bg-gray-50 text-gray-600 border-gray-200";
 };
 
@@ -71,6 +112,7 @@ const getPaymentStatusColor = (ps?: string) => {
   if (p === "cancelled") return "bg-red-50 text-red-700 border-red-200";
   return "bg-gray-50 text-gray-700 border-gray-200";
 };
+
 
 // -----------------------------------------------------------------------------
 // Reusable Subcomponents
@@ -167,16 +209,31 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(vendorOrder.status)}`}>
-          {vendorOrder.status}
-        </span>
+      <span className={getStatusBadge(vendorOrder.status)}>
+  {vendorOrder.status === "processing"
+    ? "Prepared"
+    : vendorOrder.status === "shipped"
+    ? "In Transit"
+    : vendorOrder.status === "fulfilled" ||
+      vendorOrder.status === "fullfilled"
+    ? "Delivered"
+    : vendorOrder.status === "contacted"
+    ? "Confirmed"
+    : vendorOrder.status === "approved" ||
+      vendorOrder.status === "accepted"
+    ? "Approved"
+    : vendorOrder.status === "rejected" ||
+      vendorOrder.status === "cancelled"
+    ? "Cancelled"
+    : vendorOrder.status}
+</span>
         <span className="text-lg font-bold text-[#6750A4] tracking-tight">
           {Number(vendorOrder.amount).toLocaleString()} ETB
         </span>
       </div>
     </div>
 
-    {/* Delivery tracking (if exists) */}
+    {/* Delivery tracking (if exists) – NOW USING getDeliveryStatusBadge */}
     {vendorOrder.delivery && (
       <div className="bg-gradient-to-r from-purple-50/40 to-transparent px-6 py-3 border-b border-purple-100/50">
         <div className="flex items-center gap-2 text-xs font-semibold text-[#6750A4] mb-2">
@@ -200,11 +257,21 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
               <CopyButton text={vendorOrder.delivery.tracking_id.split("-")[0]} />
             </div>
           )}
-          {vendorOrder.delivery.status && (
-            <div className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getStatusBadge(vendorOrder.delivery.status)}`}>
-              {vendorOrder.delivery.status}
-            </div>
-          )}
+   {vendorOrder.delivery.status && (
+  <div
+    className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getDeliveryStatusBadge(
+      vendorOrder.delivery.status
+    )}`}
+  >
+    {vendorOrder.delivery.status === "pending"
+      ? "Assigned"
+      : vendorOrder.delivery.status === "out_for_delivery"
+      ? "In Transit"
+      : vendorOrder.delivery.status === "delivered"
+      ? "Completed"
+      : vendorOrder.delivery.status}
+  </div>
+)}
         </div>
       </div>
     )}

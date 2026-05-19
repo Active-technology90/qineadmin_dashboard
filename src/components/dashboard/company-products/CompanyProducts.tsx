@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Building2, Plus, RefreshCw, Search } from "lucide-react";
 // import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
@@ -22,13 +22,13 @@ export default function CompanyProducts() {
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
 
   const companySlug = company?.slug ?? null;
-  // const companyName = company?.name ?? "";
+  const companyName = company?.name ?? "";
   // Get logo from companies list (since CurrentCompany doesn't have logo)
-  // const companyLogo = useMemo(() => {
-  //   if (!companySlug || !companies.length) return null;
-  //   const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
-  //   return foundCompany?.logo || null;
-  // }, [companySlug, companies]);
+  const companyLogo = useMemo(() => {
+    if (!companySlug || !companies.length) return null;
+    const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
+    return foundCompany?.logo || null;
+  }, [companySlug, companies]);
 
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -208,9 +208,10 @@ export default function CompanyProducts() {
       />
 
       <div className="px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {isSuperAdmin ? (
           <div className="flex items-center gap-3">
-            {/* {companyLogo ? (
+            {companyLogo ? (
               <img
                 src={companyLogo}
                 alt={companyName}
@@ -218,12 +219,18 @@ export default function CompanyProducts() {
               />
             ) : (
               <Building2 className="w-8 h-8 text-gray-400" />
-            )} */}
+            )}
             <div>
+              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
+              {/* <p className="text-2xl font-extrabold text-secondary tracking-tight">All Products</p> */}
+            </div>
+          </div>
+        ) : (
+           <div>
               {/* <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2> */}
               <p className="text-2xl font-extrabold text-secondary tracking-tight">All Products</p>
             </div>
-          </div>
+        )}
           <div className="flex gap-3 ">
             {isSuperAdmin && (
               <button
