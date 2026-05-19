@@ -425,49 +425,54 @@ export default function CompanyUsers() {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 w-full">
             {/* LEFT SIDE */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
-              {/* SEARCH */}
-              <div className="relative py-3 w-full sm:w-[360px] ">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+  {/* SEARCH */}
+  <div className="relative w-full sm:w-[380px]">
+    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  className="
-        w-full h-9 
-        pl-8 pr-8
+    <input
+      type="text"
+      placeholder="Search users..."
+      value={tableSearch}
+      onChange={(e) => setTableSearch(e.target.value)}
+      className="
+        w-full h-11
+        pl-10 pr-10
         rounded-xl
         border border-gray-200
         bg-white
         text-sm text-gray-700
         placeholder:text-gray-400
+
+        shadow-sm
+
         focus:outline-none
         focus:ring-2 focus:ring-gray-100
         focus:border-gray-300
+
         transition-all
       "
-                />
+    />
 
-                {tableSearch && (
-                  <button
-                    onClick={() => setTableSearch("")}
-                    className="
-          absolute right-2 top-1/2 -translate-y-1/2
-          h-5 w-5
+    {/* CLEAR BUTTON */}
+    {tableSearch && (
+      <button
+        onClick={() => setTableSearch("")}
+        className="
+          absolute right-2.5 top-1/2 -translate-y-1/2
+          h-6 w-6
           rounded-md
           flex items-center justify-center
           hover:bg-gray-100
+          active:scale-95
           transition
         "
-                  >
-                    <X className="h-3 w-3 text-gray-500" />
-                  </button>
-                )}
-              </div>
-            </div>
-
+      >
+        <X className="h-3.5 w-3.5 text-gray-500" />
+      </button>
+    )}
+  </div>
+</div>
             {/* RIGHT SIDE */}
             <div className="flex items-center gap-2 shrink-0">
               {/* ROLE FILTERS */}
