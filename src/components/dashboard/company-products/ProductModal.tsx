@@ -306,7 +306,7 @@ export function ProductModal({
                     className={`w-full px-4 py-2 rounded-lg border ${
                       errors.title
                         ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+                        : 'border-gray-200 focus:border-secondary focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20'
                     } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                     placeholder="Product name"
                     disabled={isSubmitting || isReadOnlyBasic}

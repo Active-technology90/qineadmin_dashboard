@@ -254,6 +254,8 @@ export default function Overview({
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
     const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
+  // ADDED: Local state for non-super admin "All Companies" selection (does NOT affect global context)
+  const [localAllCompaniesSelected, setLocalAllCompaniesSelected] = useState(false);
 
   console.log(aggregatedSummary, "summary")
 
@@ -264,7 +266,10 @@ export default function Overview({
       setError("");
       try {
         // If "All Companies" is selected, aggregate data for ALL users (including non-super admin with multiple companies)
-        const isAllCompanies = !company?.slug;
+        // For non-super admin: use local state instead of global company slug
+        const isAllCompanies = isSuperAdmin 
+          ? !company?.slug 
+          : localAllCompaniesSelected;
         
         // For Super Admin, if no companies loaded yet, fetch them first
         if (isAllCompanies && isSuperAdmin && analytics.available_companies.length === 0) {
@@ -358,7 +363,15 @@ export default function Overview({
           setAggregatedSummary(aggregated);
         } else {
           // Normal flow for single company
-          const companyParam = company?.slug || undefined;
+          // For non-super admin: if localAllCompaniesSelected is true, use undefined (aggregate all)
+          // Otherwise use the actual company slug from global context
+          let companyParam: string | undefined;
+          if (isSuperAdmin) {
+            companyParam = company?.slug || undefined;
+          } else {
+            // Non-super admin: use undefined only if "All Companies" is selected locally
+            companyParam = localAllCompaniesSelected ? undefined : (company?.slug || undefined);
+          }
           
           const { data } = await getAdminAnalyticsOverview({
             period,
@@ -395,7 +408,7 @@ export default function Overview({
     return () => {
       active = false;
     };
-  }, [period, company, analytics.available_companies.length]);
+  }, [period, company, analytics.available_companies.length, localAllCompaniesSelected, isSuperAdmin]);
    // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -492,8 +505,22 @@ export default function Overview({
   
   // Get the selected company name and logo for display
   // Handle both empty string and null/undefined cases
-  const selectedCompanyName = company?.name || "All Companies";
-  const selectedCompanyLogo = company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+  const selectedCompanyName = (() => {
+    if (isSuperAdmin) {
+      return company?.name || "All Companies";
+    }
+    // For non-super admin
+    if (localAllCompaniesSelected) return "All Companies";
+    return company?.name || (analytics.available_companies[0]?.name || "Select Company");
+  })();
+  
+  const selectedCompanyLogo = (() => {
+    if (isSuperAdmin) {
+      return company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+    }
+    if (localAllCompaniesSelected) return null;
+    return company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+  })();
 
   const hasRevenueData =
     currentData.length > 0 &&
@@ -523,28 +550,46 @@ export default function Overview({
     return analytics.available_companies.length >= 2;
   })();
 
-  // Handle company selection - update global context
-  // Handle company selection - update global context
+  // Handle company selection - update global context (super admin) or local state (non-super admin)
   const handleCompanyChange = (selectedSlug: string) => {
     if (selectedSlug === "") {
-      // "All Companies" selected - set company to empty to show aggregated data for ALL users
+      // "All Companies" selected
+      if (isSuperAdmin) {
+        // Super admin: update global context (existing behavior - DO NOT CHANGE)
       switchCompany({
         slug: "",
         name: "All Companies",
         role: "",
       });
     } else {
+        // Non-super admin: ONLY set local state, do NOT update global context
+        setLocalAllCompaniesSelected(true);
+      }
+    } else {
+      // Specific company selected
       const selected = analytics.available_companies.find(c => c.slug === selectedSlug);
       if (selected) {
         const membership = user?.memberships?.find((m: any) => m.company_slug === selectedSlug);
+        // Update global context for both super admin and non-super admin
         switchCompany({
           slug: selected.slug,
           name: selected.name,
           role: membership?.role || "viewer",
         });
+        // Clear local "All Companies" flag for non-super admin
+        if (!isSuperAdmin) {
+          setLocalAllCompaniesSelected(false);
+        }
       }
     }
   };
+
+  // ADDED: Reset local "All Companies" flag when global company changes (for non-super admin)
+  useEffect(() => {
+    if (!isSuperAdmin && company?.slug) {
+      setLocalAllCompaniesSelected(false);
+    }
+  }, [company?.slug, isSuperAdmin]);
 
   return (
     <div className="space-y-8">
@@ -600,7 +645,11 @@ export default function Overview({
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4]" />
                   <select
-                    value={company?.slug || ""}
+                    value={
+                      isSuperAdmin 
+                        ? (company?.slug || "") 
+                        : (localAllCompaniesSelected ? "" : (company?.slug || ""))
+                    }
                     onChange={(e) => {
                       console.log("Selected company slug:", e.target.value);
                       handleCompanyChange(e.target.value);

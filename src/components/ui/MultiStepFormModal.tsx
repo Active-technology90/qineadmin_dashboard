@@ -327,19 +327,19 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
         >
           {/* HEADER */}
           <div className="sticky top-0 z-20 bg-[#6750A4]/30 backdrop-blur-xl border-b border-[#6750A4]/30">
-            <div className="px-5 sm:px-7 pt-5 pb-4">
+            <div className="px-5 sm:px-7 pt-2 pb-2">
               <div className="flex items-start justify-between">
                 <div className="pr-4">
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#6750A4] bg-[#6750A4]/10 px-3 py-1 rounded-full mb-3">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#6750A4] bg-[#6750A4]/10 px-2 py-0.5 rounded-full mb-1.5">
                     Step {currentStep + 1} of {steps.length}
                   </div>
 
-                  <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+                  <h2 className="text-lg font-bold tracking-tight text-gray-900">
                     {current.title}
                   </h2>
 
                   {current.description && (
-                    <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+                    <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
                       {current.description}
                     </p>
                   )}
@@ -349,15 +349,16 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                   onClick={handleClose}
                   disabled={submitting}
                   className="
-                    h-11 w-11 rounded-full
+                    h-8 w-8 rounded-full
                     flex items-center justify-center
-                    bg-gray-100 hover:bg-gray-200
-                    text-gray-500 hover:text-gray-700
+                    bg-red-50 hover:bg-red-100
+                    text-red-500 hover:text-red-700
                     transition-all duration-200
                     disabled:opacity-50
+                    group
                   "
                 >
-                  <X size={20} />
+                  <X size={16} className="transition-transform group-hover:scale-110" />
                 </button>
               </div>
             </div>
@@ -397,7 +398,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
 
             {/* FOOTER */}
             <div className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-5 py-3 sm:px-7">
-              <div className="flex flex-col-reverse sm:flex-row gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 {!isFirst ? (
                   <button
                     type="button"
