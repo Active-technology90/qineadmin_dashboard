@@ -373,8 +373,6 @@ export default function CompanyUsers() {
         )}
       </div>
 
-     
-
       {/* ===== 3. COMPACT STATS ROW ===== */}
       {loading ? (
         <StatsSkeleton />
@@ -425,17 +423,17 @@ export default function CompanyUsers() {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 w-full">
             {/* LEFT SIDE */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
-  {/* SEARCH */}
-  <div className="relative w-full sm:w-[380px]">
-    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+              {/* SEARCH */}
+              <div className="relative w-full sm:w-[380px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 
-    <input
-      type="text"
-      placeholder="Search users..."
-      value={tableSearch}
-      onChange={(e) => setTableSearch(e.target.value)}
-      className="
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  className="
         w-full h-11
         pl-10 pr-10
         rounded-xl
@@ -452,13 +450,13 @@ export default function CompanyUsers() {
 
         transition-all
       "
-    />
+                />
 
-    {/* CLEAR BUTTON */}
-    {tableSearch && (
-      <button
-        onClick={() => setTableSearch("")}
-        className="
+                {/* CLEAR BUTTON */}
+                {tableSearch && (
+                  <button
+                    onClick={() => setTableSearch("")}
+                    className="
           absolute right-2.5 top-1/2 -translate-y-1/2
           h-6 w-6
           rounded-md
@@ -467,12 +465,12 @@ export default function CompanyUsers() {
           active:scale-95
           transition
         "
-      >
-        <X className="h-3.5 w-3.5 text-gray-500" />
-      </button>
-    )}
-  </div>
-</div>
+                  >
+                    <X className="h-3.5 w-3.5 text-gray-500" />
+                  </button>
+                )}
+              </div>
+            </div>
             {/* RIGHT SIDE */}
             <div className="flex items-center gap-2 shrink-0">
               {/* ROLE FILTERS */}
@@ -504,23 +502,23 @@ export default function CompanyUsers() {
                 >
                   <option value="all">All</option>
 
-                  <option value="admin">Admin ({roleCounts.admin || 0})</option>
+                  <option value="admin">Admin</option>
 
-                  <option value="staff">Staff ({roleCounts.staff || 0})</option>
+                  <option value="staff">Staff </option>
 
                   <option value="viewer">
-                    Viewer ({roleCounts.viewer || 0})
+                    Viewer 
                   </option>
 
                   <option value="delivery">
-                    Delivery ({roleCounts.delivery || 0})
+                    Delivery 
                   </option>
                 </select>
 
                 {/* optional custom arrow icon */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                {/* <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <ChevronDown className="h-3 w-3" />
-                </div>
+                </div> */}
               </div>
 
               {canManageUsers && (
