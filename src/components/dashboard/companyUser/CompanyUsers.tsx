@@ -334,11 +334,12 @@ export default function CompanyUsers() {
         isAdmin={canManageUsers} // edit/delete controls only for managers
         currentUser={currentUser}
       onEdit={(user) => {
-  setEditingUser({
-    ...user,
-    user_id: user.id,
-  });
-}}
+        setEditingUser({
+          ...user,
+          id: user.user_id.toString(),
+          user_id: user.user_id,
+        });
+      }}
         onDelete={setDeletingUser}
       />
       <AddUserModal

@@ -21,6 +21,7 @@ import {
   PhoneCall,
   ZoomIn,
   CheckCircle,
+  Building2,
 } from "lucide-react";
 import {
   getCompanyStaffByRole,
@@ -80,13 +81,13 @@ const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
 
   const base =
-    "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+    "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm";
 
   if (s === "completed" || s === "delivered" || s === "approved")
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
 
   if (s === "paid" || s === "out_for_delivery")
-    return base + "bg-violet-50 text-violet-700 border-violet-200";
+    return base + "bg-violet-50 text-violet-700 border-violet-200 flex flex-row w-24 items-center justify-center";
 
   if (s === "pending")
     return base + "bg-amber-50 text-amber-700 border-amber-200";
@@ -117,9 +118,9 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
       </div>
       {status && (
-        <div className="flex justify-start">
+        <div className="flex flex-row justify-start">
           <span className={getStatusBadge(status)}>
-            {getDisplayStatus(status)}
+            {title === "Cash on Delivery" ? status : getDisplayStatus(status)}
           </span>
         </div>
       )}
@@ -158,9 +159,8 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
-        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-      }`}
+      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+        }`}
     >
       {displayStatus}
     </span>
@@ -200,7 +200,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
 
   const delivery = order.delivery;
-  const canManage = !readOnly && order.status?.toLowerCase() === "confirmed";
+  const canManage = !readOnly && order.status?.toLowerCase() === "processing";
 
   const cod = order.payment_method === "cod";
   const deliveryStatus = delivery?.status?.toLowerCase() === "picked_up";
@@ -246,12 +246,12 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     if (!selectedUserId) return;
     setAssigning(true);
     try {
-      console.log("delivery",delivery)
+      console.log("delivery", delivery)
       if (delivery) {
-       await updateDeliveryPerson(
-  delivery.tracking_id,
-  selectedUserId,
-);
+        await updateDeliveryPerson(
+          delivery.id.toString(),
+          selectedUserId,
+        );
       } else {
         await assignDelivery({
           vendor_order: order.id,
@@ -319,7 +319,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                          delivery.delivery_person_name,
+                        delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -355,7 +355,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     No delivery person assigned yet
                   </p>
                   {deliveryStatus ||
-                    ((canManage || cod) && (
+                    ((canManage) && (
                       <button
                         onClick={() => setShowAssignForm(true)}
                         className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
@@ -378,9 +378,9 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
               <select
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500"
+                className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500 px-2"
               >
-                <option value="">Choose from the list...</option>
+                <option value="" className="px-2">Choose from the list...</option>
                 {staffList.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.phone || "No Phone"})
@@ -459,6 +459,7 @@ const ReceiptReviewCard = ({
   status,
   orderId,
   companySlug,
+  orderStatus,
 }: {
   receipt?: OrderReceipt | null;
   paymentMethod?: string;
@@ -467,6 +468,7 @@ const ReceiptReviewCard = ({
   status?: string;
   orderId?: string;
   companySlug?: string;
+  orderStatus?: string;
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -502,9 +504,12 @@ const ReceiptReviewCard = ({
       showToast(
         "error",
         err.response?.data?.detail ||
-          err.message ||
-          "Failed to confirm COD payment",
+        err.message ||
+        "Failed to confirm COD payment",
       );
+      console.error(err.response?.data?.detail ||
+        err.message ||
+        "Failed to confirm COD payment",)
     } finally {
       setCodConfirming(false);
     }
@@ -522,21 +527,21 @@ const ReceiptReviewCard = ({
         className="ring-1 ring-indigo-100"
       >
         <div className="flex flex-col items-center ">
-        
+
           <div className="flex items-center gap-2 bg-white px-4 ">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
-            <ShieldCheck className="h-8 w-8 text-indigo-600" />
-          </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
+              <ShieldCheck className="h-8 w-8 text-indigo-600" />
+            </div>
 
             <p className="text-sm font-semibold text-gray-700">Verified by</p>
 
             <img src="/chapa.png" alt="Chapa" className="h-8 object-contain" />
           </div>
 
-          <p className="text-xs text-gray-500 mt-4 text-center max-w-xs leading-relaxed">
+          {/* <p className="text-xs text-gray-500 mt-4 text-center max-w-xs leading-relaxed">
             This payment was automatically verified through secure online
             payment confirmation.
-          </p>
+          </p> */}
 
           {/* <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
             Payment Verified
@@ -546,44 +551,54 @@ const ReceiptReviewCard = ({
     );
   }
 
-  // =========================================================
-  // COD
-  // =========================================================
   if (paymentMethod === "cod") {
+    const isPaid = status?.toLowerCase() === "paid";
+    const currentOrderStatus = orderStatus?.toLowerCase();
+    const canCollect = currentOrderStatus === "fulfilled";
+
     return (
       <>
         <Card
           title="Cash on Delivery"
           icon={Banknote}
-          status="pending"
-          className="ring-1 ring-amber-100"
+          status={isPaid ? "approved" : "pending"}
+          className={`ring-1 ${isPaid ? "ring-emerald-100 border-emerald-200" : "ring-amber-100"}`}
         >
-          <div className="flex flex-col items-center text-center py-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center mb-4 shadow-inner">
-              <Truck className="h-8 w-8 text-amber-600" />
-            </div>
+          <div className="flex flex-col items-center text-center">
+            {isPaid ? (
+              <div className="flex flex-row items-center gap-4">
 
-            <p className="text-sm font-black text-gray-800 uppercase tracking-wide">
-              Awaiting Collection
-            </p>
-
-            <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
-              Payment collection is handled by the delivery person during
-              physical delivery.
-            </p>
-
-            <div className="mt-4 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
-              Pending Payment
-            </div>
-
-            {!readOnly && (
-              <button
-                onClick={() => setShowCODConfirm(true)}
-                className="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Confirm Payment Collected
-              </button>
+                <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2 shadow-inner">
+                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
+                </div>
+                <p className="text-sm font-black text-emerald-700 uppercase tracking-wide">
+                  Payment Collected
+                </p>
+                {/* <p className="text-xs text-gray-500 mt-2 max-w-xs leading-relaxed">
+                  The Cash on Delivery payment has been physically collected and confirmed.
+                </p> */}
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-4 max-w-xs leading-relaxed">
+                  {canCollect
+                    ? "Confirm physical collection of cash once the driver delivers the items and returns with the cash."
+                    : "Payment collection is disabled until the order is Delivered."}
+                </p>
+                {!readOnly && (
+                  <button
+                    onClick={() => setShowCODConfirm(true)}
+                    disabled={!canCollect}
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                      : "bg-gray-300 cursor-not-allowed shadow-none"
+                      }`}
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Confirm Payment Collected
+                  </button>
+                )}
+              </>
             )}
           </div>
         </Card>
@@ -596,6 +611,8 @@ const ReceiptReviewCard = ({
           description="Are you sure you have collected the payment for this order?"
           confirmText={codConfirming ? "Processing..." : "Yes, Confirm Payment"}
           confirmVariant="primary"
+          loading={codConfirming}
+          autoClose={false}
         />
       </>
     );
@@ -672,46 +689,42 @@ const ReceiptReviewCard = ({
   return (
     <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
       <div className="flex items-center gap-2 mb-2">
-        <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-          <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-            <Banknote className="h-4 w-4 text-[#6750A4]" />
-          </div>
+        <div className="flex w-full flex-row justify-between items-start">
+          <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
+            <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+              <Banknote className="h-4 w-4 text-[#6750A4]" />
+            </div>
 
-          <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
-            Payment Receipt
-          </h4>
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
-          {/* <div className="flex flex-row justify-between items-start">
+            <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+              Payment Receipt
+            </h4>
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            {/* <div className="flex flex-row justify-between items-start">
       <div className="flex items-center gap-2 mb-4 pb-3 w-full relative"> */}
-          {/* <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+            {/* <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
           <Icon className="h-4 w-4 text-[#6750A4]" />
         </div> */}
 
-          {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
           {title}
         </h4> */}
-          {/* Decorative gradient line under header */}
-          {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            {/* Decorative gradient line under header */}
+            {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
               </div> */}
+          </div>
+          <div>
+            <span
+              className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(
+                receipt.status,
+              )}`}
+            >
+              {receipt.status}
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="space-y-3">
-        {/* STATUS + AMOUNT */}
-        <div className="flex items-center justify-between">
-          <span
-            className={`text-xs px-2 py-1 rounded-full border ${getStatusBadge(
-              receipt.status,
-            )}`}
-          >
-            {receipt.status}
-          </span>
-
-          <p className="text-lg font-bold text-gray-900">
-            {Number(receipt.amount).toLocaleString()} ETB
-          </p>
-        </div>
-
         {/* IMAGE */}
         {receipt.receipt_image && (
           <div>
@@ -776,7 +789,7 @@ const ReceiptReviewCard = ({
              disabled:opacity-50 disabled:cursor-not-allowed
              flex items-center justify-center gap-2"
               >
-                
+
                 Reject
               </button>
             </div>
@@ -784,13 +797,12 @@ const ReceiptReviewCard = ({
         )}
 
         {/* REVIEWED STATE */}
-        {isAlreadyReviewed && (
+        {/* {isAlreadyReviewed && (
           <div
-            className={`p-4 rounded-xl flex items-start gap-3 ${
-              receipt.status === "approved"
-                ? "bg-emerald-50 border border-emerald-200"
-                : "bg-rose-50 border border-rose-200"
-            }`}
+            className={`p-4 rounded-xl flex items-start gap-3 ${receipt.status === "approved"
+              ? "bg-emerald-50 border border-emerald-200"
+              : "bg-rose-50 border border-rose-200"
+              }`}
           >
             {receipt.status === "approved" ? (
               <ShieldCheck className="h-5 w-5 text-emerald-600" />
@@ -805,12 +817,12 @@ const ReceiptReviewCard = ({
 
               <p className="text-xs text-gray-500 mt-1">
                 {receipt.status === "approved"
-                  ? "Order is ready for dispatch."
+                  ? "Order is ready for preparation."
                   : "Customer must upload another receipt."}
               </p>
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* KEEP SECOND IMAGE VIEWER */}
@@ -840,7 +852,7 @@ const ReceiptReviewCard = ({
       )}
 
       {/* REVIEW CONFIRMATION */}
-         <ConfirmationModal
+      <ConfirmationModal
         isOpen={showConfirm}
         onClose={() => {
           setShowConfirm(false);
@@ -853,8 +865,10 @@ const ReceiptReviewCard = ({
         description="This action will notify the customer and update the order workflow. Are you sure?"
         confirmText={submitting ? "Processing..." : "Confirm Action"}
         confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
+        loading={submitting}
+        autoClose={false}
       />
-   
+
     </div>
   );
 };
@@ -885,7 +899,13 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
     }
   };
 
-  if (status !== "confirmed" && status !== "processing") {
+  const isCOD = order.payment_method === "cod";
+
+  if (
+    status !== "confirmed" &&
+    status !== "processing" &&
+    !(isCOD && status === "pending")
+  ) {
     return null;
   }
 
@@ -895,42 +915,30 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         title="Order Preparation"
         icon={Package}
         status={status}
-        className={status === "confirmed" ? "ring-2 ring-purple-100 border-purple-200" : ""}
+        className={(status === "confirmed" || (isCOD && status === "pending")) ? "ring-2 ring-purple-100 border-purple-200" : ""}
       >
         <div className="flex flex-col items-center text-center py-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-4 shadow-inner">
+          {/* <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-4 shadow-inner">
             <Package className="h-8 w-8 text-purple-600" />
-          </div>
+          </div> */}
 
-          {status === "confirmed" ? (
+          {(status === "confirmed" || (isCOD && status === "pending")) && (
             <>
-              <p className="text-sm font-black text-gray-800 uppercase tracking-wide">
+              {/* <p className="text-sm font-black text-gray-800 uppercase tracking-wide">
                 Ready for Preparation
-              </p>
-              <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
+              </p> */}
+              {/* <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
                 The payment/order is confirmed. Please prepare the items so they are ready for delivery assignment.
-              </p>
+              </p> */}
               {!readOnly && (
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-[#6750A4] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#6750A4] to-[#6750A4] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Mark as Prepared
                 </button>
               )}
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-black text-emerald-700 uppercase tracking-wide">
-                Prepared & Ready
-              </p>
-              <p className="text-xs text-gray-500 mt-3 max-w-xs leading-relaxed">
-                This order has been prepared. The next step is assigning a delivery driver to dispatch it.
-              </p>
-              <div className="mt-4 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
-                Ready for Dispatch
-              </div>
             </>
           )}
         </div>
@@ -944,6 +952,8 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         description="Are you sure you want to mark this order as prepared and ready for dispatch?"
         confirmText={preparing ? "Marking..." : "Yes, Prepared"}
         confirmVariant="primary"
+        loading={preparing}
+        autoClose={false}
       />
     </>
   );
@@ -1028,7 +1038,7 @@ export function VendorOrderDetailModal({
                     </span>
                   </span>
                   <span className="flex items-center gap-1.5 text-gray-600">
-                    <User className="h-3.5 w-3.5 text-[#6750A4]" />{" "}
+                    <Building2 className="h-3.5 w-3.5 text-[#6750A4]" />{" "}
                     <span className="font-medium">{order.company?.name}</span>
                   </span>
                 </div>
@@ -1070,9 +1080,9 @@ export function VendorOrderDetailModal({
 
           {/* Scrollable Content Grid */}
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-gray-100">
-            <div className="grid grid-cols-12 gap-8">
+            <div className="grid grid-cols-12 gap-8 items-start">
               {/* Left Side: Order Composition & Shipping (8 cols) */}
-              <div className="col-span-12 lg:col-span-8 space-y-8">
+              <div className="col-span-12 lg:col-span-8 space-y-8 lg:sticky lg:top-0">
                 {/* 1. Customer Summary Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card title="Customer Profile" icon={User}>
@@ -1280,14 +1290,18 @@ export function VendorOrderDetailModal({
                   status={order.payment_status}
                   orderId={order.id}
                   companySlug={order.company?.slug}
+                  orderStatus={order.status}
                 />
 
                 {/* Preparation Card */}
-                <PreparationCard
-                  order={order}
-                  onUpdate={onUpdate}
-                  readOnly={readOnly}
-                />
+                {(order.status === "confirmed" ||
+                  (order.payment_method === "cod" && order.status === "pending")) && (
+                    <PreparationCard
+                      order={order}
+                      onUpdate={onUpdate}
+                      readOnly={readOnly}
+                    />
+                  )}
 
                 {/* 5. Delivery person Assignment Card */}
                 <DeliveryCard

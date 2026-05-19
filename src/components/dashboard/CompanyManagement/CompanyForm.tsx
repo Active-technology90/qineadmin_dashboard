@@ -1,6 +1,9 @@
 // src/components/admin/CompanyManagement/CompanyForm.tsx
+import React, { useState } from "react";
 import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
 import type { Category, SubCategory } from "../../../types";
+import LocationPickerModal from "./LocationPickerModal";
+import { MapPin } from "lucide-react";
 
 export interface CompanyFormData {
   name: string;
@@ -52,6 +55,8 @@ export default function CompanyForm({
   const filteredSubcategories = subcategories.filter(
     (sub) => sub.category === formData.category,
   );
+
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   return (
     <form
@@ -307,53 +312,78 @@ export default function CompanyForm({
         </div>
 
         {/* Coordinates (Latitude & Longitude) */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
-              Latitude
+        <div>
+          <div className="flex justify-between items-center mb-0.5">
+            <label className="block text-[14px] font-medium text-gray-600">
+              Company Location (GPS) *
             </label>
-            <input
-              type="number"
-              step="any"
-              placeholder="e.g. 9.03"
-              value={formData.latitude}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  latitude: e.target.value,
-                }))
-              }
-              disabled={!isEditingActive}
-              className={`w-full border rounded-md p-1.5 text-xs ${
-                !isEditingActive
-                  ? "bg-gray-50 border-gray-200"
-                  : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
-              }`}
-            />
+            {isEditingActive && (
+              <button
+                type="button"
+                onClick={() => setShowMapPicker(true)}
+                className="text-[10px] text-[#6750A4] hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
+              >
+                <MapPin className="h-3 w-3" />
+                Pick on Map
+              </button>
+            )}
           </div>
-          <div>
-            <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
-              Longitude
-            </label>
-            <input
-              type="number"
-              step="any"
-              placeholder="e.g. 38.74"
-              value={formData.longitude}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  longitude: e.target.value,
-                }))
-              }
-              disabled={!isEditingActive}
-              className={`w-full border rounded-md p-1.5 text-xs ${
-                !isEditingActive
-                  ? "bg-gray-50 border-gray-200"
-                  : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
-              }`}
-            />
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="relative">
+              <input
+                type="number"
+                step="any"
+                placeholder="Latitude"
+                value={formData.latitude}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    latitude: e.target.value,
+                  }))
+                }
+                disabled={!isEditingActive}
+                className={`w-full border rounded-md p-1.5 pr-8 text-xs ${
+                  !isEditingActive
+                    ? "bg-gray-50 border-gray-200"
+                    : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                }`}
+              />
+              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LAT</span>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                step="any"
+                placeholder="Longitude"
+                value={formData.longitude}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    longitude: e.target.value,
+                  }))
+                }
+                disabled={!isEditingActive}
+                className={`w-full border rounded-md p-1.5 pr-8 text-xs ${
+                  !isEditingActive
+                    ? "bg-gray-50 border-gray-200"
+                    : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                }`}
+              />
+              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LON</span>
+            </div>
           </div>
+
+          {isEditingActive && (
+            <button
+              type="button"
+              onClick={() => setShowMapPicker(true)}
+              className="mt-2 w-full py-2 border border-dashed border-[#6750A4]/40 hover:border-[#6750A4] hover:bg-purple-50/30 text-[#6750A4] rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Choose Location on Map Picker
+            </button>
+          )}
         </div>
 
         {/* Delivery Fee per KM */}
@@ -460,6 +490,22 @@ export default function CompanyForm({
           </div>
         )}
       </div>
+
+      {showMapPicker && (
+        <LocationPickerModal
+          isOpen={showMapPicker}
+          onClose={() => setShowMapPicker(false)}
+          onSelect={(selectedLat, selectedLon) => {
+            setFormData((prev) => ({
+              ...prev,
+              latitude: selectedLat,
+              longitude: selectedLon,
+            }));
+          }}
+          initialLat={formData.latitude}
+          initialLon={formData.longitude}
+        />
+      )}
     </form>
   );
 }

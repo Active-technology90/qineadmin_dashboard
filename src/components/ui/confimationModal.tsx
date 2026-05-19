@@ -1,4 +1,6 @@
-export const  ConfirmationModal = ({
+import { Loader2 } from "lucide-react";
+
+export const ConfirmationModal = ({
   isOpen,
   onClose,
   onConfirm,
@@ -6,8 +8,9 @@ export const  ConfirmationModal = ({
   description,
   confirmText = "Confirm",
   cancelText = "Cancel",
-    confirmVariant = "primary",
-  
+  confirmVariant = "primary",
+  loading = false,
+  autoClose = true,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -17,6 +20,8 @@ export const  ConfirmationModal = ({
   confirmText?: string;
   cancelText?: string;
   confirmVariant?: "primary" | "danger";
+  loading?: boolean;
+  autoClose?: boolean;
 }) => {
   if (!isOpen) return null;
 
@@ -28,23 +33,25 @@ export const  ConfirmationModal = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
           >
             {cancelText}
           </button>
           <button
             onClick={() => {
               onConfirm();
-              onClose();
-                      }}
-                   
-            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition ${
+              if (autoClose) onClose();
+            }}
+            disabled={loading}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition flex items-center justify-center gap-2 ${
               confirmVariant === "danger"
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-secondary hover:bg-secondary"
-            }`}
+            } disabled:opacity-50`}
           >
-            {confirmText}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            <span>{confirmText}</span>
           </button>
         </div>
       </div>

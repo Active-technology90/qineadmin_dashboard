@@ -682,7 +682,7 @@ const FormModal: React.FC<{
                 Cancel
               </Button>
               <Button type="submit" isLoading={isSubmitting}>
-                Save Campaign
+                Save
               </Button>
             </div>
           </form>
@@ -707,7 +707,7 @@ const SearchFilterBar: React.FC<{
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Search campaigns by title..."
+          placeholder="Search Ads by title..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition-all"
@@ -787,12 +787,12 @@ const EmptyState: React.FC<{ onCreateNew: () => void; isReadOnly: boolean }> = (
       No advertisements yet
     </h3>
     <p className="mt-1 text-sm text-gray-500">
-      Launch your first campaign to reach more customers.
+      Launch your first Advertisement to reach more customers.
     </p>
     {!isReadOnly && (
       <div className="mt-6">
         <Button onClick={onCreateNew}>
-          <Plus className="w-4 h-4 mr-2" /> Create Campaign
+          <Plus className="w-4 h-4 mr-2" /> Create Advertisement
         </Button>
       </div>
     )}
@@ -902,9 +902,9 @@ export default function AdManagement() {
       try {
         await deleteAd(adToDelete.id);
         setAds(ads.filter((ad) => ad.id !== adToDelete.id));
-        showToast("success", "Campaign deleted successfully");
+        showToast("success", "Advertisement deleted successfully");
       } catch (error) {
-        showToast("error", "Failed to delete campaign");
+        showToast("error", "Failed to delete Advertisement");
       } finally {
         setDeleteModalOpen(false);
         setAdToDelete(null);
@@ -938,9 +938,9 @@ export default function AdManagement() {
 
   const validateForm = () => {
     const errors: { title?: string; image?: string } = {};
-    if (!title.trim()) errors.title = "Campaign title is required";
+    if (!title.trim()) errors.title = "Advertisement title is required";
     if (!editingId && !imageFile)
-      errors.image = "Please select an image for new campaign";
+      errors.image = "Please select an image for new Advertisement";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -960,15 +960,15 @@ export default function AdManagement() {
     try {
       if (editingId) {
         await updateAd(editingId, formData);
-        showToast("success", "Campaign updated successfully");
+        showToast("success", "Advertisement updated successfully");
       } else {
         await createAd(formData);
-        showToast("success", "New campaign created");
+        showToast("success", "New Advertisement created");
       }
       setModalOpen(false);
       fetchAds();
     } catch (error: any) {
-      showToast("error", error.message || "Failed to save campaign");
+      showToast("error", error.message || "Failed to save Advertisement");
     } finally {
       setIsSubmitting(false);
     }
@@ -1021,7 +1021,7 @@ export default function AdManagement() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                Ad Campaigns
+                Advertisments
               </h1>
               <p className="text-gray-500 text-sm mt-0.5">
                 Manage placements across your platform
@@ -1029,7 +1029,7 @@ export default function AdManagement() {
             </div>
             {!isReadOnly && (
               <Button onClick={openCreateModal} size="lg" className="shadow-sm">
-                <Plus className="w-5 h-5" /> New Campaign
+                <Plus className="w-5 h-5" /> New Ads
               </Button>
             )}
           </div>
@@ -1038,7 +1038,7 @@ export default function AdManagement() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
-            title="Total Campaigns"
+            title="Total Ads"
             value={totalCount}
             icon={LayoutDashboard}
             color="from-blue-500 to-blue-600"
@@ -1055,12 +1055,12 @@ export default function AdManagement() {
             icon={ImageIcon}
             color="from-gray-500 to-gray-600"
           />
-          <StatCard
+          {/* <StatCard
             title="Pages Targeted"
             value={totalPagesTargeted}
             icon={Target}
             color="from-indigo-500 to-indigo-600"
-          />
+          /> */}
         </div>
 
         {/* Search & Filter */}
@@ -1123,11 +1123,11 @@ export default function AdManagement() {
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
-          title={editingId ? "Edit Campaign" : "Create New Campaign"}
+          title={editingId ? "Edit Advertisment" : "Create New Advertisment"}
           isSubmitting={isSubmitting}
         >
           <Input
-            label="Campaign Title"
+            label="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Summer Sale 2025"

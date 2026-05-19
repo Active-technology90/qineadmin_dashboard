@@ -474,22 +474,42 @@ export default function CompanyManagement() {
     // Check if any changes were made (for update operations)
     if (editingSlug && originalFormData) {
       const hasChanges = () => {
-        // Check text fields
-        if (formData.name !== originalFormData.name) return true;
-        if (formData.name_am !== originalFormData.name_am) return true;
-        if (formData.category !== originalFormData.category) return true;
-        if (formData.sub_category !== originalFormData.sub_category) return true;
-        if (formData.business_type !== originalFormData.business_type) return true;
-        if (formData.description !== originalFormData.description) return true;
-        if (formData.minimum_order_total !== originalFormData.minimum_order_total) return true;
-        if (formData.latitude !== originalFormData.latitude) return true;
-        if (formData.longitude !== originalFormData.longitude) return true;
-        if (formData.delivery_fee_per_km !== originalFormData.delivery_fee_per_km) return true;
-        if (formData.is_active !== originalFormData.is_active) return true;
-        if (formData.is_featured !== originalFormData.is_featured) return true;
-        // Check file uploads
+        // Safe string comparison helper
+        const cleanString = (val: any) => (val === null || val === undefined ? "" : String(val).trim());
+        
+        // Safe float comparison helper (coordinates / prices)
+        const cleanFloat = (val: any) => {
+          if (val === null || val === undefined || val === "") return 0;
+          const parsed = parseFloat(val);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        const compareFloats = (val1: any, val2: any) => {
+          return Math.abs(cleanFloat(val1) - cleanFloat(val2)) > 0.000001;
+        };
+
+        // Text & Select Fields
+        if (cleanString(formData.name) !== cleanString(originalFormData.name)) return true;
+        if (cleanString(formData.name_am) !== cleanString(originalFormData.name_am)) return true;
+        if (Number(formData.category) !== Number(originalFormData.category)) return true;
+        if (Number(formData.sub_category) !== Number(originalFormData.sub_category)) return true;
+        if (cleanString(formData.business_type) !== cleanString(originalFormData.business_type)) return true;
+        if (cleanString(formData.description) !== cleanString(originalFormData.description)) return true;
+        
+        // Floats and Decimals (Monetary & Coordinates)
+        if (compareFloats(formData.minimum_order_total, originalFormData.minimum_order_total)) return true;
+        if (compareFloats(formData.latitude, originalFormData.latitude)) return true;
+        if (compareFloats(formData.longitude, originalFormData.longitude)) return true;
+        if (compareFloats(formData.delivery_fee_per_km, originalFormData.delivery_fee_per_km)) return true;
+        
+        // Booleans
+        if (Boolean(formData.is_active) !== Boolean(originalFormData.is_active)) return true;
+        if (Boolean(formData.is_featured) !== Boolean(originalFormData.is_featured)) return true;
+        
+        // File Uploads
         if (formData.logo !== null) return true;
         if (formData.cover_image !== null) return true;
+        
         return false;
       };
       
