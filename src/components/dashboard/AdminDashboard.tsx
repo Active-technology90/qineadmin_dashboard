@@ -393,61 +393,39 @@ export default function AdminDashboard() {
       >
         {/* Logo & title */}
         <div
-          className={`mx-2 mt-2 px-6 py-2 border-b border-gray-800 flex-col items-center gap-3 rounded-2xl ${sidebarCollapsed ? "justify-center p-4" : ""}`}
+          className={`mx-2 mt-2 px-3 py-2 border-b border-gray-800 rounded-2xl ${sidebarCollapsed ? "flex justify-center" : "flex items-center gap-2"}`}
         >
-          <div className={`bg-white/10 p-1 rounded-full backdrop-blur-sm flex-shrink-0 ${sidebarCollapsed ? "w-12 h-12" : "w-20 h-20 ml-18"}`}>
+          {/* Logo - Always visible, left side when expanded, centered when collapsed */}
+          <div className={`bg-white/10 p-1 rounded-full backdrop-blur-sm flex-shrink-0 ${sidebarCollapsed ? "w-10 h-10" : "w-18 h-18"}`}>
             <img
               src="/qinemartethio.jpeg"
               alt="Qine Logo"
               className="w-full h-full object-cover rounded-full"
             />
           </div>
+          
+          {/* Branding Text - Only visible when sidebar is NOT collapsed */}
           {!sidebarCollapsed && (
-            <div className="flex-1 text-center">
-              {/* Role Chip */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${isSuperAdmin ? "bg-emerald-400 animate-pulse" : "bg-blue-400"}`}></div>
-                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">
-                  {isSuperAdmin
-                    ? "Super Admin"
-                    : isViewer
-                      ? "Viewer"
-                      : company?.role === "admin"
-                        ? "Company Admin"
-                        : "Staff"}
+            <div className="px-2 py-1 rounded-md bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="flex items-center gap-1">
+                <div className="w-0.5 h-2 rounded-full bg-gradient-to-b from-amber-400 to-amber-600"></div>
+                <span className="text-[10px] font-bold text-white/80 tracking-wide whitespace-nowrap">
+                  ACTIVE MART
                 </span>
-              </div>
-              {/* Main Title */}
-              <span className="block text-sm font-black tracking-wide">
-                {isSuperAdmin
-                  ? "Full Control"
-                  : isViewer
-                    ? "Read Only"
-                    : company?.role === "admin"
-                      ? "Company Management"
-                      : "Limited Access"}
-              </span>
-              {/* App Branding - Subtle Horizontal */}
-              <div className="mt-3 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/15 shadow-md">
-                <div className="flex items-center justify-center gap-1.5">
-                  <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#9b87f5] to-[#6750A4]"></div>
-                  <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
-                    ACTIVE MART
-                  </span>
-                  <span className="text-[9px] font-medium text-indigo-300/80 tracking-wide">
-                    Administration Panel
-                  </span>
-                  <div className="w-1 h-3 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
-                </div>
+                <div className="w-0.5 h-2 rounded-full bg-gradient-to-b from-amber-600 to-amber-400"></div>
               </div>
             </div>
           )}
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden ml-auto text-gray-400"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          
+          {/* Close button for mobile - only visible when not collapsed */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden text-gray-400 hover:text-white transition ml-auto"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto scrollbar-thin custom-scrollbar">
@@ -627,6 +605,12 @@ export default function AdminDashboard() {
                       ? "Super Administrator"
                       : user?.role || "Super Admin"}
                   </span>
+                  <div className="w-px h-4 bg-indigo-200 mx-1"></div>
+                  <div className="flex items-center">
+                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shadow-sm">
+                      Full Control
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -807,25 +791,34 @@ export default function AdminDashboard() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Confirm Sign Out
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Are you sure you want to sign out of your account?
-            </p>
-            <div className="flex gap-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="relative p-6 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <LogOut className="h-5 w-5 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Sign Out</h3>
+              </div>
+              <p className="text-gray-500 mt-2 ml-13">
+                Are you sure you want to sign out of your account?
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
+                className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-sm font-medium hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
               >
+                <LogOut className="h-4 w-4" />
                 Sign Out
               </button>
             </div>

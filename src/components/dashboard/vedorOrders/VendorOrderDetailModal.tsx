@@ -992,14 +992,14 @@ export function VendorOrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header */}
-          <div className="bg-gradient-to-r from-white via-white/95 to-purple-50/30 backdrop-blur-md border-b border-purple-100/30 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/15 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
             <div className="flex items-center gap-5">
               <div className="h-12 w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20">
                 <Package className="text-white h-6 w-6 drop-shadow-sm" />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">
+                  <h2 className="text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight">
                     Order #{order.id}
                   </h2>
                   <StatusBadge
@@ -1028,7 +1028,7 @@ export function VendorOrderDetailModal({
                     </span>
                   </span>
                   <span className="flex items-center gap-1.5 text-gray-600">
-                    <User className="h-3.5 w-3.5 text-gray-400" />{" "}
+                    <User className="h-3.5 w-3.5 text-[#6750A4]" />{" "}
                     <span className="font-medium">{order.company?.name}</span>
                   </span>
                 </div>

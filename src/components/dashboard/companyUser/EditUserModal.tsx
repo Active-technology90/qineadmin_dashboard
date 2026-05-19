@@ -113,9 +113,9 @@ export function EditUserModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+        <div className="flex justify-between items-center p-6 border-b border-[#6750A4]/20 bg-[#6750A4]/20 backdrop-blur-sm">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Edit Profile & Role</h2>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">Edit Profile & Role</h2>
             <p className="text-sm text-gray-500 mt-0.5">Update user information and permissions</p>
           </div>
           <button

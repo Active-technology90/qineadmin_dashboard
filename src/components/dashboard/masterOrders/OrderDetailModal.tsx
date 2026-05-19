@@ -223,7 +223,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
     {/* ===================================================== */}
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#6750A4]/10 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm">
           <Package className="h-4 w-4 text-[#6750A4]" />
         </div>
 
@@ -710,14 +710,14 @@ export function OrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Glass Header */}
-          <div className="bg-gradient-to-r from-white via-white/95 to-purple-50/30 backdrop-blur-md border-b border-purple-100/30 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/10 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
             <div className="flex items-center gap-5">
               <div className="h-12 w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20">
                 <Package className="text-white h-6 w-6 drop-shadow-sm" />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-2xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">
+                  <h2 className="text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight">
                     Order #{order.id}
                   </h2>
                   <span className={getStatusBadge(order.status)}>{order.status}</span>

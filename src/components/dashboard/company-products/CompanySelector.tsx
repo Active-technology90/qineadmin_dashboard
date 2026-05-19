@@ -1,5 +1,5 @@
 // src/components/dashboard/CompanySelector.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -7,9 +7,11 @@ import {
   Search,
   X,
   AlertCircle,
+  Package,
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import type { CompanyListItem } from '../../../types';
+import { searchProducts } from '../../../services/api';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,7 +23,11 @@ interface CompanySelectorProps {
   onBack: () => void;
   allowSwitch?: boolean; 
    subtitle?: string;
+   disableProductSearch?: boolean;
+   title?: string;
+  searchPlaceholder?: string
 }
+
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -78,9 +84,11 @@ function Header({
 function SearchInput({
   value,
   onChange,
+  placeholder = "Search by name or type..."
 }: {
   value: string;
   onChange: (val: string) => void;
+  placeholder?: string;
 }) {
   const [isFocused, setIsFocused] = useState(false);
   return (
@@ -96,7 +104,7 @@ function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder="Search by name or type..."
+        placeholder={placeholder}
         className="w-full pl-10 pr-10 py-2.5 rounded-xl border bg-gray-50 text-sm
           transition-all duration-200 outline-none
           focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary
@@ -225,11 +233,15 @@ export function CompanySelector({
   onSelect,
   // onBack,
   allowSwitch = false,
-  subtitle = "Select a company to manage its products"
+subtitle = "Select a company to manage its products", disableProductSearch = false, title = "Choose Company", searchPlaceholder = "Search by name or type..."
+
+
 }: CompanySelectorProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [productResults, setProductResults] = useState<any[]>([]);
+  const [searchingProducts, setSearchingProducts] = useState(false);
 
   const isSuperAdmin = !user?.memberships || user.memberships.length === 0;
   const hasAccess = isSuperAdmin || allowSwitch;
@@ -242,6 +254,35 @@ export function CompanySelector({
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.business_type?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Search products whenever searchTerm changes (only if product search is enabled)
+  useEffect(() => {
+    if (disableProductSearch) {
+      setProductResults([]);
+      setSearchingProducts(false);
+      return;
+    }
+    
+    const fetchProducts = async () => {
+      if (!searchTerm.trim()) {
+        setProductResults([]);
+        return;
+      }
+      setSearchingProducts(true);
+      try {
+        const response = await searchProducts({ search: searchTerm });
+        setProductResults(response.data.results || []);
+      } catch (err) {
+        console.error('Failed to search products:', err);
+        setProductResults([]);
+      } finally {
+        setSearchingProducts(false);
+      }
+    };
+    
+    const timer = setTimeout(fetchProducts, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, disableProductSearch]);
 
   const handleImageError = useCallback((companyId: number) => {
     setImageErrors((prev) => ({ ...prev, [companyId]: true }));
@@ -256,7 +297,7 @@ export function CompanySelector({
     >
       {/* Header – fixed at top */}
       <Header
-        title="Choose Company"
+        title={title}
         subtitle={subtitle}
       />
 
@@ -264,15 +305,17 @@ export function CompanySelector({
       <div className="flex-1 overflow-y-auto">
         {/* Sticky search */}
         <div className="sticky top-0 z-10 px-5 pt-3 pb-2 bg-white">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} />
+<SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={searchPlaceholder} />
           <div className="mt-3 border-b border-gray-100" />
         </div>
 
         {/* Grid / skeleton / empty states */}
         <div className="px-5 pb-5">
-          {isLoading && <SkeletonGrid />}
+          {/* Loading State */}
+          {(isLoading || searchingProducts) && <SkeletonGrid />}
 
-          {!isLoading && companies.length === 0 && (
+          {/* No Companies Available */}
+          {!isLoading && !searchingProducts && companies.length === 0 && (
             <EmptyState
               icon={Building2}
               title="No companies available"
@@ -280,38 +323,140 @@ export function CompanySelector({
             />
           )}
 
-          {!isLoading && companies.length > 0 && filteredCompanies.length === 0 && (
-            <EmptyState
-              icon={Search}
-              title="No matching companies"
-              message="Try a different search term"
-            />
+          {/* Search Results - Show both Companies and Products */}
+          {!isLoading && !searchingProducts && searchTerm && (
+            <>
+              {/* Companies Section */}
+              {filteredCompanies.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 mb-3 mt-2">
+                    <Building2 className="h-4 w-4 text-[#6750A4]" />
+                    <h3 className="text-sm font-semibold text-gray-700">Companies ({filteredCompanies.length})</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <AnimatePresence>
+                      {filteredCompanies.map((company) => (
+                        <CompanyGridCard
+                          key={company.id}
+                          company={company}
+                          onSelect={onSelect}
+                          imageError={!!imageErrors[company.id]}
+                          onImageError={handleImageError}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+
+              {/* Products Section - Only show if product search is enabled */}
+              {!disableProductSearch && productResults.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 mb-3 mt-2">
+                    <Package className="h-4 w-4 text-[#6750A4]" />
+                    <h3 className="text-sm font-semibold text-gray-700">Products ({productResults.length})</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <AnimatePresence>
+                      {productResults.map((product) => (
+                        <motion.button
+                          key={product.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          onClick={() => {
+                            if (product.company_slug) {
+                              onSelect(product.company_slug, product.company_name || product.company);
+                            }
+                          }}
+                          className="group flex flex-col items-center gap-3 p-5 rounded-xl
+                            border border-gray-200 bg-white text-center
+                            transition-all duration-200
+                            hover:border-[#6750A4]/40 hover:bg-[#6750A4]/5 hover:shadow-md
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6750A4]
+                            active:scale-[0.98]"
+                        >
+                          {/* Product Image */}
+                          <div className="w-20 h-20 rounded-xl flex items-center justify-center
+                            border border-gray-200 bg-gray-50 overflow-hidden
+                            group-hover:border-[#6750A4]/30 group-hover:shadow-sm transition-all">
+                            {product.primary_image ? (
+                              <img
+                                src={product.primary_image}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Package className="h-7 w-7 text-[#6750A4]" />
+                            )}
+                          </div>
+
+                          {/* Product Info */}
+                          <div className="min-w-0 w-full">
+                            <p className="font-bold text-gray-900 truncate text-sm">
+                              {product.title}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                              {product.company_name || product.company}
+                            </p>
+                            <p className="text-xs font-semibold text-[#6750A4] mt-1">
+                              {Number(product.price).toLocaleString()} ETB
+                            </p>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+
+              {/* No Results */}
+              {filteredCompanies.length === 0 && productResults.length === 0 && (
+                <EmptyState
+                  icon={Search}
+                  title="No results found"
+                  message={`No companies or products match "${searchTerm}"`}
+                />
+              )}
+            </>
           )}
 
-          {!isLoading && filteredCompanies.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mt-3">
-              <AnimatePresence>
-                {filteredCompanies.map((company) => (
-                  <CompanyGridCard
-                    key={company.id}
-                    company={company}
-                    onSelect={onSelect}
-                    imageError={!!imageErrors[company.id]}
-                    onImageError={handleImageError}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
+          {/* No Search Term - Show All Companies */}
+          {!isLoading && !searchingProducts && !searchTerm && (
+            <>
+              <div className="flex items-center gap-2 mb-3 mt-2">
+                <Building2 className="h-4 w-4 text-[#6750A4]" />
+                <h3 className="text-sm font-semibold text-gray-700">All Companies</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                <AnimatePresence>
+                  {companies.map((company) => (
+                    <CompanyGridCard
+                      key={company.id}
+                      company={company}
+                      onSelect={onSelect}
+                      imageError={!!imageErrors[company.id]}
+                      onImageError={handleImageError}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Footer – fixed at bottom */}
-      {!isLoading && filteredCompanies.length > 0 && (
+      {!isLoading && !searchingProducts && (
         <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 text-center flex-shrink-0">
           <p className="text-xs text-gray-500">
-            Showing {filteredCompanies.length} of {companies.length} compan
-            {companies.length !== 1 ? 'ies' : 'y'}
+            {searchTerm ? (
+              <>Found {filteredCompanies.length + productResults.length} result{(filteredCompanies.length + productResults.length) !== 1 ? 's' : ''}</>
+            ) : (
+              <>Showing {companies.length} compan{companies.length !== 1 ? 'ies' : 'y'}</>
+            )}
           </p>
         </div>
       )}

@@ -326,7 +326,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           `}
         >
           {/* HEADER */}
-          <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-gray-100">
+          <div className="sticky top-0 z-20 bg-[#6750A4]/30 backdrop-blur-xl border-b border-[#6750A4]/30">
             <div className="px-5 sm:px-7 pt-5 pb-4">
               <div className="flex items-start justify-between">
                 <div className="pr-4">
@@ -360,23 +360,22 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                   <X size={20} />
                 </button>
               </div>
-
-              {/* PROGRESS */}
-              <div className="mt-5">
-                <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className="
-                      h-full rounded-full
-                      bg-gradient-to-r from-[#6750A4] to-[#8B5CF6]
-                      transition-all duration-500 ease-out
-                    "
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-
-              {stepIndicator}
             </div>
+          </div>
+
+          {/* PROGRESS & STEP INDICATOR - Outside header */}
+          <div className="px-5 sm:px-7 pt-3 pb-4 bg-white/50 border-b border-gray-100">
+            <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden mb-4">
+              <div
+                className="
+                  h-full rounded-full
+                  bg-gradient-to-r from-[#6750A4] to-[#8B5CF6]
+                  transition-all duration-500 ease-out
+                "
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {stepIndicator}
           </div>
 
           {/* CONTENT */}
@@ -397,24 +396,24 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
             </div>
 
             {/* FOOTER */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-5 py-4 sm:px-7">
-              <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-5 py-3 sm:px-7">
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
                 {!isFirst ? (
                   <button
                     type="button"
                     onClick={prevStep}
                     disabled={submitting || isValidating}
                     className="
-                      h-12 px-5 rounded-2xl
+                      h-9 px-4 rounded-xl
                       border border-gray-300
-                      text-gray-700 font-semibold
+                      text-gray-700 font-medium text-sm
                       hover:bg-gray-50
                       transition-all duration-200
                       disabled:opacity-50
-                      flex items-center justify-center gap-2
+                      flex items-center justify-center gap-1.5
                     "
                   >
-                    <ChevronLeft size={18} />
+                    <ChevronLeft size={16} />
                     Back
                   </button>
                 ) : (
@@ -427,46 +426,46 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     onClick={nextStep}
                     disabled={isValidating}
                     className="
-                      flex-1 h-12 rounded-2xl
+                      px-5 h-9 rounded-xl
                       bg-[#6750A4]
                       hover:bg-[#5B4294]
-                      text-white font-semibold
+                      text-white font-medium text-sm
                       transition-all duration-200
                       disabled:opacity-50
-                      flex items-center justify-center gap-2
-                      shadow-lg shadow-[#6750A4]/20
+                      flex items-center justify-center gap-1.5
+                      shadow-md shadow-[#6750A4]/20
                     "
                   >
                     {isValidating && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     )}
                     Continue
-                    <ChevronRight size={18} />
+                    <ChevronRight size={16} />
                   </button>
                 ) : (
                   <button
                     type="submit"
                     disabled={submitting || isValidating}
                     className="
-                      flex-1 h-12 rounded-2xl
+                      px-5 h-9 rounded-xl
                       bg-[#6750A4]
                       hover:bg-[#5B4294]
-                      text-white font-semibold
+                      text-white font-medium text-sm
                       transition-all duration-200
                       disabled:opacity-50
-                      flex items-center justify-center gap-2
-                      shadow-lg shadow-[#6750A4]/20
+                      flex items-center justify-center gap-1.5
+                      shadow-md shadow-[#6750A4]/20
                     "
                   >
                     {submitting ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         Submitting...
                       </>
                     ) : (
                       <>
                         Submit
-                        <CheckCircle2 size={18} />
+                        <CheckCircle2 size={16} />
                       </>
                     )}
                   </button>
