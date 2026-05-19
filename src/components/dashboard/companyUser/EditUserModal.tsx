@@ -109,7 +109,7 @@ export function EditUserModal({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-200" onClick={onClose}>
       <div
         ref={modalRef}
-        className="bg-white w-full max-w-3xl rounded-2xl shadow-xl transform transition-all duration-200 scale-100 overflow-hidden"
+        className="bg-white w-full max-w-5xl rounded-2xl shadow-xl transform transition-all duration-200 scale-100 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

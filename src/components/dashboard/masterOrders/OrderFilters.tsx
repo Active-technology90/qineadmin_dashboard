@@ -140,7 +140,7 @@ export function OrderFilters({
         {/* Filters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Order Status */}
-          <div className="relative">
+          {/* <div className="relative">
             <select
               value={statusFilter}
               onChange={(e) => onStatusChange(e.target.value)}
@@ -156,10 +156,10 @@ export function OrderFilters({
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-          </div>
+          </div> */}
 
           {/* Delivery Status */}
-          <div className="relative">
+          {/* <div className="relative">
             <select
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
@@ -175,7 +175,7 @@ export function OrderFilters({
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-          </div>
+          </div> */}
 
           {/* Payment Status */}
           <div className="relative">

@@ -338,8 +338,8 @@ export default function Orders() {
               <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
               <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Fulfillment Type</th>
               <th className="w-[130px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Status</th>
-              <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">order Status</th>
-              <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Status</th>
+              {/* <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">order Status</th>
+              <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Status</th> */}
               <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Companies</th>
               <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">
@@ -380,8 +380,8 @@ export default function Orders() {
                     </div>
                   </td>
                   <td className="px-4 py-3"><PaymentStatusBadge status={order.payment_status} /></td>
-                  <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
-                  <td className="px-4 py-3"><DeliveryStatusBadge status={getOrderDeliveryStatus(order)} /></td>
+                  {/* <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
+                  <td className="px-4 py-3"><DeliveryStatusBadge status={getOrderDeliveryStatus(order)} /></td> */}
                   <td className="px-4 py-3 text-sm font-medium text-gray-700 truncate">{order.vendor_orders?.length ?? 0}</td>
                   <td className="px-4 py-3"><OrderDate dateString={order.created_at} /></td>
                   <td className="px-4 py-3 text-right">

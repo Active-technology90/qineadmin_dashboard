@@ -161,11 +161,12 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", damping: 20 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
+              {/* Header */}
+              <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -185,7 +186,7 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
                 </div>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Current Companies */}
                 <div>
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -202,7 +203,8 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
                   ) : (
                     <div className="space-y-3">
                       {user.memberships.map((m) => {
-                        const isUpdating = updatingRoleCompanyId === m.company_id;
+                        const isUpdating =
+                          updatingRoleCompanyId === m.company_id;
                         return (
                           <div
                             key={m.company_id}
@@ -230,7 +232,11 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
                                     className={`text-xs font-medium rounded-full px-2.5 py-0.5 border-0 focus:ring-2 focus:ring-purple-500 ${getRoleBadgeClass(m.role)}`}
                                   >
                                     {roleOptions.map((role) => (
-                                      <option key={role} value={role} className="capitalize">
+                                      <option
+                                        key={role}
+                                        value={role}
+                                        className="capitalize"
+                                      >
                                         {role}
                                       </option>
                                     ))}
@@ -262,80 +268,92 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
                     </div>
                   )}
                 </div>
-
-                {/* Add New Membership */}
-                <div className="border-t border-gray-100 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Add New Membership
-                  </h3>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1">
-                      <select
-                        value={selectedCompanyId}
-                        onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-                      >
-                        <option value="">Select a company</option>
-                        {availableFilteredCompanies.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="w-36">
-                      <select
-                        value={selectedRole}
-                        onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-                      >
-                        {roleOptions.map((role) => (
-                          <option key={role} value={role} className="capitalize">
-                            {role}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      onClick={handleAdd}
-                      disabled={!selectedCompanyId || loading}
-                      className="px-5 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Plus className="h-4 w-4" />
-                      )}
-                      Add Membership
-                    </button>
-                  </div>
-                  {availableFilteredCompanies.length === 0 &&
-                    selectedCompanyId === "" && (
-                      <p className="text-xs text-gray-400 mt-2">
-                        All companies are already assigned
-                      </p>
-                    )}
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 text-sm">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>{error}</span>
+              <div className="sticky bottom-0 z-20 bg-white border-t border-gray-100 p-6 space-y-4">
+                  {/* Add New Membership */}
+                  <div className=" sticky border-t border-gray-100 pt-4">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Add New Membership
+                    </h3>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1">
+                        <select
+                          value={selectedCompanyId}
+                          onChange={(e) =>
+                            setSelectedCompanyId(Number(e.target.value))
+                          }
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                        >
+                          <option value="">Select a company</option>
+                          {availableFilteredCompanies.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-36">
+                        <select
+                          value={selectedRole}
+                          onChange={(e) =>
+                            setSelectedRole(e.target.value as UserRole)
+                          }
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                        >
+                          {roleOptions.map((role) => (
+                            <option
+                              key={role}
+                              value={role}
+                              className="capitalize"
+                            >
+                              {role}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        onClick={handleAdd}
+                        disabled={!selectedCompanyId || loading}
+                        className="px-5 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+                      >
+                        {loading ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                        Add Membership
+                      </button>
+                    </div>
+                    {availableFilteredCompanies.length === 0 &&
+                      selectedCompanyId === "" && (
+                        <p className="text-xs text-gray-400 mt-2">
+                          All companies are already assigned
+                        </p>
+                      )}
                   </div>
-                )}
-              </div>
 
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
-                <button
-                  onClick={onClose}
-                  className="px-5 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Done
-                </button>
-              </div>
+                  {/* Error Message */}
+                  {error && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-600 text-sm">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                {/* Footer */}
+                <div className=" bg-white px-6 py-4 border-t border-gray-100 flex justify-end">
+                  <button
+                    onClick={onClose}
+                    className="px-5 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              
             </motion.div>
           </motion.div>
         )}

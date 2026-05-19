@@ -51,8 +51,8 @@ export default function SuperAdminView({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        pageSize={pageSize}
-        onPageSizeChange={onPageSizeChange}
+        // pageSize={pageSize}
+        // onPageSizeChange={onPageSizeChange}
       />
     </>
   );

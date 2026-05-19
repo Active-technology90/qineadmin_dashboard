@@ -415,8 +415,8 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-[#6750A4] py-5 rounded-t-3xl">
-                <div className="flex items-center justify-between">
+              <div className="sticky top-0 z-10 bg-[#6750A4] py-4 rounded-t-3xl">
+                <div className="flex items-center justify-between mr-4">
                   <div className="px-6">
                     <h2 className="text-2xl font-bold text-white">
                       Edit User Profile
@@ -436,7 +436,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <form onSubmit={handleSubmit} className="px-6 py-8 space-y-5">
                 {/* Avatar Upload */}
                 {/* <div className="flex justify-center">
                   <AvatarUpload

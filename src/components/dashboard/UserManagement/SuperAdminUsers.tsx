@@ -17,7 +17,6 @@ import {
   Minus,
 } from "lucide-react";
 import {
-
   deleteUser,
   getAllUsers,
   getAvailableCompanies,
@@ -34,19 +33,13 @@ import EditUserModal from "./EditUserModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ManageMembershipsModal from "./ManageMembershipsModal";
 import ViewUserModal from "./ViewUserModal";
-
+import { TableControls } from "../../ui/TableControls";
+import { useToast } from "../../../hooks/useToast";
+import { Toast } from "../../ui/Toast";
 
 // ============================================================
 // TableControls – simple wrapper for the top filter bar
 // ============================================================
-interface TableControlsProps {
-  children: React.ReactNode;
-}
-const TableControls: React.FC<TableControlsProps> = ({ children }) => (
-  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
-    {children}
-  </div>
-);
 
 // ============================================================
 // Utility Functions
@@ -135,46 +128,40 @@ const UserFilters: React.FC<FiltersProps> = ({
   setSearchTerm,
   roleFilter,
   setRoleFilter,
-  // onRefresh,
 }) => (
-  <>
-    <div className="relative flex-1 max-w-md">
+  <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
+    {/* SEARCH */}
+    <div className="relative flex-1">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+
       <input
         type="text"
         placeholder="Search by name, email, phone or company..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
       />
     </div>
-    <div className="flex gap-3 w-full sm:w-auto">
-      <div className="relative">
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white/50 backdrop-blur-sm appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-        >
-          <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="staff">Staff</option>
-          <option value="viewer">Viewer</option>
-          <option value="delivery">Delivery</option>
-          <option value="no_company">No Company</option>
-        </select>
-        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-      </div>
-      {/* <button
-        onClick={onRefresh}
-        className="p-2.5 rounded-xl border border-gray-200 bg-white/50 hover:bg-white transition-colors"
-        title="Refresh"
-      >
-        <RefreshCw className="h-5 w-5 text-gray-600" />
-      </button> */}
-    </div>
-  </>
-);
 
+    {/* FILTER */}
+    <div className="relative w-full md:w-[180px]">
+      <select
+        value={roleFilter}
+        onChange={(e) => setRoleFilter(e.target.value)}
+        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+      >
+        <option value="all">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+        <option value="viewer">Viewer</option>
+        <option value="delivery">Delivery</option>
+        <option value="no_company">No Company</option>
+      </select>
+
+      <Filter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+    </div>
+  </div>
+);
 // ============================================================
 // Actions Dropdown Component
 // ============================================================
@@ -354,12 +341,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
             </td>
             <td className="py-4 px-6">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-               {user.is_active ? (
-                <div className="flex items-center gap-1.5"> <CheckCircle className="h-3 w-3" /> Active</div>
-                )
-                : (
-                  <div className="flex items-center gap-1.5"><Minus className="h-3 w-3 text-red-600" /> <p className="text-red-600"> Inactive</p></div>
-               )}
+                {user.is_active ? (
+                  <div className="flex items-center gap-1.5">
+                    {" "}
+                    <CheckCircle className="h-3 w-3" /> Active
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Minus className="h-3 w-3 text-red-600" />{" "}
+                    <p className="text-red-600"> Inactive</p>
+                  </div>
+                )}
               </span>
             </td>
             <td className="py-4 px-6 text-right">
@@ -425,9 +417,15 @@ const UserMobileCards: React.FC<UserTableProps> = ({
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+           {user.is_active ? (
           <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
             <CheckCircle className="h-3 w-3" /> Active
-          </span>
+            </span>
+          ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-red-600">
+                <Minus className="h-3 w-3" /> Inactive
+              </span>
+            )}
         </div>
       </div>
     ))}
@@ -491,6 +489,7 @@ const LoadingSkeleton: React.FC = () => (
 // Main Component: SuperAdminUsers
 // ============================================================
 const SuperAdminUsers: React.FC = () => {
+  const { toast, showToast } = useToast();
   // Data state – all users loaded once
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -544,13 +543,13 @@ const SuperAdminUsers: React.FC = () => {
     };
     loadUsers();
   }, [fetchAllUsers]);
-  
+
   useEffect(() => {
-  if (managingUser && allUsers.length) {
-    const updated = allUsers.find(u => u.id === managingUser.id);
-    if (updated) setManagingUser(updated);
-  }
-}, [allUsers, managingUser]);
+    if (managingUser && allUsers.length) {
+      const updated = allUsers.find((u) => u.id === managingUser.id);
+      if (updated) setManagingUser(updated);
+    }
+  }, [allUsers, managingUser]);
 
   // Filter users based on search term and role (client‑side)
   const filteredUsers = useMemo(() => {
@@ -607,46 +606,46 @@ const SuperAdminUsers: React.FC = () => {
   }, [filteredUsers]);
 
   // Handlers
- // Inside SuperAdminUsers component
+  // Inside SuperAdminUsers component
 
-const handleRefresh = async () => {
-  setSearchTerm("");
-  setRoleFilter("all");
-  setCurrentPage(1);
-  await refreshAllUsers(); // 👈 fetch latest data from API
-};
+  const handleRefresh = async () => {
+    setSearchTerm("");
+    setRoleFilter("all");
+    setCurrentPage(1);
+    await refreshAllUsers(); // 👈 fetch latest data from API
+  };
 
- const handleResetFilters = async () => {
-  setSearchTerm("");
-  setRoleFilter("all");
-  setCurrentPage(1);
-  await refreshAllUsers();
-};
+  const handleResetFilters = async () => {
+    setSearchTerm("");
+    setRoleFilter("all");
+    setCurrentPage(1);
+    await refreshAllUsers();
+  };
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
 
- const refreshAllUsers = async () => {
-  const users = await fetchAllUsers();
-  setAllUsers(users);
-  
-  // If a user is currently being managed, update that state with fresh data
-  if (managingUser) {
-    const updatedUser = users.find(u => u.id === managingUser.id);
-    if (updatedUser) setManagingUser(updatedUser);
-  }
-  // Similarly, update other selected user states if needed (e.g., selectedUser, editingUser)
-  if (selectedUser) {
-    const updatedUser = users.find(u => u.id === selectedUser.id);
-    if (updatedUser) setSelectedUser(updatedUser);
-  }
-  if (editingUser) {
-    const updatedUser = users.find(u => u.id === editingUser.id);
-    if (updatedUser) setEditingUser(updatedUser);
-  }
-};
+  const refreshAllUsers = async () => {
+    const users = await fetchAllUsers();
+    setAllUsers(users);
+
+    if (managingUser) {
+      const updatedUser = users.find((u) => u.id === managingUser.id);
+      if (updatedUser) setManagingUser(updatedUser);
+    }
+
+    if (selectedUser) {
+      const updatedUser = users.find((u) => u.id === selectedUser.id);
+      if (updatedUser) setSelectedUser(updatedUser);
+    }
+
+    if (editingUser) {
+      const updatedUser = users.find((u) => u.id === editingUser.id);
+      if (updatedUser) setEditingUser(updatedUser);
+    }
+  };
   // View user
   const handleView = (user: User) => {
     setSelectedUser(user);
@@ -661,8 +660,16 @@ const handleRefresh = async () => {
 
   const handleSaveEdit = async (updatedData: Partial<User>) => {
     if (!editingUser) return;
-    await updateUser(editingUser.id, updatedData);
-    await refreshAllUsers();
+
+    try {
+      await updateUser(editingUser.id, updatedData);
+      await refreshAllUsers();
+
+      showToast("success", "User updated successfully");
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to update user");
+    }
   };
 
   // Delete user
@@ -673,10 +680,19 @@ const handleRefresh = async () => {
 
   const handleConfirmDelete = async () => {
     if (!deletingUser) return;
-    await deleteUser(deletingUser.id);
-    setIsDeleteModalOpen(false);
-    setDeletingUser(null);
-    await refreshAllUsers();
+
+    try {
+      await deleteUser(deletingUser.id);
+
+      showToast("success", "User deleted successfully");
+
+      setIsDeleteModalOpen(false);
+      setDeletingUser(null);
+
+      await refreshAllUsers();
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to delete user");
+    }
   };
 
   // Manage memberships
@@ -761,7 +777,10 @@ const handleRefresh = async () => {
         </div>
 
         {/* TableControls + Filters */}
-        <TableControls>
+        <TableControls
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+        >
           <UserFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -794,9 +813,6 @@ const handleRefresh = async () => {
               currentPage={currentPage}
               totalPages={Math.ceil(filteredUsers.length / pageSize)}
               onPageChange={handlePageChange}
-              pageSize={pageSize}
-              onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={[10, 25, 50, 100]}
               enableUrlSync={false}
             />
           </>
@@ -828,24 +844,37 @@ const handleRefresh = async () => {
         onConfirm={handleConfirmDelete}
       />
 
+      <ManageMembershipsModal
+        isOpen={isMembershipModalOpen}
+        onClose={() => setIsMembershipModalOpen(false)}
+        user={managingUser}
+        availableCompanies={availableCompanies}
+        onUpdateRole={async (userId, companySlug, role) => {
+          try {
+            await updateUserCompanyRole(companySlug, userId, role);
+            await refreshAllUsers();
 
-<ManageMembershipsModal
-  isOpen={isMembershipModalOpen}
-  onClose={() => setIsMembershipModalOpen(false)}
-  user={managingUser}
-  availableCompanies={availableCompanies}
-  onUpdateRole={async (userId, companySlug, role) => {
-    await updateUserCompanyRole(companySlug, userId, role);
-    await refreshAllUsers();
-  }}
-  onRemoveMembership={async (userId, companyId) => {
-    const company = availableCompanies.find(c => c.id === companyId);
-    if (!company) throw new Error("Company not found");
-    await removeUserFromCompany(company.slug, userId);
-    await refreshAllUsers();
-  }}
-  onRefresh={refreshAllUsers}  // <-- will refresh after add
-/>
+            showToast("success", "Role updated successfully");
+          } catch (err: any) {
+            showToast("error", "Failed to update role");
+          }
+        }}
+        onRemoveMembership={async (userId, companyId) => {
+          try {
+            const company = availableCompanies.find((c) => c.id === companyId);
+            if (!company) throw new Error("Company not found");
+
+            await removeUserFromCompany(company.slug, userId);
+            await refreshAllUsers();
+
+            showToast("success", "User removed from company");
+          } catch (err: any) {
+            showToast("error", err.message || "Failed to remove user");
+          }
+        }}
+        onRefresh={refreshAllUsers} // <-- will refresh after add
+      />
+      <Toast toast={toast} />
     </>
   );
 };

@@ -40,13 +40,13 @@ export function CompanyUsersTable({
 
   return (
     <>
-     <div className="mt-5">
+     {/* <div className="mt-5">
   <TableControls
     pageSize={pageSize}
-    onPageSizeChange={onPageSizeChange}
-  >
+    onPageSizeChange={onPageSizeChange} */}
+  {/* > */}
     {/* SEARCH INSIDE CHILDREN */}
-    <div className="relative">
+    {/* <div className="relative">
       <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
 
       <input
@@ -63,9 +63,9 @@ export function CompanyUsersTable({
           focus:border-[#6750A4]
         "
       />
-    </div>
-  </TableControls>
-</div>
+    </div> */}
+  {/* </TableControls>
+</div> */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
