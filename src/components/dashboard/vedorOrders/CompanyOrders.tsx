@@ -19,20 +19,35 @@ import { useReadOnly } from "../AdminDashboard";
 const DEFAULT_PAGE_SIZE = 10;
 
 /* ---------- Reusable sub‑components ---------- */
-const StatusBadge = ({ status }: { status: string }) => {
-  // Backend -> Frontend display mapping
-  const statusLabels: Record<string, string> = {
-    // Order status
+const StatusBadge = ({
+  status,
+  type = "order",
+}: {
+  status: string;
+  type?: "order" | "delivery";
+}) => {
+  const normalizedStatus = status?.toLowerCase?.() || "";
+
+  const orderStatusLabels: Record<string, string> = {
     processing: "Prepared",
     shipped: "In Transit",
     fulfilled: "Delivered",
     contacted: "Confirmed",
+    pending: "pending", // order status stays pending
+  };
 
-    // Delivery status
-    pending: "Pending",
+  const deliveryStatusLabels: Record<string, string> = {
+    pending: "Assigned", // delivery status mapping
     out_for_delivery: "In Transit",
     delivered: "Completed",
   };
+
+  const labels =
+    type === "delivery" ? deliveryStatusLabels : orderStatusLabels;
+
+  const displayLabel =
+    labels[normalizedStatus] ||
+    normalizedStatus.replace(/_/g, " ");
 
   const colors: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -52,11 +67,6 @@ const StatusBadge = ({ status }: { status: string }) => {
     payment_rejected: "bg-red-50 text-red-700 border border-red-200",
   };
 
-  const normalizedStatus = status?.toLowerCase?.() || "";
-
-  const displayLabel =
-    statusLabels[normalizedStatus] || normalizedStatus.replace(/_/g, " ");
-
   const color = colors[normalizedStatus] || "bg-gray-100 text-gray-600";
 
   return (
@@ -68,6 +78,8 @@ const StatusBadge = ({ status }: { status: string }) => {
     </span>
   );
 };
+
+
 
 // Helper component for formatted date display
 const OrderDate = ({ dateString }: { dateString?: string }) => {
@@ -515,12 +527,10 @@ export default function CompanyOrders() {
                         : "—"}
                     </td> 
                     <td className="px-6 py-4">
-                      <StatusBadge status={order.status} />
+                     <StatusBadge status={order.status} type="order" />
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge
-                        status={order.delivery?.status || "not assigned"}
-                      />
+                    <StatusBadge status={order.delivery?.status || "no assigned"} type="delivery" />
                     </td>
                     {/* <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">

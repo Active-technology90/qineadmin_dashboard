@@ -197,7 +197,7 @@ export function CreateCompanyUserModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         {/* HEADER */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50">
@@ -479,7 +479,7 @@ export function CreateCompanyUserModal({
         </div>
 
         {/* FOOTER */}
-        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <div className=" sticky bottom-0 z-20 px-6 py-5 border-t border-gray-100 bg-gray-50 flex flex-col-reverse sm:flex-row justify-end gap-3">
           <button
             onClick={onClose}
             className="px-5 py-3 rounded-2xl border border-gray-200 hover:bg-white transition font-medium"

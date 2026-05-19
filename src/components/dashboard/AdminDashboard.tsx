@@ -470,7 +470,7 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
           />
-          {showPlatformAdmin && (
+          {isSuperAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
               label="User Management"
