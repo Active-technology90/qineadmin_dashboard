@@ -346,7 +346,7 @@ export default function CompanyUsers() {
             )}
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-secondary leading-tight">
+            <h1 className="text-2xl font-extrabold text-secondary leading-tight">
               {isSuperAdmin ? companyName : "Team Members"}
             </h1>
             <p className="text-xs text-gray-500">
