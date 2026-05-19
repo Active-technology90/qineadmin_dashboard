@@ -359,7 +359,7 @@ export default function CompanyUsers() {
           <button
             onClick={clearCompany}
             className="
-        h-9 px-3
+        h-9 px-3 
         rounded-xl
         border border-gray-200
         bg-white
@@ -540,7 +540,7 @@ export default function CompanyUsers() {
         "
                   >
                     <UserPlus className="h-3.5 w-3.5" />
-                    Add Member
+                    Add Team Member
                   </button>
 
                   <button
@@ -586,7 +586,7 @@ export default function CompanyUsers() {
                 className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#6750A4] text-white text-xs font-medium hover:bg-[#4c3789] transition"
               >
                 <UserPlus className="h-3 w-3" />
-                Add member
+                Add Team member
               </button>
             )}
           </div>
@@ -605,11 +605,11 @@ export default function CompanyUsers() {
               totalPages={totalPages}
               onPageChange={setCurrentPage}
               pageSize={pageSize}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setCurrentPage(1);
-              }}
-              pageSizeOptions={[10, 25, 50, 100]}
+              // onPageSizeChange={(size) => {
+              //   setPageSize(size);
+              //   setCurrentPage(1);
+              // }}
+              // pageSizeOptions={[10, 25, 50, 100]}
               enableUrlSync={true}
             />
           </>
