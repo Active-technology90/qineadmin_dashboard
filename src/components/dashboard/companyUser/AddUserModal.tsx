@@ -123,20 +123,20 @@ export function AddUserModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden"
+        className="bg-white w-full max-w-[95%] sm:max-w-3xl rounded-2xl shadow-xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 bg-white">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Add team member
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
               Search by email or phone number
             </p>
           </div>
@@ -145,15 +145,15 @@ export function AddUserModal({
             className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-1 hover:bg-gray-100"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
           {/* Search input with live suggestions */}
           <div className="relative" ref={containerRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
               Search user <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -169,7 +169,7 @@ export function AddUserModal({
                 }}
                 onFocus={() => setShowDropdown(true)}
                 onKeyDown={handleKeyDown}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-20 focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none"
+                className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 pr-16 sm:pr-20 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none"
                 aria-autocomplete="list"
                 aria-expanded={showDropdown}
               />
@@ -183,15 +183,15 @@ export function AddUserModal({
                     onSelectUser(null);
                     setShowDropdown(false);
                   }}
-                  className="absolute right-10 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
                   aria-label="Clear search"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               )}
 
               <ChevronDown
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 transition-transform ${
+                className={`absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 transition-transform ${
                   showDropdown ? "rotate-180" : ""
                 }`}
               />
@@ -201,18 +201,18 @@ export function AddUserModal({
             {showDropdown && (
               <div
                 ref={dropdownRef}
-                className="absolute z-20 mt-1.5 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-64 overflow-y-auto"
+                className="absolute z-20 mt-1.5 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 sm:max-h-64 overflow-y-auto"
               >
                 {searching ? (
-                  <div className="p-4 text-center text-gray-500">
-                    <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                  <div className="p-3 sm:p-4 text-center text-gray-500">
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mx-auto" />
                     <p className="mt-1 text-sm">Searching...</p>
                   </div>
                 ) : searchResults.length === 0 && searchTerm.trim() !== "" ? (
-                  <div className="p-6 text-center">
-                    <UserIcon className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500">No users found</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                  <div className="p-4 sm:p-6 text-center">
+                    <UserIcon className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-gray-300 mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-500">No users found</p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
                       Try a different email or phone
                     </p>
                   </div>
@@ -221,20 +221,20 @@ export function AddUserModal({
                     <button
                       key={user.id}
                       onClick={() => handleSelectUser(user)}
-                      className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0 ${
+                      className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 transition-colors border-b border-gray-50 last:border-0 ${
                         idx === dropdownIndex
                           ? "bg-indigo-50"
                           : "hover:bg-gray-50"
                       }`}
                     >
                       <UserAvatar user={user} size="sm" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {user.username}
                         </p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         {user.phone_number && (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-400 truncate">
                             {user.phone_number}
                           </p>
                         )}
@@ -253,16 +253,16 @@ export function AddUserModal({
 
           {/* Selected user preview */}
           {selectedUser && (
-            <div className="bg-gradient-to-r from-indigo-50/50 to-white rounded-xl p-4 flex items-center gap-4 border border-indigo-100 shadow-sm">
+            <div className="bg-gradient-to-r from-indigo-50/50 to-white rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 border border-indigo-100 shadow-sm">
               <UserAvatar user={selectedUser} size="lg" />
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">
                   {selectedUser.first_name || "—"}{" "}
                   {selectedUser.last_name || ""}
                 </p>
-                <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                <p className="text-xs sm:text-sm text-gray-500 truncate">{selectedUser.email}</p>
                 {selectedUser.phone_number && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 truncate">
                     {selectedUser.phone_number}
                   </p>
                 )}
@@ -272,28 +272,28 @@ export function AddUserModal({
                   onSelectUser(null);
                   onSearchChange("");
                 }}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 flex-shrink-0"
                 aria-label="Remove selection"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </div>
           )}
 
           {/* Role selection – now includes Delivery */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
               Assign role <span className="text-red-500">*</span>
             </label>
             <select
               value={selectedRole}
               onChange={(e) => onRoleChange(e.target.value as any)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer"
+              className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 1rem center",
-                backgroundSize: "1.25rem",
+                backgroundPosition: "right 0.75rem sm:right-1rem center",
+                backgroundSize: "1rem sm:1.25rem",
               }}
             >
               <option value="admin">
@@ -306,26 +306,26 @@ export function AddUserModal({
               {/* ✅ Uncommented and added */}
               <option value="viewer">Viewer – Read‑only access</option>
             </select>
-            <p className="text-xs text-gray-400 mt-1.5">
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5">
               Roles can be changed later without affecting user data.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50/30">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={onAdd}
             disabled={!selectedUser || adding}
-            className="px-5 py-2.5 bg-secondary text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center gap-2"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2 w-full sm:w-auto"
           >
-            {adding && <Loader2 className="h-4 w-4 animate-spin" />}
+            {adding && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
             {adding ? "Adding..." : "Add user"}
           </button>
         </div>

@@ -261,25 +261,26 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
-      {/* Toast Notification */}
+    <div className="w-full min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 lg:py-10">
+      <div className="max-w-7xl mx-auto">
+        {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 ${
+          className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 ${
             toast.type === "success"
               ? "bg-green-50 border-green-200 text-green-800"
               : "bg-red-50 border-red-200 text-red-800"
-          } border rounded-xl shadow-lg p-4 max-w-sm`}
+          } border rounded-xl shadow-lg p-4 max-w-full sm:max-w-sm`}
         >
           <div className="flex items-center gap-3">
             {toast.type === "success" ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
             ) : (
               <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
                 !
               </div>
             )}
-            <p className="text-sm font-medium">{toast.message}</p>
+            <p className="text-sm font-medium break-words">{toast.message}</p>
           </div>
         </div>
       )}
@@ -292,7 +293,7 @@ export default function AdminProfile() {
           }}
         > */}
                 <div
-          className="relative h-32 bg-cover bg-center"
+          className="relative h-24 sm:h-28 md:h-32 bg-cover bg-center"
           style={{
             backgroundImage: `url('/src/assets/profile bg.png')`,
             backgroundSize: 'cover',
@@ -300,19 +301,19 @@ export default function AdminProfile() {
           }}
         >
           {/* Logout button - top right corner */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 z-10">
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              className="flex items-center gap-1 sm:gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200"
             >
-              <LogOut className="h-4 w-4" />
-              Sign Out
+              <LogOut className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
           
-          <div className="absolute -bottom-12 left-6 flex items-end gap-4">
+          <div className="absolute -bottom-8 sm:-bottom-10 md:-bottom-12 left-4 sm:left-5 md:left-6 flex items-end gap-2 sm:gap-3 md:gap-4">
             <div className="relative group">
-              <div className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-md overflow-hidden">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-3 sm:border-4 border-white bg-white shadow-md overflow-hidden">
                 {avatar ? (
                   <img
                     src={avatar}
@@ -321,15 +322,15 @@ export default function AdminProfile() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                    <User className="h-10 w-10" />
+                    <User className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
                   </div>
                 )}
               </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 transition"
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1 sm:p-1.5 shadow-md cursor-pointer hover:bg-gray-50 transition"
               >
-                <Camera className="h-4 w-4 text-gray-600" />
+                <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-gray-600" />
                 <input
                   id="avatar-upload"
                   type="file"
@@ -339,69 +340,71 @@ export default function AdminProfile() {
                 />
               </label>
             </div>
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-sm">
+            <div className="mb-1 sm:mb-2 md:mb-4">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight drop-shadow-sm break-words max-w-[180px] sm:max-w-[250px] md:max-w-none">
                 {user?.first_name} {user?.last_name}
               </h1>
 
-              <div className="mt-2 inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">
-                <span className="w-2 h-2 rounded-full bg-white" />
-                <p className="text-black/60 text-sm font-medium">
+              <div className="mt-1 sm:mt-2 inline-flex items-center gap-1 sm:gap-2 bg-white/15 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />
+                <p className="text-black/60 text-xs sm:text-sm font-medium truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
                   {user?.email}
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <div className="pt-16 pb-6 px-6">
+        <div className="pt-12 sm:pt-14 md:pt-16 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6">
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-gray-200">
-            <button
-              onClick={() => setActiveForm("profile")}
-              className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
-                activeForm === "profile"
-                  ? "text-[#6750A4]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Edit Profile
-              {activeForm === "profile" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveForm("password")}
-              className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
-                activeForm === "password"
-                  ? "text-[#6750A4]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Change Password
-              {activeForm === "password" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
-              )}
-            </button>
-            {!isSuperAdmin && (
+          <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 min-w-max sm:min-w-0">
               <button
-                onClick={() => setActiveForm("membership")}
-                className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
-                  activeForm === "membership"
+                onClick={() => setActiveForm("profile")}
+                className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
+                  activeForm === "profile"
                     ? "text-[#6750A4]"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                Memberships
-                {activeForm === "membership" && (
+                Edit Profile
+                {activeForm === "profile" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
                 )}
               </button>
-            )}
+              <button
+                onClick={() => setActiveForm("password")}
+                className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
+                  activeForm === "password"
+                    ? "text-[#6750A4]"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Change Password
+                {activeForm === "password" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+                )}
+              </button>
+              {!isSuperAdmin && (
+                <button
+                  onClick={() => setActiveForm("membership")}
+                  className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
+                    activeForm === "membership"
+                      ? "text-[#6750A4]"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Memberships
+                  {activeForm === "membership" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Profile Form - Updated with 2-column layout for all fields */}
           {activeForm === "profile" && (
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 sm:mt-5 md:mt-6 space-y-4 sm:space-y-5">
               {/* Row 1: First Name and Last Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -413,10 +416,10 @@ export default function AdminProfile() {
                     name="first_name"
                     render={({ field }) => (
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
-                          className={`w-full pl-9 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                          className={`w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                             passwordErrors.confirmPassword
                               ? "border-red-500 focus:ring-red-500"
                               : "border-gray-200 focus:border-transparent"
@@ -428,7 +431,7 @@ export default function AdminProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Last Name
                   </label>
                   <Controller
@@ -436,10 +439,10 @@ export default function AdminProfile() {
                     name="last_name"
                     render={({ field }) => (
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
                           placeholder="Last Name"
                         />
                       </div>
@@ -459,11 +462,11 @@ export default function AdminProfile() {
                     name="email"
                     render={({ field }) => (
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
                           type="email"
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
                           placeholder="you@example.com"
                         />
                       </div>
@@ -479,11 +482,11 @@ export default function AdminProfile() {
                     name="phone_number"
                     render={({ field }) => (
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
                           onChange={(e) => field.onChange(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
                           placeholder="+251 9XX XXX XXX"
                         />
                       </div>
@@ -500,7 +503,7 @@ export default function AdminProfile() {
                 <button
                   onClick={handleSubmit(onSubmitProfile)}
                   disabled={profileLoading}
-                  className="px-6 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
@@ -510,8 +513,8 @@ export default function AdminProfile() {
 
                     {/* Password Form - Updated with icons and reduced width */}
           {activeForm === "password" && (
-            <div className="mt-6 max-w-md">
-              <div className="space-y-5">
+            <div className="mt-4 sm:mt-5 md:mt-6 w-full">
+              <div className="max-w-full sm:max-w-md space-y-4 sm:space-y-5">
                            <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current Password
@@ -521,11 +524,11 @@ export default function AdminProfile() {
                   name="currentPassword"
                   render={({ field }) => (
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                       <input
                         {...field}
                         type={showCurrentPassword ? "text" : "password"}
-                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.currentPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -535,12 +538,12 @@ export default function AdminProfile() {
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
                         {showCurrentPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         )}
                       </button>
                     </div>
@@ -561,11 +564,11 @@ export default function AdminProfile() {
                   name="newPassword"
                   render={({ field }) => (
                     <div className="relative">
-                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                       <input
                         {...field}
                         type={showNewPassword ? "text" : "password"}
-                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.newPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -575,12 +578,12 @@ export default function AdminProfile() {
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
                         {showNewPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         )}
                       </button>
                     </div>
@@ -605,11 +608,11 @@ export default function AdminProfile() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <div className="relative">
-                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                       <input
                         {...field}
                         type={showConfirmPassword ? "text" : "password"}
-                        className={`w-full pl-9 pr-10 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.confirmPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -619,12 +622,12 @@ export default function AdminProfile() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                       >
                         {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         )}
                       </button>
                     </div>
@@ -637,13 +640,13 @@ export default function AdminProfile() {
                 )}
               </div>
               <div className="pt-2">
-                <button
-                  onClick={handlePasswordSubmit(onSubmitPassword)}
-                  disabled={passwordLoading}
-                  className="px-6 py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50"
-                >
-                  {passwordLoading ? "Saving..." : "Change Password"}
-                </button>
+              <button
+                onClick={handlePasswordSubmit(onSubmitPassword)}
+                disabled={passwordLoading}
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 text-sm sm:text-base"
+              >
+                {passwordLoading ? "Saving..." : "Change Password"}
+              </button>
               </div>
               </div>
             </div>
@@ -651,25 +654,25 @@ export default function AdminProfile() {
 
           {/* Membership Section with current selection highlight */}
           {!isSuperAdmin && activeForm === "membership" && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">
+            <div className="mt-4 sm:mt-5 md:mt-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                   Your Companies
                 </h3>
-                <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
                   {user?.memberships?.length || 0} memberships
                 </span>
               </div>
 
               {user?.memberships?.length ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {user.memberships.map((membership: any, idx: number) => {
                     const isActive = isCurrentCompany(membership);
                     return (
                       <div
                         key={idx}
                         onClick={() => handleSwitchCompany(membership)}
-                        className={`relative bg-white border rounded-xl p-4 cursor-pointer transition-all duration-200 group ${
+                        className={`relative bg-white border rounded-xl p-3 sm:p-4 cursor-pointer transition-all duration-200 group ${
                           isActive
                             ? "border-[#6750A4] shadow-md ring-1 ring-[#6750A4]/20"
                             : "border-gray-200 hover:shadow-md"
@@ -678,7 +681,7 @@ export default function AdminProfile() {
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                             <div
-                              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden shadow-md ${
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden shadow-md flex-shrink-0 ${
                                 isActive
                                   ? "bg-gradient-to-br from-[#6750A4] to-purple-700 ring-2 ring-[#6750A4]/30"
                                   : "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-[#6750A4]/10 group-hover:to-purple-100"
@@ -695,23 +698,23 @@ export default function AdminProfile() {
                                     />
                                   );
                                 }
-                                return <Building className={`h-6 w-6 transition-all duration-300 ${
+                                return <Building className={`h-5 w-5 sm:h-6 sm:w-6 transition-all duration-300 ${
                                   isActive ? "text-white" : "text-gray-500 group-hover:text-[#6750A4]"
                                 }`} />;
                               })()}
                             </div>
                             <div className="flex-1">
                               <p
-                                className={`font-semibold transition-all duration-300 ${
+                                className={`font-semibold transition-all duration-300 truncate ${
                                   isActive
-                                    ? "text-[#6750A4] text-lg"
-                                    : "text-gray-800 group-hover:text-[#6750A4] text-base"
+                                    ? "text-[#6750A4] text-base sm:text-lg"
+                                    : "text-gray-800 group-hover:text-[#6750A4] text-sm sm:text-base"
                                 }`}
                               >
                                 {membership.company_name}
                               </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                                <span className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
                                   membership.role === "admin"
                                     ? "bg-emerald-100 text-emerald-700"
                                     : membership.role === "staff"
@@ -723,16 +726,16 @@ export default function AdminProfile() {
                                   {membership.role}
                                 </span>
                                 {isActive && (
-                                  <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                  <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full">
                                     Active
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
                             <span
-                              className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                              className={`text-xs px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-medium ${
                                 membership.role === "admin"
                                   ? "bg-green-100 text-green-700"
                                   : membership.role === "staff"
@@ -743,9 +746,9 @@ export default function AdminProfile() {
                               {membership.role}
                             </span>
                             {isActive ? (
-                              <CheckCircle className="h-4 w-4 text-[#6750A4]" />
+                              <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#6750A4]" />
                             ) : (
-                              <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-[#6750A4] transition-colors" />
+                              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 group-hover:text-[#6750A4] transition-colors" />
                             )}
                           </div>
                         </div>
@@ -754,9 +757,9 @@ export default function AdminProfile() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <Building className="h-12 w-12 mx-auto text-gray-300" />
-                  <p className="text-gray-500 mt-2">
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-xl">
+                  <Building className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-300" />
+                  <p className="text-gray-500 mt-2 text-sm sm:text-base">
                     No company memberships found
                   </p>
                 </div>
@@ -768,40 +771,41 @@ export default function AdminProfile() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[calc(100%-2rem)] sm:max-w-md mx-auto overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="relative p-6 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <LogOut className="h-5 w-5 text-red-600" />
+            <div className="p-4 sm:p-6 pb-3 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Sign Out</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Sign Out</h3>
               </div>
-              <p className="text-gray-500 mt-2 ml-13">
+              <p className="text-sm sm:text-base text-gray-500 mt-2 sm:mt-3 pl-10 sm:pl-13">
                 Are you sure you want to sign out of your account?
               </p>
             </div>
 
             {/* Modal Body */}
-            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200 w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancel
               </button>
               <button
                 onClick={logout}
-                className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-sm font-medium hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-sm font-medium hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto order-1 sm:order-2"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Sign Out
               </button>
             </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

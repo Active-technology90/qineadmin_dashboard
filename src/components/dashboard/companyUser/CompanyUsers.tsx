@@ -41,7 +41,7 @@ import { TableControls } from "../../ui/TableControls";
 // Compact skeletons
 // ----------------------------------------------------------------------
 const StatsSkeleton: React.FC = () => (
-  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
     {[...Array(5)].map((_, i) => (
       <div
         key={i}
@@ -273,14 +273,14 @@ export default function CompanyUsers() {
   // Permission guard
   if (!canViewUsers) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 p-6 text-center">
-        <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 text-gray-400 mb-2">
-          <Shield className="h-5 w-5" />
+      <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 text-center mx-4 sm:mx-0">
+        <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-50 text-gray-400 mb-2">
+          <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
           Access Restricted
         </h3>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
           You don't have permission to view company users.
         </p>
       </div>
@@ -315,9 +315,9 @@ export default function CompanyUsers() {
 
   if (!companySlug) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-500 bg-white rounded-xl border border-gray-100">
-        <Building2 className="h-8 w-8 text-gray-300 mb-2" />
-        <p className="text-sm">
+      <div className="flex flex-col items-center justify-center py-8 sm:py-10 px-4 sm:px-0 text-gray-500 bg-white rounded-xl border border-gray-100 mx-4 sm:mx-0">
+        <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-gray-300 mb-2" />
+        <p className="text-xs sm:text-sm text-center">
           No company selected. Please select a company first.
         </p>
       </div>
@@ -328,11 +328,13 @@ export default function CompanyUsers() {
   // RENDER - LAYOUT: Header → Unified Toolbar → Stats → Table
   // ----------------------------------------------------------------------
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 px-4 sm:px-0">
       {/* ===== 1. COMPACT HEADER ===== */}
-      <div className="flex items-center justify-between gap-3 px-0">
+      <div className="flex flex-row items-center justify-between gap-3 px-0 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
+          {/* Logo only shows for Super Admin */}
+          {isSuperAdmin && (
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
             {companyLogo ? (
               <img
                 src={companyLogo}
@@ -341,15 +343,17 @@ export default function CompanyUsers() {
               />
             ) : (
               <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-gray-500" />
+                <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
               </div>
             )}
           </div>
+
+          )}
           <div>
-            <h1 className="text-2xl font-extrabold text-secondary leading-tight">
-              {isSuperAdmin ? companyName : "Team Members"}
+            <h1 className="text-xl sm:text-2xl font-extrabold text-secondary leading-tight break-words">
+              {isSuperAdmin ? companyName : "All Users"}
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-[10px] sm:text-xs text-gray-500">
               Manage roles and organization access
             </p>
           </div>
@@ -359,13 +363,14 @@ export default function CompanyUsers() {
           <button
             onClick={clearCompany}
             className="
-        h-9 px-3
+        h-8 sm:h-9 px-2 sm:px-3
         rounded-xl
         border border-gray-200
         bg-white
-        text-xs font-medium text-gray-700
+        text-[10px] sm:text-xs font-medium text-gray-700
         hover:bg-gray-50
         transition-all
+        flex-shrink-0
       "
           >
             Switch
@@ -376,7 +381,7 @@ export default function CompanyUsers() {
       {loading ? (
         <StatsSkeleton />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           <StatCard
             title="Total"
             value={users?.length || 0}
@@ -420,7 +425,7 @@ export default function CompanyUsers() {
             setCurrentPage(1);
           }}
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
             {/* LEFT SIDE */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
   {/* SEARCH */}
@@ -565,14 +570,14 @@ export default function CompanyUsers() {
         {loading ? (
           <TableSkeleton rows={pageSize} />
         ) : paginatedUsers.length === 0 ? (
-          <div className="py-10 text-center">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 text-gray-400 mb-2">
-              <Users className="h-5 w-5" />
+          <div className="py-8 sm:py-10 text-center">
+            <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-50 text-gray-400 mb-2">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-900">
               No members found
             </h3>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
               {tableSearch || roleFilter !== "all"
                 ? "Try adjusting your search or filters."
                 : "Get started by adding your first team member."}
@@ -580,9 +585,9 @@ export default function CompanyUsers() {
             {canManageUsers && !tableSearch && roleFilter === "all" && (
               <button
                 onClick={() => setShowAddModal(true)}
-                className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#6750A4] text-white text-xs font-medium hover:bg-[#4c3789] transition"
+                className="mt-2 inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[#6750A4] text-white text-[10px] sm:text-xs font-medium hover:bg-[#4c3789] transition"
               >
-                <UserPlus className="h-3 w-3" />
+                <UserPlus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 Add member
               </button>
             )}
@@ -681,20 +686,20 @@ const StatCard: React.FC<{
         rounded-xl
         border border-gray-100
         bg-white
-        p-4
+        p-2 sm:p-4
         shadow-sm
         hover:shadow-md
         transition-all
       "
     >
-      <div className="flex items-center justify-between p-2">
+      <div className="flex items-center justify-between gap-2 p-1 sm:p-2">
         {/* LEFT */}
-        <div className="space-y-1">
-          <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+        <div className="space-y-0.5 sm:space-y-1">
+          <p className="text-[9px] sm:text-[11px] font-medium text-gray-500 uppercase tracking-wide">
             {title}
           </p>
 
-          <p className="text-xl font-semibold text-gray-900 leading-none">
+          <p className="text-base sm:text-xl font-semibold text-gray-900 leading-none">
             {value}
           </p>
         </div>
@@ -702,13 +707,13 @@ const StatCard: React.FC<{
         {/* RIGHT ICON */}
         <div
           className={`
-            h-9 w-9
+            h-7 w-7 sm:h-9 sm:w-9
             rounded-lg
             flex items-center justify-center
             ${colorClasses[color]}
           `}
         >
-          <Icon className="h-8 w-8" />
+          <Icon className="h-6 w-6 sm:h-8 sm:w-8" />
         </div>
       </div>
     </motion.div>

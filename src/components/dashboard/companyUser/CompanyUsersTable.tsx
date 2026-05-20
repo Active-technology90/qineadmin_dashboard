@@ -66,21 +66,21 @@ export function CompanyUsersTable({
     </div> */}
   {/* </TableControls>
 </div> */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <table className="min-w-[640px] sm:min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                 User
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
               {isAdmin && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               )}
@@ -89,16 +89,16 @@ export function CompanyUsersTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={4} className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
-                  <p className="mt-2 text-gray-500">Loading users...</p>
+                <td colSpan={4} className="text-center py-8 sm:py-12">
+                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-indigo-500" />
+                  <p className="mt-2 text-xs sm:text-sm text-gray-500">Loading users...</p>
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-12 text-gray-500">
-                  <UserIcon className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <p>No users found</p>
+                <td colSpan={4} className="text-center py-8 sm:py-12 text-gray-500">
+                  <UserIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-300 mb-2" />
+                  <p className="text-xs sm:text-sm">No users found</p>
                 </td>
               </tr>
             ) : (
@@ -107,9 +107,9 @@ export function CompanyUsersTable({
                   key={user.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
+                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {user.profile_image ? (
                           <img
                             src={user.profile_image}
@@ -117,13 +117,13 @@ export function CompanyUsersTable({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-indigo-600 font-semibold text-sm">
+                          <span className="text-indigo-600 font-semibold text-[10px] sm:text-sm">
                             {user.first_name?.[0] ||
                               user.email[0].toUpperCase()}
                           </span>
                         )}
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">
                         {user.username || `${user.first_name} ${user.last_name}`}
                       </span>
                     </div>
@@ -132,28 +132,28 @@ export function CompanyUsersTable({
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="capitalize px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+                    <span className="capitalize px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                     {isAdmin && (
                       <button
                         onClick={() => onEdit(user)}
-                        className="text-indigo-600 hover:text-indigo-800 mr-3 transition"
+                        className="text-indigo-600 hover:text-indigo-800 mr-2 sm:mr-3 transition p-1 rounded-md hover:bg-indigo-50"
                         title="Edit role"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     )}
                     {isAdmin && (
                       <button
                         onClick={() => onDelete(user)}
                         disabled={isSelf(user)}
-                        className={`transition ${
+                        className={`transition p-1 rounded-md ${
                           isSelf(user)
                             ? "text-gray-300 cursor-not-allowed"
-                            : "text-red-600 hover:text-red-800"
+                            : "text-red-600 hover:text-red-800 hover:bg-red-50"
                         }`}
                         title={
                           isSelf(user)
@@ -161,7 +161,7 @@ export function CompanyUsersTable({
                             : "Remove user"
                         }
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     )}
                   </td>

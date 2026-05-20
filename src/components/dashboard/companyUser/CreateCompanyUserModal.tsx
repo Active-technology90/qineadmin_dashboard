@@ -179,7 +179,7 @@ export function CreateCompanyUserModal({
   };
 
   const inputClass = (field: keyof FormErrors) => `
-    w-full pl-10 pr-12 py-3 rounded-2xl border bg-white
+    w-full pl-8 sm:pl-10 pr-8 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border bg-white
     outline-none transition-all duration-200
     ${
       touched[field] && errors[field]
@@ -192,39 +192,39 @@ export function CreateCompanyUserModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-[95%] sm:max-w-5xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] sm:max-h-[85vh] flex flex-col"
       >
         {/* HEADER */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50">
+        <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50 backdrop-blur-sm bg-opacity-95">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Create User</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-secondary">Create User</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Create and onboard a company user instantly
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/80 transition"
+            className="p-1.5 sm:p-2 rounded-full hover:bg-white/80 transition flex-shrink-0"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
           </button>
         </div>
 
         {/* BODY */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             {/* FIRST NAME */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 First Name <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Abebe"
@@ -235,7 +235,7 @@ export function CreateCompanyUserModal({
                 />
               </div>
               {touched.first_name && errors.first_name && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
                   <AlertCircle className="h-3.5 w-3.5" /> {errors.first_name}
                 </p>
               )}
@@ -243,11 +243,11 @@ export function CreateCompanyUserModal({
 
             {/* LAST NAME */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Bikila"
@@ -258,19 +258,19 @@ export function CreateCompanyUserModal({
                 />
               </div>
               {touched.last_name && errors.last_name && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {errors.last_name}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.last_name}
                 </p>
               )}
             </div>
 
             {/* USERNAME */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Username <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="abebe123"
@@ -283,19 +283,19 @@ export function CreateCompanyUserModal({
                 />
               </div>
               {touched.username && errors.username && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {errors.username}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.username}
                 </p>
               )}
             </div>
 
             {/* EMAIL */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Email <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="email"
                   placeholder="abebe@example.com"
@@ -306,22 +306,22 @@ export function CreateCompanyUserModal({
                 />
               </div>
               {touched.email && errors.email && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {errors.email}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.email}
                 </p>
               )}
             </div>
 
             {/* PHONE – with restricted Ethiopian format hint */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Phone Number <span className="text-red-500">*</span>
-                <span className="text-xs text-gray-400 ml-1">
+                <span className="text-[10px] sm:text-xs text-gray-400 ml-1">
                   (restricted to Ethiopian numbers)
                 </span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="09XXXXXXXX or +2519XXXXXXXX"
@@ -334,32 +334,31 @@ export function CreateCompanyUserModal({
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-help"
                   title="Only Ethiopian mobile numbers are accepted"
                 >
-                  <Info className="h-4 w-4" />
+                  <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
               </div>
               {touched.phone_number && errors.phone_number && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {errors.phone_number}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.phone_number}
                 </p>
               )}
               {!errors.phone_number && (
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-[10px] sm:text-xs text-gray-400">
                   Example: +251911000000 or 0911000000
                 </p>
               )}
             </div>
-
             {/* ROLE */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Role
               </label>
               <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <select
                   value={formData.role}
                   onChange={(e) => handleChange("role", e.target.value)}
-                  className="w-full appearance-none pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] outline-none transition"
+                  className="w-full appearance-none pl-8 sm:pl-10 pr-8 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] outline-none transition"
                 >
                   <option value="admin">Admin</option>
                   <option value="staff">Staff</option>
@@ -371,11 +370,11 @@ export function CreateCompanyUserModal({
 
             {/* PASSWORD */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Strong password..."
@@ -387,23 +386,23 @@ export function CreateCompanyUserModal({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   )}
                 </button>
               </div>
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-[10px] sm:text-xs text-gray-500">
                       Password strength
                     </span>
                     <span
-                      className={`text-xs font-medium ${
+                      className={`text-[10px] sm:text-xs font-medium ${
                         passwordStrength <= 1
                           ? "text-red-500"
                           : passwordStrength <= 3
@@ -433,19 +432,19 @@ export function CreateCompanyUserModal({
                 </div>
               )}
               {touched.password && errors.password && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" /> {errors.password}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.password}
                 </p>
               )}
             </div>
 
             {/* CONFIRM PASSWORD */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 block">
                 Confirm Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm password..."
@@ -459,18 +458,18 @@ export function CreateCompanyUserModal({
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   )}
                 </button>
               </div>
               {touched.confirm_password && errors.confirm_password && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5" />{" "}
+                <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
                   {errors.confirm_password}
                 </p>
               )}
@@ -479,25 +478,25 @@ export function CreateCompanyUserModal({
         </div>
 
         {/* FOOTER */}
-        <div className=" sticky bottom-0 z-20 px-6 py-5 border-t border-gray-100 bg-gray-50 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 rounded-b-2xl sm:rounded-b-3xl">
           <button
             onClick={onClose}
-            className="px-5 py-3 rounded-2xl border border-gray-200 hover:bg-white transition font-medium"
+            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl border border-gray-200 hover:bg-white transition font-medium text-sm sm:text-base w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-3 rounded-2xl bg-[#6750A4] hover:bg-[#5b4694] text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl bg-[#6750A4] hover:bg-[#5b4694] text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto"
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Creating...
+                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Creating...
               </>
             ) : (
               <>
-                <UserPlus className="h-4 w-4" />
+                <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Create User
               </>
             )}

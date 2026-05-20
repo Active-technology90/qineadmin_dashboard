@@ -286,18 +286,18 @@ export default function Orders() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <Toast toast={toast} />
 
       {/* Header with title and mobile filter button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-secondary tracking-tight"> All master Orders</h2>
-          <p className="text-sm text-secondary mt-0.5">Manage and track all customer orders</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight">All Master Orders</h2>
+          <p className="text-xs sm:text-sm text-secondary mt-0.5">Manage and track all customer orders</p>
         </div>
         <button
           onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="lg:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="lg:hidden inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 w-full sm:w-auto justify-center"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -329,27 +329,25 @@ export default function Orders() {
       </div>
 
       {/* Orders Table */}
-      <div className="overflow-x-auto lg:overflow-x-hidden rounded-xl border border-gray-200 shadow-sm">
-        <table className="min-w-full table-fixed">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm -mx-3 sm:mx-0 px-3 sm:px-0">
+        <table className="min-w-[800px] lg:min-w-full table-fixed">
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
-              <th className="w-[80px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
-              <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-              <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Fulfillment Type</th>
-              <th className="w-[130px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Status</th>
-              {/* <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">order Status</th>
-              <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Status</th> */}
-              <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Companies</th>
-              <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="w-[80px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
+              <th className="w-[140px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+              <th className="w-[110px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+              <th className="w-[120px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Fulfillment</th>
+              <th className="w-[130px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Status</th>
+              <th className="w-[90px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Companies</th>
+              <th className="w-[150px] px-2 sm:px-4 py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>Date & Time</span>
                 </div>
               </th>
-              <th className="w-[90px] px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="w-[90px] px-2 sm:px-4 py-3 text-right text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -369,16 +367,16 @@ export default function Orders() {
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900 truncate">
                     {Number(order.total_amount).toLocaleString()} <span className="text-xs text-gray-500">ETB</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                  <td className="px-2 sm:px-4 py-2 sm:py-3">
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
                       {order.fulfillment_type === "delivery" ? (
-                        <Truck className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                        <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
                       ) : (
-                        <Package className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                        <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
                       )}
                       <span className="capitalize truncate">{order.fulfillment_type}</span>
                     </div>
-                  </td>
+                   </td>
                   <td className="px-4 py-3"><PaymentStatusBadge status={order.payment_status} /></td>
                   {/* <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                   <td className="px-4 py-3"><DeliveryStatusBadge status={getOrderDeliveryStatus(order)} /></td> */}
@@ -387,10 +385,10 @@ export default function Orders() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-sm font-medium transition-all duration-200"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
                     >
-                      <Eye className="h-4 w-4" />
-                      <span>View</span>
+                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden xs:inline">View</span>
                     </button>
                   </td>
                 </tr>
@@ -402,14 +400,14 @@ export default function Orders() {
 
       {/* Pagination */}
       {!loading && !error && filteredOrders.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
             pageSize={pageSize}
             enableUrlSync={true}
-            className="rounded-xl border border-gray-100"
+            className="rounded-xl border border-gray-100 w-full sm:w-auto"
           />
         </div>
       )}
