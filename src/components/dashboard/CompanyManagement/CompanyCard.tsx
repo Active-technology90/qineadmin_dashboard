@@ -14,7 +14,7 @@ export default function CompanyCard({
   // userRole,
 }: CompanyCardProps) {
   return (
-    <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group h-fit w-full  min-w-[420px] max-w-md">
+    <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group w-full min-w-0 sm:min-w-[360px] max-w-full sm:max-w-md">
       {/* Cover Image Section */}
       <div className="relative h-40 w-full overflow-hidden">
         {company.cover_image ? (
@@ -38,19 +38,19 @@ export default function CompanyCard({
               <img
                 src={company.logo}
                 alt={company.name}
-                className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-2xl"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-4 border-white shadow-2xl"
               />
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#6750A4] to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#6750A4] to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
                 <Building2 size={32} className="text-white" />
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-xl mb-1 line-clamp-2 break-words drop-shadow-lg text-white [text-shadow:_0_1px_4px_rgb(0_0_0_/_0.5)]">
+            <h3 className="font-bold text-xl sm:text-2xl mb-1 line-clamp-2 break-words drop-shadow-lg text-white [text-shadow:_0_1px_4px_rgb(0_0_0_/_0.5)]">
               {company.name}
             </h3>
-            <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-[#6750A4]/50 shadow-lg">
+            <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-[#6750A4]/50 shadow-lg truncate max-w-full">
               {company.slug}
             </p>
           </div>
@@ -59,7 +59,7 @@ export default function CompanyCard({
         {/* Status Badges */}
         <div className="flex gap-2 flex-wrap justify-end mb-3">
           <span
-            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${
+            className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
               company.is_active
                 ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                 : "bg-gray-100 text-gray-500 border border-gray-200"
@@ -71,15 +71,15 @@ export default function CompanyCard({
 
         {/* Category */}
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 mb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-white rounded-md shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
               <Tag size={14} className="text-indigo-600" />
             </div>
-            <div className="flex-1">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
                 Category
               </p>
-              <p className="font-semibold text-gray-900 text-sm">
+              <p className="font-semibold text-gray-900 text-sm break-words">
                 {company.category_name}
               </p>
             </div>
@@ -89,33 +89,33 @@ export default function CompanyCard({
         {/* Subcategory */}
         {company.sub_category_name && (
           <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-lg p-3 mb-2 border border-indigo-100">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-white rounded-md shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
                 <Tag size={14} className="text-indigo-400" />
               </div>
-              <div className="flex-1">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
                   Subcategory
                 </p>
-                <p className="font-medium text-gray-700 text-sm">
+                <p className="font-medium text-gray-700 text-sm break-words">
                   {company.sub_category_name}
                 </p>
               </div>
             </div>
           </div>
-        )}
+        )} 
 
         {/* Business Type */}
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-white rounded-md shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
               <Building2 size={14} className="text-[#6750A4]" />
             </div>
-            <div className="flex-1">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
                 Business Type
               </p>
-              <p className="font-bold text-gray-900 text-sm">
+              <p className="font-bold text-gray-900 text-sm break-words">
                 {company.business_type?.toUpperCase() || "N/A"}
               </p>
             </div>

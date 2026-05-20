@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Building2, ChevronDown, Search } from "lucide-react";
+import { Building2, ChevronDown, Search, Check } from "lucide-react";
 
 export function CompanySelect({
   scopeOptions,
@@ -12,6 +12,7 @@ export function CompanySelect({
 
   const ref = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const isAllCompanies = !company?.slug;
 
@@ -44,6 +45,14 @@ export function CompanySelect({
   useEffect(() => {
     setActiveIndex(0);
   }, [search]);
+
+  /* Auto‑scroll active item into view */
+  useEffect(() => {
+    if (listRef.current && open && filtered.length > 0) {
+      const activeEl = listRef.current.children[activeIndex] as HTMLElement;
+      activeEl?.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex, open, filtered.length]);
 
   /* Keyboard navigation */
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -82,7 +91,7 @@ export function CompanySelect({
   const selectedLogo = company?.logo;
 
   return (
-    <div ref={ref} className="relative w-[360px]">
+    <div ref={ref} className="relative w-full sm:w-[360px]">
       {/* Trigger */}
       <button
         type="button"
@@ -100,10 +109,10 @@ export function CompanySelect({
           {selectedLogo ? (
             <img
               src={selectedLogo}
-              className="w-7 h-7 rounded-full object-cover border"
+              className="w-7 h-7 rounded-full object-cover border shrink-0"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
               <Building2 className="w-4 h-4 text-gray-500" />
             </div>
           )}
@@ -114,7 +123,7 @@ export function CompanySelect({
         </div>
 
         <ChevronDown
-          className={`w-4 h-4 text-gray-500 transition-transform ${
+          className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -123,26 +132,33 @@ export function CompanySelect({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+          className="
+            absolute z-50 mt-2 w-full bg-white border border-gray-200
+            rounded-xl shadow-xl overflow-hidden
+            left-0
+          "
           onKeyDown={handleKeyDown}
         >
           {/* Search */}
-          <div className="flex items-center gap-2 px-3 py-2 m-2 rounded-xl bg-gray-50 border border-gray-200">
-            <Search className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 px-3 py-2 m-2 rounded-lg bg-gray-50 border border-gray-200">
+            <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
               ref={inputRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search company..."
-              className="w-full bg-transparent text-sm outline-none"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
             />
           </div>
 
           {/* List */}
-          <div className="max-h-90 overflow-y-auto">
+          <div
+            ref={listRef}
+            className="max-h-[60vh] overflow-y-auto divide-y divide-gray-100"
+          >
             {filtered.length === 0 ? (
-              <div className="p-4 text-sm text-gray-400 text-center">
-                No companies found
+              <div className="p-6 text-sm text-gray-400 text-center">
+                No companies match your search
               </div>
             ) : (
               filtered.map((opt: any, index: number) => {
@@ -158,37 +174,40 @@ export function CompanySelect({
                       setOpen(false);
                     }}
                     className={`
-                      flex items-start gap-3 px-4 py-3 cursor-pointer
-                      transition
-                      ${isActive ? "bg-gray-100" : ""}
-                      ${isSelected ? "bg-gray-50" : ""}
-                      hover:bg-gray-100
+                      flex items-center gap-3 px-4 py-3 cursor-pointer
+                      transition-colors
+                      ${isActive ? "bg-gray-100" : "hover:bg-gray-50"}
+                      ${isSelected ? "bg-purple-50/70" : ""}
                     `}
                   >
                     {/* Logo */}
                     {opt.logo ? (
                       <img
                         src={opt.logo}
-                        className="w-7 h-7 rounded-full object-cover border mt-0.5"
+                        className="w-7 h-7 rounded-full object-cover border shrink-0"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center mt-0.5">
+                      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                         <Building2 className="w-4 h-4 text-gray-500" />
                       </div>
                     )}
 
                     {/* Text */}
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-semibold text-gray-800 break-words">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
                         {opt.label}
-                      </span>
-
+                      </p>
                       {opt.subLabel && (
-                        <span className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 truncate">
                           {opt.subLabel}
-                        </span>
+                        </p>
                       )}
                     </div>
+
+                    {/* Checkmark */}
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-[#6750A4] shrink-0" />
+                    )}
                   </div>
                 );
               })
