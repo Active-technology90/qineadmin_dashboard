@@ -27,7 +27,6 @@ import type { AnalyticsOverviewResponse } from "../../types";
 // import { useReadOnly } from "./AdminDashboard";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
-import { CompanySelect } from "./dropdowncompanyselector";
 
 const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
   scope: "company",
@@ -187,13 +186,13 @@ const SummaryCard = ({
   textColor,
   onClick,
 }: SummaryCardProps) => (
-  <div
+  <div 
     onClick={onClick}
     className="group relative bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-2xl p-5 shadow-md border border-white/50 hover:shadow-lg hover:border-[#6750A4]/30 transition-all duration-300"
   >
     {/* Animated gradient background on hover */}
     <div className="absolute inset-0 bg-gradient-to-br from-[#6750A4]/0 via-[#6750A4]/0 to-[#9b87f5]/0 group-hover:from-[#6750A4]/5 group-hover:via-[#6750A4]/3 group-hover:to-[#9b87f5]/8 rounded-2xl transition-all duration-500"></div>
-
+    
     <div className="relative z-10">
       {/* Top row with icon and subtle indicator */}
       <div className="flex items-center justify-between mb-5">
@@ -203,12 +202,10 @@ const SummaryCard = ({
           <div
             className={`relative ${bgLight} w-12 h-12 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300`}
           >
-            <Icon
-              className={`h-6 w-6 ${textColor} group-hover:scale-110 transition-transform duration-300`}
-            />
+            <Icon className={`h-6 w-6 ${textColor} group-hover:scale-110 transition-transform duration-300`} />
           </div>
         </div>
-
+        
         {/* Subtle stat badge */}
         {/* <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-50/50 border border-gray-100/50 opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -224,7 +221,7 @@ const SummaryCard = ({
             {title}
           </h3>
         </div>
-
+        
         {/* Value with modern number styling */}
         <div className="flex items-baseline gap-1">
           <span className="text-3xl font-black text-gray-800 tracking-tight group-hover:bg-gradient-to-r group-hover:from-[#6750A4] group-hover:to-[#7c63b8] group-hover:bg-clip-text group-hover:text-transparent transition-all duration-500">
@@ -239,14 +236,7 @@ const SummaryCard = ({
   </div>
 );
 
-type DashboardTab =
-  | "products"
-  | "masterOrders"
-  | "companyOrders"
-  | "payments"
-  | "companies"
-  | "allOrders"
-  | "companyUser";
+type DashboardTab = "products" | "masterOrders" | "companyOrders" | "payments" | "companies" | "allOrders" | "companyUser";
 
 export default function Overview({
   onNavigate,
@@ -257,17 +247,17 @@ export default function Overview({
   const { user } = useAuth();
   const isSuperAdmin = !user?.memberships?.length;
   const [period, setPeriod] = useState<Period>("week");
-  const { company, switchCompany } = useCurrentCompany();
+ const { company, switchCompany } = useCurrentCompany();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  // const [selectedCompanySlug, setSelectedCompanySlug] = useState("");
-
   const [analytics, setAnalytics] =
     useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
-  const [companiesList, setCompaniesList] = useState<any[]>([]);
+    const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
+  // ADDED: Local state for non-super admin "All Companies" selection (does NOT affect global context)
+  const [localAllCompaniesSelected, setLocalAllCompaniesSelected] = useState(false);
 
-  console.log(aggregatedSummary, "summary");
+  console.log(aggregatedSummary, "summary")
 
   useEffect(() => {
     let active = true;
@@ -276,21 +266,20 @@ export default function Overview({
       setError("");
       try {
         // If "All Companies" is selected, aggregate data for ALL users (including non-super admin with multiple companies)
-        const isAllCompanies = !company?.slug;
-
+        // For non-super admin: use local state instead of global company slug
+        const isAllCompanies = isSuperAdmin 
+          ? !company?.slug 
+          : localAllCompaniesSelected;
+        
         // For Super Admin, if no companies loaded yet, fetch them first
-        if (
-          isAllCompanies &&
-          isSuperAdmin &&
-          analytics.available_companies.length === 0
-        ) {
+        if (isAllCompanies && isSuperAdmin && analytics.available_companies.length === 0) {
           try {
             const { data } = await getAdminAnalyticsOverview({
               period,
               company_slug: undefined,
             });
             if (data && data.available_companies) {
-              setAnalytics((prev) => ({
+              setAnalytics(prev => ({
                 ...prev,
                 available_companies: data.available_companies,
               }));
@@ -303,7 +292,7 @@ export default function Overview({
             return;
           }
         }
-
+        
         if (isAllCompanies && analytics.available_companies.length > 0) {
           // Fetch data for each company and aggregate
           let aggregated = {
@@ -314,46 +303,32 @@ export default function Overview({
             company_total_count: 0,
             revenue_series: [] as any[],
           };
-
+          
           // Fetch all companies in parallel for better performance
-          const fetchPromises = analytics.available_companies.map(
-            async (company) => {
-              try {
-                const { data } = await getAdminAnalyticsOverview({
-                  period,
-                  company_slug: company.slug,
-                });
-                if (data && data.summary) {
-                  return {
-                    products: data.summary.products || 0,
-                    users: data.summary.users || 0,
-                    orders: data.summary.orders || 0,
-                    payments_total: data.summary.payments_total || 0,
-                    success: true,
-                  };
-                }
+          const fetchPromises = analytics.available_companies.map(async (company) => {
+            try {
+              const { data } = await getAdminAnalyticsOverview({
+                period,
+                company_slug: company.slug,
+              });
+              if (data && data.summary) {
                 return {
-                  success: false,
-                  products: 0,
-                  users: 0,
-                  orders: 0,
-                  payments_total: 0,
-                };
-              } catch (err) {
-                console.error(`Failed to fetch data for ${company.slug}:`, err);
-                return {
-                  success: false,
-                  products: 0,
-                  users: 0,
-                  orders: 0,
-                  payments_total: 0,
+                  products: data.summary.products || 0,
+                  users: data.summary.users || 0,
+                  orders: data.summary.orders || 0,
+                  payments_total: data.summary.payments_total || 0,
+                  success: true,
                 };
               }
-            },
-          );
-
+              return { success: false, products: 0, users: 0, orders: 0, payments_total: 0 };
+            } catch (err) {
+              console.error(`Failed to fetch data for ${company.slug}:`, err);
+              return { success: false, products: 0, users: 0, orders: 0, payments_total: 0 };
+            }
+          });
+          
           const results = await Promise.all(fetchPromises);
-
+          
           for (const result of results) {
             if (result.success) {
               aggregated.products += result.products;
@@ -363,15 +338,15 @@ export default function Overview({
               aggregated.company_total_count += 1;
             }
           }
-
+          
           if (!active) return;
-
+          
           // Use the last fetched company for structure (charts need the structure)
           const lastCompanyRes = await getAdminAnalyticsOverview({
             period,
             company_slug: analytics.available_companies[0]?.slug,
           });
-
+          
           if (lastCompanyRes.data && lastCompanyRes.data.summary) {
             // Create modified analytics with aggregated summary
             const modifiedAnalytics = { ...lastCompanyRes.data };
@@ -388,14 +363,22 @@ export default function Overview({
           setAggregatedSummary(aggregated);
         } else {
           // Normal flow for single company
-          const companyParam = company?.slug || undefined;
-
+          // For non-super admin: if localAllCompaniesSelected is true, use undefined (aggregate all)
+          // Otherwise use the actual company slug from global context
+          let companyParam: string | undefined;
+          if (isSuperAdmin) {
+            companyParam = company?.slug || undefined;
+          } else {
+            // Non-super admin: use undefined only if "All Companies" is selected locally
+            companyParam = localAllCompaniesSelected ? undefined : (company?.slug || undefined);
+          }
+          
           const { data } = await getAdminAnalyticsOverview({
             period,
             company_slug: companyParam,
           });
           if (!active) return;
-
+          
           if (data && data.summary) {
             setAnalytics(data);
             setAggregatedSummary(null);
@@ -425,8 +408,8 @@ export default function Overview({
     return () => {
       active = false;
     };
-  }, [period, company, analytics.available_companies.length]);
-  // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
+  }, [period, company, analytics.available_companies.length, localAllCompaniesSelected, isSuperAdmin]);
+   // Fetch companies list to get logos (same as CompanyProducts and AdminProfile)
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -450,16 +433,13 @@ export default function Overview({
             company_slug: undefined,
           });
           if (data && data.available_companies) {
-            setAnalytics((prev) => ({
+            setAnalytics(prev => ({
               ...prev,
               available_companies: data.available_companies,
             }));
           }
         } catch (error) {
-          console.error(
-            "Failed to fetch available companies for super admin:",
-            error,
-          );
+          console.error("Failed to fetch available companies for super admin:", error);
         }
       };
       fetchAvailableCompanies();
@@ -467,8 +447,7 @@ export default function Overview({
   }, [isSuperAdmin, period]);
 
   const currentData = analytics.revenue_series;
-  const totalRevenue =
-    currentData?.reduce((s, d) => s + (d?.revenue || 0), 0) || 0;
+    const totalRevenue = currentData?.reduce((s, d) => s + (d?.revenue || 0), 0) || 0;
 
   const summaryData = isSuperAdmin
     ? {
@@ -523,12 +502,25 @@ export default function Overview({
       logo: getCompanyLogoFromList(c.slug),
     })),
   ];
-
+  
   // Get the selected company name and logo for display
   // Handle both empty string and null/undefined cases
-  const selectedCompanyName = company?.name || "All Companies";
-  const selectedCompanyLogo =
-    company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+  const selectedCompanyName = (() => {
+    if (isSuperAdmin) {
+      return company?.name || "All Companies";
+    }
+    // For non-super admin
+    if (localAllCompaniesSelected) return "All Companies";
+    return company?.name || (analytics.available_companies[0]?.name || "Select Company");
+  })();
+  
+  const selectedCompanyLogo = (() => {
+    if (isSuperAdmin) {
+      return company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+    }
+    if (localAllCompaniesSelected) return null;
+    return company && company?.slug ? getCompanyLogoFromList(company.slug) : null;
+  })();
 
   const hasRevenueData =
     currentData.length > 0 &&
@@ -546,7 +538,7 @@ export default function Overview({
     productSalesData.length > 0 &&
     productSalesData.some((product) => product.sales > 0);
   const hasRecentOrdersData = recentOrders.length > 0;
-
+  
   // Determine if company dropdown should be shown
   // Hide dropdown when user has access to only ONE company (including super admin with no companies)
   const shouldShowCompanyDropdown = (() => {
@@ -558,32 +550,46 @@ export default function Overview({
     return analytics.available_companies.length >= 2;
   })();
 
-  // Handle company selection - update global context
-  // Handle company selection - update global context
+  // Handle company selection - update global context (super admin) or local state (non-super admin)
   const handleCompanyChange = (selectedSlug: string) => {
     if (selectedSlug === "") {
-      // "All Companies" selected - set company to empty to show aggregated data for ALL users
+      // "All Companies" selected
+      if (isSuperAdmin) {
+        // Super admin: update global context (existing behavior - DO NOT CHANGE)
       switchCompany({
         slug: "",
         name: "All Companies",
         role: "",
       });
     } else {
-      const selected = analytics.available_companies.find(
-        (c) => c.slug === selectedSlug,
-      );
+        // Non-super admin: ONLY set local state, do NOT update global context
+        setLocalAllCompaniesSelected(true);
+      }
+    } else {
+      // Specific company selected
+      const selected = analytics.available_companies.find(c => c.slug === selectedSlug);
       if (selected) {
-        const membership = user?.memberships?.find(
-          (m: any) => m.company_slug === selectedSlug,
-        );
+        const membership = user?.memberships?.find((m: any) => m.company_slug === selectedSlug);
+        // Update global context for both super admin and non-super admin
         switchCompany({
           slug: selected.slug,
           name: selected.name,
           role: membership?.role || "viewer",
         });
+        // Clear local "All Companies" flag for non-super admin
+        if (!isSuperAdmin) {
+          setLocalAllCompaniesSelected(false);
+        }
       }
     }
   };
+
+  // ADDED: Reset local "All Companies" flag when global company changes (for non-super admin)
+  useEffect(() => {
+    if (!isSuperAdmin && company?.slug) {
+      setLocalAllCompaniesSelected(false);
+    }
+  }, [company?.slug, isSuperAdmin]);
 
   return (
     <div className="space-y-8">
@@ -595,11 +601,11 @@ export default function Overview({
             {/* Left Section - Company Info */}
             <div className="flex items-center gap-4">
               {/* Logo with gradient ring */}
-              <div className="relative">
+               <div className="relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
                 <div className="absolute inset-0 rounded-full shadow-inner"></div>
                 {selectedCompanyLogo && company?.slug ? (
-                  <div className="relative w-12 h-12 rounded-full bg-white p-0.5 shadow-lg">
+                                  <div className="relative w-12 h-12 rounded-full bg-white p-0.5 shadow-lg">
                     <img
                       src={selectedCompanyLogo}
                       alt={selectedCompanyName}
@@ -607,28 +613,24 @@ export default function Overview({
                     />
                   </div>
                 ) : (
-                  <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
-                    <Building2 className="h-6 w-6 text-white" />
+                                   <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
+                                        <Building2 className="h-6 w-6 text-white" />
                   </div>
                 )}
               </div>
-
+              
               {/* Company Info */}
               <div>
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5]"></div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    Currently Viewing
-                  </p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Currently Viewing</p>
                 </div>
-                <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent">
+                               <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent">
                   {selectedCompanyName}
                 </h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                  <p className="text-[9px] font-medium text-gray-400">
-                    Active Dashboard
-                  </p>
+                  <p className="text-[9px] font-medium text-gray-400">Active Dashboard</p>
                 </div>
               </div>
             </div>
@@ -642,31 +644,30 @@ export default function Overview({
                 </span>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4]" />
-                  <CompanySelect
-                    scopeOptions={scopeOptions}
-                    company={
-                      scopeOptions.find(
-                        (c: any) => c.value === company?.slug,
-                      ) || scopeOptions[0]
+                  <select
+                    value={
+                      isSuperAdmin 
+                        ? (company?.slug || "") 
+                        : (localAllCompaniesSelected ? "" : (company?.slug || ""))
                     }
-                    handleCompanyChange={handleCompanyChange}
-                  />
-                  {/* <svg
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    onChange={(e) => {
+                      console.log("Selected company slug:", e.target.value);
+                      handleCompanyChange(e.target.value);
+                    }}
+                    className="pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 transition-all cursor-pointer appearance-none w-[360px]"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg> */}
+                    {scopeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
-
+              
               {/* {readOnly && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
@@ -675,7 +676,7 @@ export default function Overview({
               )} */}
             </div>
           </div>
-
+          
           {/* Decorative divider */}
           <div className="mt-3">
             <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
@@ -692,14 +693,12 @@ export default function Overview({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
         {loading ? (
-          Array.from({ length: isSuperAdmin && !company?.slug ? 4 : 3 }).map(
-            (_, i) => <SkeletonCard key={i} />,
-          )
+          Array.from({ length: isSuperAdmin && !company?.slug ? 4 : 3 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
             {isSuperAdmin && !company?.slug && (
-              <div
-                onClick={() => onNavigate?.("companies")}
+              <div 
+                onClick={() => onNavigate?.("companies")} 
                 className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <SummaryCard
@@ -718,7 +717,7 @@ export default function Overview({
               bgLight="bg-blue-50"
               textColor="text-blue-600"
             />   */}
-            <div
+            <div 
               onClick={() => onNavigate?.("companyOrders")}
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
@@ -730,8 +729,8 @@ export default function Overview({
                 textColor="text-purple-600"
               />
             </div>
-            <div
-              onClick={() => onNavigate?.("products")}
+            <div 
+              onClick={() => onNavigate?.("products")} 
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard
@@ -743,8 +742,8 @@ export default function Overview({
               />
             </div>
 
-            <div
-              onClick={() => onNavigate?.("users")}
+            <div 
+              onClick={() => onNavigate?.("users")} 
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard
@@ -755,18 +754,14 @@ export default function Overview({
                 textColor="text-emerald-600"
               />
             </div>
-            {!isSuperAdmin && (
-              <div
-                onClick={() => onNavigate?.("payments")}
+            { !isSuperAdmin && (
+              <div 
+                onClick={() => onNavigate?.("payments")} 
                 className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <SummaryCard
                   title="Total Payments"
-                  value={
-                    summaryData?.payments?.total
-                      ? formatCurrency(summaryData.payments.total)
-                      : formatCurrency(0)
-                  }
+                  value={summaryData?.payments?.total ? formatCurrency(summaryData.payments.total) : formatCurrency(0)}
                   icon={DollarSign}
                   bgLight="bg-amber-50"
                   textColor="text-amber-600"
@@ -1117,10 +1112,7 @@ export default function Overview({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
-                          <p
-                            className="text-sm font-medium  truncate"
-                            style={{ color: product.color }}
-                          >
+                          <p className="text-sm font-medium  truncate" style={{ color: product.color }}>
                             {product.name}
                           </p>
                           <span className="text-sm font-semibold text-gray-900">
@@ -1128,10 +1120,7 @@ export default function Overview({
                           </span>
                         </div>
                         <div className="flex flex-row gap-2 items-center ">
-                          <div
-                            className="flex flex-row gap-2 items-center rounded p-1"
-                            style={{ backgroundColor: product.color }}
-                          >
+                          <div className="flex flex-row gap-2 items-center rounded p-1" style={{ backgroundColor: product.color }}>
                             <Building2 className="h-4 w-4 text-white" />
                             <p className="text-[11px] font-medium text-white truncate">
                               {product.company_name}

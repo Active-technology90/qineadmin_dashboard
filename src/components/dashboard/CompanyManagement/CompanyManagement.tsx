@@ -410,7 +410,7 @@ export default function CompanyManagement() {
         if (allCompanies.length > 0) {
           const first = allCompanies[0];
           setEditingSlug(first.slug);
-          setFormData({
+          const newFormData = {
             name: first.name,
             name_am: first.name_am || "",
             slug: first.slug,
@@ -426,7 +426,9 @@ export default function CompanyManagement() {
             is_featured: first.is_featured,
             logo: null,
             cover_image: null,
-          });
+          };
+          setFormData(newFormData);
+          setOriginalFormData({ ...newFormData, logo: first.logo, cover_image: first.cover_image });
           if (first.logo) setLogoPreview(first.logo);
           if (first.cover_image) setCoverPreview(first.cover_image);
         }
@@ -474,6 +476,7 @@ export default function CompanyManagement() {
     // Check if any changes were made (for update operations)
     if (editingSlug && originalFormData) {
       const hasChanges = () => {
+
         // Safe string comparison helper
         const cleanString = (val: any) => (val === null || val === undefined ? "" : String(val).trim());
         
@@ -513,7 +516,14 @@ export default function CompanyManagement() {
         return false;
       };
       
-      if (!hasChanges()) {
+      const changesExist = hasChanges();
+      console.log('Changes detected:', changesExist);
+      console.log('Form data logo:', formData.logo);
+      console.log('Original logo:', originalFormData.logo);
+      console.log('Form data cover:', formData.cover_image);
+      console.log('Original cover:', originalFormData.cover_image);
+      
+      if (!changesExist) {
         showToast("info", "No changes detected. Update canceled.");
         // Close edit mode without submitting
         if (!isSuperAdmin) {
@@ -529,29 +539,8 @@ export default function CompanyManagement() {
     
     setSubmitting(true);
     try {
-      const payload: any = {
-        name: formData.name,
-        name_am: formData.name_am || undefined,
-        slug: formData.slug || undefined,
-        category: formData.category,
-        sub_category: formData.sub_category,
-        business_type: formData.business_type,
-        description: formData.description || undefined,
-        minimum_order_total:
-          formData.minimum_order_total || "0.00",
-        latitude: formData.latitude || undefined,
-        longitude: formData.longitude || undefined,
-        delivery_fee_per_km: formData.delivery_fee_per_km || "0.00",
-        is_active: formData.is_active,
-        is_featured: formData.is_featured,
-      };
-
-      const hasFiles = !!(
-        formData.logo || formData.cover_image
-      );
-
-      if (hasFiles) {
-        const formPayload = new FormData();
+      // Always use FormData to handle image deletion
+     const formPayload = new FormData();
 
         formPayload.append("name", formData.name);
 
@@ -609,28 +598,28 @@ export default function CompanyManagement() {
           String(formData.is_featured)
         );
 
-        if (formData.logo) {
-          formPayload.append("logo", formData.logo);
-        }
 
-        if (formData.cover_image) {
-          formPayload.append(
-            "cover_image",
-            formData.cover_image
-          );
-        }
+      // Handle logo: only send if user uploaded a new file OR intentionally removed it
+      // Do NOT send anything if the logo hasn't changed (formData.logo is null and original had image but user didn't click remove)
+      if (formData.logo instanceof File) {
+        formPayload.append("logo", formData.logo);
+      } else if (formData.logo === null && originalFormData?.logo && logoPreview === null) {
+        // User removed the image (logoPreview is null confirms they clicked remove)
+        formPayload.append("logo", "");
+      }
 
-        if (editingSlug) {
+      // Handle cover_image: only send if user uploaded a new file OR intentionally removed it
+      if (formData.cover_image instanceof File) {
+        formPayload.append("cover_image", formData.cover_image);
+      } else if (formData.cover_image === null && originalFormData?.cover_image && coverPreview === null) {
+        // User removed the cover image (coverPreview is null confirms they clicked remove)
+        formPayload.append("cover_image", "");
+      }
+
+  if (editingSlug) {
           await updateCompany(editingSlug, formPayload);
         } else {
           await createCompany(formPayload);
-        }
-      } else {
-        if (editingSlug) {
-          await updateCompany(editingSlug, payload);
-        } else {
-          await createCompany(payload);
-        }
       }
 
       showToast(
@@ -729,8 +718,8 @@ export default function CompanyManagement() {
         cover_image: null,
       };
       setFormData(newFormData);
-      // Save original data for change detection
-      setOriginalFormData({ ...newFormData });
+      // Save original data for change detection (including original image URLs)
+      setOriginalFormData({ ...newFormData, logo: company.logo, cover_image: company.cover_image });
       if (company.logo) setLogoPreview(company.logo);
       if (company.cover_image) setCoverPreview(company.cover_image);
       if (isSuperAdmin) {
@@ -769,45 +758,40 @@ export default function CompanyManagement() {
         content: (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company Name (English) <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="Company Name (English) *"
+                placeholder="Enter company name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className={`w-full border rounded-lg p-2 ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
               />
               {formErrors.name && (
                 <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
               )}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name (Amharic)
+              </label>
               <input
                 type="text"
-                placeholder="Name (Amharic)"
+                placeholder="Enter company name in Amharic"
                 value={formData.name_am}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name_am: e.target.value }))
                 }
-                className="w-full border border-gray-300 rounded-lg p-2"
+               className="w-full border border-gray-300 rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4]"
               />
-            </div>
-            <div className="md:col-span-2">
-              <input
-                type="text"
-                placeholder="Slug (unique) *"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                className={`w-full border rounded-lg p-2 font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"}`}
-              />
-              {formErrors.slug && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
-              )}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category <span className="text-red-500">*</span>
+              </label>
               <select
                 value={formData.category}
                 onChange={(e) => {
@@ -818,9 +802,9 @@ export default function CompanyManagement() {
                     sub_category: 0,
                   }));
                 }}
-                className={`w-full border rounded-lg p-2 ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
               >
-                <option value={0}>Select Category *</option>
+                <option value={0}>Select Category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -834,6 +818,9 @@ export default function CompanyManagement() {
               )}
             </div>
              <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Subcategory <span className="text-red-500">*</span>
+              </label>
               <select
                 value={formData.sub_category}
                 onChange={(e) =>
@@ -842,11 +829,10 @@ export default function CompanyManagement() {
                     sub_category: Number(e.target.value),
                   }))
                 }
-                className={`w-full border rounded-lg p-2 ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
                 disabled={!formData.category}
-                style={{ cursor: !formData.category ? "not-allowed" : "default" }}
-              >
-                <option value={0}>Select Subcategory *</option>
+                style={{ cursor: !formData.category ? "not-allowed" : "default" }}>
+                <option value={0}>Select Subcategory</option>
                 {subcategories
                   .filter((sub) => sub.category === formData.category)
                   .map((sub) => (
@@ -862,6 +848,9 @@ export default function CompanyManagement() {
               )}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Business Type <span className="text-red-500">*</span>
+              </label>
               <select
                 value={formData.business_type}
                 onChange={(e) =>
@@ -870,9 +859,9 @@ export default function CompanyManagement() {
                     business_type: e.target.value,
                   }))
                 }
-                className={`w-full border rounded-lg p-2 ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
               >
-                <option value="">Select Business Type *</option>
+                <option value="">Select Business Type</option>
                 <option value="brand">Company</option>
                 <option value="store">Store</option>
                 <option value="service">Service</option>
@@ -884,9 +873,31 @@ export default function CompanyManagement() {
                 </p>
               )}
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Slug <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., my-company-slug"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                }
+                 disabled={!!editingSlug}
+               className={`w-full border rounded-lg p-2 font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.slug ? "border-red-500" : "border-gray-300"}
+               ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+              />
+              {formErrors.slug && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+              )}
+            </div>
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
               <textarea
-                placeholder="Description"
+                placeholder="Enter company description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -894,7 +905,7 @@ export default function CompanyManagement() {
                     description: e.target.value,
                   }))
                 }
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full border border-gray-300 rounded-lg p-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4]"
                 rows={3}
               />
             </div>
@@ -904,14 +915,22 @@ export default function CompanyManagement() {
       },
       {
         id: "images",
-         title: <span className="text-[#6750A4]">Images & Status</span>,
+        title: <span className="text-[#6750A4]">Images & Status</span>,
         content: (
-          <div className="space-y-6 ">
-            <div className="w-72">
-<DragDropImageUpload
-              label="Logo"
-              size = "sm"
-              value={formData.logo}
+          <div className="space-y-8">
+            {/* Logo and Cover Image - Side by Side */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B6BB5]"></div>
+                Company Images
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <DragDropImageUpload
+                      label="Logo"
+                      size="sm"
+                      value={formData.logo}
               onChange={(file) =>
                 setFormData((prev) => ({ ...prev, logo: file }))
               }
@@ -919,8 +938,80 @@ export default function CompanyManagement() {
               required={false}
             />
             </div>
-            
-            <DragDropImageUpload
+                  <p className="text-xs text-gray-400 mt-2 text-center">Square image recommended (1:1 ratio)</p>
+                </div> */}
+                                <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Logo
+                    </label>
+                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-2 flex flex-col items-center justify-center transition-all duration-300 hover:border-[#6750A4] hover:bg-gray-50/80" style={{ height: '130px' }}>
+                      <input
+                        type="file"
+                        id="company-logo-upload"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert("File must be smaller than 5MB");
+                              return;
+                            }
+                            setFormData((prev) => ({ ...prev, logo: file }));
+                            setLogoPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                      {logoPreview ? (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                          <div className="relative group/preview">
+                            <img
+                              src={logoPreview}
+                              alt="Logo Preview"
+                              className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-[#6750A4]/20"
+                            />
+                            <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-white text-[10px] font-medium">Preview</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, logo: null }));
+                              setLogoPreview(null);
+                              const fileInput = document.getElementById("company-logo-upload") as HTMLInputElement;
+                              if (fileInput) fileInput.value = "";
+                            }}
+                            className="mt-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                            title="Remove image"
+                          >
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="company-logo-upload"
+                          className="flex flex-col items-center justify-center cursor-pointer w-full h-full transition-all duration-200 hover:scale-102"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6750A4]/10 to-[#6750A4]/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
+                            <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-[11px] font-semibold text-gray-600">Upload Logo</span>
+                          <span className="text-[10px] text-gray-400 mt-0.5">PNG, JPG up to 5MB</span>
+                        </label>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2 text-center">Square image recommended (1:1 ratio)</p>
+                  </div>
+                </div>
+                <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <DragDropImageUpload
               label="Cover Image"
               value={formData.cover_image}
               onChange={(file) =>
@@ -928,9 +1019,22 @@ export default function CompanyManagement() {
               }
               previewUrl={coverPreview}
             />
-            <div className="flex items-center space-x-6">
-              <label className="flex items-center space-x-2">
-                <input
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2 text-center">Wide banner recommended (16:9 ratio)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Settings */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B6BB5]"></div>
+                Status Settings
+              </h4>
+              <div className="bg-gray-50/50 rounded-xl p-5 border border-gray-100">
+                <div className="flex flex-wrap items-center gap-8">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) =>
@@ -939,12 +1043,15 @@ export default function CompanyManagement() {
                       is_active: e.target.checked,
                     }))
                   }
-                  className="h-4 w-4 text-indigo-600 rounded"
-                />
-                <span className="text-sm text-gray-700">Active</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
+                  className="h-4 w-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4] focus:ring-2 cursor-pointer"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#6750A4] transition-colors">Active</span>
+                      <p className="text-xs text-gray-400 mt-0.5">Company is visible to customers</p>
+                    </div>
+                  </label>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                     <input
                   type="checkbox"
                   checked={formData.is_featured}
                   onChange={(e) =>
@@ -953,10 +1060,15 @@ export default function CompanyManagement() {
                       is_featured: e.target.checked,
                     }))
                   }
-                  className="h-4 w-4 text-indigo-600 rounded"
-                />
-                <span className="text-sm text-gray-700">Featured</span>
-              </label>
+                  className="h-4 w-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4] focus:ring-2 cursor-pointer"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#6750A4] transition-colors">Featured</span>
+                      <p className="text-xs text-gray-400 mt-0.5">Highlighted on homepage and listings</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         ),

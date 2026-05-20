@@ -136,16 +136,19 @@ export default function CompanyProducts() {
       if (existingProductId) {
         await updateProduct(existingProductId, data);
         showToast("success", "Updated");
+        await refetch(); // Refresh the product list
         return { id: existingProductId };
       }
       // Normal edit mode
       if (editingProduct) {
         await updateProduct(editingProduct.id, data);
         showToast("success", "Updated");
+        await refetch(); // Refresh the product list
         return { id: editingProduct.id };
       } else {
         const created = await createProduct(data);
         showToast("success", "Created");
+        await refetch(); // Refresh the product list for new product
         return created;
       }
     } catch (err: any) {

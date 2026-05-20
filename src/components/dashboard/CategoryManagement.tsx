@@ -489,11 +489,12 @@ export default function CategoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, slug: e.target.value })
                   }
+                  disabled={!!editingId}
                   className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 ${
                     formErrors.slug 
                       ? "border-red-500 bg-red-50 focus:border-red-500" 
                       : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
-                  }`}
+                  } ${editingId ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
                 />
                 {formErrors.slug && (
                   <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1.5">
