@@ -185,31 +185,31 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
     animate={{ opacity: 1, y: 0 }}
     whileHover={{ y: -2 }}
     transition={{ duration: 0.2 }}
-    className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+    className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden w-full"
   >
     {/* Company header */}
-    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
+    <div className="px-2 sm:px-5 md:px-6 py-2 sm:py-4 border-b border-gray-100 bg-gray-50/30 flex flex-wrap items-start sm:items-center justify-between gap-1 sm:gap-3 w-full">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
           {vendorOrder.company?.logo ? (
             <img
               src={vendorOrder.company.logo}
               alt={`${vendorOrder.company.name} logo`}
-              className="w-6 h-6 object-contain"
+              className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
             />
           ) : (
-            <Store className="h-5 w-5 text-[#6750A4]" />
+            <Store className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
           )}
         </div>
-        <div>
-          <p className="font-semibold text-gray-800">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-800 text-[10px] sm:text-base truncate">
             {vendorOrder.company?.name || "Unknown Company"}
           </p>
-          <p className="text-xs text-gray-500">Vendor order</p>
+          <p className="text-[8px] sm:text-[10px] text-gray-500">Vendor order</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(vendorOrder.status)}`}>
+      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <span className={`px-1 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-xs font-semibold rounded-full border ${getStatusBadge(vendorOrder.status)}`}>
           {vendorOrder.status === "processing"
             ? "Prepared"
             : vendorOrder.status === "shipped"
@@ -227,13 +227,13 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                       ? "Cancelled"
                       : vendorOrder.status}
         </span>
-        <div className="text-right">
-          <span className="text-lg font-bold text-[#6750A4] tracking-tight block">
+        <div className="text-right flex-shrink-0">
+          <span className="text-[11px] sm:text-lg font-bold text-[#6750A4] tracking-tight block">
             {Number(vendorOrder.amount).toLocaleString()} ETB
           </span>
           {Number(vendorOrder.delivery_fee) > 0 && (
-            <span className="text-[10px] font-medium text-gray-500 block">
-              Incl. {Number(vendorOrder.delivery_fee).toLocaleString()} ETB Delivery
+            <span className="text-[7px] sm:text-[10px] font-medium text-gray-500 block">
+              Incl. {Number(vendorOrder.delivery_fee).toLocaleString()} ETB
             </span>
           )}
         </div>
@@ -243,23 +243,23 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
 
     {/* Delivery tracking (if exists) – NOW USING getDeliveryStatusBadge */}
     {vendorOrder.delivery && (
-      <div className="bg-gradient-to-r from-purple-50/40 to-transparent px-6 py-3 border-b border-purple-100/50">
+      <div className="bg-gradient-to-r from-purple-50/40 to-transparent px-3 sm:px-5 md:px-6 py-2 sm:py-3 border-b border-purple-100/50 w-full">
         <div className="flex items-center gap-2 text-xs font-semibold text-[#6750A4] mb-2">
-          <Truck className="h-3.5 w-3.5" />
+          <Truck className="h-3.5 w-3.5 flex-shrink-0" />
           <span>Delivery tracking</span>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-1.5 sm:gap-4 text-[10px] sm:text-sm">
           {vendorOrder.delivery.delivery_person_name && (
-            <div className="flex items-center gap-2 bg-white/50 rounded-full px-3 py-1">
-              <User className="h-3 w-3 text-gray-500" />
-              <span className="text-gray-700">
+            <div className="flex items-center gap-1 sm:gap-2 bg-white/50 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1">
+              <User className="h-2 w-2 sm:h-3 sm:w-3 text-gray-500" />
+              <span className="text-gray-700 text-[10px] sm:text-sm">
                 {vendorOrder.delivery.delivery_person_name}
               </span>
             </div>
           )}
           {vendorOrder.delivery.tracking_id && (
-            <div className="flex items-center gap-2 bg-white/50 rounded-full px-3 py-1">
-              <span className="text-gray-700 font-mono text-xs">
+            <div className="flex items-center gap-1 sm:gap-2 bg-white/50 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1">
+              <span className="text-gray-700 font-mono text-[9px] sm:text-xs">
                 {vendorOrder.delivery.tracking_id.split("-")[0]}
               </span>
               <CopyButton text={vendorOrder.delivery.tracking_id.split("-")[0]} />
@@ -267,7 +267,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
           )}
           {vendorOrder.delivery.status && (
             <div
-              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getDeliveryStatusBadge(
+              className={`inline-flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-0.5 text-[8px] sm:text-[9px] rounded-full ${getDeliveryStatusBadge(
                 vendorOrder.delivery.status
               )}`}
             >
@@ -285,32 +285,31 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
     )}
 
     {vendorOrder.items.length > 0 && (
-      <div className="px-5 py-6 sm:px-6">
-        {/* ===================================================== */}
+      <div className="px-2 sm:px-5 md:px-6 py-3 sm:py-6 w-full">
         {/* Header */}
         {/* ===================================================== */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm">
-              <Package className="h-4 w-4 text-[#6750A4]" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm flex-shrink-0">
+              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#6750A4]" />
             </div>
 
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
+            <div className="min-w-0 flex-1">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
                 Order Items
               </p>
 
-              <h3 className="mt-1 text-sm font-bold text-gray-900">
+              <h3 className="mt-1 text-xs sm:text-sm font-bold text-gray-900 truncate">
                 {vendorOrder.items.length} Product
                 {vendorOrder.items.length > 1 ? "s" : ""}
               </h3>
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start rounded-2xl border border-[#6750A4]/10 bg-[#6750A4]/5 px-3 py-2">
-            <div className="h-2 w-2 rounded-full bg-[#6750A4] animate-pulse" />
+          <div className="inline-flex items-center gap-2 self-start rounded-xl sm:rounded-2xl border border-[#6750A4]/10 bg-[#6750A4]/5 px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0">
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#6750A4] animate-pulse" />
 
-            <span className="text-[11px] font-bold tracking-wide text-[#6750A4]">
+            <span className="text-[9px] sm:text-[11px] font-bold tracking-wide text-[#6750A4] whitespace-nowrap">
               Vendor Products
             </span>
           </div>
@@ -362,35 +361,44 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                 }}
                 className="
               group
-              grid
-              grid-cols-1
-              md:grid-cols-12
-              gap-5
-              md:gap-4
-              px-5
-              py-5
+              block
+              sm:grid
+              sm:grid-cols-12
+              gap-1
+              sm:gap-4
+              px-1
+              py-2
+              sm:px-5
+              sm:py-5
               md:px-6
               transition-all
               duration-300
               hover:bg-gradient-to-r
               hover:from-violet-50/40
               hover:to-transparent
+              w-full
+              border-b
+              border-gray-100
+              last:border-0
             "
               >
                 {/* ===================================================== */}
                 {/* Product */}
                 {/* ===================================================== */}
-                <div className="md:col-span-6 min-w-0">
-                  <div className="flex items-center gap-4 min-w-0">
+                <div className="sm:col-span-6 md:col-span-6 w-full">
+                  <div className="flex flex-row items-center gap-2 sm:gap-4 w-full">
                     {/* Image */}
                     <div
                       className="
                     relative
-                    h-16
-                    w-16
+                    h-8
+                    w-8
+                    sm:h-16
+                    sm:w-16
                     flex-shrink-0
                     overflow-hidden
-                    rounded-2xl
+                    rounded-md
+                    sm:rounded-2xl
                     border
                     border-gray-100
                     bg-gradient-to-br
@@ -422,17 +430,17 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                     </div>
 
                     {/* Details */}
-                    <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-bold leading-tight text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="truncate text-[10px] sm:text-sm font-bold leading-tight text-gray-900">
                         {item.title}
                       </h4>
 
                       <div className="mt-2 flex items-center gap-2 min-w-0">
-                        <span className="inline-flex flex-shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        <span className="inline-flex flex-shrink-0 items-center rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-gray-500">
                           SKU
                         </span>
 
-                        <span className="truncate font-mono text-[11px] text-gray-400">
+                        <span className="truncate font-mono text-[9px] text-gray-400">
                           {item.sku || "N/A"}
                         </span>
                       </div>
@@ -443,30 +451,34 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                 {/* ===================================================== */}
                 {/* Qty */}
                 {/* ===================================================== */}
-                <div className="md:col-span-2 flex md:justify-center items-center">
-                  <div className="w-full md:w-auto flex items-center justify-between md:block">
-                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                <div className="sm:col-span-2 flex flex-row sm:flex-col items-center justify-between sm:justify-center sm:items-center mt-1 sm:mt-0">
+                  <div className="flex flex-row sm:flex-col items-center gap-1 sm:gap-0 w-full">
+                    <span className="text-[9px] sm:hidden font-bold uppercase tracking-wide text-gray-400">
                       Qty
                     </span>
 
                     <div
                       className="
                     inline-flex
-                    h-10
-                    min-w-[54px]
+                    h-5
+                    sm:h-10
+                    min-w-[32px]
+                    sm:min-w-[54px]
                     items-center
                     justify-center
-                    rounded-2xl
+                    rounded-md
+                    sm:rounded-2xl
                     border
                     border-[#6750A4]/10
                     bg-gradient-to-br
                     from-[#6750A4]/8
                     to-violet-50
-                    px-4
+                    px-1
+                    sm:px-4
                     shadow-sm
                   "
                     >
-                      <span className="text-sm font-black text-[#6750A4]">
+                      <span className="text-[8px] sm:text-sm font-black text-[#6750A4]">
                         ×{item.qty}
                       </span>
                     </div>
@@ -476,18 +488,17 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                 {/* ===================================================== */}
                 {/* Unit Price */}
                 {/* ===================================================== */}
-                <div className="md:col-span-2 flex md:justify-end items-center">
-                  <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
-                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                <div className="sm:col-span-2 flex flex-row sm:flex-col items-center justify-between sm:justify-end mt-1 sm:mt-0">
+                  <div className="flex flex-row sm:flex-col items-center gap-1 sm:gap-0 w-full sm:text-right">
+                    <span className="text-[9px] sm:hidden font-bold uppercase tracking-wide text-gray-400">
                       Unit Price
                     </span>
 
                     <div>
-                      <p className="text-sm font-bold tracking-tight text-gray-700">
+                      <p className="text-[10px] sm:text-sm font-bold tracking-tight text-gray-700">
                         {Number(item.unit_price).toLocaleString()}
                       </p>
-
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+                      <p className="text-[7px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
                         ETB
                       </p>
                     </div>
@@ -497,18 +508,17 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                 {/* ===================================================== */}
                 {/* Total */}
                 {/* ===================================================== */}
-                <div className="md:col-span-2 flex md:justify-end items-center">
-                  <div className="w-full md:w-auto flex items-center justify-between md:block md:text-right">
-                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                <div className="sm:col-span-2 flex flex-row sm:flex-col items-center justify-between sm:justify-end mt-1 sm:mt-0">
+                  <div className="flex flex-row sm:flex-col items-center gap-1 sm:gap-0 w-full sm:text-right">
+                    <span className="text-[9px] sm:hidden font-bold uppercase tracking-wide text-gray-400">
                       Total
                     </span>
 
                     <div>
-                      <p className="text-base font-black tracking-tight text-gray-900">
+                      <p className="text-[11px] sm:text-base font-black tracking-tight text-gray-900">
                         {Number(item.line_total).toLocaleString()}
                       </p>
-
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6750A4]">
+                      <p className="text-[7px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#6750A4]">
                         ETB
                       </p>
                     </div>
@@ -529,7 +539,7 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#6750A4] via-[#5a448c] to-[#4a3a78] p-6 shadow-lg"
+    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#6750A4] via-[#5a448c] to-[#4a3a78] p-4 sm:p-6 shadow-lg w-full"
   >
     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
     <div className="relative z-10">
@@ -539,30 +549,30 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
           <p className="text-sm font-semibold text-white/90">Financial breakdown</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Total</p>
-          <h3 className="text-2xl font-black text-white">
-            {Number(order.total_amount).toLocaleString()} <span className="text-sm">ETB</span>
+          <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Total</p>
+          <h3 className="text-lg sm:text-2xl font-black text-white">
+            {Number(order.total_amount).toLocaleString()} <span className="text-[10px] sm:text-sm">ETB</span>
           </h3>
         </div>
       </div>
-      <div className="space-y-3 pt-2 border-t border-white/10">
-        <div className="flex justify-between text-xs font-medium text-white/70">
+      <div className="space-y-2 sm:space-y-3 pt-2 border-t border-white/10">
+        <div className="flex justify-between text-[10px] sm:text-xs font-medium text-white/70">
           <span>Subtotal</span>
           <span>{Number(order.subtotal).toLocaleString()} ETB</span>
         </div>
-        <div className="flex justify-between text-xs font-medium text-white/70">
+        <div className="flex justify-between text-[10px] sm:text-xs font-medium text-white/70">
           <span>Tax</span>
           <span>{Number(order.tax_total).toLocaleString()} ETB</span>
         </div>
         {/* Render each vendor order's delivery fee separately */}
         {order.vendor_orders?.map((vo) => (
-          <div key={vo.id} className="flex justify-between text-xs font-medium text-white/70 pl-3 border-l border-white/20">
-            <span className="opacity-80">{vo.company?.name || "Vendor"} Delivery</span>
-            <span>{Number(vo.delivery_fee || 0).toLocaleString()} ETB</span>
+          <div key={vo.id} className="flex justify-between text-[10px] sm:text-xs font-medium text-white/70 pl-2 sm:pl-3 border-l border-white/20">
+            <span className="opacity-80 truncate max-w-[100px] sm:max-w-none">{vo.company?.name || "Vendor"} Delivery</span>
+            <span className="flex-shrink-0">{Number(vo.delivery_fee || 0).toLocaleString()} ETB</span>
           </div>
         ))}
         {Number(order.delivery_fee) > 0 && (
-          <div className="flex justify-between text-xs font-bold text-white pt-1 border-t border-white/10">
+          <div className="flex justify-between text-[10px] sm:text-xs font-bold text-white pt-1 border-t border-white/10">
             <span>Total Delivery Fee</span>
             <span>{Number(order.delivery_fee).toLocaleString()} ETB</span>
           </div>
@@ -579,7 +589,7 @@ const TimelineCard = memo(({ order }: { order: MasterOrder }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+    className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm w-full"
   >
     <div className="flex items-center gap-2 mb-6">
       <Calendar className="h-4 w-4 text-[#6750A4]" />
@@ -617,17 +627,17 @@ TimelineCard.displayName = "TimelineCard";
 // Customer Profile Card (simplified for master order)
 const CustomerCard = memo(({ order }: { order: MasterOrder }) => (
   <Card title="Customer Profile" icon={User}>
-    <div className="flex items-center gap-4">
-      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-xl">
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
+      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-lg sm:text-xl flex-shrink-0">
         {getInitials(order.recipient_name || "?")}
       </div>
-      <div className="space-y-1">
-        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+      <div className="space-y-1 text-center sm:text-left">
+        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent break-words">
           {order.recipient_name || "N/A"}
         </p>
-        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-3 py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
-          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-xs font-mono font-bold text-green-700 tracking-tight">
+        <div className="flex items-center justify-center sm:justify-start gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg w-full sm:w-fit border border-blue-200 shadow-sm">
+          <PhoneCall className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600 flex-shrink-0" />
+          <span className="text-[10px] sm:text-xs font-mono font-bold text-green-700 tracking-tight break-all">
             {order.shipping_phone || "No phone"}
           </span>
           <CopyButton text={order.shipping_phone} />
@@ -642,21 +652,21 @@ CustomerCard.displayName = "CustomerCard";
 const ShippingCard = memo(({ order }: { order: MasterOrder }) => (
   <Card title="Shipping Destination" icon={MapPin}>
     <div className="space-y-3">
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
-        <span className="text-xs font-bold text-gray-500 min-w-[100px]">Recipient:</span>
-        <span className="text-sm font-bold text-[#6750A4]">{order.recipient_name || "N/A"}</span>
+      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+        <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Recipient:</span>
+        <span className="text-xs sm:text-sm font-bold text-[#6750A4] break-words">{order.recipient_name || "N/A"}</span>
       </div>
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-blue-50/30 border-l-4 border-green-500">
-        <span className="text-xs font-bold text-gray-500 min-w-[100px]">Phone:</span>
-        <div className="flex items-center gap-2">
-          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-sm font-mono font-bold text-green-700">{order.shipping_phone || "N/A"}</span>
+      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-blue-50/30 border-l-4 border-green-500">
+        <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Phone:</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <PhoneCall className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600 flex-shrink-0" />
+          <span className="text-[10px] sm:text-sm font-mono font-bold text-green-700 break-all">{order.shipping_phone || "N/A"}</span>
           <CopyButton text={order.shipping_phone} />
         </div>
       </div>
-      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
-        <span className="text-xs font-bold text-gray-500 min-w-[100px]">Address:</span>
-        <span className="text-sm text-gray-700 leading-relaxed">{order.shipping_address_text || "N/A"}</span>
+      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+        <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Address:</span>
+        <span className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">{order.shipping_address_text || "N/A"}</span>
       </div>
     </div>
   </Card>
@@ -759,7 +769,7 @@ export function OrderDetailModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -774,77 +784,82 @@ export function OrderDetailModal({
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="relative bg-gradient-to-br from-white via-white to-gray-50/50 w-full max-w-7xl max-h-[92vh] rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white/20 backdrop-blur-sm"
+          className="relative bg-gradient-to-br from-white via-white to-gray-50/50 w-full max-w-[95%] sm:max-w-7xl max-h-[90vh] sm:max-h-[92vh] rounded-2xl sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white/20 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Glass Header */}
-          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/10 px-8 py-5 flex justify-between items-center sticky top-0 z-20 shadow-sm">
-            <div className="flex items-center gap-5">
-              <div className="h-12 w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20">
-                <Package className="text-white h-6 w-6 drop-shadow-sm" />
+          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/10 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
+            {/* Top row: Icon on left, Buttons on right */}
+            <div className="flex flex-row justify-between items-start gap-2">
+              {/* Left side - Package Icon */}
+              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
+                <Package className="text-white h-4 w-4 sm:h-6 sm:w-6 drop-shadow-sm" />
               </div>
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight">
-                    Order #{order.id}
-                  </h2>
-                  <span className={getStatusBadge(order.status)}>{order.status}</span>
-                </div>
-                <div className="flex items-center gap-4 text-xs font-bold">
-                  <span className="flex items-center gap-2 bg-[#6750A4]/10 px-4 py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
-                    <Calendar className="h-3.5 w-3.5 text-[#6750A4]" />
-                    <span className="font-mono text-[12px] font-semibold text-gray-700 tracking-tight">
-                      {new Date(order.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}{" "}
-                      <span className="text-[#6750A4] mx-0.5">•</span>{" "}
-                      {new Date(order.created_at).toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
+
+              {/* Right side - Buttons */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {onRefresh && (
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="group flex items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-gray-200 bg-white
+                   hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100
+                   active:scale-95 transition-all duration-200
+                   disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {refreshing ? (
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#6750A4] animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
+                    )}
+                    <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
+                      {refreshing ? "Refreshing..." : "Refresh"}
                     </span>
-                  </span>
-                  <span className="flex items-center gap-1.5 text-gray-600">
-                    <Building2 className="h-3.5 w-3.5 text-gray-400" />
-                    <span className="font-medium">
-                      {order.vendor_orders?.length || 0} {order.vendor_orders?.length === 1 ? "company" : "companies"}
-                    </span>
-                  </span>
-                </div>
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="group p-1.5 sm:p-3 rounded-lg sm:rounded-xl bg-white border border-gray-200 shadow-sm
+                 hover:bg-rose-50 hover:border-rose-200
+                 active:scale-95 transition-all duration-200"
+                >
+                  <X className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {onRefresh && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white
-                     hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100
-                     active:scale-95 transition-all duration-200
-                     disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-                >
-                  {refreshing ? (
-                    <Loader2 className="h-4 w-4 text-[#6750A4] animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
-                  )}
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
-                    {refreshing ? "Refreshing..." : "Refresh"}
+            {/* Bottom row: Order details */}
+            <div className="mt-1.5 sm:mt-4">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
+                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight break-words">
+                  Order #{order.id}
+                </h2>
+                <span className={getStatusBadge(order.status)}>{order.status}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
+                <span className="flex items-center gap-1 sm:gap-2 bg-[#6750A4]/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
+                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />
+                  <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
+                    {new Date(order.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}{" "}
+                    <span className="text-[#6750A4] mx-0.5">•</span>{" "}
+                    {new Date(order.created_at).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
                   </span>
-                </button>
-              )}
-              <button
-                onClick={onClose}
-                className="group p-3 rounded-xl bg-white border border-gray-200 shadow-sm
-                   hover:bg-rose-50 hover:border-rose-200
-                   active:scale-95 transition-all duration-200"
-              >
-                <X className="h-5 w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
-              </button>
+                </span>
+                <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
+                  <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-gray-400" />
+                  <span className="font-medium text-[9px] sm:text-sm">
+                    {order.vendor_orders?.length || 0} {order.vendor_orders?.length === 1 ? "company" : "companies"}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -856,13 +871,13 @@ export function OrderDetailModal({
             {showTopShadow && (
               <div className="sticky top-0 h-8 bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none z-10" />
             )}
-            <div className="p-8">
-              <div className="grid grid-cols-12 gap-8">
+            <div className="p-3 sm:p-5 md:p-8">
+              <div className="grid grid-cols-12 gap-4 sm:gap-6 md:gap-8">
                 {/* Left Side: Customer & Shipping + Vendor Orders */}
-                <div className="col-span-12 lg:col-span-8 space-y-8">
+                <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-6 md:space-y-8 min-w-0">
                   {/* Customer + Shipping (only for delivery) */}
                   {order.fulfillment_type === "delivery" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <CustomerCard order={order} />
                       <ShippingCard order={order} />
                     </div>
@@ -870,14 +885,14 @@ export function OrderDetailModal({
 
                   {/* Vendor Orders Section */}
                   {order.vendor_orders && order.vendor_orders.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6 min-w-0">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-5 w-5 text-[#6750A4]" />
                         <h4 className="text-base font-semibold text-gray-800">
                           Company orders ({order.vendor_orders.length})
                         </h4>
                       </div>
-                      <div className="space-y-5">
+                <div className="col-span-12 lg:col-span-4 space-y-6">
                         {order.vendor_orders.map((vo) => (
                           <VendorOrderCard key={vo.id} vendorOrder={vo} />
                         ))}

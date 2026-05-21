@@ -201,9 +201,9 @@ export function OrderFilters({
             <select
               value={fulfillmentTypeFilter}
               onChange={(e) => onFulfillmentTypeChange(e.target.value)}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Fulfillment Types</option>
               {Object.entries(fulfillmentLabels).map(([value, label]) => (
@@ -212,7 +212,7 @@ export function OrderFilters({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Page Size */}
@@ -220,9 +220,9 @@ export function OrderFilters({
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value={5}>5 / page</option>
               <option value={10}>10 / page</option>
@@ -230,7 +230,7 @@ export function OrderFilters({
               <option value={30}>30 / page</option>
               <option value={60}>60 / page</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
       </div>
