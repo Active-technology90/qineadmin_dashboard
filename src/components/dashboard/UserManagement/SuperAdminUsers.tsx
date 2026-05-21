@@ -36,10 +36,7 @@ import ViewUserModal from "./ViewUserModal";
 import { TableControls } from "../../ui/TableControls";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
-
-// ============================================================
-// TableControls – simple wrapper for the top filter bar
-// ============================================================
+import { CustomSelect } from "../../ui/CustomSelect";
 
 // ============================================================
 // Utility Functions
@@ -81,6 +78,15 @@ const formatPhone = (phone: string | null): string => {
   return phone;
 };
 
+
+  const roleOptions = [
+  { label: "All Roles", value: "all", icon: <Users className="h-4 w-4" /> },
+  { label: "Admin", value: "admin", icon: <Shield className="h-4 w-4 text-purple-600" /> },
+  { label: "Staff", value: "staff", icon: <Users className="h-4 w-4 text-blue-600" /> },
+  { label: "Viewer", value: "viewer", icon: <Eye className="h-4 w-4 text-amber-600" /> },
+  { label: "Delivery", value: "delivery", icon: <Package className="h-4 w-4 text-emerald-600" /> },
+  { label: "No Company", value: "no_company", icon: <Briefcase className="h-4 w-4 text-gray-600" /> },
+];
 // ============================================================
 // Statistics Card Component
 // ============================================================
@@ -129,7 +135,9 @@ const UserFilters: React.FC<FiltersProps> = ({
   roleFilter,
   setRoleFilter,
 }) => (
+  
   <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
+    
     {/* SEARCH */}
     <div className="relative flex-1">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -139,26 +147,18 @@ const UserFilters: React.FC<FiltersProps> = ({
         placeholder="Search by name, email, phone or company..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
       />
     </div>
 
-    {/* FILTER */}
-    <div className="relative w-full md:w-[180px]">
-      <select
+    {/* CUSTOM ROLE SELECT */}
+    <div className="w-full md:w-[220px]">
+      <CustomSelect
         value={roleFilter}
-        onChange={(e) => setRoleFilter(e.target.value)}
-        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-      >
-        <option value="all">All Roles</option>
-        <option value="admin">Admin</option>
-        <option value="staff">Staff</option>
-        <option value="viewer">Viewer</option>
-        <option value="delivery">Delivery</option>
-        <option value="no_company">No Company</option>
-      </select>
-
-      <Filter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+        onChange={setRoleFilter}
+        options={roleOptions}
+        placeholder="Filter by role"
+      />
     </div>
   </div>
 );
@@ -258,7 +258,7 @@ interface UserTableProps {
   onManageMemberships: (user: User) => void;
 }
 const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
-  <div className="hidden md:block overflow-x-auto">
+  <div className="hidden lg:block overflow-x-auto">
     <table className="w-full">
       <thead className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl">
         <tr>
@@ -365,36 +365,36 @@ const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
 );
 
 // ============================================================
-// Mobile Cards Component
+// Mobile Cards Component (now tablet-friendly grid)
 // ============================================================
 const UserMobileCards: React.FC<UserTableProps> = ({
   users,
   ...actionProps
 }) => (
-  <div className="md:hidden space-y-4">
+  <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
     {users.map((user) => (
       <div
         key={user.id}
-        className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition"
+        className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition flex flex-col"
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base">
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shrink-0">
               {getInitials(user.first_name, user.last_name, user.username)}
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900 truncate">
                 {user.first_name || user.username}
               </p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
           <ActionsDropdown user={user} {...actionProps} />
         </div>
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-2 flex-1">
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-500">Phone:</span>
-            <span className="text-gray-900">
+            <span className="text-gray-900 truncate">
               {formatPhone(user.phone_number)}
             </span>
           </div>
@@ -417,15 +417,15 @@ const UserMobileCards: React.FC<UserTableProps> = ({
           </div>
         </div>
         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-           {user.is_active ? (
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-            <CheckCircle className="h-3 w-3" /> Active
+          {user.is_active ? (
+            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+              <CheckCircle className="h-3 w-3" /> Active
             </span>
           ) : (
-              <span className="inline-flex items-center gap-1 text-xs text-red-600">
-                <Minus className="h-3 w-3" /> Inactive
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 text-xs text-red-600">
+              <Minus className="h-3 w-3" /> Inactive
+            </span>
+          )}
         </div>
       </div>
     ))}
@@ -606,8 +606,6 @@ const SuperAdminUsers: React.FC = () => {
   }, [filteredUsers]);
 
   // Handlers
-  // Inside SuperAdminUsers component
-
   const handleRefresh = async () => {
     setSearchTerm("");
     setRoleFilter("all");
@@ -724,7 +722,7 @@ const SuperAdminUsers: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -743,7 +741,7 @@ const SuperAdminUsers: React.FC = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
           <StatCard
             title="Total Admins"
             value={stats.totalAdmins}
@@ -802,6 +800,7 @@ const SuperAdminUsers: React.FC = () => {
               onRemove={handleRemove}
               onManageMemberships={handleManageMemberships}
             />
+              
             <UserMobileCards
               users={paginatedUsers}
               onView={handleView}

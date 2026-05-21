@@ -41,7 +41,7 @@ export default function NonSuperAdminView({
   onCloseForm,
 }: NonSuperAdminViewProps) {
   return (
-    <div className="flex flex-col lg:flex-row gap-12 items-stretch">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch">
       {/* Left: Company Cards */}
       <div className="flex flex-col">
         {companies.map((company) => (
@@ -55,13 +55,13 @@ export default function NonSuperAdminView({
       </div>
 
       {/* Right: Inline form */}
-          <div className="lg:w-2/3 w-full flex flex-col gap-3 sticky top-6">
+      <div className="lg:w-4/5 w-full flex flex-col gap-4 lg:sticky lg:top-6">
         {/* Action Buttons - Edit, Update, Cancel on same line */}
         {companies.length > 0 && (
-          <div className="flex justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             {/* Update & Cancel Buttons - only show when editing is active */}
             {isEditingActive ? (
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <button
                   type="submit"
                   onClick={onSubmit}
@@ -108,7 +108,7 @@ export default function NonSuperAdminView({
               </div>
             ) : (
               /* View Only Badge - clean text-only with lock icon */
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -130,7 +130,6 @@ export default function NonSuperAdminView({
             )}
             
              {/* Edit Button */}
-            {/* Edit Button */}
             <button
               onClick={() => {
                 if (userCompanyRole === "owner" || userCompanyRole === "admin" || userCompanyRole === "super_admin") {
@@ -178,7 +177,6 @@ export default function NonSuperAdminView({
           </div>
         )}
 
-        {/* Header */}
         {/* Form Container - Header removed */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
 

@@ -61,10 +61,10 @@ export default function CompanyForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-row divide-x divide-gray-100"
+      className="flex flex-col lg:flex-row lg:divide-x lg:divide-gray-100"
     >
       {/* LEFT COLUMN */}
-      <div className="flex-1 p-3 space-y-3 overflow-y-auto  scrollbar-thin  max-h-[calc(100vh-160px)]">
+      <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-thin max-h-[calc(100vh-160px)]">
         {/* Company Name */}
         <div>
           <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
@@ -228,7 +228,7 @@ export default function CompanyForm({
       </div>
 
       {/* RIGHT COLUMN */}
-      <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-thin  max-h-[calc(100vh-160px)]">
+      <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-thin max-h-[calc(100vh-160px)]">
         {/* Business Type */}
         <div>
           <label className="block text-[14px] font-medium text-gray-600 mb-0.5">

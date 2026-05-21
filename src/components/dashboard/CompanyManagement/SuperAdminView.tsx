@@ -31,8 +31,7 @@ export default function SuperAdminView({
   onPageChange,
   onEdit,
   onDelete,
-  pageSize,
-  onPageSizeChange,
+ 
 }: SuperAdminViewProps) {
   return (
     <>

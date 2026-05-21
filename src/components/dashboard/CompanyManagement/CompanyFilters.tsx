@@ -2,6 +2,7 @@
 import { X } from "lucide-react";
 import { SearchInput } from "../../ui/SearchInput";
 import { TableControls } from "../../ui/TableControls";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 
 interface CompanyFiltersProps {
   pageSize: number;
@@ -47,83 +48,104 @@ export default function CompanyFilters({
   onClearAll,
 }: CompanyFiltersProps) {
   return (
-    <TableControls pageSize={pageSize} onPageSizeChange={onPageSizeChange}>
-      <div className="flex flex-col gap-3 w-full">
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <div className="flex-1">
-            <SearchInput
-              value={inputValue}
-              onChange={onInputChange}
-              debounceMs={0}
-              loading={loading}
-              showClearButton={false}
-              placeholder="Search by name, slug, category, subcategory, or type..."
-            />
-          </div>
-          <select
-            value={`${sortField}|${sortOrder}`}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 sm:w-48"
-          >
-            <option value={`${sortField}|${sortOrder}`}>All Filters</option>
-            <option value="name|asc">Name (A-Z)</option>
-            <option value="name|desc">Name (Z-A)</option>
-            <option value="is_active|desc">Active First</option>
-            <option value="is_featured|desc">Featured First</option>
-          </select>
-        </div>
+    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-200">
 
-        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
-          <select
-            value={businessTypeFilter}
-            onChange={(e) => onBusinessTypeChange(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="all">All Business Types</option>
-            {businessTypeOptions.map((type) => (
-              <option key={type} value={type}>
-                {type.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="all">All Categories</option>
-            {categoryOptions.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <select
-            value={subCategoryFilter}
-            onChange={(e) => onSubCategoryChange(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="all">All Subcategories</option>
-            {subCategoryOptions.map((subCat) => (
-              <option key={subCat} value={subCat}>
-                {subCat}
-              </option>
-            ))}
-          </select>
-          {hasActiveFilters ? (
-            <button
-              type="button"
-              onClick={onClearAll}
-              className="inline-flex items-center justify-center gap-1.5 border border-[#f31313] text-[#f31313] rounded-lg px-4 py-2 text-sm w-1/3 hover:bg-[#f31313]/5"
-            >
-              <X size={14} />
-              Clear
-            </button>
-          ) : (
-            <div />
-          )}
-        </div>
+      {/* ================= MOBILE (ONLY SEARCH, NO TABLE CONTROLS) ================= */}
+      <div className="block md:hidden px-3 py-3">
+        <SearchInput
+          value={inputValue}
+          onChange={onInputChange}
+          debounceMs={0}
+          loading={loading}
+          showClearButton={false}
+          placeholder="Search..."
+        />
       </div>
-    </TableControls>
+
+      {/* ================= TABLET + DESKTOP ================= */}
+      <div className="hidden md:block">
+        <TableControls pageSize={pageSize} onPageSizeChange={onPageSizeChange}>
+          <div className="w-full py-3 space-y-3">
+
+            {/* SEARCH + SORT (TABLET LAYOUT) */}
+            <div className="flex flex-col lg:flex-row gap-3 w-full">
+              <div className="flex-1">
+                <SearchInput
+                  value={inputValue}
+                  onChange={onInputChange}
+                  debounceMs={0}
+                  loading={loading}
+                  showClearButton={false}
+                  placeholder="Search by name, slug, category..."
+                />
+              </div>
+
+              <div className="w-full lg:w-56">
+                <CustomSelect
+                  value={`${sortField}|${sortOrder}`}
+                  onChange={onSortChange}
+                  placeholder="Sort"
+                  options={[
+                    { value: "name|asc", label: "Name (A-Z)" },
+                    { value: "name|desc", label: "Name (Z-A)" },
+                    { value: "is_active|desc", label: "Active First" },
+                    { value: "is_featured|desc", label: "Featured First" },
+                  ]}
+                />
+              </div>
+            </div>
+
+            {/* FILTER GRID (ONLY DESKTOP LARGE SCREENS) */}
+            <div className="hidden lg:grid grid-cols-2 xl:grid-cols-5 gap-3">
+
+              <CustomSelect
+                value={businessTypeFilter}
+                onChange={onBusinessTypeChange}
+                placeholder="Business Type"
+                options={businessTypeOptions.map<SelectOption>((type) => ({
+                  value: type,
+                  label: type.toUpperCase(),
+                }))}
+              />
+
+              <CustomSelect
+                value={categoryFilter}
+                onChange={onCategoryChange}
+                placeholder="Category"
+                options={categoryOptions.map<SelectOption>((cat) => ({
+                  value: cat,
+                  label: cat,
+                }))}
+              />
+
+              <CustomSelect
+                value={subCategoryFilter}
+                onChange={onSubCategoryChange}
+                placeholder="Subcategory"
+                options={subCategoryOptions.map<SelectOption>((sub) => ({
+                  value: sub,
+                  label: sub,
+                }))}
+              />
+
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  className="flex items-center justify-center gap-1.5 border border-red-500 text-red-500 rounded-xl px-4 py-2 text-sm hover:bg-red-50 min-h-[42px]"
+                >
+                  <X size={14} />
+                  Clear
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
+
+          </div>
+        </TableControls>
+      </div>
+
+    </div>
   );
 }

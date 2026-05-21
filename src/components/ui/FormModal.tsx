@@ -24,7 +24,6 @@ const maxWidthClasses = {
   '3xl': 'sm:max-w-7xl',
 };
 
-// Focus trap helper
 const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active: boolean) => {
   useEffect(() => {
     if (!active || !containerRef.current) return;
@@ -50,23 +49,33 @@ const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active:
         }
       }
     };
+
     window.addEventListener('keydown', handleTab);
     return () => window.removeEventListener('keydown', handleTab);
   }, [active, containerRef]);
 };
 
-// Backdrop & modal variants
 const backdropVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, transition: { duration: 0.15 } },
+  visible: { opacity: 1, transition: { duration: 0.25 } },
+  exit: { opacity: 0, transition: { duration: 0.2 } },
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.96, y: 10 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } },
-  exit: { opacity: 0, scale: 0.96, y: 10, transition: { duration: 0.15, ease: 'easeIn' } },
-} as const;
+  hidden: { opacity: 0, scale: 0.95, y: 12 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 12,
+    transition: { duration: 0.2, ease: 'easeInOut' },
+  },
+};
 
 export const FormModal: React.FC<FormModalProps> = ({
   isOpen,
@@ -83,10 +92,8 @@ export const FormModal: React.FC<FormModalProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
   const [shouldRender, setShouldRender] = useState(false);
 
-  // Focus trap when open
   useFocusTrap(modalRef, isOpen);
 
-  // Scroll lock + ESC + handle open/close animations
   useEffect(() => {
     if (!isOpen) {
       setShouldRender(false);
@@ -100,6 +107,7 @@ export const FormModal: React.FC<FormModalProps> = ({
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+
     window.addEventListener('keydown', handleEsc);
 
     return () => {
@@ -108,7 +116,6 @@ export const FormModal: React.FC<FormModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  // Auto‑focus first focusable element after modal opens
   useEffect(() => {
     if (isOpen && modalRef.current) {
       const focusable = modalRef.current.querySelectorAll(
@@ -122,7 +129,11 @@ export const FormModal: React.FC<FormModalProps> = ({
 
   const handleOutsideClick = useCallback(
     (e: React.MouseEvent) => {
-      if (closeOnOutsideClick && modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      if (
+        closeOnOutsideClick &&
+        modalRef.current &&
+        !modalRef.current.contains(e.target as Node)
+      ) {
         onClose();
       }
     },
@@ -146,7 +157,7 @@ export const FormModal: React.FC<FormModalProps> = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4"
           onClick={handleOutsideClick}
           aria-modal="true"
           role="dialog"
@@ -159,55 +170,65 @@ export const FormModal: React.FC<FormModalProps> = ({
             animate="visible"
             exit="exit"
             className={`
-              w-full ${maxWidthClasses[maxWidth]}
-              bg-white rounded-2xl shadow-2xl
-              flex flex-col max-h-[90vh]
-              ring-1 ring-black/5
+              w-full
+              max-h-[95vh] sm:max-h-[92vh]
+              ${maxWidthClasses[maxWidth]}
+              bg-white
+              rounded-2xl sm:rounded-3xl
+              shadow-2xl
+              ring-1 ring-gray-200/30
+              flex flex-col
+              overflow-hidden
             `}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#6750A4]/30 sticky top-0 bg-[#6750A4]/20 backdrop-blur-sm z-10 rounded-t-2xl">
-              <h2 id="modal-title" className="text-lg sm:text-xl font-bold text-[#6750A4]">
-                {title}
-              </h2>
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 shadow-sm transition duration-200 group"
-                  aria-label="Close modal"
+            <div className="sticky top-0 z-20">
+              <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-white/20 bg-gradient-to-r from-[#6750A4]/10 via-white/80 to-white/60 backdrop-blur-xl">
+                <h2
+                  id="modal-title"
+                  className="text-base sm:text-lg lg:text-xl font-semibold text-[#6750A4] truncate"
                 >
-                  <X size={20} className="transition-transform group-hover:scale-110" />
-                </button>
-              )}
+                  {title}
+                </h2>
+
+                {showCloseButton && (
+                  <button
+                    onClick={onClose}
+                    className="p-2 rounded-full bg-white/70 hover:bg-white text-red-500 hover:text-red-600 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40"
+                    aria-label="Close modal"
+                  >
+                    <X size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Form */}
             <form
               ref={formRef}
               onSubmit={handleSubmit}
               className="flex flex-col flex-1 overflow-hidden"
             >
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5 ">
+              <div className="flex-1 overflow-y-auto px-3 sm:px-5 lg:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                 {children}
               </div>
 
-              {/* Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 sm:px-6 py-4 rounded-b-2xl">
-                <div className="flex flex-col-reverse sm:flex-row gap-3">
+              <div className="sticky bottom-0 border-t border-gray-100 bg-white/90 backdrop-blur-xl px-3 sm:px-5 lg:px-6 py-3 sm:py-4">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98]"
                   >
                     Cancel
                   </button>
+
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-white font-medium transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#6750A4] to-[#7c63c9] hover:from-[#5a448c] hover:to-[#6d56b3]"
                   >
-                    {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {submitting && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
                     {submitting ? 'Saving...' : 'Save'}
                   </button>
                 </div>
