@@ -400,33 +400,33 @@ export function ImageGallery({ images, productId, companySlug, onImagesChange, o
       </div>
     </div>
 
-     {/* Custom Confirmation Modal */}
+     {/* Custom Confirmation Modal - Responsive */}
     {showConfirmModal && (
       <div 
-        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4"
         onClick={(e) => e.target === e.currentTarget && closeConfirmModal()}
       >
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-200">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[92%] sm:max-w-md mx-auto overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Delete Image</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Delete Image</h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
               Are you sure you want to delete this image? This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={closeConfirmModal}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition text-sm sm:text-base w-full sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
               >
                 Delete
               </button>

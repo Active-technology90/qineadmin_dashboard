@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Building2, Plus, RefreshCw, Search } from "lucide-react";
 // import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
@@ -66,7 +66,15 @@ export default function CompanyProducts() {
     updateProduct,
     deleteProduct,
     refetch,
-  } = useCompanyProducts({ companySlug });
+  } = useCompanyProducts({ companySlug, pageSize });
+  // Debug: log when pageSize changes
+  useEffect(() => {
+    console.log("Page size changed to:", pageSize);
+    setCurrentPage(1);
+    setTimeout(() => {
+      refetch();
+    }, 100);
+  }, [pageSize]);
 
   // Modals & toast
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -191,7 +199,7 @@ export default function CompanyProducts() {
   return (
     <>
       <Toast toast={toast} zIndex={toastZIndex} />
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.title || ""}
@@ -212,61 +220,65 @@ export default function CompanyProducts() {
         onShowToast={showToastWithHigherZIndex}
       />
 
-      <div className="px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {isSuperAdmin ? (
-          <div className="flex items-center gap-3">
-            {companyLogo ? (
-              <img
-                src={companyLogo}
-                alt={companyName}
-                className="w-10 h-10 rounded-full object-cover border border-gray-200"
-              />
-            ) : (
-              <Building2 className="w-8 h-8 text-gray-400" />
-            )}
+      <div className="px-3 sm:px-5 md:px-6">
+        {/* TITLE SECTION - Full width on top */}
+        <div className="w-full">
+          {isSuperAdmin ? (
+            <div className="flex items-center gap-2 sm:gap-3">
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt={companyName}
+                  className="w-6 h-6 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <Building2 className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400" />
+              )}
+              <div>
+                <h2 className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">{companyName}</h2>
+              </div>
+            </div>
+          ) : (
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2>
-              {/* <p className="text-2xl font-extrabold text-secondary tracking-tight">All Products</p> */}
+              <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">All Products</p>
             </div>
-          </div>
-        ) : (
-           <div>
-              {/* <h2 className="text-2xl font-extrabold text-secondary tracking-tight">{companyName}</h2> */}
-              <p className="text-2xl font-extrabold text-secondary tracking-tight">All Products</p>
-            </div>
-        )}
-          <div className="flex gap-3 ">
+          )}
+        </div>
+
+        {/* BUTTONS SECTION - Below title, Switch on LEFT, Add Product on RIGHT */}
+        <div className="flex flex-row justify-between items-center gap-3 mt-3 sm:mt-4">
+          {/* LEFT SIDE - Switch button (only for super admin) */}
+          <div className="flex-shrink-0">
             {isSuperAdmin && (
               <button
                 onClick={clearCompany}
-                className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm shadow-sm"
               >
-                <RefreshCw className="h-4 w-4" /> Switch
+                <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Switch
               </button>
             )}
+          </div>
+
+          {/* RIGHT SIDE - Add Product button (always on right) */}
+          <div className="flex-shrink-0">
             {canEditBasic && (
               <button
                 onClick={handleAdd}
-                className="px-4 py-2 rounded-full mt-2  bg-secondary text-white hover:bg-secondary flex items-center gap-2 shadow-sm"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
               >
-                <Plus className="h-4 w-4" /> Add Product
+                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="mt-1 px-6 py-1">
-        <TableControls
-          pageSize={pageSize}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setCurrentPage(1);
-          }}
-        >
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+      <div className="mt-1 px-3 sm:px-5 md:px-6 py-1">
+        {/* Unified container - border only on desktop, no border on mobile */}
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 sm:border sm:border-gray-200 sm:rounded-xl bg-white p-0 sm:p-1.5">
+          {/* LEFT SIDE - Search (reduced width on mobile) */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
             <input
               value={search}
               type="search"
@@ -274,14 +286,39 @@ export default function CompanyProducts() {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]"
+              placeholder="Search..."
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 focus:border-[#6750A4] bg-white transition-all duration-200 [&:focus]:ring-[#6750A4] [&:focus]:border-[#6750A4]"
+              style={{ outline: "none" }}
             />
           </div>
-        </TableControls>
+
+          {/* RIGHT SIDE - Custom Page Size Selector (reduced size) */}
+          <div className="flex-shrink-0">
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 focus:border-[#6750A4] cursor-pointer appearance-none pr-6 sm:pr-7 transition-all duration-200"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 0.5rem center",
+                backgroundSize: "1rem",
+              }}
+            >
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={15}>15 / page</option>
+              <option value={30}>30 / page</option>
+              <option value={60}>60 / page</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div className="px-6 py-2">
+      <div className="px-3 sm:px-5 md:px-6 py-2">
         <ProductTable
           products={products}
           totalItems={totalItems}

@@ -201,22 +201,22 @@ export function ProductModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/50 backdrop-blur-sm transition-all duration-200"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-3xl w-full max-w-[95%] sm:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#6750A4]/20 backdrop-blur-sm border-b border-[#6750A4]/20 px-6 py-4">
+        <div className="sticky top-0 z-10 bg-[#6750A4]/20 backdrop-blur-sm border-b border-[#6750A4]/20 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+              <h3 className="text-base sm:text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent break-words">
                 {editingProduct ? 'Product Details' : 'New Product'}
-                {isReadOnlyBasic && <span className="ml-2 text-sm font-normal text-amber-600">(View only)</span>}
+                {isReadOnlyBasic && <span className="ml-2 text-[10px] sm:text-sm font-normal text-amber-600">(View only)</span>}
                 {!isReadOnlyBasic && isPricingDisabled && isEditMode && (
-                  <span className="ml-2 text-sm font-normal text-blue-600">(Price/Stock read only)</span>
+                  <span className="ml-2 text-[10px] sm:text-sm font-normal text-blue-600">(Price/Stock read only)</span>
                 )}
               </h3>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                 {step === 'details' 
                   ? (isReadOnlyBasic ? 'Product information' : 'Enter product details') 
                   : 'Manage product images'}
@@ -224,24 +224,24 @@ export function ProductModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full text-gray-400 hover:text-[#6750A4] hover:bg-[#6750A4]/10 transition"
+              className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-[#6750A4] hover:bg-[#6750A4]/10 transition flex-shrink-0"
               aria-label="Close"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
 
           {/* Progress Stepper – hide if completely read-only */}
           {!isReadOnlyBasic && (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+            <div className="mt-3 sm:mt-4">
+              <div className="flex items-center gap-1 sm:gap-2 mb-2">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
                     step === 'details' ? 'bg-secondary text-white' : 'bg-secondary/10 text-secondary'
                   }`}>
-                    {step === 'details' ? '1' : <CheckCircle className="h-4 w-4" />}
+                    {step === 'details' ? '1' : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
                   </div>
-                  <span className={`text-sm font-medium ${step === 'details' ? 'text-secondary' : 'text-gray-500'}`}>
+                  <span className={`text-[10px] sm:text-sm font-medium ${step === 'details' ? 'text-secondary' : 'text-gray-500'}`}>
                     Details
                   </span>
                 </div>
@@ -251,13 +251,13 @@ export function ProductModal({
                     style={{ width: `${stepProgress}%` }}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
                     step === 'gallery' ? 'bg-secondary text-white' : 'bg-gray-100 text-gray-400'
                   }`}>
-                    {step === 'gallery' ? '2' : <CheckCircle className="h-4 w-4" />}
+                    {step === 'gallery' ? '2' : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
                   </div>
-                  <span className={`text-sm font-medium ${step === 'gallery' ? 'text-secondary' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] sm:text-sm font-medium ${step === 'gallery' ? 'text-secondary' : 'text-gray-400'}`}>
                     Images
                   </span>
                 </div>
@@ -267,10 +267,10 @@ export function ProductModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="transition-all duration-300 ease-out">
             {step === 'details' ? (
-              <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-5">
+              <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-4 sm:space-y-5">
                 {/* SKU – disabled when editing or basic read-only */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -279,7 +279,7 @@ export function ProductModal({
                   <input
                     {...register('sku')}
                     disabled={isSubmitting || !!editingProduct || isReadOnlyBasic}
-                    className={`w-full px-4 py-2 rounded-lg border ${
+                    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                       errors.sku
                         ? 'border-red-500 focus:ring-red-100'
                         : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
@@ -289,8 +289,8 @@ export function ProductModal({
                     placeholder="e.g., FLR-001"
                   />
                   {errors.sku && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3.5 w-3.5" />
+                    <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       {errors.sku.message}
                     </p>
                   )}
@@ -303,7 +303,7 @@ export function ProductModal({
                   </label>
                   <input
                     {...register('title')}
-                    className={`w-full px-4 py-2 rounded-lg border ${
+                    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                       errors.title
                         ? 'border-red-500 focus:ring-red-100'
                         : 'border-gray-200 focus:border-secondary focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20'
@@ -317,7 +317,7 @@ export function ProductModal({
                 </div>
 
                 {/* Price & Stock */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Price (ETB) <span className="text-red-500">*</span>
@@ -326,7 +326,7 @@ export function ProductModal({
                       type="number"
                       step="0.01"
                       {...register('price', { valueAsNumber: true })}
-                      className={`w-full px-4 py-2 rounded-lg border ${
+                      className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                         errors.price
                           ? 'border-red-500 focus:ring-red-100'
                           : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
@@ -347,7 +347,7 @@ export function ProductModal({
                     <input
                       type="number"
                       {...register('stock', { valueAsNumber: true })}
-                      className={`w-full px-4 py-2 rounded-lg border ${
+                      className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                         errors.stock
                           ? 'border-red-500 focus:ring-red-100'
                           : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
@@ -370,7 +370,7 @@ export function ProductModal({
                   </label>
                   <select
                     {...register('unit')}
-                    className={`w-full px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none ${
+                    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border border-gray-200 bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none ${
                       isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                     }`}
                     disabled={isSubmitting || isReadOnlyBasic}
@@ -386,9 +386,9 @@ export function ProductModal({
             ) : (
               <div className="space-y-5">
                 {loadingImages ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-                    <p className="text-sm text-gray-500 mt-3">Loading images...</p>
+                  <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                    <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-secondary" />
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">Loading images...</p>
                   </div>
                 ) : (
                    <ImageGallery
@@ -423,24 +423,24 @@ export function ProductModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4">
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4">
           {step === 'details' ? (
             isReadOnlyBasic ? (
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition text-sm sm:text-base"
                 >
                   Close
                 </button>
               </div>
             ) : (
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition text-sm sm:text-base w-full sm:w-auto"
                 >
                   Cancel
                 </button>
@@ -448,27 +448,27 @@ export function ProductModal({
                   type="submit"
                   form="product-details-form"
                   disabled={isSubmitting}
-                  className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
                 >
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Continue to Images <ChevronRight className="h-4 w-4" />
+                  {isSubmitting && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
+                  Continue to Images <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             )
           ) : (
-            <div className="flex justify-between gap-3">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={handleBackToDetails}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
                 disabled={isReadOnlyBasic}
               >
-                <ChevronLeft className="h-4 w-4" /> Back to Details
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Back to Details
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition shadow-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
               >
                 Done
               </button>
