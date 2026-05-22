@@ -687,7 +687,7 @@ export default function CompanyUsers() {
           >
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+              <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
               <button
                 onClick={() => setShowMobileFilterModal(false)}
                 className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -695,12 +695,11 @@ export default function CompanyUsers() {
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
-
             {/* Content */}
             <div className="p-4 space-y-4">
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-secondary mb-1.5">
                   Search
                 </label>
                 <div className="relative">
@@ -710,20 +709,20 @@ export default function CompanyUsers() {
                     placeholder="Search users..."
                     value={tableSearch}
                     onChange={(e) => setTableSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
                   />
                 </div>
               </div>
 
               {/* Role Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-secondary mb-1.5">
                   Role
                 </label>
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value as any)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
                 >
                   <option value="all">All Roles</option>
                   <option value="admin">Admin ({roleCounts.admin || 0})</option>
@@ -735,7 +734,7 @@ export default function CompanyUsers() {
 
               {/* Page Size */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-secondary mb-1.5">
                   Items per page
                 </label>
                 <select
@@ -744,7 +743,7 @@ export default function CompanyUsers() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
                 >
                   <option value={5}>5 / page</option>
                   <option value={10}>10 / page</option>
@@ -754,29 +753,27 @@ export default function CompanyUsers() {
                 </select>
               </div>
 
-              {/* Active Filters Indicator */}
-              {(tableSearch || roleFilter !== "all") && (
-                <div className="pt-2">
+              {/* Action Buttons - Equal width, side by side */}
+              <div className="flex items-center gap-3 pt-2">
+                {(tableSearch || roleFilter !== "all") && (
                   <button
                     onClick={() => {
                       setTableSearch("");
                       setRoleFilter("all");
                       setCurrentPage(1);
                     }}
-                    className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
                   >
-                    Clear all filters
+                    Clear all
                   </button>
-                </div>
-              )}
-
-              {/* Close Button */}
-              <button
-                onClick={() => setShowMobileFilterModal(false)}
-                className="w-full py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
-              >
-                Apply Filters
-              </button>
+                )}
+                <button
+                  onClick={() => setShowMobileFilterModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>
