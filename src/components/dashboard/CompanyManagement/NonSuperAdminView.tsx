@@ -108,7 +108,7 @@ export default function NonSuperAdminView({
               </div>
             ) : (
               /* View Only Badge - clean text-only with lock icon */
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className=" p-4 flex items-center gap-3 flex-wrap">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"

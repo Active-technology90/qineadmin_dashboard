@@ -485,7 +485,7 @@ export default function CompanyForm({
 
         {/* View only message */}
         {!isEditingActive && (
-          <div className="text-center py-2 text-gray-500 text-[10px] bg-gray-50 rounded-md border border-gray-100 mt-2">
+          <div className="text-center p-3 text-gray-500 text-[10px] bg-gray-50 rounded-md border border-gray-100 mt-2">
             🔒 View only
           </div>
         )}

@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, Eye, Filter, SlidersHorizontal, X } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
 import {
   getCategories,
   createCategory,
@@ -14,19 +14,17 @@ import {
   deleteCategory,
 } from "../../services/api";
 import type { Category } from "../../types";
-import { FormModal } from "../ui/FormModal";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 import { ErrorView } from "../ui/ErrorView";
 import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
-// import { DragDropImageUpload } from "../ui/DragDropImageUpload";
-import { useReadOnly } from "./AdminDashboard"; // <-- import read‑only context
-
+import { useReadOnly } from "./AdminDashboard";
 import CategoryTable from "./category-management/CategoryTable";
 import CategoryFormModal from "./category-management/CategoryFormModal";
-import { CustomSelect } from "../ui/CustomSelect";
+import SortSheet from "../ui/SortSheet";
+import MobileActionBar from "../ui/MobileActionBar";
 import type { SelectOption } from "../ui/CustomSelect";
 
 export default function CategoryManagement() {
@@ -67,24 +65,9 @@ export default function CategoryManagement() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const { toast, showToast } = useToast();
 
-  // ---- Mobile sort sheet state (SuperAdminView pattern) ----
+  // ---- Mobile sort sheet state ----
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tempSort, setTempSort] = useState("name|asc");
-
-  // Lock body scroll when sheet is open (no dependency on sortField/sortOrder)
-  useEffect(() => {
-    if (sheetOpen) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [sheetOpen]);
 
   // Filter categories client‑side
   const filteredCategories = useMemo(() => {
@@ -99,14 +82,14 @@ export default function CategoryManagement() {
     );
   }, [categories, searchTerm]);
 
-  // ---- useSorting hook (defines sortField, sortOrder) ----
+  // ---- useSorting hook ----
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredCategories,
     "name",
     "asc",
   );
 
-  // Sync tempSort when sheet opens (now after useSorting)
+  // Sync tempSort when sheet opens
   useEffect(() => {
     if (sheetOpen) {
       setTempSort(`${sortField}|${sortOrder}`);
@@ -126,7 +109,7 @@ export default function CategoryManagement() {
     setSheetOpen(false);
   };
 
-  const clearMobileSort = () => {
+  const resetMobileSort = () => {
     setTempSort("name|asc");
     if ("name|asc" !== `${sortField}|${sortOrder}`) {
       handleSort("name");
@@ -446,121 +429,27 @@ export default function CategoryManagement() {
         onPageChange={goToPage}
       />
 
-      {/* ---- MOBILE STICKY SORT BAR (visible below md) ---- */}
-      <div className="md:hidden fixed bottom-0 left-0  z-30 bg-white/90 backdrop-blur-xl border-t border-gray-200/80 px-4 py-3 flex gap-3 safe-bottom">
-        {/* <button
-          onClick={() => setSheetOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-        >
-          <Filter className="w-4 h-4" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-[#6750A4] text-white text-[10px] font-bold leading-none">
-              {activeFilterCount}
-            </span>
-          )}
-        </button> */}
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          {sortLabel}
-        </button>
-      </div>
+      {/* Mobile sticky bottom bar (only sort, no filter button) */}
+      <MobileActionBar
+        activeFilterCount={activeFilterCount}
+        sortLabel={sortLabel}
+        onOpenFilters={() => {}}
+        onOpenSort={() => setSheetOpen(true)}
+        showFilterButton={false}
+      />
 
-      {/* ---- MOBILE SORT SHEET (visible when sheetOpen) ---- */}
-      {sheetOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm transition-opacity duration-300"
-            onClick={() => setSheetOpen(false)}
-          />
-          {/* Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white rounded-t-2xl shadow-2xl max-h-[70vh] transform transition-all duration-300 ease-out">
-            {/* Drag handle */}
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-gray-300" />
-            </div>
+      {/* Sort sheet */}
+      <SortSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        options={sortOptions}
+        value={tempSort}
+        onChange={setTempSort}
+        onApply={applyMobileSort}
+        onReset={resetMobileSort}
+      />
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Sort</h3>
-              <button
-                onClick={() => setSheetOpen(false)}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Sort options */}
-            {/* Sort options (Improved UX Cards) */}
-<div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 py-3 space-y-4">
-  <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 block">
-    Sort By
-  </label>
-
-  <div className="grid grid-cols-1 gap-3">
-    {sortOptions.map((opt) => {
-      const isActive = tempSort === opt.value;
-
-      return (
-        <button
-          key={opt.value}
-          onClick={() => setTempSort(opt.value)}
-          className={`
-            w-full flex items-center justify-between
-            px-4 py-3 rounded-2xl border
-            transition-all duration-200 active:scale-[0.98]
-
-            ${
-              isActive
-                ? "bg-[#6750A4] text-white border-[#6750A4] shadow-md"
-                : "bg-white text-gray-700 border-gray-200 hover:border-[#6750A4]/40 hover:bg-gray-50"
-            }
-          `}
-        >
-          <span className="text-sm font-semibold">{opt.label}</span>
-
-          {/* Radio indicator */}
-          <span
-            className={`
-              w-4 h-4 rounded-full border-2 flex items-center justify-center
-              ${isActive ? "border-white" : "border-gray-300"}
-            `}
-          >
-            {isActive && (
-              <span className="w-2 h-2 bg-white rounded-full" />
-            )}
-          </span>
-        </button>
-      );
-    })}
-  </div>
-</div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-100 bg-white p-4 flex gap-3 flex-shrink-0 safe-bottom">
-              <button
-                onClick={clearMobileSort}
-                className="flex-1 h-12 rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700 active:scale-[0.98] transition-all"
-              >
-                Reset
-              </button>
-              <button
-                onClick={applyMobileSort}
-                className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
-              >
-                Apply Sort
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Modal – only rendered when not read‑only (optional, but keeps conditional) */}
+      {/* Modal – only rendered when not read‑only */}
       {!readOnly && (
         <CategoryFormModal
           isOpen={modalOpen}

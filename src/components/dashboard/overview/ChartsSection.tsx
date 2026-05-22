@@ -55,23 +55,25 @@ export default function ChartsSection({
 }: ChartsSectionProps) {
   return (
     <>
-      {/* Revenue & Order Status Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-3 lg:gap-4">
-        {/* Revenue Bar Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      {/* =========== Revenue & Order Status Row =========== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 lg:gap-5">
+        {/* -------- Revenue Bar Chart (lg:col-span-2) -------- */}
+        <div className="lg:col-span-2 bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
           {loading ? (
-            <SkeletonChart height="h-[300px]" />
+            <SkeletonChart height="h-64 sm:h-72 lg:h-80" />
           ) : (
             <>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="space-y-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                     Revenue
                   </h3>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                     {formatCurrency(totalRevenue)}
                   </p>
-                  <div className="flex items-center gap-3 mt-1">
+                  {/* Legend */}
+                  <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#6750A4]" />
                       <span className="text-xs text-gray-500">Current</span>
@@ -82,25 +84,32 @@ export default function ChartsSection({
                     </div>
                   </div>
                 </div>
+                {/* Period switcher + icon */}
                 <div className="flex items-center gap-2">
-                  <div className="flex bg-gray-100 rounded-lg p-1">
+                  <div className="flex bg-gray-100 rounded-xl p-1">
                     {(["week", "month", "year"] as Period[]).map((p) => (
                       <button
                         key={p}
                         onClick={() => setPeriod(p)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? "bg-white shadow text-[#6750A4]" : "text-gray-500 hover:text-gray-700"}`}
+                        className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
+                          period === p
+                            ? "bg-white shadow text-[#6750A4] ring-1 ring-gray-200/50"
+                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                        }`}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
                       </button>
                     ))}
                   </div>
-                  <div className="p-2 bg-purple-50 rounded-lg">
+                  <div className="p-2 bg-purple-50 rounded-xl hidden sm:block">
                     <TrendingUp className="h-5 w-5 text-[#6750A4]" />
                   </div>
                 </div>
               </div>
+
+              {/* Chart container */}
               {hasRevenueData ? (
-                <div className="h-72">
+                <div className="h-64 sm:h-72 lg:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={currentData}
@@ -113,12 +122,13 @@ export default function ChartsSection({
                       />
                       <XAxis
                         dataKey="label"
-                        tick={{ fontSize: 12, fill: "#9ca3af" }}
+                        tick={{ fontSize: 11, fill: "#9ca3af" }}
                         axisLine={false}
                         tickLine={false}
+                        interval="preserveStartEnd"
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: "#9ca3af" }}
+                        tick={{ fontSize: 11, fill: "#9ca3af" }}
                         axisLine={false}
                         tickLine={false}
                         tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
@@ -162,18 +172,18 @@ export default function ChartsSection({
           )}
         </div>
 
-        {/* Order Status Pie Chart with dynamic colors */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        {/* -------- Order Status Donut Chart -------- */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
           {loading ? (
-            <SkeletonChart height="h-[300px]" />
+            <SkeletonChart height="h-64 sm:h-72 lg:h-80" />
           ) : (
             <>
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-700 mb-4">
                 Orders by Status
               </h3>
               {hasOrderStatusData ? (
                 <>
-                  <div className="h-48 flex items-center justify-center">
+                  <div className="h-48 sm:h-56 lg:h-64 flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -199,7 +209,8 @@ export default function ChartsSection({
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex flex-wrap gap-3 mt-2">
+                  {/* Legend – wraps nicely on all screens */}
+                  <div className="flex flex-wrap gap-3 mt-3 justify-center sm:justify-start">
                     {orderStatusData.map((s) => (
                       <div key={s.name} className="flex items-center gap-1.5">
                         <span
@@ -225,31 +236,29 @@ export default function ChartsSection({
         </div>
       </div>
 
-      {/* Product Trend & Top Products */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-3 lg:gap-4">
-        {/* Product Trend Line Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      {/* =========== Product Trend & Top Products =========== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 lg:gap-5 mt-4 md:mt-6">
+        {/* -------- Product Trend Line Chart (lg:col-span-2) -------- */}
+        <div className="lg:col-span-2 bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
           {loading ? (
-            <SkeletonChart height="h-[300px]" />
+            <SkeletonChart height="h-64 sm:h-72 lg:h-80" />
           ) : (
             <>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                     Product Sales Trend
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Monthly comparison
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Monthly comparison</p>
                 </div>
-                <div className="flex items-center gap-4">
+                {/* Legend – wraps on small screens */}
+                <div className="flex flex-wrap items-center gap-3 xs:gap-4">
                   {topProductNames.map((name, idx) => (
                     <div key={name} className="flex items-center gap-1.5">
                       <span
                         className="w-3 h-3 rounded-full"
                         style={{
-                          backgroundColor:
-                            CHART_COLORS[idx % CHART_COLORS.length],
+                          backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
                         }}
                       />
                       <span className="text-xs text-gray-600">{name}</span>
@@ -258,7 +267,7 @@ export default function ChartsSection({
                 </div>
               </div>
               {hasProductTrendData ? (
-                <div className="h-72">
+                <div className="h-64 sm:h-72 lg:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={productTrendData}
@@ -271,12 +280,12 @@ export default function ChartsSection({
                       />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: "#9ca3af" }}
+                        tick={{ fontSize: 11, fill: "#9ca3af" }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: "#9ca3af" }}
+                        tick={{ fontSize: 11, fill: "#9ca3af" }}
                         axisLine={false}
                         tickLine={false}
                         tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
@@ -317,14 +326,14 @@ export default function ChartsSection({
           )}
         </div>
 
-        {/* Top products */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        {/* -------- Top Products -------- */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
           {loading ? (
-            <SkeletonChart height="h-[300px]" />
+            <SkeletonChart height="h-64 sm:h-72 lg:h-80" />
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-700">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                   Top Products
                 </h3>
                 <button
@@ -336,33 +345,42 @@ export default function ChartsSection({
                 </button>
               </div>
               {hasTopProductsData ? (
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-y-auto pr-1">
                   {productSalesData.map((product) => (
-                    <div key={product.name} className="flex items-center gap-3">
+                    <div
+                      key={product.name}
+                      className="group flex items-center gap-3 hover:bg-gray-50/50 p-2 -mx-2 rounded-xl transition-colors"
+                    >
                       <div
-                        className="w-2.5 h-2.5 rounded-full"
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: product.color }}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
-                          <p className="text-sm font-medium  truncate" style={{ color: product.color }}>
+                          <p
+                            className="text-sm font-medium truncate pr-2"
+                            style={{ color: product.color }}
+                          >
                             {product.name}
                           </p>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
                             {formatCurrency(product.sales)}
                           </span>
                         </div>
-                        <div className="flex flex-row gap-2 items-center ">
-                          <div className="flex flex-row gap-2 items-center rounded p-1" style={{ backgroundColor: product.color }}>
-                            <Building2 className="h-4 w-4 text-white" />
-                            <p className="text-[11px] font-medium text-white truncate">
-                              {product.company_name}
-                            </p>
-                          </div>
+                        {/* Company badge */}
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-white"
+                            style={{ backgroundColor: product.color }}
+                          >
+                            <Building2 className="h-3 w-3" />
+                            {product.company_name}
+                          </span>
                         </div>
-                        <div className="mt-1 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        {/* Progress bar */}
+                        <div className="mt-2 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full"
+                            className="h-full rounded-full transition-all duration-500"
                             style={{
                               width: `${productSalesData[0]?.sales ? (product.sales / productSalesData[0].sales) * 100 : 0}%`,
                               backgroundColor: product.color,

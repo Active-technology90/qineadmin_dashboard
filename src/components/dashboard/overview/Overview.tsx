@@ -501,7 +501,7 @@ export default function Overview({
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 xs:gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 xs:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 xs:gap-3 sm:gap-4">
         {loading ? (
           Array.from({ length: skeletonCount }).map((_, i) => <SkeletonCard key={i} />)
         ) : (

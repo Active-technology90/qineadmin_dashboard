@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon, Filter, SlidersHorizontal, X } from "lucide-react";
+import { Plus, ImageIcon, Edit, Trash2 } from "lucide-react";
 import {
   getSubCategories,
   createSubCategory,
@@ -26,9 +26,11 @@ import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
-import { DragDropImageUpload } from "../ui/DragDropImageUpload";
 import { useReadOnly } from "./AdminDashboard";
 import { CustomSelect } from "../ui/CustomSelect";
+import MobileCardSkeleton from "../ui/MobileCardSkeleton";
+import MobileActionBar from "../ui/MobileActionBar";
+import FilterSortSheet from "../ui/FilterSortSheet";
 
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
@@ -152,21 +154,6 @@ export default function SubCategoryManagement() {
     };
     return labels[val] || "Sort";
   }, [sortField, sortOrder]);
-
-  // Lock body scroll when sheet is open
-  useEffect(() => {
-    if (sheetOpen) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [sheetOpen]);
 
   // Sync temp state with current filters when sheet opens
   useEffect(() => {
@@ -573,26 +560,7 @@ export default function SubCategoryManagement() {
       {/* Mobile card view (below md) */}
       <div className="block md:hidden">
         {loading ? (
-          <div className="space-y-4 px-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl p-4 shadow-sm border animate-pulse"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-gray-200 rounded" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="h-3 bg-gray-200 rounded" />
-                  <div className="h-3 bg-gray-200 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <MobileCardSkeleton count={3} metaLinePairs={2} showActions={!readOnly} />
         ) : paginatedItemsWithRowNumber.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-2">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -634,13 +602,8 @@ export default function SubCategoryManagement() {
                       <p className="text-xs text-gray-500">{sub.name_am}</p>
                     )}
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      sub.is_active
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
+                 <span className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] xs:text-xs font-medium rounded-full ${sub.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                     <span className={`w-1.5 h-1.5 rounded-full ${sub.is_active ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                     {sub.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -651,7 +614,7 @@ export default function SubCategoryManagement() {
                       sub.category}
                   </div>
                   <div>
-                    <span className="font-medium">Code:</span>{" "}
+                    <span className="font-medium">Item Code:</span>{" "}
                     {sub.item_code || "—"}
                   </div>
                   <div>
@@ -669,12 +632,14 @@ export default function SubCategoryManagement() {
                       onClick={() => openEdit(sub)}
                       className="flex-1 bg-[#6750A4]/10 text-[#6750A4] text-xs font-medium px-3 py-2 rounded-lg hover:bg-[#6750A4]/20 min-h-[44px]"
                     >
+                      <Edit size={14} className="inline-block mr-1" />
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteClick(sub)}
                       className="flex-1 bg-red-50 text-red-600 text-xs font-medium px-3 py-2 rounded-lg hover:bg-red-100 min-h-[44px]"
                     >
+                      <Trash2 size={14} className="inline-block mr-1" />
                       Delete
                     </button>
                   </div>
@@ -708,116 +673,31 @@ export default function SubCategoryManagement() {
         />
       </div>
 
-      {/* ========== MOBILE STICKY FILTER BAR (visible below md) ========== */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-gray-200/80 px-4 py-3 safe-bottom flex gap-3">
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-        >
-          <Filter className="w-4 h-4" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-[#6750A4] text-white text-[10px] font-bold leading-none">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          {sortLabel}
-        </button>
-      </div>
+      {/* ========== MOBILE STICKY FILTER BAR ========== */}
+      <MobileActionBar
+        activeFilterCount={activeFilterCount}
+        sortLabel={sortLabel}
+        onOpenFilters={() => setSheetOpen(true)}
+        onOpenSort={() => setSheetOpen(true)}
+        showFilterButton={true}
+      />
 
-      {/* ========== MOBILE FILTER SHEET ========== */}
-      {sheetOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm transition-opacity duration-300"
-            onClick={() => setSheetOpen(false)}
-          />
-          {/* Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white rounded-t-2xl shadow-2xl max-h-[90vh] transform transition-all duration-300 ease-out">
-            {/* Drag handle */}
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-gray-300" />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Filters & Sort</h3>
-                {tempCategory !== "all" && (
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                      {categories.find(c => String(c.id) === tempCategory)?.name || tempCategory}
-                      <X
-                        className="w-3 h-3 cursor-pointer"
-                        onClick={() => setTempCategory("all")}
-                      />
-                    </span>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => setSheetOpen(false)}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 py-3 space-y-12">
-              {/* Sort section */}
-              <div>
-                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
-                  Sort By
-                </label>
-                <CustomSelect
-                  value={tempSort}
-                  onChange={setTempSort}
-                  options={sortOptions}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Filter section */}
-              <div>
-                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
-                  Category
-                </label>
-                <CustomSelect
-                  value={tempCategory}
-                  onChange={setTempCategory}
-                  options={categoryOptions}
-                  className="w-full"
-                />
-              </div>
-              <div className="h-2" />
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-100 bg-white p-4 flex gap-3 flex-shrink-0 safe-bottom">
-              <button
-                onClick={clearAllFilters}
-                className="flex-1 h-12 rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700 active:scale-[0.98] transition-all"
-              >
-                Clear
-              </button>
-              <button
-                onClick={applyMobileFilters}
-                className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      {/* ========== MOBILE FILTER & SORT SHEET ========== */}
+      <FilterSortSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        sortOptions={sortOptions}
+        tempSort={tempSort}
+        onTempSortChange={setTempSort}
+        categoryOptions={categoryOptions}
+        tempCategory={tempCategory}
+        onTempCategoryChange={setTempCategory}
+        categoryNameMap={Object.fromEntries(
+          categories.map((c) => [String(c.id), c.name]),
+        )}
+        onApply={applyMobileFilters}
+        onClearAll={clearAllFilters}
+      />
 
       {/* Modal */}
       {!readOnly && (

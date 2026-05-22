@@ -1,10 +1,20 @@
+// src/components/admin/SuperAdminView.tsx
+import React, { useState, useEffect } from "react";
+import {
+  Edit,
+  Trash2,
+  ImageIcon,
+} from "lucide-react";
 import { DataTable, type Column } from "../../ui/DataTable";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
 import { CustomSelect } from "../../ui/CustomSelect";
 import type { CompanyListItem } from "../../../types";
-import { Edit, Trash2, ImageIcon, Filter, SlidersHorizontal, X } from "lucide-react";
-import { useState, useEffect } from "react";
+
+// ---- shared components ----
+import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
+import MobileActionBar from "../../ui/MobileActionBar";
+import BottomSheet from "../../ui/BottomSheet";
 
 interface SuperAdminViewProps {
   paginatedItems: (CompanyListItem & { rowNumber?: number })[];
@@ -12,7 +22,7 @@ interface SuperAdminViewProps {
   loading: boolean;
   sortField: string;
   sortOrder: "asc" | "desc";
-  onSort: (field: string) => void; // for DataTable column sorting (desktop)
+  onSort: (field: string) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -21,7 +31,7 @@ interface SuperAdminViewProps {
   // Mobile filter props
   inputValue: string;
   onInputChange: (value: string) => void;
-  onSortChange: (value: string) => void; // mobile sort callback
+  onSortChange: (value: string) => void;
   businessTypeFilter: string;
   onBusinessTypeChange: (value: string) => void;
   categoryFilter: string;
@@ -47,7 +57,6 @@ export default function SuperAdminView({
   onPageChange,
   onEdit,
   onDelete,
-  // mobile filters
   inputValue,
   onInputChange,
   onSortChange,
@@ -63,14 +72,14 @@ export default function SuperAdminView({
   hasActiveFilters,
   onClearAll,
 }: SuperAdminViewProps) {
-  // ------ Mobile filter sheet state ------
+  // ---- Mobile filter sheet ----
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tempBusinessType, setTempBusinessType] = useState(businessTypeFilter);
   const [tempCategory, setTempCategory] = useState(categoryFilter);
   const [tempSubCategory, setTempSubCategory] = useState(subCategoryFilter);
   const [tempSort, setTempSort] = useState(`${sortField}|${sortOrder}`);
 
-  // Active filter count for mobile badge
+  // Active filter badge count
   const activeFilterCount = [
     businessTypeFilter !== "all",
     categoryFilter !== "all",
@@ -82,27 +91,12 @@ export default function SuperAdminView({
     const val = `${sortField}|${sortOrder}`;
     if (val === "name|asc") return "Name A-Z";
     if (val === "name|desc") return "Name Z-A";
-    if (val === "is_active|desc") return "Active first";
-    if (val === "is_featured|desc") return "Featured first";
+    if (val === "is_active|desc") return "Active First";
+    if (val === "is_featured|desc") return "Featured First";
     return "Sort";
   })();
 
-  // Lock body scroll when sheet is open
-  useEffect(() => {
-    if (sheetOpen) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [sheetOpen]);
-
-  // Sync temp state with current filters when sheet opens
+  // Sync temp state when sheet opens
   useEffect(() => {
     if (sheetOpen) {
       setTempBusinessType(businessTypeFilter);
@@ -110,22 +104,13 @@ export default function SuperAdminView({
       setTempSubCategory(subCategoryFilter);
       setTempSort(`${sortField}|${sortOrder}`);
     }
-  }, [
-    sheetOpen,
-    businessTypeFilter,
-    categoryFilter,
-    subCategoryFilter,
-    sortField,
-    sortOrder,
-  ]);
+  }, [sheetOpen, businessTypeFilter, categoryFilter, subCategoryFilter, sortField, sortOrder]);
 
   const applyFilters = () => {
     if (tempSort !== `${sortField}|${sortOrder}`) onSortChange(tempSort);
-    if (tempBusinessType !== businessTypeFilter)
-      onBusinessTypeChange(tempBusinessType);
+    if (tempBusinessType !== businessTypeFilter) onBusinessTypeChange(tempBusinessType);
     if (tempCategory !== categoryFilter) onCategoryChange(tempCategory);
-    if (tempSubCategory !== subCategoryFilter)
-      onSubCategoryChange(tempSubCategory);
+    if (tempSubCategory !== subCategoryFilter) onSubCategoryChange(tempSubCategory);
     setSheetOpen(false);
   };
 
@@ -134,7 +119,7 @@ export default function SuperAdminView({
     setSheetOpen(false);
   };
 
-  // ------ Existing helpers ------
+  // ---- card helpers ----
   const renderStatusBadge = (isActive: boolean) => (
     <span
       className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold leading-none shadow-sm ${
@@ -143,7 +128,7 @@ export default function SuperAdminView({
           : "bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200"
       }`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"} mr-1.5`}></span>
+      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"} mr-1.5`} />
       {isActive ? "Active" : "Inactive"}
     </span>
   );
@@ -169,29 +154,9 @@ export default function SuperAdminView({
     </span>
   );
 
-  const CardSkeleton = () => (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 animate-pulse">
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-100 to-gray-200" />
-        <div className="flex-1 space-y-2">
-          <div className="h-5 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-3/4" />
-          <div className="h-3.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-1/2" />
-        </div>
-      </div>
-      <div className="mt-4 space-y-3">
-        <div className="h-3.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-full" />
-        <div className="h-3.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-5/6" />
-        <div className="flex gap-3 mt-3">
-          <div className="h-7 w-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full" />
-          <div className="h-7 w-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* ============ DESKTOP / TABLET (same as before) ============ */}
+      {/* ============ DESKTOP / TABLET ============ */}
       <div className="hidden md:block">
         <DataTable
           data={paginatedItems}
@@ -209,7 +174,7 @@ export default function SuperAdminView({
       {/* ============ MOBILE LAYOUT ============ */}
       <div className="block md:hidden">
         {/* Search */}
-        <div className="px-4 pt-4 pb-2">
+        <div className="sticky top-0 z-10 bg-white px-4 pt-4 pb-2">
           <SearchInput
             value={inputValue}
             onChange={onInputChange}
@@ -223,11 +188,7 @@ export default function SuperAdminView({
 
         {/* Cards */}
         {loading ? (
-          <div className="space-y-4 px-4">
-            {[...Array(5)].map((_, idx) => (
-              <CardSkeleton key={idx} />
-            ))}
-          </div>
+          <MobileCardSkeleton count={5} />
         ) : paginatedItems.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center mx-4">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
@@ -320,95 +281,40 @@ export default function SuperAdminView({
           </div>
         )}
 
-        {/* ===== STICKY BOTTOM FILTER BAR (mobile) ===== */}
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-gray-200/80 px-4 py-3 safe-bottom flex gap-3">
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-[#6750A4] text-white text-[10px] font-bold leading-none">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            {sortLabel}
-          </button>
-        </div>
-
-        {/* ===== BOTTOM SHEET OVERLAY ===== */}
-        {/* Backdrop */}
-        <div
-          className={`
-            fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm
-            transition-opacity duration-300 ease-out
-            ${sheetOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
-          `}
-          onClick={() => setSheetOpen(false)}
-          aria-hidden="true"
+        {/* ========== MOBILE STICKY BOTTOM BAR ========== */}
+        <MobileActionBar
+          activeFilterCount={activeFilterCount}
+          sortLabel={sortLabel}
+          onOpenFilters={() => setSheetOpen(true)}
+          onOpenSort={() => setSheetOpen(true)}
+          showFilterButton={true}
         />
 
-        {/* Sheet */}
-        <div
-          className={`
-            fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white
-            rounded-t-2xl shadow-2xl max-h-[70vh] overflow-hidden
-            transform transition-all duration-300 ease-out
-            ${sheetOpen ? "translate-y-0 scale-100" : "translate-y-full scale-95"}
-          `}
+        {/* ========== FILTER & SORT BOTTOM SHEET ========== */}
+        <BottomSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title="Filters & Sort"
+          maxHeight="70vh"
+          footer={
+            <>
+              <button
+                onClick={clearAll}
+                className="flex-1 h-12 rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700 active:scale-[0.98] transition-all"
+              >
+                Clear
+              </button>
+              <button
+                onClick={applyFilters}
+                className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+              >
+                Apply Filters
+              </button>
+            </>
+          }
         >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-2 pb-1">
-            <div className="w-10 h-1.5 rounded-full bg-gray-300" />
-          </div>
-
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Filters & Sort</h3>
-              {/* Active filter chips */}
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {tempBusinessType !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                    {tempBusinessType.toUpperCase()}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => setTempBusinessType("all")}
-                    />
-                  </span>
-                )}
-                {tempCategory !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                    {tempCategory}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => setTempCategory("all")} />
-                  </span>
-                )}
-                {tempSubCategory !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                    {tempSubCategory}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => setTempSubCategory("all")} />
-                  </span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setSheetOpen(false)}
-              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-
-          {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-6 py-3 space-y-5">
-            {/* Sort section – compact radio style */}
+          <div className="space-y-12 px-2">
+            {/* Sort section */}
             <div>
               <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
                 Sort By
@@ -437,109 +343,88 @@ export default function SuperAdminView({
 
             <div className="border-t border-gray-100" />
 
-            {/* Filters – CustomSelect dropdowns */}
-            <div className="space-y-12 px-2">
-              {/* Business Type */}
-              <div>
-                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
-                  Business Type
-                </label>
-                {loading ? (
-                  <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
-                    <span>Loading...</span>
-                  </div>
-                ) : businessTypeOptions.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic py-2">No types available</p>
-                ) : (
-                  <CustomSelect
-                    value={tempBusinessType}
-                    onChange={setTempBusinessType}
-                    placeholder="All types"
-                    options={[
-                      { value: "all", label: "All" },
-                      ...businessTypeOptions.map((type) => ({
-                        value: type,
-                        label: type.toUpperCase(),
-                      })),
-                    ]}
-                    className="w-full"
-                  />
-                )}
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
-                  Category
-                </label>
-                {loading ? (
-                  <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
-                    <span>Loading...</span>
-                  </div>
-                ) : categoryOptions.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic py-2">No categories available</p>
-                ) : (
-                  <CustomSelect
-                    value={tempCategory}
-                    onChange={setTempCategory}
-                    placeholder="All categories"
-                    options={[
-                      { value: "all", label: "All" },
-                      ...categoryOptions.map((cat) => ({ value: cat, label: cat })),
-                    ]}
-                    className="w-full"
-                  />
-                )}
-              </div>
-
-              {/* Subcategory */}
-              <div>
-                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
-                  Subcategory
-                </label>
-                {loading ? (
-                  <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
-                    <span>Loading...</span>
-                  </div>
-                ) : subCategoryOptions.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic py-2">No subcategories available</p>
-                ) : (
-                  <CustomSelect
-                    value={tempSubCategory}
-                    onChange={setTempSubCategory}
-                    placeholder="All subcategories"
-                    options={[
-                      { value: "all", label: "All" },
-                      ...subCategoryOptions.map((sub) => ({ value: sub, label: sub })),
-                    ]}
-                    className="w-full"
-                  />
-                )}
-              </div>
+            {/* Business Type */}
+            <div>
+              <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
+                Business Type
+              </label>
+              {loading ? (
+                <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <span>Loading...</span>
+                </div>
+              ) : businessTypeOptions.length === 0 ? (
+                <p className="text-sm text-gray-400 italic py-2">No types available</p>
+              ) : (
+                <CustomSelect
+                  value={tempBusinessType}
+                  onChange={setTempBusinessType}
+                  placeholder="All types"
+                  options={[
+                    { value: "all", label: "All" },
+                    ...businessTypeOptions.map((type) => ({
+                      value: type,
+                      label: type.toUpperCase(),
+                    })),
+                  ]}
+                  className="w-full"
+                />
+              )}
             </div>
 
-            <div className="h-2" />
-          </div>
+            {/* Category */}
+            <div>
+              <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
+                Category
+              </label>
+              {loading ? (
+                <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <span>Loading...</span>
+                </div>
+              ) : categoryOptions.length === 0 ? (
+                <p className="text-sm text-gray-400 italic py-2">No categories available</p>
+              ) : (
+                <CustomSelect
+                  value={tempCategory}
+                  onChange={setTempCategory}
+                  placeholder="All categories"
+                  options={[
+                    { value: "all", label: "All" },
+                    ...categoryOptions.map((cat) => ({ value: cat, label: cat })),
+                  ]}
+                  className="w-full"
+                />
+              )}
+            </div>
 
-          {/* Footer */}
-          <div className="border-t border-gray-100 bg-white p-4 flex gap-3 flex-shrink-0 safe-bottom">
-            <button
-              onClick={clearAll}
-              className="flex-1 h-12 rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700 active:scale-[0.98] transition-all"
-            >
-              Clear
-            </button>
-            <button
-              onClick={applyFilters}
-              className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
-            >
-              Apply Filters
-            </button>
+            {/* Subcategory */}
+            <div>
+              <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
+                Subcategory
+              </label>
+              {loading ? (
+                <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <span>Loading...</span>
+                </div>
+              ) : subCategoryOptions.length === 0 ? (
+                <p className="text-sm text-gray-400 italic py-2">No subcategories available</p>
+              ) : (
+                <CustomSelect
+                  value={tempSubCategory}
+                  onChange={setTempSubCategory}
+                  placeholder="All subcategories"
+                  options={[
+                    { value: "all", label: "All" },
+                    ...subCategoryOptions.map((sub) => ({ value: sub, label: sub })),
+                  ]}
+                  className="w-full"
+                />
+              )}
+            </div>
           </div>
-        </div>
+        </BottomSheet>
       </div>
 
       {/* Pagination */}

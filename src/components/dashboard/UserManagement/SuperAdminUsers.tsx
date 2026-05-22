@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+// src/components/admin/SuperAdminUsers.tsx
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   Search,
   MoreVertical,
@@ -16,6 +23,7 @@ import {
   Package,
   Minus,
   X,
+  ChevronRight,
 } from "lucide-react";
 import {
   deleteUser,
@@ -24,11 +32,10 @@ import {
   removeUserFromCompany,
   updateUser,
   updateUserCompanyRole,
-  // updateUserCompanyRole,
 } from "../../../services/api";
 import type { User, UserRole, Membership } from "../../../types";
 
-// Import your custom components
+// Import shared UI components
 import { Pagination } from "../../ui/Pagination";
 import EditUserModal from "./EditUserModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -38,6 +45,8 @@ import { TableControls } from "../../ui/TableControls";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
 import { CustomSelect } from "../../ui/CustomSelect";
+import BottomSheet from "../../ui/BottomSheet";
+import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
 
 // ============================================================
 // Utility Functions
@@ -79,15 +88,35 @@ const formatPhone = (phone: string | null): string => {
   return phone;
 };
 
-
-  const roleOptions = [
+const roleOptions = [
   { label: "All Roles", value: "all", icon: <Users className="h-4 w-4" /> },
-  { label: "Admin", value: "admin", icon: <Shield className="h-4 w-4 text-purple-600" /> },
-  { label: "Staff", value: "staff", icon: <Users className="h-4 w-4 text-blue-600" /> },
-  { label: "Viewer", value: "viewer", icon: <Eye className="h-4 w-4 text-amber-600" /> },
-  { label: "Delivery", value: "delivery", icon: <Package className="h-4 w-4 text-emerald-600" /> },
-  { label: "No Company", value: "no_company", icon: <Briefcase className="h-4 w-4 text-gray-600" /> },
+  {
+    label: "Admin",
+    value: "admin",
+    icon: <Shield className="h-4 w-4 text-purple-600" />,
+  },
+  {
+    label: "Staff",
+    value: "staff",
+    icon: <Users className="h-4 w-4 text-blue-600" />,
+  },
+  {
+    label: "Viewer",
+    value: "viewer",
+    icon: <Eye className="h-4 w-4 text-amber-600" />,
+  },
+  {
+    label: "Delivery",
+    value: "delivery",
+    icon: <Package className="h-4 w-4 text-emerald-600" />,
+  },
+  {
+    label: "No Company",
+    value: "no_company",
+    icon: <Briefcase className="h-4 w-4 text-gray-600" />,
+  },
 ];
+
 // ============================================================
 // Statistics Card Component
 // ============================================================
@@ -111,7 +140,9 @@ const StatCard: React.FC<StatCardProps> = ({
         <p className="text-xs font-medium text-white/70 uppercase tracking-wider">
           {title}
         </p>
-        <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-white mt-2">
+          {value}
+        </p>
       </div>
       <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
         {icon}
@@ -121,7 +152,7 @@ const StatCard: React.FC<StatCardProps> = ({
 );
 
 // ============================================================
-// Filters Component
+// Filters Component (refactored to use BottomSheet)
 // ============================================================
 interface FiltersProps {
   searchTerm: string;
@@ -130,115 +161,247 @@ interface FiltersProps {
   setRoleFilter: (value: string) => void;
   onRefresh: () => void;
 }
+
 const UserFilters: React.FC<FiltersProps> = ({
   searchTerm,
   setSearchTerm,
   roleFilter,
   setRoleFilter,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
-    <div className="w-full flex flex-col gap-2">
-      
-      {/* SEARCH (always visible, compact on mobile) */}
-      <div className="relative w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <>
+      <div
+        className="
+          w-full
+          flex flex-col
+          lg:flex-row
+          lg:items-center
+          gap-3
+          lg:gap-4
+        "
+      >
+        {/* SEARCH */}
+        <div className="relative flex-1 min-w-0">
+          {/* Glow */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#6750A4]/10 to-purple-300/10 blur-xl opacity-70" />
 
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-sm"
-        />
-
-        {searchTerm && (
-          <button
-            onClick={() => setSearchTerm("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {/* MOBILE FILTER BUTTON (compact UX) */}
-      <div className="flex md:hidden gap-2">
-        <button
-          onClick={() => setOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gray-100 text-sm font-medium"
-        >
-          <Filter className="h-4 w-4" />
-          Filter
-        </button>
-
-        <button
-          onClick={() => setRoleFilter("all")}
-          className="px-3 py-2 rounded-xl bg-purple-100 text-purple-700 text-sm font-medium"
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* DESKTOP ROLE FILTER */}
-      <div className="hidden md:block w-[220px]">
-        <CustomSelect
-          value={roleFilter}
-          onChange={setRoleFilter}
-          options={roleOptions}
-          placeholder="Filter by role"
-        />
-      </div>
-
-      {/* MOBILE BOTTOM SHEET */}
-      {open && (
-        <div className="fixed inset-0 z-50">
-          {/* overlay */}
           <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setOpen(false)}
-          />
+            className="
+              relative
+              flex items-center
+              rounded-2xl
+              border border-gray-200/70
+              bg-white/80
+              backdrop-blur-xl
+              shadow-sm
+              hover:shadow-md
+              focus-within:ring-4
+              focus-within:ring-[#6750A4]/10
+              focus-within:border-[#6750A4]/30
+              transition-all duration-300
+            "
+          >
+            <Search
+              className="
+                absolute left-3 sm:left-4
+                h-4 w-4 sm:h-5 sm:w-5
+                text-gray-400
+              "
+            />
 
-          {/* sheet */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 space-y-3">
-            
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-gray-900">Filter Users</h3>
-              <button onClick={() => setOpen(false)}>
-                <X className="h-5 w-5" />
+            <input
+              type="text"
+              placeholder="Search users, email, role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="
+                w-full
+                bg-transparent
+                pl-10 sm:pl-12
+                pr-10
+                py-2 sm:py-2.5
+                text-sm sm:text-[15px]
+                text-gray-700
+                placeholder:text-gray-400
+                rounded-2xl
+                outline-none
+              "
+            />
+
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="
+                  absolute right-3
+                  flex items-center justify-center
+                  h-7 w-7
+                  rounded-full
+                  bg-gray-100
+                  hover:bg-red-50
+                  hover:text-red-500
+                  transition-all duration-200
+                  active:scale-90
+                "
+              >
+                <X className="h-4 w-4" />
               </button>
-            </div>
+            )}
+          </div>
+        </div>
 
-            {/* ROLE FILTER (mobile friendly chips) */}
-            <div className="grid grid-cols-2 gap-2">
-              {roleOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => {
-                    setRoleFilter(opt.value);
-                    setOpen(false);
-                  }}
-                  className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${
-                    roleFilter === opt.value
-                      ? "bg-purple-600 text-white border-purple-600"
-                      : "bg-gray-100 text-gray-700 border-gray-200"
-                  }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              ))}
+        {/* RIGHT ACTIONS */}
+        <div
+          className="
+            flex items-center
+            gap-2 sm:gap-3
+            w-full lg:w-auto
+          "
+        >
+          {/* MOBILE FILTER BUTTON */}
+          <div className="flex md:hidden flex-1 gap-2">
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="
+                flex-1
+                flex items-center justify-center gap-2
+                px-3
+                rounded-2xl
+                bg-gradient-to-r
+                from-[#6750A4]
+                to-purple-500
+                text-white
+                text-sm font-semibold
+                shadow-lg shadow-purple-500/20
+                hover:scale-[1.01]
+                active:scale-[0.98]
+                transition-all duration-200
+              "
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </button>
+
+            <button
+              onClick={() => setRoleFilter("all")}
+              className="
+                px-4 py-3
+                rounded-2xl
+                border border-gray-200
+                bg-white/80
+                backdrop-blur-md
+                text-gray-700
+                text-sm font-medium
+                hover:bg-gray-50
+                active:scale-95
+                transition-all duration-200
+              "
+            >
+              Reset
+            </button>
+          </div>
+
+          {/* DESKTOP FILTER */}
+          <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
+            <div className="w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+              <CustomSelect
+                value={roleFilter}
+                onChange={setRoleFilter}
+                options={roleOptions}
+                placeholder="Filter by role"
+              />
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* MOBILE BOTTOM SHEET */}
+      <BottomSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Filter Users"
+      >
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              Select a role to filter users
+            </p>
+
+            <button
+              onClick={() => setRoleFilter("all")}
+              className="
+                text-xs font-semibold
+                text-[#6750A4]
+                hover:underline
+              "
+            >
+              Reset All
+            </button>
+          </div>
+
+          {/* Options */}
+          <div className="grid grid-cols-2 gap-3">
+            {roleOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  setRoleFilter(opt.value);
+                  setSheetOpen(false);
+                }}
+                className={`
+                  group
+                  relative
+                  flex flex-col items-center justify-center
+                  gap-2
+                  min-h-[88px]
+                  rounded-2xl
+                  border
+                  px-3 py-4
+                  text-sm font-semibold
+                  transition-all duration-200
+                  active:scale-[0.97]
+
+                  ${
+                    roleFilter === opt.value
+                      ? `
+                        bg-gradient-to-br
+                        from-[#6750A4]
+                        to-purple-500
+                        border-purple-500
+                        text-white
+                        shadow-lg shadow-purple-500/20
+                      `
+                      : `
+                        bg-gray-50
+                        border-gray-200
+                        text-gray-700
+                        hover:border-[#6750A4]/30
+                        hover:bg-purple-50
+                      `
+                  }
+                `}
+              >
+                <div className="text-lg">
+                  {opt.icon}
+                </div>
+
+                <span className="text-center leading-tight">
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </BottomSheet>
+    </>
   );
 };
 // ============================================================
 // Actions Dropdown Component
 // ============================================================
+
 interface ActionsDropdownProps {
   user: User;
   onView: (user: User) => void;
@@ -246,6 +409,7 @@ interface ActionsDropdownProps {
   onRemove: (user: User) => void;
   onManageMemberships: (user: User) => void;
 }
+
 const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   user,
   onView,
@@ -254,69 +418,213 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   onManageMemberships,
 }) => {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (!(e.target as Element).closest(".actions-dropdown")) setOpen(false);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
     };
-    if (open) document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, [open]);
 
+  const menuItems = [
+    {
+      label: "View Profile",
+      icon: Eye,
+      iconColor: "text-gray-600",
+      hover: "hover:bg-gray-50",
+      action: () => onView(user),
+    },
+    {
+      label: "Edit User",
+      icon: Edit,
+      iconColor: "text-blue-600",
+      hover: "hover:bg-blue-50",
+      action: () => onEdit(user),
+    },
+    {
+      label: "Manage Memberships",
+      icon: Building2,
+      iconColor: "text-purple-600",
+      hover: "hover:bg-purple-50",
+      action: () => onManageMemberships(user),
+    },
+    {
+      label: "Remove User",
+      icon: Trash2,
+      iconColor: "text-red-600",
+      hover: "hover:bg-red-50",
+      textColor: "text-red-600",
+      danger: true,
+      action: () => onRemove(user),
+    },
+  ];
+
   return (
-    <div className="relative actions-dropdown">
+    <div
+      ref={dropdownRef}
+      className="relative flex items-center justify-center"
+    >
+      {/* Trigger Button */}
       <button
-        onClick={() => setOpen(!open)}
-        className="p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 transition"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`
+          group
+          relative
+          flex items-center justify-center
+          h-9 w-9
+          sm:h-10 sm:w-10
+          rounded-2xl
+          border border-transparent
+          bg-white/70
+          hover:bg-white
+          hover:border-[#6758D4]/20
+          hover:shadow-lg
+          active:scale-95
+          transition-all duration-200
+          backdrop-blur-md
+        `}
       >
-        <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+        <MoreVertical
+          className={`
+            h-4 w-4 sm:h-5 sm:w-5
+            text-gray-600
+            transition-transform duration-200
+            ${open ? "rotate-90" : "group-hover:scale-110"}
+          `}
+        />
+
+        {open && (
+          <span className="absolute inset-0 rounded-2xl ring-2 ring-[#6758D4]/20" />
+        )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#6758D4] bg-white/90 backdrop-blur-xl shadow-xl overflow-hidden z-50 animate-fadeIn">
-          <button
-            onClick={() => {
-              onView(user);
-              setOpen(false);
-            }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-gray-50"
-          >
-            <Eye className="h-4 w-4 text-gray-600" />
-            View Profile
-          </button>
-          <button
-            onClick={() => {
-              onEdit(user);
-              setOpen(false);
-            }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-gray-50"
-          >
-            <Edit className="h-4 w-4 text-blue-600" />
-            Edit User
-          </button>
-          <button
-            onClick={() => {
-              onManageMemberships(user);
-              setOpen(false);
-            }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-gray-50"
-          >
-            <Building2 className="h-4 w-4 text-purple-600" />
-            Manage Memberships
-          </button>
-          <div className=" my-1" />
-          <button
-            onClick={() => {
-              onRemove(user);
-              setOpen(false);
-            }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-            Remove User
-          </button>
+      {/* Dropdown */}
+      <div
+        className={`
+          absolute right-0 top-[calc(100%+10px)]
+         w-[160px]
+xs:w-[160px]
+sm:w-[200px]
+md:w-72
+lg:w-72
+xl:w-72
+max-w-[calc(100vw-24px)]
+          origin-top-right
+          rounded-3xl
+          border border-white/40
+          bg-white/85
+          backdrop-blur-2xl
+          shadow-[0_20px_60px_rgba(0,0,0,0.15)]
+          overflow-hidden
+          z-[999]
+          transition-all duration-300 ease-out
+          
+          ${
+            open
+              ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+          }
+        `}
+      >
+        {/* Header */}
+        <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            User Actions
+          </p>
         </div>
-      )}
+
+        {/* Menu */}
+        <div className="p-2">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.label}
+                onClick={() => {
+                  item.action();
+                  setOpen(false);
+                }}
+                className={`
+                  group
+                  relative
+                  flex items-center justify-between
+                  w-full
+                  rounded-2xl
+                  px-3 sm:px-4
+                  py-3 sm:py-3.5
+                  transition-all duration-200
+                  active:scale-[0.98]
+                  ${item.hover}
+                  ${item.textColor || "text-gray-700"}
+                  ${index !== menuItems.length - 1 ? "mb-1" : ""}
+                `}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`
+                      flex items-center justify-center
+                      h-9 w-9
+                      rounded-xl
+                      bg-white
+                      shadow-sm
+                      border border-gray-100
+                      transition-all duration-200
+                      group-hover:scale-105
+                    `}
+                  >
+                    <Icon
+                      className={`h-4 w-4 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
+                    />
+                  </div>
+
+                  <span
+                    className="
+                      text-sm sm:text-[15px]
+                      font-medium
+                      truncate
+                    "
+                  >
+                    {item.label}
+                  </span>
+                </div>
+
+                <ChevronRight
+                  className="
+                    h-4 w-4
+                    text-gray-300
+                    transition-all duration-200
+                    group-hover:translate-x-1
+                    group-hover:text-gray-500
+                  "
+                />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom Glow */}
+        <div className="h-1 bg-gradient-to-r from-[#6758D4] via-purple-400 to-pink-400 opacity-70" />
+      </div>
     </div>
   );
 };
@@ -439,7 +747,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
 );
 
 // ============================================================
-// Mobile Cards Component (now tablet-friendly grid)
+// Mobile Cards Component
 // ============================================================
 const UserMobileCards: React.FC<UserTableProps> = ({
   users,
@@ -449,82 +757,39 @@ const UserMobileCards: React.FC<UserTableProps> = ({
     {users.map((user) => (
       <div
         key={user.id}
-        className="
-          bg-white rounded-xl xs:rounded-2xl
-          border border-gray-100
-          p-2 xs:p-3 sm:p-5
-          shadow-sm hover:shadow-md
-          transition flex flex-col
-        "
+        className="bg-white rounded-xl xs:rounded-2xl border border-gray-100 p-2 xs:p-3 sm:p-5 shadow-sm hover:shadow-md transition flex flex-col"
       >
-        {/* HEADER */}
         <div className="flex items-start justify-between gap-2">
-          
           <div className="flex items-center gap-2 xs:gap-3 min-w-0">
-            
-            {/* AVATAR */}
-            <div className="
-              h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12
-              rounded-full bg-gradient-to-br from-purple-500 to-indigo-600
-              flex items-center justify-center
-              text-white font-bold
-              text-[10px] xs:text-xs sm:text-sm
-              shrink-0
-            ">
+            <div className="h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] xs:text-xs sm:text-sm shrink-0">
               {getInitials(user.first_name, user.last_name, user.username)}
             </div>
-
-            {/* NAME */}
             <div className="min-w-0">
-              <p className="
-                font-semibold text-gray-900
-                text-xs xs:text-sm sm:text-base
-                truncate
-              ">
+              <p className="font-semibold text-gray-900 text-xs xs:text-sm sm:text-base truncate">
                 {user.first_name || user.username}
               </p>
-
-              <p className="
-                text-[10px] xs:text-[11px] sm:text-xs
-                text-gray-500 truncate
-              ">
+              <p className="text-[10px] xs:text-[11px] sm:text-xs text-gray-500 truncate">
                 {user.email}
               </p>
             </div>
           </div>
-
-          {/* ACTIONS */}
           <div className="shrink-0">
             <ActionsDropdown user={user} {...actionProps} />
           </div>
         </div>
-
-        {/* BODY */}
         <div className="mt-3 xs:mt-4 space-y-2 flex-1">
-          
-          {/* PHONE */}
           <div className="flex items-center gap-2 text-[11px] xs:text-xs sm:text-sm">
             <span className="text-gray-500">Phone:</span>
             <span className="text-gray-900 truncate">
               {formatPhone(user.phone_number)}
             </span>
           </div>
-
-          {/* MEMBERSHIPS */}
           <div className="flex flex-wrap gap-1.5 xs:gap-2">
             {user.memberships.length > 0 ? (
               user.memberships.map((m: Membership, idx: number) => (
                 <span
                   key={idx}
-                  className={`
-                    inline-flex items-center
-                    px-2 py-0.5 xs:px-2.5 xs:py-1
-                    rounded-lg xs:rounded-xl
-                    text-[9px] xs:text-[10px] sm:text-xs
-                    font-medium border
-                    ${roleStyles[m.role]}
-                    max-w-full truncate
-                  `}
+                  className={`inline-flex items-center px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-lg xs:rounded-xl text-[9px] xs:text-[10px] sm:text-xs font-medium border ${roleStyles[m.role]} max-w-full truncate`}
                 >
                   {m.company_name}
                 </span>
@@ -536,13 +801,7 @@ const UserMobileCards: React.FC<UserTableProps> = ({
             )}
           </div>
         </div>
-
-        {/* FOOTER */}
-        <div className="
-          mt-2 xs:mt-3 pt-2 xs:pt-3
-          border-t border-gray-100
-          flex justify-between items-center
-        ">
+        <div className="mt-2 xs:mt-3 pt-2 xs:pt-3 border-t border-gray-100 flex justify-between items-center">
           {user.is_active ? (
             <span className="inline-flex items-center gap-1 text-[10px] xs:text-xs text-emerald-600">
               <CheckCircle className="h-3 w-3 xs:h-4 xs:w-4" />
@@ -559,6 +818,7 @@ const UserMobileCards: React.FC<UserTableProps> = ({
     ))}
   </div>
 );
+
 // ============================================================
 // Empty State Component
 // ============================================================
@@ -584,10 +844,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onReset }) => (
 );
 
 // ============================================================
-// Loading Skeleton
+// Loading Skeleton (now includes mobile cards via MobileCardSkeleton)
 // ============================================================
 const LoadingSkeleton: React.FC = () => (
   <div className="space-y-6">
+    {/* Desktop stats skeleton */}
     <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
       {[...Array(5)].map((_, i) => (
         <div
@@ -596,7 +857,8 @@ const LoadingSkeleton: React.FC = () => (
         ></div>
       ))}
     </div>
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    {/* Desktop table skeleton */}
+    <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 space-y-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex items-center gap-4">
@@ -609,6 +871,10 @@ const LoadingSkeleton: React.FC = () => (
         ))}
       </div>
     </div>
+    {/* Mobile cards skeleton (using shared MobileCardSkeleton) */}
+    <div className="lg:hidden px-1 xs:px-2 sm:px-0">
+      <MobileCardSkeleton count={5} />
+    </div>
   </div>
 );
 
@@ -617,18 +883,15 @@ const LoadingSkeleton: React.FC = () => (
 // ============================================================
 const SuperAdminUsers: React.FC = () => {
   const { toast, showToast } = useToast();
-  // Data state – all users loaded once
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtering & pagination state
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modal states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -641,7 +904,6 @@ const SuperAdminUsers: React.FC = () => {
     Array<{ id: number; name: string; slug: string }>
   >([]);
 
-  // Helper: recursively fetch all users
   const fetchAllUsers = useCallback(async (): Promise<User[]> => {
     let page = 1;
     let all: User[] = [];
@@ -655,7 +917,6 @@ const SuperAdminUsers: React.FC = () => {
     return all;
   }, []);
 
-  // Load all users on mount
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true);
@@ -678,7 +939,6 @@ const SuperAdminUsers: React.FC = () => {
     }
   }, [allUsers, managingUser]);
 
-  // Filter users based on search term and role (client‑side)
   const filteredUsers = useMemo(() => {
     let filtered = [...allUsers];
     if (searchTerm.trim()) {
@@ -705,14 +965,12 @@ const SuperAdminUsers: React.FC = () => {
     return filtered;
   }, [allUsers, searchTerm, roleFilter]);
 
-  // Paginate filtered users
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     const end = start + pageSize;
     return filteredUsers.slice(start, end);
   }, [filteredUsers, currentPage, pageSize]);
 
-  // Stats based on ALL filtered users (not just current page)
   const stats = useMemo(() => {
     const totalAdmins = filteredUsers.filter((u) =>
       u.memberships.some((m) => m.role === "admin"),
@@ -732,12 +990,11 @@ const SuperAdminUsers: React.FC = () => {
     return { totalAdmins, totalStaff, totalViewers, totalDelivery, noCompany };
   }, [filteredUsers]);
 
-  // Handlers
   const handleRefresh = async () => {
     setSearchTerm("");
     setRoleFilter("all");
     setCurrentPage(1);
-    await refreshAllUsers(); // 👈 fetch latest data from API
+    await refreshAllUsers();
   };
 
   const handleResetFilters = async () => {
@@ -746,6 +1003,7 @@ const SuperAdminUsers: React.FC = () => {
     setCurrentPage(1);
     await refreshAllUsers();
   };
+
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
@@ -755,29 +1013,25 @@ const SuperAdminUsers: React.FC = () => {
   const refreshAllUsers = async () => {
     const users = await fetchAllUsers();
     setAllUsers(users);
-
     if (managingUser) {
       const updatedUser = users.find((u) => u.id === managingUser.id);
       if (updatedUser) setManagingUser(updatedUser);
     }
-
     if (selectedUser) {
       const updatedUser = users.find((u) => u.id === selectedUser.id);
       if (updatedUser) setSelectedUser(updatedUser);
     }
-
     if (editingUser) {
       const updatedUser = users.find((u) => u.id === editingUser.id);
       if (updatedUser) setEditingUser(updatedUser);
     }
   };
-  // View user
+
   const handleView = (user: User) => {
     setSelectedUser(user);
     setIsViewModalOpen(true);
   };
 
-  // Edit user
   const handleEdit = (user: User) => {
     setEditingUser(user);
     setIsEditModalOpen(true);
@@ -785,11 +1039,9 @@ const SuperAdminUsers: React.FC = () => {
 
   const handleSaveEdit = async (updatedData: Partial<User>) => {
     if (!editingUser) return;
-
     try {
       await updateUser(editingUser.id, updatedData);
       await refreshAllUsers();
-
       showToast("success", "User updated successfully");
       setIsEditModalOpen(false);
     } catch (err: any) {
@@ -797,7 +1049,6 @@ const SuperAdminUsers: React.FC = () => {
     }
   };
 
-  // Delete user
   const handleRemove = (user: User) => {
     setDeletingUser(user);
     setIsDeleteModalOpen(true);
@@ -805,28 +1056,22 @@ const SuperAdminUsers: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!deletingUser) return;
-
     try {
       await deleteUser(deletingUser.id);
-
       showToast("success", "User deleted successfully");
-
       setIsDeleteModalOpen(false);
       setDeletingUser(null);
-
       await refreshAllUsers();
     } catch (err: any) {
       showToast("error", err.message || "Failed to delete user");
     }
   };
 
-  // Manage memberships
   const handleManageMemberships = (user: User) => {
     setManagingUser(user);
     setIsMembershipModalOpen(true);
   };
 
-  // Load available companies when membership modal opens
   useEffect(() => {
     if (isMembershipModalOpen) {
       getAvailableCompanies().then(setAvailableCompanies).catch(console.error);
@@ -849,25 +1094,61 @@ const SuperAdminUsers: React.FC = () => {
 
   return (
     <>
-      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 space-y-6">
-        {/* Header */}
+      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-900 to-[#6750A4] bg-clip-text text-transparent">
-              User Management
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Manage platform users, roles, and company memberships
-            </p>
+          <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              
+              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-[#6750A4] to-purple-400 shadow-sm" />
+
+              <div className="min-w-0">
+                <h1
+                  className="
+          text-[22px]
+          xs:text-2xl
+          sm:text-3xl
+          md:text-4xl
+          font-black
+          tracking-tight
+          leading-tight
+          bg-gradient-to-r
+          from-purple-900
+          via-[#6750A4]
+          to-purple-500
+          bg-clip-text
+          text-transparent
+          break-words
+        "
+                >
+                  User Management
+                </h1>
+
+                <p
+                  className="
+          mt-1
+          text-xs
+          xs:text-sm
+          sm:text-base
+          text-gray-500
+          leading-relaxed
+          max-w-2xl
+        "
+                >
+                  Manage platform users, roles, and company memberships
+                </p>
+              </div>
+            </div>
+
+            {/* Decorative line */}
+            <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-[#6750A4] to-purple-300 opacity-80" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
               Total Users: {allUsers.length}
             </div>
           </div>
         </div>
 
-        {/* Statistics Cards */}
         <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
           <StatCard
             title="Total Admins"
@@ -900,34 +1181,35 @@ const SuperAdminUsers: React.FC = () => {
             gradient="from-gray-600 to-gray-700"
           />
         </div>
-<div className="w-full sm:flex-1 sm:hidden">
-    <UserFilters
-      searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
-      roleFilter={roleFilter}
-      setRoleFilter={setRoleFilter}
-      onRefresh={handleRefresh}
-    />
-  </div>
-        {/* TableControls + Filters */}
-     <div className="hidden sm:flex w-full items-center justify-between gap-3">
-  <div className="w-full">
-    <TableControls
-      pageSize={pageSize}
-      onPageSizeChange={handlePageSizeChange}
-      className="w-full"
-    >
-      <UserFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        roleFilter={roleFilter}
-        setRoleFilter={setRoleFilter}
-        onRefresh={handleRefresh}
-      />
-    </TableControls>
-  </div>
-</div>
-        {/* Content */}
+
+        <div className="w-full sm:flex-1 sm:hidden">
+          <UserFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            onRefresh={handleRefresh}
+          />
+        </div>
+
+        <div className="hidden sm:flex w-full items-center justify-between gap-3">
+          <div className="w-full py-1">
+            <TableControls
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              className="w-full"
+            >
+              <UserFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                roleFilter={roleFilter}
+                setRoleFilter={setRoleFilter}
+                onRefresh={handleRefresh}
+              />
+            </TableControls>
+          </div>
+        </div>
+
         {filteredUsers.length === 0 ? (
           <EmptyState onReset={handleResetFilters} />
         ) : (
@@ -939,7 +1221,6 @@ const SuperAdminUsers: React.FC = () => {
               onRemove={handleRemove}
               onManageMemberships={handleManageMemberships}
             />
-              
             <UserMobileCards
               users={paginatedUsers}
               onView={handleView}
@@ -957,17 +1238,15 @@ const SuperAdminUsers: React.FC = () => {
         )}
       </div>
 
-      {/* View User Modal */}
       <ViewUserModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         user={selectedUser}
         onEdit={handleEdit}
-        onSuspend={(user) => console.log("Suspend user", user)}
+        // onSuspend={(user) => console.log("Suspend user", user)}
         onDelete={handleRemove}
       />
 
-      {/* Edit User Modal */}
       <EditUserModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -975,7 +1254,6 @@ const SuperAdminUsers: React.FC = () => {
         onSave={handleSaveEdit}
       />
 
-      {/* Delete Confirmation Modal */}
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -991,7 +1269,6 @@ const SuperAdminUsers: React.FC = () => {
           try {
             await updateUserCompanyRole(companySlug, userId, role);
             await refreshAllUsers();
-
             showToast("success", "Role updated successfully");
           } catch (err: any) {
             showToast("error", "Failed to update role");
@@ -1001,16 +1278,14 @@ const SuperAdminUsers: React.FC = () => {
           try {
             const company = availableCompanies.find((c) => c.id === companyId);
             if (!company) throw new Error("Company not found");
-
             await removeUserFromCompany(company.slug, userId);
             await refreshAllUsers();
-
             showToast("success", "User removed from company");
           } catch (err: any) {
             showToast("error", err.message || "Failed to remove user");
           }
         }}
-        onRefresh={refreshAllUsers} // <-- will refresh after add
+        onRefresh={refreshAllUsers}
       />
       <Toast toast={toast} />
     </>

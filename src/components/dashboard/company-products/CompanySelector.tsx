@@ -21,30 +21,29 @@ interface CompanySelectorProps {
   isLoading: boolean;
   onSelect: (slug: string, name: string) => void;
   onBack: () => void;
-  allowSwitch?: boolean; 
-   subtitle?: string;
-   disableProductSearch?: boolean;
-   title?: string;
-  searchPlaceholder?: string
+  allowSwitch?: boolean;
+  subtitle?: string;
+  disableProductSearch?: boolean;
+  title?: string;
+  searchPlaceholder?: string;
 }
 
-
 // ---------------------------------------------------------------------------
-// Sub-components
+// Sub-components (modernized)
 // ---------------------------------------------------------------------------
 function AccessDenied() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto overflow-hidden"
+      className="bg-white rounded-3xl shadow-xl border border-gray-100 max-w-lg mx-auto overflow-hidden"
     >
       <Header title="Company Selector" />
       <div className="p-10 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
-        <h3 className="text-base font-semibold text-gray-900 mb-1">Access Denied</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Access Denied</h3>
         <p className="text-sm text-gray-500">
           Only super administrators can switch companies.
         </p>
@@ -63,7 +62,7 @@ function Header({
   onBack?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-4 px-6 py-2 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
+    <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100 bg-white/80 backdrop-blur-md">
       {onBack && (
         <button
           onClick={onBack}
@@ -74,8 +73,12 @@ function Header({
         </button>
       )}
       <div>
-        <h2 className="text-xl font-bold text-secondary">{title}</h2>
-        {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-[#6750A4] to-[#8B5CF6] bg-clip-text text-transparent">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{subtitle}</p>
+        )}
       </div>
     </div>
   );
@@ -84,7 +87,7 @@ function Header({
 function SearchInput({
   value,
   onChange,
-  placeholder = "Search by name or type..."
+  placeholder = "Search by name or type...",
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -94,8 +97,8 @@ function SearchInput({
   return (
     <div className="relative">
       <Search
-        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-          isFocused ? 'text-secondary' : 'text-gray-400'
+        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 transition-colors ${
+          isFocused ? 'text-[#6750A4]' : 'text-gray-400'
         }`}
       />
       <input
@@ -105,23 +108,23 @@ function SearchInput({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-10 py-2.5 rounded-xl border bg-gray-50 text-sm
+        className="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border bg-gray-50/90 backdrop-blur-sm text-sm sm:text-base
           transition-all duration-200 outline-none
-          focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary
-          hover:border-gray-300"
+          focus:bg-white focus:border-[#6750A4]/60 focus:ring-4 focus:ring-[#6750A4]/10
+          hover:border-gray-300 placeholder-gray-400"
         aria-label="Search companies"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />
         </button>
       )}
       {!value && !isFocused && (
-        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-gray-100 text-[10px] text-gray-400 font-sans border border-gray-200">
+        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-gray-100 text-[10px] text-gray-500 font-sans border border-gray-200">
           <span className="text-xs">⌘</span>K
         </kbd>
       )}
@@ -131,13 +134,13 @@ function SearchInput({
 
 function SkeletonGrid() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 animate-pulse"
+          className="flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl border border-gray-100 animate-pulse bg-white/50"
         >
-          <div className="w-12 h-12 rounded-xl bg-gray-100" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gray-100" />
           <div className="w-3/4 h-4 bg-gray-100 rounded-full" />
           <div className="w-1/2 h-3 bg-gray-100 rounded-full" />
         </div>
@@ -157,11 +160,11 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="p-4 rounded-2xl bg-gray-50 mb-4">
+      <div className="p-4 rounded-2xl bg-gray-50 mb-4 shadow-inner">
         <Icon className="h-10 w-10 text-gray-300" />
       </div>
-      <p className="text-gray-700 font-medium">{title}</p>
-      <p className="text-sm text-gray-500 mt-1">{message}</p>
+      <p className="text-gray-700 font-medium text-sm sm:text-base">{title}</p>
+      <p className="text-xs sm:text-sm text-gray-500 mt-1">{message}</p>
     </div>
   );
 }
@@ -188,19 +191,19 @@ function CompanyGridCard({
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
       onClick={() => onSelect(company.slug, company.name)}
-      className="group flex flex-col items-center gap-3 p-5 rounded-xl
-        border border-gray-200 bg-white text-center
-        transition-all duration-200
-        hover:border-[#6750A4]/40 hover:bg-[#6750A4]/5 hover:shadow-md
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6750A4]
+      className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
+        border border-gray-200 bg-white/80 backdrop-blur-sm text-center
+        transition-all duration-300 ease-out
+        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
         active:scale-[0.98]"
     >
       {/* Logo / Icon */}
-      <div className="w-20 h-20 rounded-full flex items-center justify-center
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
         border border-gray-200 bg-gray-50 overflow-hidden
-        group-hover:border-[#6750A4]/30 group-hover:shadow-sm transition-all">
+        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
         {showIcon ? (
-          <Building2 className="h-7 w-7 text-[#6750A4]" />
+          <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
         ) : (
           <img
             src={logoUrl}
@@ -213,11 +216,68 @@ function CompanyGridCard({
 
       {/* Info */}
       <div className="min-w-0 w-full">
-        <p className="font-bold text-gray-900 truncate text-lg">
+        <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
           {company.name}
         </p>
         <p className="text-xs text-gray-500 truncate capitalize mt-0.5">
           {company.business_type || 'Company'}
+        </p>
+      </div>
+    </motion.button>
+  );
+}
+
+function ProductCard({
+  product,
+  onSelect,
+}: {
+  product: any;
+  onSelect: (slug: string, name: string) => void;
+}) {
+  return (
+    <motion.button
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      onClick={() => {
+        if (product.company_slug) {
+          onSelect(product.company_slug, product.company_name || product.company);
+        }
+      }}
+      className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
+        border border-gray-200 bg-white/80 backdrop-blur-sm text-center
+        transition-all duration-300 ease-out
+        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
+        active:scale-[0.98]"
+    >
+      {/* Product Image */}
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
+        border border-gray-200 bg-gray-50 overflow-hidden
+        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
+        {product.primary_image ? (
+          <img
+            src={product.primary_image}
+            alt={product.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Package className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
+        )}
+      </div>
+
+      {/* Product Info */}
+      <div className="min-w-0 w-full">
+        <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+          {product.title}
+        </p>
+        <p className="text-xs text-gray-500 truncate mt-0.5">
+          {product.company_name || product.company}
+        </p>
+        <p className="text-xs sm:text-sm font-bold text-[#6750A4] mt-1">
+          {Number(product.price).toLocaleString()} ETB
         </p>
       </div>
     </motion.button>
@@ -231,11 +291,12 @@ export function CompanySelector({
   companies,
   isLoading,
   onSelect,
-  // onBack,
+  onBack,
   allowSwitch = false,
-subtitle = "Select a company to manage its products", disableProductSearch = false, title = "Choose Company", searchPlaceholder = "Search by name or type..."
-
-
+  subtitle = "Select a company to manage its products",
+  disableProductSearch = false,
+  title = "Choose Company",
+  searchPlaceholder = "Search by name or type...",
 }: CompanySelectorProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -262,7 +323,7 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
       setSearchingProducts(false);
       return;
     }
-    
+
     const fetchProducts = async () => {
       if (!searchTerm.trim()) {
         setProductResults([]);
@@ -279,7 +340,7 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
         setSearchingProducts(false);
       }
     };
-    
+
     const timer = setTimeout(fetchProducts, 500);
     return () => clearTimeout(timer);
   }, [searchTerm, disableProductSearch]);
@@ -292,25 +353,30 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto flex flex-col"
-      style={{ maxHeight: 'calc(100vh - 100px)' }}
+      className="bg-white rounded-3xl shadow-2xl border border-gray-100/80 max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
+      style={{ maxHeight: 'calc(100vh - 120px)' }}
     >
       {/* Header – fixed at top */}
       <Header
         title={title}
         subtitle={subtitle}
+        onBack={onBack}
       />
 
       {/* Scrollable content area (search + grid) */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         {/* Sticky search */}
-        <div className="sticky top-0 z-10 px-5 pt-3 pb-2 bg-white">
-<SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={searchPlaceholder} />
+        <div className="sticky top-0 z-10 px-4 sm:px-6 pt-3 pb-2 bg-white/90 backdrop-blur-md">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={searchPlaceholder}
+          />
           <div className="mt-3 border-b border-gray-100" />
         </div>
 
         {/* Grid / skeleton / empty states */}
-        <div className="px-5 pb-5">
+        <div className="px-4 sm:px-6 pb-6">
           {/* Loading State */}
           {(isLoading || searchingProducts) && <SkeletonGrid />}
 
@@ -329,11 +395,13 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
               {/* Companies Section */}
               {filteredCompanies.length > 0 && (
                 <>
-                  <div className="flex items-center gap-2 mb-3 mt-2">
-                    <Building2 className="h-4 w-4 text-[#6750A4]" />
-                    <h3 className="text-sm font-semibold text-gray-700">Companies ({filteredCompanies.length})</h3>
+                  <div className="flex items-center gap-2 mb-4 mt-2">
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-700">
+                      Companies ({filteredCompanies.length})
+                    </h3>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                  <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-8">
                     <AnimatePresence>
                       {filteredCompanies.map((company) => (
                         <CompanyGridCard
@@ -352,60 +420,20 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
               {/* Products Section - Only show if product search is enabled */}
               {!disableProductSearch && productResults.length > 0 && (
                 <>
-                  <div className="flex items-center gap-2 mb-3 mt-2">
-                    <Package className="h-4 w-4 text-[#6750A4]" />
-                    <h3 className="text-sm font-semibold text-gray-700">Products ({productResults.length})</h3>
+                  <div className="flex items-center gap-2 mb-4 mt-2">
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-700">
+                      Products ({productResults.length})
+                    </h3>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     <AnimatePresence>
                       {productResults.map((product) => (
-                        <motion.button
+                        <ProductCard
                           key={product.id}
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => {
-                            if (product.company_slug) {
-                              onSelect(product.company_slug, product.company_name || product.company);
-                            }
-                          }}
-                          className="group flex flex-col items-center gap-3 p-5 rounded-xl
-                            border border-gray-200 bg-white text-center
-                            transition-all duration-200
-                            hover:border-[#6750A4]/40 hover:bg-[#6750A4]/5 hover:shadow-md
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6750A4]
-                            active:scale-[0.98]"
-                        >
-                          {/* Product Image */}
-                          <div className="w-20 h-20 rounded-xl flex items-center justify-center
-                            border border-gray-200 bg-gray-50 overflow-hidden
-                            group-hover:border-[#6750A4]/30 group-hover:shadow-sm transition-all">
-                            {product.primary_image ? (
-                              <img
-                                src={product.primary_image}
-                                alt={product.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Package className="h-7 w-7 text-[#6750A4]" />
-                            )}
-                          </div>
-
-                          {/* Product Info */}
-                          <div className="min-w-0 w-full">
-                            <p className="font-bold text-gray-900 truncate text-sm">
-                              {product.title}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate mt-0.5">
-                              {product.company_name || product.company}
-                            </p>
-                            <p className="text-xs font-semibold text-[#6750A4] mt-1">
-                              {Number(product.price).toLocaleString()} ETB
-                            </p>
-                          </div>
-                        </motion.button>
+                          product={product}
+                          onSelect={onSelect}
+                        />
                       ))}
                     </AnimatePresence>
                   </div>
@@ -426,11 +454,13 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
           {/* No Search Term - Show All Companies */}
           {!isLoading && !searchingProducts && !searchTerm && (
             <>
-              <div className="flex items-center gap-2 mb-3 mt-2">
-                <Building2 className="h-4 w-4 text-[#6750A4]" />
-                <h3 className="text-sm font-semibold text-gray-700">All Companies</h3>
+              <div className="flex items-center gap-2 mb-4 mt-2">
+                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                <h3 className="text-sm sm:text-base font-semibold text-gray-700">
+                  All Companies
+                </h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 <AnimatePresence>
                   {companies.map((company) => (
                     <CompanyGridCard
@@ -450,12 +480,17 @@ subtitle = "Select a company to manage its products", disableProductSearch = fal
 
       {/* Footer – fixed at bottom */}
       {!isLoading && !searchingProducts && (
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50 text-center flex-shrink-0">
-          <p className="text-xs text-gray-500">
+        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/80 backdrop-blur-sm text-center flex-shrink-0">
+          <p className="text-xs sm:text-sm text-gray-500">
             {searchTerm ? (
-              <>Found {filteredCompanies.length + productResults.length} result{(filteredCompanies.length + productResults.length) !== 1 ? 's' : ''}</>
+              <>
+                Found {filteredCompanies.length + productResults.length}{' '}
+                result{(filteredCompanies.length + productResults.length) !== 1 ? 's' : ''}
+              </>
             ) : (
-              <>Showing {companies.length} compan{companies.length !== 1 ? 'ies' : 'y'}</>
+              <>
+                Showing {companies.length} compan{companies.length !== 1 ? 'ies' : 'y'}
+              </>
             )}
           </p>
         </div>
