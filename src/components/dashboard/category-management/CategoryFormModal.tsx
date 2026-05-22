@@ -37,7 +37,6 @@ export default function CategoryFormModal({
   setFormData,
   formErrors,
   editingId,
-  readOnly,
 }: CategoryFormModalProps) {
   return (
     <FormModal

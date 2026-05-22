@@ -6,20 +6,21 @@ import {
   statusClass,
   paymentStatusClass,
 } from "./uiHelpers";
+import type { AnalyticsRecentOrder } from "../../../types";
 
-interface Order {
-  id: string;
-  customer: string;
-  amount: number;
-  status: string;
-  paymentStatus: string;
-  vendors: string;
-  date: string;
-}
+// interface Order {
+//   id: string;
+//   customer: string;
+//   amount: number;
+//   status: string;
+//   paymentStatus: string;
+//   vendors: string;
+//   date: string;
+// }
 
 interface OrdersTableProps {
   loading: boolean;
-  recentOrders: Order[];
+  recentOrders: AnalyticsRecentOrder[];
   onNavigate?: (tab: any) => void;
   isSuperAdmin: boolean;
 }

@@ -23,7 +23,9 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
-import Overview from "./overview/Overview";
+import Overview, {
+  type DashboardTab as OverviewDashboardTab,
+} from "./overview/Overview";
 import CompanyUsers from "./companyUser/CompanyUsers";
 import CompanyOrders from "./vedorOrders/CompanyOrders";
 import Payments from "./Payments";
@@ -267,9 +269,20 @@ export default function AdminDashboard() {
     setProfileDropdownOpen(false);
   };
 
-  const navigateFromOverview = (
-    tab: "products" | "masterOrders" | "companyOrders",
-  ) => navigate(tab);
+  const navigateFromOverview = (tab: OverviewDashboardTab) => {
+  switch (tab) {
+    case "companyUser":
+      navigate("users");
+      break;
+
+    case "allOrders":
+      navigate("companyOrders");
+      break;
+
+    default:
+      navigate(tab as Tab);
+  }
+};
 
   // Handle logout with confirmation
   const handleLogoutClick = () => {

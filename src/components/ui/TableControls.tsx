@@ -1,6 +1,6 @@
 // src/components/ui/TableControls.tsx
 import React, { memo } from "react";
-import { CustomSelect } from "./CustomSelect";
+import { CustomSelect, type SelectOption } from "./CustomSelect";
 
 interface TableControlsProps {
   pageSize: number;

@@ -1,5 +1,5 @@
 // src/components/admin/overview/Overview.tsx
-import { useState, useEffect, type ComponentType, useMemo, useCallback } from "react";
+import { useState, useEffect,  useMemo, useCallback } from "react";
 import {
   Package,
   Users,
@@ -60,8 +60,15 @@ const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
 };
 
 type Period = "week" | "month" | "year";
-type DashboardTab = "products" | "masterOrders" | "companyOrders" | "payments" | "companies" | "allOrders" | "companyUser";
-
+export type DashboardTab =
+  | "products"
+  | "masterOrders"
+  | "companyOrders"
+  | "payments"
+  | "companies"
+  | "allOrders"
+  | "companyUser";
+  
 export default function Overview({
   onNavigate,
 }: {
@@ -76,7 +83,7 @@ export default function Overview({
   const [error, setError] = useState<string>("");
   const [analytics, setAnalytics] = useState<AnalyticsOverviewResponse>(EMPTY_ANALYTICS);
   const [companiesList, setCompaniesList] = useState<any[]>([]);
-  const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
+  // const [aggregatedSummary, setAggregatedSummary] = useState<any>(null);
   // ADDED: Local state for non-super admin "All Companies" selection (does NOT affect global context)
   const [localAllCompaniesSelected, setLocalAllCompaniesSelected] = useState(false);
 
@@ -171,7 +178,7 @@ export default function Overview({
             };
             setAnalytics(modifiedAnalytics);
           }
-          setAggregatedSummary(aggregated);
+          // setAggregatedSummary(aggregated);
         } else {
           let companyParam: string | undefined;
           if (isSuperAdmin) {
@@ -188,7 +195,7 @@ export default function Overview({
 
           if (data && data.summary) {
             setAnalytics(data);
-            setAggregatedSummary(null);
+            // setAggregatedSummary(null);
           } else {
             setAnalytics(EMPTY_ANALYTICS);
           }
@@ -545,7 +552,7 @@ export default function Overview({
               />
             </div>
             <div
-              onClick={() => onNavigate?.("users")}
+              onClick={() => onNavigate?.("companyUser")}
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard

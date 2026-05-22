@@ -25,7 +25,7 @@ interface DataTableProps<T> {
   totalItems?: number;
   itemsPerPage?: number;
   sortField?: string;
-  sortOrder?: 'asc' | 'desc';
+sortOrder: "desc" | "asc" | undefined;
   onSort?: (field: string) => void;
 }
 

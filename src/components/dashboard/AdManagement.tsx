@@ -10,12 +10,10 @@ import {
   LayoutDashboard,
   Activity,
   Image as ImageIcon,
-  Target,
   Globe,
   AlertTriangle,
   Upload,
-  ChevronDown,
-  Check,
+
   ChevronLeft,
   ChevronRight,
   MegaphoneOff,
@@ -128,12 +126,12 @@ import { getAds, createAd, updateAd, deleteAd } from "../../services/api";
 // ----------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------
-const PAGE_OPTIONS = [
-  { value: "home", label: "Home" },
-  { value: "buy", label: "Buy" },
-  { value: "rent", label: "Rent" },
-  { value: "developments", label: "Real Estate" },
-];
+// const PAGE_OPTIONS = [
+//   { value: "home", label: "Home" },
+//   { value: "buy", label: "Buy" },
+//   { value: "rent", label: "Rent" },
+//   { value: "developments", label: "Real Estate" },
+// ];
 
 const ITEMS_PER_PAGE = 6;
 
@@ -271,106 +269,106 @@ const StatCard: React.FC<{
 // ----------------------------------------------------------------------
 // Multi‑select dropdown for target pages
 // ----------------------------------------------------------------------
-const MultiSelectPages: React.FC<{
-  value: string[];
-  onChange: (pages: string[]) => void;
-}> = ({ value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const togglePage = (pageValue: string) => {
-    if (value.includes(pageValue))
-      onChange(value.filter((v) => v !== pageValue));
-    else onChange([...value, pageValue]);
-  };
-  const toggleAll = () => {
-    if (value.length === PAGE_OPTIONS.length) onChange([]);
-    else onChange(PAGE_OPTIONS.map((p) => p.value));
-  };
-  const selectedLabels = value
-    .map((v) => PAGE_OPTIONS.find((p) => p.value === v)?.label)
-    .filter(Boolean);
+// const MultiSelectPages: React.FC<{
+//   value: string[];
+//   onChange: (pages: string[]) => void;
+// }> = ({ value, onChange }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+//   const togglePage = (pageValue: string) => {
+//     if (value.includes(pageValue))
+//       onChange(value.filter((v) => v !== pageValue));
+//     else onChange([...value, pageValue]);
+//   };
+//   const toggleAll = () => {
+//     if (value.length === PAGE_OPTIONS.length) onChange([]);
+//     else onChange(PAGE_OPTIONS.map((p) => p.value));
+//   };
+//   const selectedLabels = value
+//     .map((v) => PAGE_OPTIONS.find((p) => p.value === v)?.label)
+//     .filter(Boolean);
 
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-gray-700">
-        Target Pages
-      </label>
-      <div className="relative">
-        <div
-          onClick={() => setIsOpen(!isOpen)}
-          className="min-h-[44px] p-2 border border-gray-200 rounded-xl bg-white flex flex-wrap gap-1.5 items-center cursor-pointer transition-all hover:border-gray-300"
-        >
-          {value.length === 0 ? (
-            <span className="text-gray-400 text-sm px-2">Select pages...</span>
-          ) : (
-            selectedLabels.map((label) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1 bg-[#6750A4]/10 text-[#6750A4] text-xs px-2.5 py-1 rounded-full"
-              >
-                {label}
-                <X
-                  className="w-3 h-3 cursor-pointer hover:text-[#6750A4]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onChange(
-                      value.filter(
-                        (v) =>
-                          PAGE_OPTIONS.find((p) => p.value === v)?.label !==
-                          label
-                      )
-                    );
-                  }}
-                />
-              </span>
-            ))
-          )}
-          <ChevronDown
-            className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""
-              }`}
-          />
-        </div>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto"
-            >
-              <div className="p-2 border-b border-gray-100">
-                <button
-                  onClick={toggleAll}
-                  className="text-xs text-[#6750A4] hover:underline"
-                >
-                  Select All / Clear
-                </button>
-              </div>
-              {PAGE_OPTIONS.map((option) => (
-                <div
-                  key={option.value}
-                  onClick={() => togglePage(option.value)}
-                  className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div
-                    className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${value.includes(option.value)
-                        ? "bg-[#6750A4] border-[#6750A4]"
-                        : "border-gray-300"
-                      }`}
-                  >
-                    {value.includes(option.value) && (
-                      <Check className="w-3 h-3 text-white" />
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-700">{option.label}</span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="space-y-1.5">
+//       <label className="block text-sm font-medium text-gray-700">
+//         Target Pages
+//       </label>
+//       <div className="relative">
+//         <div
+//           onClick={() => setIsOpen(!isOpen)}
+//           className="min-h-[44px] p-2 border border-gray-200 rounded-xl bg-white flex flex-wrap gap-1.5 items-center cursor-pointer transition-all hover:border-gray-300"
+//         >
+//           {value.length === 0 ? (
+//             <span className="text-gray-400 text-sm px-2">Select pages...</span>
+//           ) : (
+//             selectedLabels.map((label) => (
+//               <span
+//                 key={label}
+//                 className="inline-flex items-center gap-1 bg-[#6750A4]/10 text-[#6750A4] text-xs px-2.5 py-1 rounded-full"
+//               >
+//                 {label}
+//                 <X
+//                   className="w-3 h-3 cursor-pointer hover:text-[#6750A4]"
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     onChange(
+//                       value.filter(
+//                         (v) =>
+//                           PAGE_OPTIONS.find((p) => p.value === v)?.label !==
+//                           label
+//                       )
+//                     );
+//                   }}
+//                 />
+//               </span>
+//             ))
+//           )}
+//           <ChevronDown
+//             className={`ml-auto w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""
+//               }`}
+//           />
+//         </div>
+//         <AnimatePresence>
+//           {isOpen && (
+//             <motion.div
+//               initial={{ opacity: 0, y: -10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               exit={{ opacity: 0, y: -10 }}
+//               className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto"
+//             >
+//               <div className="p-2 border-b border-gray-100">
+//                 <button
+//                   onClick={toggleAll}
+//                   className="text-xs text-[#6750A4] hover:underline"
+//                 >
+//                   Select All / Clear
+//                 </button>
+//               </div>
+//               {PAGE_OPTIONS.map((option) => (
+//                 <div
+//                   key={option.value}
+//                   onClick={() => togglePage(option.value)}
+//                   className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+//                 >
+//                   <div
+//                     className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${value.includes(option.value)
+//                         ? "bg-[#6750A4] border-[#6750A4]"
+//                         : "border-gray-300"
+//                       }`}
+//                   >
+//                     {value.includes(option.value) && (
+//                       <Check className="w-3 h-3 text-white" />
+//                     )}
+//                   </div>
+//                   <span className="text-sm text-gray-700">{option.label}</span>
+//                 </div>
+//               ))}
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+//       </div>
+//     </div>
+//   );
+// };
 
 // ----------------------------------------------------------------------
 // Image Uploader with drag & drop and preview
@@ -510,8 +508,8 @@ const AdCard: React.FC<{
   getImageUrl: (url: string) => string;
   isReadOnly: boolean;
 }> = ({ ad, onEdit, onDelete, getImageUrl, isReadOnly }) => {
-  const pageCount = ad.target_pages.length;
-  const isAllPages = pageCount === PAGE_OPTIONS.length;
+  // const pageCount = ad.target_pages.length;
+  // const isAllPages = pageCount === PAGE_OPTIONS.length;
 
   return (
     <motion.div
@@ -995,10 +993,10 @@ export default function AdManagement() {
 
   const totalCount = ads.length;
   const activeCount = ads.filter((ad) => ad.is_active).length;
-  const totalPagesTargeted = ads.reduce(
-    (sum, ad) => sum + ad.target_pages.length,
-    0
-  );
+                // const totalPagesTargeted = ads.reduce(
+                //   (sum, ad) => sum + ad.target_pages.length,
+                //   0
+                // );
 
   const getImageUrl = (image: string) => {
     if (!image) return "";

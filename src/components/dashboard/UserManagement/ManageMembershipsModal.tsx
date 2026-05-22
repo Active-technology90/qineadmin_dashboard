@@ -36,16 +36,16 @@ const roleSelectOptions: SelectOption[] = roleOptions.map((role) => ({
   value: role,
 }));
 
-const getRoleBadgeClass = (role: UserRole) => {
-  const classes: Record<UserRole, string> = {
-    owner: "bg-rose-100 text-rose-800 border-rose-200",
-    admin: "bg-purple-100 text-purple-800 border-purple-200",
-    staff: "bg-blue-100 text-blue-800 border-blue-200",
-    viewer: "bg-amber-100 text-amber-800 border-amber-200",
-    delivery: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  };
-  return classes[role];
-};
+// const getRoleBadgeClass = (role: UserRole) => {
+//   const classes: Record<UserRole, string> = {
+//     owner: "bg-rose-100 text-rose-800 border-rose-200",
+//     admin: "bg-purple-100 text-purple-800 border-purple-200",
+//     staff: "bg-blue-100 text-blue-800 border-blue-200",
+//     viewer: "bg-amber-100 text-amber-800 border-amber-200",
+//     delivery: "bg-emerald-100 text-emerald-800 border-emerald-200",
+//   };
+//   return classes[role];
+// };
 
 const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
   isOpen,

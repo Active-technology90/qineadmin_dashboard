@@ -16,7 +16,7 @@ import {
 import { TrendingUp, Building2 } from "lucide-react";
 import { SkeletonChart, EmptyState } from "./LoadingStates";
 import { formatCurrency, CHART_COLORS } from "./uiHelpers";
-import type { DashboardTab } from "../../types"; // adjust path if needed
+import type { DashboardTab } from "./Overview";
 
 type Period = "week" | "month" | "year";
 

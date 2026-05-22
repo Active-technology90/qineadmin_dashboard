@@ -259,7 +259,9 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ message, onDismiss }) => {
 };
 
 interface ActionButtonProps {
-  onClick?: () => void;
+  onClick?: (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => void | Promise<void>;
   loading?: boolean;
   disabled?: boolean;
   variant?: "primary" | "secondary";
@@ -370,31 +372,34 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
       return Object.keys(errors).length === 0;
     }, [formData]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!validate()) return;
+   const handleSubmit = async (
+  e?: React.FormEvent | React.MouseEvent<HTMLButtonElement>
+) => {
+  e?.preventDefault();
 
-      setLoading(true);
-      setError("");
+  if (!validate()) return;
 
-      try {
-        const updateData: Partial<User> = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone_number: formData.phone_number,
-          username: formData.username,
-          is_active: formData.is_active,
-        };
-        console.log(updateData);
-        await onSave(updateData);
-        onClose();
-      } catch (err: any) {
-        setError(err.message || "Failed to update user");
-      } finally {
-        setLoading(false);
-      }
+  setLoading(true);
+  setError("");
+
+  try {
+    const updateData: Partial<User> = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      phone_number: formData.phone_number,
+      username: formData.username,
+      is_active: formData.is_active,
     };
+
+    await onSave(updateData);
+    onClose();
+  } catch (err: any) {
+    setError(err.message || "Failed to update user");
+  } finally {
+    setLoading(false);
+  }
+};
 
     if (!isOpen) return null;
 

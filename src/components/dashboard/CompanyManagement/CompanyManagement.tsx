@@ -435,13 +435,13 @@ export default function CompanyManagement() {
             cover_image: null,
           };
           setFormData(newFormData);
-          setOriginalFormData({
-            ...newFormData,
-            logo: first.logo,
-            cover_image: first.cover_image,
-          });
-          if (first.logo) setLogoPreview(first.logo);
-          if (first.cover_image) setCoverPreview(first.cover_image);
+        setOriginalFormData({
+  ...newFormData,
+  logo: null,
+  cover_image: null,
+});
+          setLogoPreview(first.logo ?? null);
+setCoverPreview(first.cover_image ?? null);
         }
       } else {
         setCompanies([]);
@@ -632,7 +632,7 @@ export default function CompanyManagement() {
         formPayload.append("logo", formData.logo);
       } else if (
         formData.logo === null &&
-        originalFormData?.logo &&
+        originalFormData?.original_logo &&
         logoPreview === null
       ) {
         // User removed the image (logoPreview is null confirms they clicked remove)
@@ -644,7 +644,7 @@ export default function CompanyManagement() {
         formPayload.append("cover_image", formData.cover_image);
       } else if (
         formData.cover_image === null &&
-        originalFormData?.cover_image &&
+       originalFormData?.original_cover_image &&
         coverPreview === null
       ) {
         // User removed the cover image (coverPreview is null confirms they clicked remove)
@@ -750,13 +750,13 @@ export default function CompanyManagement() {
       };
       setFormData(newFormData);
       // Save original data for change detection (including original image URLs)
-      setOriginalFormData({
-        ...newFormData,
-        logo: company.logo,
-        cover_image: company.cover_image,
-      });
-      if (company.logo) setLogoPreview(company.logo);
-      if (company.cover_image) setCoverPreview(company.cover_image);
+     setOriginalFormData({
+  ...newFormData,
+  original_logo: company.logo ?? null,
+  original_cover_image: company.cover_image ?? null,
+});
+     setLogoPreview(company.logo ?? null);
+setCoverPreview(company.cover_image ?? null);
       if (isSuperAdmin) {
         setModalOpen(true);
       } else {

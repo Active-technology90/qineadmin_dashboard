@@ -61,19 +61,27 @@ const backdropVariants = {
   exit: { opacity: 0, transition: { duration: 0.2 } },
 };
 
+const customEase = (x: number) => Math.sin(x * Math.PI);
+
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95, y: 12 },
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+    transition: {
+      duration: 0.25,
+      ease: customEase,
+    },
   },
   exit: {
     opacity: 0,
     scale: 0.95,
-    y: 12,
-    transition: { duration: 0.2, ease: 'easeInOut' },
+    y: 20,
+    transition: {
+      duration: 0.2,
+      ease: customEase,
+    },
   },
 };
 

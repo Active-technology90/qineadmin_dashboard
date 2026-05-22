@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -27,13 +27,24 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
-  getDeliveries, // ADD THIS
+   // ADD THIS
   updateDeliveryPerson,
   prepareVendorOrder,
   confirmCODPayment,
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
+interface OrderReceipt {
+  // Define the properties of the OrderReceipt type here
+  // For example:
+  id: number;
+  status: string;
+  receipt_image: string;
+  bank_name: string;
+  amount: string;
+  uploaded_at: string;
+  // Add more properties as needed
+}
 
 // ---------- Animation Variants ----------
 const containerVariants = {

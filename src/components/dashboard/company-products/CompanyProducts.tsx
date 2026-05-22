@@ -15,6 +15,7 @@ import { ErrorView } from "../../ui/ErrorView";
 import { TableControls } from "../../ui/TableControls";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
+import type { CompanyListItem } from "../../../types";
 
 export default function CompanyProducts() {
   const { user } = useAuth();

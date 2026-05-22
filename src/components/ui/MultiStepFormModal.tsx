@@ -19,7 +19,7 @@ import {
 
 export interface FormStep {
   id: string;
-  title: string;
+    title: React.ReactNode;
   description?: string;
   content: ReactNode;
   validate?: () => boolean | Promise<boolean>;
@@ -311,7 +311,11 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           ref={modalRef}
           role="dialog"
           aria-modal="true"
-          aria-label={current.title}
+       aria-label={
+  typeof current.title === "string"
+    ? current.title
+    : current.description || `Step ${currentStep + 1}`
+}
           onClick={(e) => e.stopPropagation()}
           className={`
             w-full bg-white

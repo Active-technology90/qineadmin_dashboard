@@ -27,7 +27,7 @@ import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { useSorting } from "../../hooks/useSorting";
 import { useReadOnly } from "./AdminDashboard";
-import { CustomSelect } from "../ui/CustomSelect";
+import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
 import MobileCardSkeleton from "../ui/MobileCardSkeleton";
 import MobileActionBar from "../ui/MobileActionBar";
 import FilterSortSheet from "../ui/FilterSortSheet";
@@ -55,13 +55,13 @@ export default function SubCategoryManagement() {
   const [tempSort, setTempSort] = useState("name|asc");
 
   // Accordion for mobile sheet (for future extensions, not fully used but kept)
-  const [accordion, setAccordion] = useState({
-    sort: true,
-    filter: true,
-  });
+  // const [accordion, setAccordion] = useState({
+  //   sort: true,
+  //   filter: true,
+  // });
 
-  const toggleAccordion = (section: keyof typeof accordion) =>
-    setAccordion((prev) => ({ ...prev, [section]: !prev[section] }));
+  // const toggleAccordion = (section: keyof typeof accordion) =>
+  //   setAccordion((prev) => ({ ...prev, [section]: !prev[section] }));
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);

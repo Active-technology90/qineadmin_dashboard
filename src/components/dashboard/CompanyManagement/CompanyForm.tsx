@@ -21,6 +21,10 @@ export interface CompanyFormData {
   is_featured: boolean;
   logo: File | null;
   cover_image: File | null;
+
+  // ADD THESE
+  original_logo?: string | null;
+  original_cover_image?: string | null;
 }
 
 interface CompanyFormProps {
@@ -36,6 +40,7 @@ interface CompanyFormProps {
   editingSlug: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
+  
 }
 
 export default function CompanyForm({
