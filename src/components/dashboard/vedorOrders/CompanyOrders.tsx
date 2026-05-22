@@ -180,15 +180,18 @@ export default function CompanyOrders() {
   const isSuperAdmin = !user?.memberships?.length;
   const isAdminLike = isSuperAdmin || readOnly;
 
-  const shouldFetchAll = isAdminLike;
+  // Superadmin: global admin API. Viewer: scoped admin API (backend filters by company).
+  // Admin/staff: company-scoped API only.
+  const shouldFetchAll = isSuperAdmin || readOnly;
 
   const companySlug = company?.slug ?? null;
   const effectiveSlug = useMemo(() => {
-    if (!isAdminLike && user?.memberships?.length) {
+    if (shouldFetchAll) return null;
+    if (user?.memberships?.length) {
       return companySlug || user.memberships[0]?.company_slug || null;
     }
     return null;
-  }, [isAdminLike, companySlug, user]);
+  }, [shouldFetchAll, companySlug, user]);
 
   // const companyName = company?.name ?? "";
 
