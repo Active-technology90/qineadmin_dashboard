@@ -79,6 +79,7 @@ export default function CompanyUsers() {
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
   const readOnly = useReadOnly();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
 
   const companySlug = company?.slug ?? null;
@@ -330,8 +331,9 @@ export default function CompanyUsers() {
   return (
     <div className="space-y-3 px-4 sm:px-0">
       {/* ===== 1. COMPACT HEADER ===== */}
-      <div className="flex flex-row items-center justify-between gap-3 px-0 flex-wrap">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-row items-center justify-between gap-3 px-0">
+        {/* LEFT SIDE - Logo and Title */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Logo only shows for Super Admin */}
           {isSuperAdmin && (
             <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
@@ -349,28 +351,30 @@ export default function CompanyUsers() {
           </div>
 
           )}
-          <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-secondary leading-tight break-words">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-2xl font-extrabold text-secondary leading-tight break-words">
               {isSuperAdmin ? companyName : "All Users"}
             </h1>
-            <p className="text-[10px] sm:text-xs text-gray-500">
+            <p className="text-[9px] sm:text-xs text-gray-500">
               Manage roles and organization access
             </p>
           </div>
         </div>
 
+        {/* RIGHT SIDE - Switch button (only for super admin) */}
         {isSuperAdmin && (
           <button
             onClick={clearCompany}
             className="
         h-8 sm:h-9 px-2 sm:px-3
-        rounded-xl
-        border border-gray-200
-        bg-white
-        text-[10px] sm:text-xs font-medium text-gray-700
-        hover:bg-gray-50
+        rounded-lg
+        border border-secondary/30
+        bg-secondary
+        text-[10px] sm:text-xs font-medium text-white
+        hover:bg-secondary/90
         transition-all
         flex-shrink-0
+        shadow-sm
       "
           >
             Switch
@@ -381,7 +385,7 @@ export default function CompanyUsers() {
       {loading ? (
         <StatsSkeleton />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+        <div className="hidden sm:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           <StatCard
             title="Total"
             value={users?.length || 0}
@@ -418,67 +422,63 @@ export default function CompanyUsers() {
       {/* ===== 4. MAIN TABLE CARD ===== */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {/* TableControls wraps search + page size selector */}
-        <TableControls
-          pageSize={pageSize}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setCurrentPage(1);
-          }}
-        >
+        {/* TableControls - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block">
+          <TableControls
+            pageSize={pageSize}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-            {/* LEFT SIDE */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
-  {/* SEARCH */}
-  <div className="relative w-full sm:w-[380px]">
-    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-
-    <input
-      type="text"
-      placeholder="Search users..."
-      value={tableSearch}
-      onChange={(e) => setTableSearch(e.target.value)}
-      className="
-        w-full h-11
-        pl-10 pr-10
-        rounded-xl
-        border border-gray-200
-        bg-white
-        text-sm text-gray-700
-        placeholder:text-gray-400
-
-        shadow-sm
-
-        focus:outline-none
-        focus:ring-2 focus:ring-gray-100
-        focus:border-gray-300
-
-        transition-all
-      "
-    />
-
-    {/* CLEAR BUTTON */}
-    {tableSearch && (
-      <button
-        onClick={() => setTableSearch("")}
-        className="
-          absolute right-2.5 top-1/2 -translate-y-1/2
-          h-6 w-6
-          rounded-md
-          flex items-center justify-center
-          hover:bg-gray-100
-          active:scale-95
-          transition
-        "
-      >
-        <X className="h-3.5 w-3.5 text-gray-500" />
-      </button>
-    )}
-  </div>
-</div>
+            {/* LEFT SIDE - SEARCH (Hidden on mobile) */}
+            <div className="hidden sm:flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+              {/* SEARCH */}
+              <div className="relative w-full sm:w-[380px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  className="
+                    w-full h-11
+                    pl-10 pr-10
+                    rounded-xl
+                    border border-gray-200
+                    bg-white
+                    text-sm text-gray-700
+                    placeholder:text-gray-400
+                    shadow-sm
+                    focus:outline-none
+                    focus:ring-2 focus:ring-gray-100
+                    focus:border-gray-300
+                    transition-all
+                  "
+                />
+                {tableSearch && (
+                  <button
+                    onClick={() => setTableSearch("")}
+                    className="
+                      absolute right-2.5 top-1/2 -translate-y-1/2
+                      h-6 w-6
+                      rounded-md
+                      flex items-center justify-center
+                      hover:bg-gray-100
+                      active:scale-95
+                      transition
+                    "
+                  >
+                    <X className="h-3.5 w-3.5 text-gray-500" />
+                  </button>
+                )}
+              </div>
+            </div>
             {/* RIGHT SIDE */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* ROLE FILTERS */}
-              <div className="relative w-44">
+              {/* ROLE FILTERS (Hidden on mobile) */}
+              <div className="hidden sm:block relative w-44">
                 <select
                   value={roleFilter}
                   onChange={(e) =>
@@ -488,84 +488,116 @@ export default function CompanyUsers() {
                         | "admin"
                         | "staff"
                         | "viewer"
-                        | "delivery",
+                        | "delivery"
                     )
                   }
                   className="
-      w-full h-9 px-3 pr-8
-      rounded-xl
-      border border-gray-200
-      bg-white
-      text-sm text-gray-700
-      font-medium
-      shadow-sm
-      focus:outline-none
-      focus:ring-2 focus:ring-gray-200
-      transition
-    "
+                    w-full h-9 px-3 pr-8
+                    rounded-xl
+                    border border-gray-200
+                    bg-white
+                    text-sm text-gray-700
+                    font-medium
+                    shadow-sm
+                    focus:outline-none
+                    focus:ring-2 focus:ring-gray-200
+                    transition
+                  "
                 >
                   <option value="all">All</option>
-
                   <option value="admin">Admin ({roleCounts.admin || 0})</option>
-
                   <option value="staff">Staff ({roleCounts.staff || 0})</option>
-
-                  <option value="viewer">
-                    Viewer ({roleCounts.viewer || 0})
-                  </option>
-
-                  <option value="delivery">
-                    Delivery ({roleCounts.delivery || 0})
-                  </option>
+                  <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
+                  <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
                 </select>
-
-                {/* optional custom arrow icon */}
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <ChevronDown className="h-3 w-3" />
                 </div>
               </div>
-
-              {canManageUsers && (
-                <>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="
-          h-9 px-3.5
-          rounded-xl
-          bg-[#6750A4]
-          text-white
-          text-xs font-medium
-          hover:bg-[#4c3789]
-          transition-all
-          flex items-center gap-1.5
-          shadow-sm
-        "
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Add Member
-                  </button>
-
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="
-          h-9 px-3.5
-          rounded-xl
-          border border-gray-200
-          bg-white
-          text-xs font-medium text-gray-700
-          hover:bg-gray-50
-          transition-all
-          flex items-center gap-1.5
-        "
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Create User
-                  </button>
-                </>
-              )}
+              {/* DESKTOP: Buttons on right side (original layout) */}
+              <div className="hidden lg:flex items-center gap-2">
+                {canManageUsers && (
+                  <>
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="
+                        h-9 px-3.5
+                        rounded-xl
+                        bg-[#6750A4]
+                        text-white
+                        text-xs font-medium
+                        hover:bg-[#4c3789]
+                        transition-all
+                        flex items-center gap-1.5
+                        shadow-sm
+                      "
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Add Member
+                    </button>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="
+                        h-9 px-3.5
+                        rounded-xl
+                        border-2 border-[#6750A4]
+                        bg-white
+                        text-xs font-medium text-[#6750A4]
+                        hover:bg-secondary/5
+                        transition-all
+                        flex items-center gap-1.5
+                      "
+                    >
+                      <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
+                      Create User
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </TableControls>
+          </TableControls>
+        </div>
+
+        {/* MOBILE: Buttons with space-between layout (Create User left, Add Member right) */}
+        <div className="flex lg:hidden items-center justify-between gap-2 mb-3">
+          {canManageUsers && (
+            <>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="
+                  h-9 px-3.5
+                  rounded-xl
+                  border-2 border-[#6750A4]
+                  bg-white
+                  text-xs font-medium text-[#6750A4]
+                  hover:bg-secondary/5
+                  transition-all
+                  flex items-center gap-1.5
+                "
+              >
+                <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
+                Create User
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="
+                  h-9 px-3.5
+                  rounded-xl
+                  border-2 border-[#6750A4]
+                  bg-white
+                  text-xs font-medium text-[#6750A4]
+                  hover:bg-secondary/5
+                  transition-all
+                  flex items-center gap-1.5
+                "
+              >
+                <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
+                Add Member
+              </button>
+            </>
+          )}
+        </div>
 
         {loading ? (
           <TableSkeleton rows={pageSize} />
@@ -617,6 +649,138 @@ export default function CompanyUsers() {
           </>
         )}
       </div>
+
+      {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
+      <button
+        onClick={() => setShowMobileFilterModal(true)}
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+      >
+        <div className="relative">
+          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {(tableSearch || roleFilter !== "all") && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          )}
+        </div>
+        <span className="text-sm font-semibold tracking-wide text-[#6750A4]">Filter</span>
+        {(tableSearch || roleFilter !== "all") && (
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+            Active
+          </span>
+        )}
+      </button>
+
+      {/* Mobile Filter Modal - Bottom Sheet */}
+      {showMobileFilterModal && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setShowMobileFilterModal(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          
+          {/* Bottom Sheet Content */}
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+              <button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Search
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={tableSearch}
+                    onChange={(e) => setTableSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Role Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Role
+                </label>
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as any)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin ({roleCounts.admin || 0})</option>
+                  <option value="staff">Staff ({roleCounts.staff || 0})</option>
+                  <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
+                  <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
+                </select>
+              </div>
+
+              {/* Page Size */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Items per page
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
+                >
+                  <option value={5}>5 / page</option>
+                  <option value={10}>10 / page</option>
+                  <option value={15}>15 / page</option>
+                  <option value={30}>30 / page</option>
+                  <option value={60}>60 / page</option>
+                </select>
+              </div>
+
+              {/* Active Filters Indicator */}
+              {(tableSearch || roleFilter !== "all") && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setTableSearch("");
+                      setRoleFilter("all");
+                      setCurrentPage(1);
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="w-full py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== Modals ===== */}
       <AddUserModal
