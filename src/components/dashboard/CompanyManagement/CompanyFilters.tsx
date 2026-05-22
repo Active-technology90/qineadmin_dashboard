@@ -1,4 +1,3 @@
-// src/components/admin/CompanyManagement/CompanyFilters.tsx
 import { X } from "lucide-react";
 import { SearchInput } from "../../ui/SearchInput";
 import { TableControls } from "../../ui/TableControls";
@@ -48,28 +47,13 @@ export default function CompanyFilters({
   onClearAll,
 }: CompanyFiltersProps) {
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-200">
-
-      {/* ================= MOBILE (ONLY SEARCH, NO TABLE CONTROLS) ================= */}
-      <div className="block md:hidden px-3 py-3">
-        <SearchInput
-          value={inputValue}
-          onChange={onInputChange}
-          debounceMs={0}
-          loading={loading}
-          showClearButton={false}
-          placeholder="Search..."
-        />
-      </div>
-
-      {/* ================= TABLET + DESKTOP ================= */}
+    <div className="relative z-20 ">
+      {/* ================= TABLET + DESKTOP ONLY ================= */}
       <div className="hidden md:block">
         <TableControls pageSize={pageSize} onPageSizeChange={onPageSizeChange}>
-          <div className="w-full py-3 space-y-3">
-
-            {/* SEARCH + SORT (TABLET LAYOUT) */}
-            <div className="flex flex-col lg:flex-row gap-3 w-full">
-              <div className="flex-1">
+          <div className="w-full  sm:py-3 md:py-1 px-3 sm:px-4 md:px-5 space-y-3 sm:space-y-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
+              <div className="flex-1 min-w-0">
                 <SearchInput
                   value={inputValue}
                   onChange={onInputChange}
@@ -79,8 +63,7 @@ export default function CompanyFilters({
                   placeholder="Search by name, slug, category..."
                 />
               </div>
-
-              <div className="w-full lg:w-56">
+              <div className="w-full sm:w-64 md:w-56 lg:w-64">
                 <CustomSelect
                   value={`${sortField}|${sortOrder}`}
                   onChange={onSortChange}
@@ -94,10 +77,7 @@ export default function CompanyFilters({
                 />
               </div>
             </div>
-
-            {/* FILTER GRID (ONLY DESKTOP LARGE SCREENS) */}
-            <div className="hidden lg:grid grid-cols-2 xl:grid-cols-5 gap-3">
-
+            <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3 md:gap-4">
               <CustomSelect
                 value={businessTypeFilter}
                 onChange={onBusinessTypeChange}
@@ -107,7 +87,6 @@ export default function CompanyFilters({
                   label: type.toUpperCase(),
                 }))}
               />
-
               <CustomSelect
                 value={categoryFilter}
                 onChange={onCategoryChange}
@@ -117,7 +96,6 @@ export default function CompanyFilters({
                   label: cat,
                 }))}
               />
-
               <CustomSelect
                 value={subCategoryFilter}
                 onChange={onSubCategoryChange}
@@ -127,25 +105,22 @@ export default function CompanyFilters({
                   label: sub,
                 }))}
               />
-
               {hasActiveFilters ? (
                 <button
                   type="button"
                   onClick={onClearAll}
-                  className="flex items-center justify-center gap-1.5 border border-red-500 text-red-500 rounded-xl px-4 py-2 text-sm hover:bg-red-50 min-h-[42px]"
+                  className="flex items-center justify-center gap-2 border border-red-500/70 text-red-600 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-red-50 hover:border-red-600 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 active:scale-[0.98] min-h-[42px] w-full sm:w-auto"
                 >
-                  <X size={14} />
-                  Clear
+                  <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <span>Clear all filters</span>
                 </button>
               ) : (
-                <div />
+                <div className="hidden xl:block" />
               )}
             </div>
-
           </div>
         </TableControls>
       </div>
-
     </div>
   );
 }

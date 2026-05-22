@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon } from "lucide-react";
+import { Plus, ImageIcon, Filter, SlidersHorizontal, X } from "lucide-react";
 import {
   getSubCategories,
   createSubCategory,
@@ -46,6 +46,20 @@ export default function SubCategoryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ---- Mobile filter sheet state ----
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [tempCategory, setTempCategory] = useState("all");
+  const [tempSort, setTempSort] = useState("name|asc");
+
+  // Accordion for mobile sheet (for future extensions, not fully used but kept)
+  const [accordion, setAccordion] = useState({
+    sort: true,
+    filter: true,
+  });
+
+  const toggleAccordion = (section: keyof typeof accordion) =>
+    setAccordion((prev) => ({ ...prev, [section]: !prev[section] }));
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -108,11 +122,82 @@ export default function SubCategoryManagement() {
     );
   }, [subs, categories, searchTerm, categoryFilter]);
 
+  // ========== USE SORTING ==========
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
     filteredSubs,
     "name",
     "asc",
   );
+
+  // ========== DERIVED VALUES DEPENDENT ON SORTING ==========
+  // Active filter count for mobile badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (categoryFilter !== "all") count++;
+    if (inputValue.trim() !== "") count++;
+    return count;
+  }, [categoryFilter, inputValue]);
+
+  const sortLabel = useMemo(() => {
+    const val = `${sortField}|${sortOrder}`;
+    const labels: Record<string, string> = {
+      "name|asc": "Name A-Z",
+      "name|desc": "Name Z-A",
+      "order|asc": "Order ↑",
+      "order|desc": "Order ↓",
+      "company_count|desc": "Most Companies",
+      "company_count|asc": "Fewest Companies",
+      "is_active|desc": "Active First",
+      "is_active|asc": "Inactive First",
+    };
+    return labels[val] || "Sort";
+  }, [sortField, sortOrder]);
+
+  // Lock body scroll when sheet is open
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [sheetOpen]);
+
+  // Sync temp state with current filters when sheet opens
+  useEffect(() => {
+    if (sheetOpen) {
+      setTempCategory(categoryFilter);
+      setTempSort(`${sortField}|${sortOrder}`);
+    }
+  }, [sheetOpen, categoryFilter, sortField, sortOrder]);
+
+  const applyMobileFilters = () => {
+    if (tempSort !== `${sortField}|${sortOrder}`) {
+      const [field, desiredOrder] = tempSort.split("|");
+      if (field === sortField) {
+        if (desiredOrder !== sortOrder) handleSort(field);
+      } else {
+        handleSort(field);
+        if (desiredOrder === "desc") handleSort(field);
+      }
+    }
+    if (tempCategory !== categoryFilter) {
+      setCategoryFilter(tempCategory);
+    }
+    setSheetOpen(false);
+  };
+
+  const clearAllFilters = () => {
+    setInputValue("");
+    setSearchTerm("");
+    setCategoryFilter("all");
+    setSheetOpen(false);
+  };
 
   const {
     paginatedItems,
@@ -279,6 +364,7 @@ export default function SubCategoryManagement() {
     },
     [readOnly],
   );
+
   const categoryOptions: SelectOption[] = useMemo(
     () => [
       { value: "all", label: "All Categories" },
@@ -289,6 +375,7 @@ export default function SubCategoryManagement() {
     ],
     [categories],
   );
+
   const columns: Column<SubCategory>[] = useMemo(
     () => [
       {
@@ -390,18 +477,24 @@ export default function SubCategoryManagement() {
     { value: "is_active|desc", label: "Active First" },
     { value: "is_active|asc", label: "Inactive First" },
   ];
+
   return (
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
       <Toast toast={toast} />
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold text-[#6750A4]">SubCategories</h2>
-          {readOnly && (
-            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-              View Only
-            </span>
-          )}
+      <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0 w-full overflow-hidden">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B5CF6] shrink-0" />
+          <div className="min-w-0 flex items-center gap-1.5 xs:gap-2 sm:gap-3 overflow-hidden">
+            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-[#6750A4] truncate leading-tight">
+              SubCategories
+            </h2>
+            {readOnly && (
+              <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100/80 backdrop-blur-sm text-[10px] xs:text-[11px] text-gray-600 font-medium px-1.5 xs:px-2 sm:px-2.5 py-1 whitespace-nowrap max-w-full">
+                <span className="truncate">View Only</span>
+              </span>
+            )}
+          </div>
         </div>
         {!readOnly && (
           <button
@@ -409,16 +502,64 @@ export default function SubCategoryManagement() {
               resetForm();
               setModalOpen(true);
             }}
-            className="bg-[#6750A4] text-white px-4 py-2.5 rounded-full flex items-center gap-2 hover:bg-[#5a458c] transition shadow-sm text-sm font-medium min-h-[40px] min-w-[44px]"
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-[#6750A4] hover:bg-[#5a458c] active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md text-white font-semibold text-[11px] xs:text-xs sm:text-sm px-2.5 xs:px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 min-h-[28px] xs:min-h-[42px] sm:min-h-[40px] max-w-[165px] xs:max-w-none whitespace-nowrap overflow-hidden"
+            aria-label="Add SubCategory"
           >
-            <Plus size={18} /> Add SubCategory
+            <Plus
+              size={16}
+              className="shrink-0 xs:h-[17px] xs:w-[17px] sm:h-[18px] sm:w-[18px]"
+            />
+            <span className="truncate">Add SubCategory</span>
           </button>
         )}
       </div>
 
-      {/* Sticky controls */}
-      {/* 🔍 MOBILE STICKY SEARCH ONLY */}
-      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-2 py-3 sm:hidden">
+      {/* ========== DESKTOP CONTROLS (hidden on mobile) ========== */}
+      <div className="hidden md:block sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
+        <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:flex gap-3 w-full">
+            <div className="md:col-span-2 lg:flex-1">
+              <SearchInput
+                value={inputValue}
+                onChange={handleInputChange}
+                debounceMs={0}
+                showClearButton={false}
+                placeholder="Search by name, Amharic name, slug, item code, or category..."
+                loading={loading}
+              />
+            </div>
+            <div className="w-full lg:w-56">
+              <CustomSelect
+                value={`${sortField}|${sortOrder}`}
+                onChange={(val) => {
+                  const [field, desiredOrder] = val.split("|");
+                  if (field === sortField) {
+                    if (desiredOrder !== sortOrder) handleSort(field);
+                  } else {
+                    handleSort(field);
+                    if (desiredOrder === "desc") handleSort(field);
+                  }
+                }}
+                options={sortOptions}
+                placeholder="Sort by..."
+                className="w-full"
+              />
+            </div>
+            <div className="w-full lg:w-48">
+              <CustomSelect
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                options={categoryOptions}
+                placeholder="Filter category..."
+                className="w-full"
+              />
+            </div>
+          </div>
+        </TableControls>
+      </div>
+
+      {/* ========== MOBILE SEARCH (visible below md) ========== */}
+      <div className="md:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-2 py-3">
         <SearchInput
           value={inputValue}
           onChange={handleInputChange}
@@ -429,70 +570,10 @@ export default function SubCategoryManagement() {
         />
       </div>
 
-      {/* 🖥 DESKTOP / TABLET FULL CONTROLS */}
-     <div className="hidden sm:block sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
-
-  <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-
-    {/* 🔥 RESPONSIVE GRID FIX */}
-    <div className="
-      grid grid-cols-2 md:grid-cols-2 lg:flex
-      gap-3 w-full
-    ">
-
-      {/* SEARCH (always full width on tablet too) */}
-      <div className="md:col-span-2 lg:flex-1">
-        <SearchInput
-          value={inputValue}
-          onChange={handleInputChange}
-          debounceMs={0}
-          showClearButton={false}
-          placeholder="Search by name, Amharic name, slug, item code, or category..."
-          loading={loading}
-        />
-      </div>
-
-      {/* SORT */}
-  
-      <div className="w-full lg:w-56">
-        <CustomSelect
-          value={`${sortField}|${sortOrder}`}
-          onChange={(val) => {
-            const [field, desiredOrder] = val.split("|");
-
-            if (field === sortField) {
-              if (desiredOrder !== sortOrder) handleSort(field);
-            } else {
-              handleSort(field);
-              if (desiredOrder === "desc") handleSort(field);
-            }
-          }}
-          options={sortOptions}
-          placeholder="Sort by..."
-          className="w-full"
-        />
-      </div>
-
-      {/* FILTER */}
-      <div className="w-full lg:w-48">
-        <CustomSelect
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          options={categoryOptions}
-          placeholder="Filter category..."
-          className="w-full"
-        />
-      </div>
-
-    </div>
-
-  </TableControls>
-</div>
-
-      {/* Mobile card view */}
-      <div className="block sm:hidden">
+      {/* Mobile card view (below md) */}
+      <div className="block md:hidden">
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-4 px-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -513,7 +594,7 @@ export default function SubCategoryManagement() {
             ))}
           </div>
         ) : paginatedItemsWithRowNumber.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center px-2">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <ImageIcon className="h-8 w-8 text-gray-400" />
             </div>
@@ -527,7 +608,7 @@ export default function SubCategoryManagement() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 px-2 pb-24">
             {paginatedItemsWithRowNumber.map((sub) => (
               <div
                 key={sub.id}
@@ -605,7 +686,7 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden sm:block overflow-x-auto -mx-2 sm:-mx-4 px-2 sm:px-4">
+      <div className="hidden md:block overflow-x-auto -mx-2 sm:-mx-4 px-2 sm:px-4">
         <MemoizedDataTable<SubCategory>
           data={paginatedItemsWithRowNumber}
           columns={columns}
@@ -626,6 +707,117 @@ export default function SubCategoryManagement() {
           onPageChange={goToPage}
         />
       </div>
+
+      {/* ========== MOBILE STICKY FILTER BAR (visible below md) ========== */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-gray-200/80 px-4 py-3 safe-bottom flex gap-3">
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
+        >
+          <Filter className="w-4 h-4" />
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-[#6750A4] text-white text-[10px] font-bold leading-none">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="flex-1 flex items-center justify-center gap-2 bg-gray-100/90 rounded-2xl py-3 text-sm font-semibold text-gray-700 active:scale-95 transition-all"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          {sortLabel}
+        </button>
+      </div>
+
+      {/* ========== MOBILE FILTER SHEET ========== */}
+      {sheetOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setSheetOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white rounded-t-2xl shadow-2xl max-h-[90vh] transform transition-all duration-300 ease-out">
+            {/* Drag handle */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1.5 rounded-full bg-gray-300" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Filters & Sort</h3>
+                {tempCategory !== "all" && (
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                      {categories.find(c => String(c.id) === tempCategory)?.name || tempCategory}
+                      <X
+                        className="w-3 h-3 cursor-pointer"
+                        onClick={() => setTempCategory("all")}
+                      />
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setSheetOpen(false)}
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 py-3 space-y-12">
+              {/* Sort section */}
+              <div>
+                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
+                  Sort By
+                </label>
+                <CustomSelect
+                  value={tempSort}
+                  onChange={setTempSort}
+                  options={sortOptions}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Filter section */}
+              <div>
+                <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
+                  Category
+                </label>
+                <CustomSelect
+                  value={tempCategory}
+                  onChange={setTempCategory}
+                  options={categoryOptions}
+                  className="w-full"
+                />
+              </div>
+              <div className="h-2" />
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-100 bg-white p-4 flex gap-3 flex-shrink-0 safe-bottom">
+              <button
+                onClick={clearAllFilters}
+                className="flex-1 h-12 rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700 active:scale-[0.98] transition-all"
+              >
+                Clear
+              </button>
+              <button
+                onClick={applyMobileFilters}
+                className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Modal */}
       {!readOnly && (
@@ -709,11 +901,13 @@ export default function SubCategoryManagement() {
                   Category <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
-                  value={categoryFilter}
-                  onChange={setCategoryFilter}
-                  options={categoryOptions}
-                  placeholder="Filter category..."
-                  className="w-full sm:w-48"
+                  value={String(formData.category)}
+                  onChange={(val) =>
+                    setFormData({ ...formData, category: Number(val) })
+                  }
+                  options={categoryOptions.filter(opt => opt.value !== "all")}
+                  placeholder="Select a category..."
+                  className="w-full"
                 />
                 {formErrors.category && (
                   <p className="text-red-500 text-xs mt-1.5">
@@ -922,6 +1116,13 @@ export default function SubCategoryManagement() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {/* Safe area bottom padding for mobile filter bar */}
+      <style>{`
+        .safe-bottom {
+          padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+      `}</style>
     </div>
   );
 }

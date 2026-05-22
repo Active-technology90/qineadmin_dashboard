@@ -1013,30 +1013,71 @@ export default function AdManagement() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Sticky Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-20 bg-white/80 backdrop-blur-md rounded-2xl -mt-2 pt-4 pb-3 px-4 border-b border-gray-100"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                Advertisments
-              </h1>
-              <p className="text-gray-500 text-sm mt-0.5">
-                Manage placements across your platform
-              </p>
-            </div>
-            {!isReadOnly && (
-              <Button onClick={openCreateModal} size="lg" className="shadow-sm">
-                <Plus className="w-5 h-5" /> New Ads
-              </Button>
-            )}
-          </div>
-        </motion.div>
+       <motion.div
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="
+    sticky top-0 z-20
+    bg-white/80 backdrop-blur-md
+    rounded-2xl
+    -mt-2 pt-3 sm:pt-4 pb-3 px-3 sm:px-4
+    border-b border-gray-100
+    w-full
+    overflow-hidden
+  "
+>
+  <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 min-w-0 w-full">
+    
+    {/* Left Section */}
+    <div className="min-w-0 flex-1 overflow-hidden">
+      <h1 className="
+        text-[20px] xs:text-2xl sm:text-3xl
+        font-bold
+        bg-gradient-to-r from-gray-900 to-gray-600
+        bg-clip-text text-transparent
+        truncate leading-tight
+      ">
+        Advertisments
+      </h1>
 
+      <p className="
+        text-gray-500
+        text-[11px] xs:text-xs sm:text-sm
+        mt-0.5
+        truncate
+      ">
+        Manage placements across your platform
+      </p>
+    </div>
+
+    {/* Right Section */}
+    {!isReadOnly && (
+      <div className="shrink-0">
+        <Button
+          onClick={openCreateModal}
+          size="lg"
+          className="
+            shadow-sm
+            inline-flex items-center justify-center
+            gap-1.5 sm:gap-2
+            px-2.5 xs:px-3 sm:px-4
+            py-2 sm:py-2.5
+            text-xs sm:text-sm
+            whitespace-nowrap
+            min-h-[28px] sm:min-h-[40px]
+            max-w-[140px] xs:max-w-none
+            overflow-hidden
+          "
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+          <span className="truncate">New Ads</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</motion.div>
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className=" hidden xs:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
             title="Total Ads"
             value={totalCount}

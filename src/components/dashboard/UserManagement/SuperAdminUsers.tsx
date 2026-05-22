@@ -15,6 +15,7 @@ import {
   Shield,
   Package,
   Minus,
+  X,
 } from "lucide-react";
 import {
   deleteUser,
@@ -103,16 +104,16 @@ const StatCard: React.FC<StatCardProps> = ({
   gradient,
 }) => (
   <div
-    className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5`}
+    className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 sm:p-5 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5`}
   >
     <div className="flex items-center justify-between">
       <div>
         <p className="text-xs font-medium text-white/70 uppercase tracking-wider">
           {title}
         </p>
-        <p className="text-3xl font-bold text-white mt-2">{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{value}</p>
       </div>
-      <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
         {icon}
       </div>
     </div>
@@ -134,34 +135,107 @@ const UserFilters: React.FC<FiltersProps> = ({
   setSearchTerm,
   roleFilter,
   setRoleFilter,
-}) => (
-  
-  <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
-    
-    {/* SEARCH */}
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+}) => {
+  const [open, setOpen] = useState(false);
 
-      <input
-        type="text"
-        placeholder="Search by name, email, phone or company..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-      />
-    </div>
+  return (
+    <div className="w-full flex flex-col gap-2">
+      
+      {/* SEARCH (always visible, compact on mobile) */}
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 
-    {/* CUSTOM ROLE SELECT */}
-    <div className="w-full md:w-[220px]">
-      <CustomSelect
-        value={roleFilter}
-        onChange={setRoleFilter}
-        options={roleOptions}
-        placeholder="Filter by role"
-      />
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-sm"
+        />
+
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* MOBILE FILTER BUTTON (compact UX) */}
+      <div className="flex md:hidden gap-2">
+        <button
+          onClick={() => setOpen(true)}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gray-100 text-sm font-medium"
+        >
+          <Filter className="h-4 w-4" />
+          Filter
+        </button>
+
+        <button
+          onClick={() => setRoleFilter("all")}
+          className="px-3 py-2 rounded-xl bg-purple-100 text-purple-700 text-sm font-medium"
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* DESKTOP ROLE FILTER */}
+      <div className="hidden md:block w-[220px]">
+        <CustomSelect
+          value={roleFilter}
+          onChange={setRoleFilter}
+          options={roleOptions}
+          placeholder="Filter by role"
+        />
+      </div>
+
+      {/* MOBILE BOTTOM SHEET */}
+      {open && (
+        <div className="fixed inset-0 z-50">
+          {/* overlay */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* sheet */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 space-y-3">
+            
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">Filter Users</h3>
+              <button onClick={() => setOpen(false)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* ROLE FILTER (mobile friendly chips) */}
+            <div className="grid grid-cols-2 gap-2">
+              {roleOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setRoleFilter(opt.value);
+                    setOpen(false);
+                  }}
+                  className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${
+                    roleFilter === opt.value
+                      ? "bg-purple-600 text-white border-purple-600"
+                      : "bg-gray-100 text-gray-700 border-gray-200"
+                  }`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 // ============================================================
 // Actions Dropdown Component
 // ============================================================
@@ -193,9 +267,9 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     <div className="relative actions-dropdown">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-xl hover:bg-gray-100 transition"
+        className="p-1.5 sm:p-2 rounded-xl hover:bg-gray-100 transition"
       >
-        <MoreVertical className="h-5 w-5 text-gray-600" />
+        <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
       </button>
 
       {open && (
@@ -371,59 +445,113 @@ const UserMobileCards: React.FC<UserTableProps> = ({
   users,
   ...actionProps
 }) => (
-  <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="lg:hidden grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 gap-2 xs:gap-3 sm:gap-4 px-1 xs:px-2 sm:px-0">
     {users.map((user) => (
       <div
         key={user.id}
-        className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition flex flex-col"
+        className="
+          bg-white rounded-xl xs:rounded-2xl
+          border border-gray-100
+          p-2 xs:p-3 sm:p-5
+          shadow-sm hover:shadow-md
+          transition flex flex-col
+        "
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shrink-0">
+        {/* HEADER */}
+        <div className="flex items-start justify-between gap-2">
+          
+          <div className="flex items-center gap-2 xs:gap-3 min-w-0">
+            
+            {/* AVATAR */}
+            <div className="
+              h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12
+              rounded-full bg-gradient-to-br from-purple-500 to-indigo-600
+              flex items-center justify-center
+              text-white font-bold
+              text-[10px] xs:text-xs sm:text-sm
+              shrink-0
+            ">
               {getInitials(user.first_name, user.last_name, user.username)}
             </div>
+
+            {/* NAME */}
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 truncate">
+              <p className="
+                font-semibold text-gray-900
+                text-xs xs:text-sm sm:text-base
+                truncate
+              ">
                 {user.first_name || user.username}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+
+              <p className="
+                text-[10px] xs:text-[11px] sm:text-xs
+                text-gray-500 truncate
+              ">
+                {user.email}
+              </p>
             </div>
           </div>
-          <ActionsDropdown user={user} {...actionProps} />
+
+          {/* ACTIONS */}
+          <div className="shrink-0">
+            <ActionsDropdown user={user} {...actionProps} />
+          </div>
         </div>
-        <div className="mt-4 space-y-2 flex-1">
-          <div className="flex items-center gap-2 text-sm">
+
+        {/* BODY */}
+        <div className="mt-3 xs:mt-4 space-y-2 flex-1">
+          
+          {/* PHONE */}
+          <div className="flex items-center gap-2 text-[11px] xs:text-xs sm:text-sm">
             <span className="text-gray-500">Phone:</span>
             <span className="text-gray-900 truncate">
               {formatPhone(user.phone_number)}
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+
+          {/* MEMBERSHIPS */}
+          <div className="flex flex-wrap gap-1.5 xs:gap-2">
             {user.memberships.length > 0 ? (
               user.memberships.map((m: Membership, idx: number) => (
-                <div key={idx} className="flex items-center gap-1.5">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${roleStyles[m.role]}`}
-                  >
-                    {m.company_name} ({m.role})
-                  </span>
-                </div>
+                <span
+                  key={idx}
+                  className={`
+                    inline-flex items-center
+                    px-2 py-0.5 xs:px-2.5 xs:py-1
+                    rounded-lg xs:rounded-xl
+                    text-[9px] xs:text-[10px] sm:text-xs
+                    font-medium border
+                    ${roleStyles[m.role]}
+                    max-w-full truncate
+                  `}
+                >
+                  {m.company_name}
+                </span>
               ))
             ) : (
-              <span className="text-xs text-gray-400">
+              <span className="text-[10px] xs:text-xs text-gray-400">
                 No companies assigned
               </span>
             )}
           </div>
         </div>
-        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+
+        {/* FOOTER */}
+        <div className="
+          mt-2 xs:mt-3 pt-2 xs:pt-3
+          border-t border-gray-100
+          flex justify-between items-center
+        ">
           {user.is_active ? (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-              <CheckCircle className="h-3 w-3" /> Active
+            <span className="inline-flex items-center gap-1 text-[10px] xs:text-xs text-emerald-600">
+              <CheckCircle className="h-3 w-3 xs:h-4 xs:w-4" />
+              Active
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs text-red-600">
-              <Minus className="h-3 w-3" /> Inactive
+            <span className="inline-flex items-center gap-1 text-[10px] xs:text-xs text-red-600">
+              <Minus className="h-3 w-3 xs:h-4 xs:w-4" />
+              Inactive
             </span>
           )}
         </div>
@@ -431,7 +559,6 @@ const UserMobileCards: React.FC<UserTableProps> = ({
     ))}
   </div>
 );
-
 // ============================================================
 // Empty State Component
 // ============================================================
@@ -461,7 +588,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onReset }) => (
 // ============================================================
 const LoadingSkeleton: React.FC = () => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+    <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
@@ -722,11 +849,11 @@ const SuperAdminUsers: React.FC = () => {
 
   return (
     <>
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 space-y-6">
+      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-900 to-[#6750A4] bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-900 to-[#6750A4] bg-clip-text text-transparent">
               User Management
             </h1>
             <p className="text-gray-500 mt-1">
@@ -741,7 +868,7 @@ const SuperAdminUsers: React.FC = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
           <StatCard
             title="Total Admins"
             value={stats.totalAdmins}
@@ -773,21 +900,33 @@ const SuperAdminUsers: React.FC = () => {
             gradient="from-gray-600 to-gray-700"
           />
         </div>
-
+<div className="w-full sm:flex-1 sm:hidden">
+    <UserFilters
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      roleFilter={roleFilter}
+      setRoleFilter={setRoleFilter}
+      onRefresh={handleRefresh}
+    />
+  </div>
         {/* TableControls + Filters */}
-        <TableControls
-          pageSize={pageSize}
-          onPageSizeChange={handlePageSizeChange}
-        >
-          <UserFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            roleFilter={roleFilter}
-            setRoleFilter={setRoleFilter}
-            onRefresh={handleRefresh}
-          />
-        </TableControls>
-
+     <div className="hidden sm:flex w-full items-center justify-between gap-3">
+  <div className="w-full">
+    <TableControls
+      pageSize={pageSize}
+      onPageSizeChange={handlePageSizeChange}
+      className="w-full"
+    >
+      <UserFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+        onRefresh={handleRefresh}
+      />
+    </TableControls>
+  </div>
+</div>
         {/* Content */}
         {filteredUsers.length === 0 ? (
           <EmptyState onReset={handleResetFilters} />

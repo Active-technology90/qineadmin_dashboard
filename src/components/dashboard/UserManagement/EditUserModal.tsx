@@ -55,7 +55,9 @@ const FormInput: React.FC<FormInputProps> = ({
       >
         {icon && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            {icon}
+            <span className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-5 sm:w-5">
+              {icon}
+            </span>
           </div>
         )}
         <input
@@ -68,8 +70,8 @@ const FormInput: React.FC<FormInputProps> = ({
           placeholder={placeholder || (focused ? label : "")}
           required={required}
           autoComplete={autoComplete}
-          className={`w-full bg-white/80 backdrop-blur-sm px-4 py-3 rounded-xl border transition-all duration-200 outline-none ${
-            icon ? "pl-10" : "pl-4"
+          className={`w-full bg-white/80 backdrop-blur-sm px-3 xs:px-4 py-2.5 xs:py-3 rounded-xl border transition-all duration-200 outline-none text-xs xs:text-sm sm:text-base ${
+            icon ? "pl-8 xs:pl-10" : "pl-3 xs:pl-4"
           } ${
             error
               ? "border-red-300 focus:border-red-500"
@@ -78,11 +80,11 @@ const FormInput: React.FC<FormInputProps> = ({
         />
         <label
           htmlFor={id}
-          className={`absolute left-3 transition-all duration-200 pointer-events-none px-1 bg-white/80 backdrop-blur-sm ${
+          className={`absolute left-3 transition-all duration-200 pointer-events-none px-1 bg-white/80 backdrop-blur-sm text-xs xs:text-sm ${
             focused || hasValue
-              ? "text-xs -top-2.5 text-[#6750A4]"
-              : "text-sm top-1/2 -translate-y-1/2 text-gray-500"
-          } ${icon ? "left-10" : "left-3"}`}
+              ? "text-[10px] xs:text-xs -top-2.5 text-[#6750A4]"
+              : "text-xs xs:text-sm top-1/2 -translate-y-1/2 text-gray-500"
+          } ${icon ? "left-8 xs:left-10" : "left-3"}`}
         >
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -91,7 +93,7 @@ const FormInput: React.FC<FormInputProps> = ({
         <motion.p
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-xs text-red-500 mt-1 ml-1"
+          className="text-[10px] xs:text-xs text-red-500 mt-1 ml-1"
         >
           {error}
         </motion.p>
@@ -114,23 +116,23 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
 }) => {
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+    <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 xs:p-4 bg-gray-50 rounded-xl gap-2 xs:gap-0">
       <div>
-        <p className="font-medium text-gray-900">{label}</p>
-        {description && <p className="text-xs text-gray-500">{description}</p>}
+        <p className="font-medium text-gray-900 text-xs xs:text-sm">{label}</p>
+        {description && <p className="text-[10px] xs:text-xs text-gray-500">{description}</p>}
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 ${
+        className={`relative inline-flex h-5 xs:h-6 w-9 xs:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 ${
           checked ? "bg-[#6750A4]" : "bg-gray-300"
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? "translate-x-6" : "translate-x-1"
+          className={`inline-block h-3.5 xs:h-4 w-3.5 xs:w-4 transform rounded-full bg-white transition-transform ${
+            checked ? "translate-x-5 xs:translate-x-6" : "translate-x-0.5 xs:translate-x-1"
           }`}
         />
       </button>
@@ -243,10 +245,10 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ message, onDismiss }) => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-200"
+      className="flex items-center gap-3 p-3 xs:p-4 bg-red-50 rounded-xl border border-red-200"
     >
-      <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-      <p className="text-sm text-red-700 flex-1">{message}</p>
+      <AlertCircle className="h-4 w-4 xs:h-5 xs:w-5 text-red-500 flex-shrink-0" />
+      <p className="text-xs xs:text-sm text-red-700 flex-1">{message}</p>
       {onDismiss && (
         <button onClick={onDismiss} className="p-1 hover:bg-red-100 rounded-lg">
           <X className="h-4 w-4 text-red-500" />
@@ -274,7 +276,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   type = "button",
 }) => {
   const baseStyles =
-    "px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2";
+    "px-4 xs:px-5 py-2 xs:py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 text-xs xs:text-sm sm:text-base";
   const variants = {
     primary:
       "bg-[#6750A4] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0",
@@ -396,6 +398,19 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
 
     if (!isOpen) return null;
 
+    // Responsive modal classes
+    const modalContainerClasses = `
+      bg-white p-4 shadow-[0_25px_80px_rgba(0,0,0,0.15)] border border-secondary/10 
+      w-full flex flex-col
+      max-[319px]:h-[100dvh] max-[319px]:rounded-none
+      xs:h-[95dvh] xs:rounded-t-3xl xs:mt-auto
+      sm:max-w-lg sm:max-h-[92dvh] sm:rounded-3xl sm:mx-auto
+      md:max-w-2xl
+      lg:max-w-4xl
+      xl:max-w-5xl
+      2xl:max-w-6xl
+    `;
+
     return (
       <AnimatePresence>
         {isOpen && (
@@ -403,7 +418,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80  p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-0 sm:p-4"
             onClick={onClose}
           >
             <motion.div
@@ -411,17 +426,17 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25 }}
-              className="bg-white rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.15)] border border-secondary/10 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              className={modalContainerClasses}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-[#6750A4] py-4 rounded-t-3xl">
-                <div className="flex items-center justify-between mr-4">
-                  <div className="px-6">
-                    <h2 className="text-2xl font-bold text-white">
+              <div className="sticky top-0 z-10 bg-[#6750A4] py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
+                <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6">
+                  <div>
+                    <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-white">
                       Edit User Profile
                     </h2>
-                    <p className="text-purple-100 text-sm mt-1">
+                    <p className="text-purple-100 text-xs xs:text-sm mt-1">
                       Update user information and permissions
                     </p>
                   </div>
@@ -436,108 +451,112 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="px-6 py-8 space-y-5">
-                {/* Avatar Upload */}
-                {/* <div className="flex justify-center">
-                  <AvatarUpload
-                    imageUrl={user?.profile_image || null}
-                    onImageChange={setAvatarFile}
-                    name={`${formData.first_name} ${formData.last_name}`}
-                  />
-                </div> */}
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                <form onSubmit={handleSubmit} className="px-4 xs:px-5 sm:px-6 py-6 xs:py-8 space-y-5">
+                  {/* Avatar Upload */}
+                  {/* <div className="flex justify-center">
+                    <AvatarUpload
+                      imageUrl={user?.profile_image || null}
+                      onImageChange={setAvatarFile}
+                      name={`${formData.first_name} ${formData.last_name}`}
+                    />
+                  </div> */}
 
-                {/* Two-column layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4">
-                  <FormInput
-                    id="first_name"
-                    label="First Name"
-                    value={formData.first_name}
-                    onChange={(val) =>
-                      setFormData({ ...formData, first_name: val })
-                    }
-                    icon={<User2Icon className="h-4 w-4" />}
-                    autoComplete="given-name"
-                  />
-                  <FormInput
-                    id="last_name"
-                    label="Last Name"
-                    value={formData.last_name}
-                    onChange={(val) =>
-                      setFormData({ ...formData, last_name: val })
-                    }
-                    icon={<UserIcon className="h-4 w-4" />}
-                    autoComplete="family-name"
-                  />
-                  <FormInput
-                    id="username"
-                    label="Username"
-                    value={formData.username}
-                    onChange={(val) =>
-                      setFormData({ ...formData, username: val })
-                    }
-                    icon={<UserCircle className="h-4 w-4" />}
-                    required
-                    error={fieldErrors.username}
-                    autoComplete="username"
-                  />
-                  <FormInput
-                    id="email"
-                    label="Email Address"
-                    type="email"
-                    value={formData.email}
-                    onChange={(val) => setFormData({ ...formData, email: val })}
-                    icon={<Mail className="h-4 w-4" />}
-                    required
-                    error={fieldErrors.email}
-                    autoComplete="email"
-                  />
-                  <FormInput
-                    id="phone_number"
-                    label="Phone Number"
-                    value={formData.phone_number}
-                    onChange={(val) =>
-                      setFormData({ ...formData, phone_number: val })
-                    }
-                    icon={<Phone className="h-4 w-4" />}
-                    error={fieldErrors.phone_number}
-                    autoComplete="tel"
-                  />
-                </div>
+                  {/* Two-column layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xs:gap-5">
+                    <FormInput
+                      id="first_name"
+                      label="First Name"
+                      value={formData.first_name}
+                      onChange={(val) =>
+                        setFormData({ ...formData, first_name: val })
+                      }
+                      icon={<User2Icon className="h-4 w-4" />}
+                      autoComplete="given-name"
+                    />
+                    <FormInput
+                      id="last_name"
+                      label="Last Name"
+                      value={formData.last_name}
+                      onChange={(val) =>
+                        setFormData({ ...formData, last_name: val })
+                      }
+                      icon={<UserIcon className="h-4 w-4" />}
+                      autoComplete="family-name"
+                    />
+                    <FormInput
+                      id="username"
+                      label="Username"
+                      value={formData.username}
+                      onChange={(val) =>
+                        setFormData({ ...formData, username: val })
+                      }
+                      icon={<UserCircle className="h-4 w-4" />}
+                      required
+                      error={fieldErrors.username}
+                      autoComplete="username"
+                    />
+                    <FormInput
+                      id="email"
+                      label="Email Address"
+                      type="email"
+                      value={formData.email}
+                      onChange={(val) => setFormData({ ...formData, email: val })}
+                      icon={<Mail className="h-4 w-4" />}
+                      required
+                      error={fieldErrors.email}
+                      autoComplete="email"
+                    />
+                    <FormInput
+                      id="phone_number"
+                      label="Phone Number"
+                      value={formData.phone_number}
+                      onChange={(val) =>
+                        setFormData({ ...formData, phone_number: val })
+                      }
+                      icon={<Phone className="h-4 w-4" />}
+                      error={fieldErrors.phone_number}
+                      autoComplete="tel"
+                    />
+                  </div>
 
-                {/* Toggle Switch */}
-                <ToggleSwitch
-                  checked={formData.is_active}
-                  onChange={(checked) =>
-                    setFormData({ ...formData, is_active: checked })
-                  }
-                  label="Active Account"
-                  description="User can log in and access the platform"
-                />
+                  {/* Toggle Switch */}
+                  <ToggleSwitch
+                    checked={formData.is_active}
+                    onChange={(checked) =>
+                      setFormData({ ...formData, is_active: checked })
+                    }
+                    label="Active Account"
+                    description="User can log in and access the platform"
+                  />
 
-                {/* Error Message */}
-                {error && (
-                  <ErrorAlert message={error} onDismiss={() => setError("")} />
-                )}
+                  {/* Error Message */}
+                  {error && (
+                    <ErrorAlert message={error} onDismiss={() => setError("")} />
+                  )}
+                </form>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
-                  <ActionButton
-                    onClick={onClose}
-                    variant="secondary"
-                    type="button"
-                  >
-                    Cancel
-                  </ActionButton>
-                  <ActionButton
-                    loading={loading}
-                    variant="primary"
-                    type="submit"
-                  >
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                  </ActionButton>
-                </div>
-              </form>
+              {/* Sticky Footer with buttons */}
+              <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4 flex flex-col-reverse sm:flex-row justify-end gap-2 xs:gap-3" style={{ paddingBottom: `max(env(safe-area-inset-bottom, 1rem), 1rem)` }}>
+                <ActionButton
+                  onClick={onClose}
+                  variant="secondary"
+                  type="button"
+                >
+                  Cancel
+                </ActionButton>
+                <ActionButton
+                  loading={loading}
+                  variant="primary"
+                  type="submit"
+                  onClick={handleSubmit}
+                >
+                  <Save className="h-4 w-4" />
+                  Save Changes
+                </ActionButton>
+              </div>
             </motion.div>
           </motion.div>
         )}

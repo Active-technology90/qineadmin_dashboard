@@ -424,59 +424,57 @@ export default function Overview({
   const skeletonCount = isSuperAdmin && !company?.slug ? 4 : 3;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto space-y-6 sm:space-y-8 px-2 sm:px-4">
+    <div className="w-full max-w-[1600px] mx-auto space-y-4 xs:space-y-6 sm:space-y-8 px-1.5 xs:px-2 sm:px-4">
       {/* Scope selector */}
       {shouldShowCompanyDropdown && (
-        <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-xl py-3 px-3 sm:px-5 shadow-md border border-gray-100/80">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-xl py-2.5 xs:py-3 px-2 xs:px-3 sm:px-5 shadow-md border border-gray-100/80">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 xs:gap-4">
             {/* Company Info */}
-              {isSuperAdmin && (
-            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <div className="relative shrink-0">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
-                <div className="absolute inset-0 rounded-full shadow-inner"></div>
-                {selectedCompanyLogo && company?.slug ? (
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-lg">
-                    <img
-                      src={selectedCompanyLogo}
-                      alt={selectedCompanyName}
-                      className="w-full h-full rounded-full object-cover"
-                    />
+            {isSuperAdmin && (
+              <div className="hidden sm:flex items-center gap-2 xs:gap-3 sm:gap-4 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
+                  <div className="absolute inset-0 rounded-full shadow-inner"></div>
+                  {selectedCompanyLogo && company?.slug ? (
+                    <div className="relative w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-lg">
+                      <img
+                        src={selectedCompanyLogo}
+                        alt={selectedCompanyName}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
+                      <Building2 className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-white" />
+                    </div>
+                  )}
+                </div>
+              
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 xs:gap-2">
+                    <div className="w-1 h-3 xs:h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5] shrink-0"></div>
+                    <p className="text-[9px] xs:text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      Currently Viewing
+                    </p>
                   </div>
-                ) : (
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
-                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                  <h2 className="text-sm xs:text-lg sm:text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent truncate">
+                    {selectedCompanyName}
+                  </h2>
+                  <div className="flex items-center gap-1 xs:gap-1.5 mt-0.5">
+                    <div className="w-1 xs:w-1.5 h-1 xs:h-1.5 rounded-full bg-emerald-500 shrink-0"></div>
+                    <p className="text-[8px] xs:text-[9px] font-medium text-gray-400 truncate">Active Dashboard</p>
                   </div>
-                )}
+                </div>
               </div>
-            
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5] shrink-0"></div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    Currently Viewing
-                  </p>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent truncate">
-                  {selectedCompanyName}
-                </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></div>
-                  <p className="text-[9px] font-medium text-gray-400 truncate">Active Dashboard</p>
-                </div>
-                </div>
-              
-            </div>
-              
-  )}
+            )}
             {/* Company selector */}
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="flex items-center gap-2 flex-1 sm:flex-initial">
-                <span className="items-center gap-1.5 text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:flex">
+            <div className="flex items-center gap-2 xs:gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 flex-1 lg:flex-initial min-w-0">
+                <span className="items-center gap-1.5 text-[10px] xs:text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:flex shrink-0">
                   <Building2 className="h-3 w-3" />
                   Select Company
                 </span>
-                <div className="relative flex-1 sm:flex-initial min-w-0 max-w-full">
+                <div className="relative flex-1 lg:flex-initial min-w-0 max-w-full">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4] hidden sm:block" />
                   <CompanySelect
                     scopeOptions={scopeOptions}
@@ -490,20 +488,20 @@ export default function Overview({
               {/* View Only badge removed */}
             </div>
           </div>
-          <div className="mt-3">
+          <div className="mt-2 xs:mt-3">
             <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
           </div>
         </div>
       )}
 
       {!!error && (
-        <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-3 text-sm break-words">
+        <div className="bg-red-50 text-red-700 border border-red-100 rounded-xl p-2.5 xs:p-3 text-xs xs:text-sm break-words">
           {error}
         </div>
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 xs:gap-3 sm:gap-4">
         {loading ? (
           Array.from({ length: skeletonCount }).map((_, i) => <SkeletonCard key={i} />)
         ) : (

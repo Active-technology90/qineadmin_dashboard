@@ -309,13 +309,16 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
       >
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={current.title}
           onClick={(e) => e.stopPropagation()}
           className={`
             w-full bg-white
             rounded-t-[32px] sm:rounded-[32px]
             shadow-[0_20px_60px_rgba(0,0,0,0.2)]
             flex flex-col overflow-hidden
-            max-h-[100dvh] sm:max-h-[92vh]
+            max-h-[95dvh]  sm:max-h-[92vh]
             ${maxWidthClasses[maxWidth]}
             transition-all duration-300
             ${
@@ -327,19 +330,19 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
         >
           {/* HEADER */}
           <div className="sticky top-0 z-20 bg-[#6750A4]/30 backdrop-blur-xl border-b border-[#6750A4]/30">
-            <div className="px-5 sm:px-7 pt-2 pb-2">
+            <div className="px-4 sm:px-6 md:px-7 pt-2 pb-2">
               <div className="flex items-start justify-between">
-                <div className="pr-4">
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#6750A4] bg-[#6750A4]/10 px-2 py-0.5 rounded-full mb-1.5">
+                <div className="pr-4 min-w-0 flex-1">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-[#6750A4] bg-[#6750A4]/10 px-2 py-0.5 rounded-full mb-1.5 uppercase tracking-wide">
                     Step {currentStep + 1} of {steps.length}
                   </div>
 
-                  <h2 className="text-lg font-bold tracking-tight text-gray-900">
+                  <h2 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-gray-900 break-words">
                     {current.title}
                   </h2>
 
                   {current.description && (
-                    <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
+                    <p className="mt-0.5 text-xs sm:text-sm text-gray-500 leading-relaxed">
                       {current.description}
                     </p>
                   )}
@@ -349,23 +352,24 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                   onClick={handleClose}
                   disabled={submitting}
                   className="
-                    h-8 w-8 rounded-full
+                    h-9 w-9 rounded-full
                     flex items-center justify-center
                     bg-red-50 hover:bg-red-100
                     text-red-500 hover:text-red-700
                     transition-all duration-200
                     disabled:opacity-50
-                    group
+                    group flex-shrink-0
                   "
+                  aria-label="Close modal"
                 >
-                  <X size={16} className="transition-transform group-hover:scale-110" />
+                  <X size={16} className="transition-transform group-hover:scale-105" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* PROGRESS & STEP INDICATOR - Outside header */}
-          <div className="px-5 sm:px-7 pt-3 pb-4 bg-white/50 border-b border-gray-100">
+          <div className="px-4 sm:px-6 md:px-7 pt-3 pb-4 bg-white/50 border-b border-gray-100">
             <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden mb-4">
               <div
                 className="
@@ -391,13 +395,18 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                 scrollbar-thin scrollbar-thumb-gray-300
               "
             >
-              <div className={`p-5 sm:p-7 ${contentAnimation}`}>
-                {current.content}
+              <div className={`p-4 sm:p-5 md:p-7 ${contentAnimation}`}>
+                <div className="max-w-prose lg:max-w-2xl mx-auto w-full">
+                  {current.content}
+                </div>
               </div>
             </div>
 
             {/* FOOTER */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-5 py-3 sm:px-7">
+            <div
+              className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 sm:px-6 md:px-7 py-3"
+              style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+            >
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 {!isFirst ? (
                   <button
@@ -405,7 +414,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     onClick={prevStep}
                     disabled={submitting || isValidating}
                     className="
-                      h-9 px-4 rounded-xl
+                      h-10 min-h-10 px-4 rounded-xl
                       border border-gray-300
                       text-gray-700 font-medium text-sm
                       hover:bg-gray-50
@@ -427,7 +436,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     onClick={nextStep}
                     disabled={isValidating}
                     className="
-                      px-5 h-9 rounded-xl
+                      px-5 h-10 min-h-10 rounded-xl
                       bg-[#6750A4]
                       hover:bg-[#5B4294]
                       text-white font-medium text-sm
@@ -448,7 +457,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     type="submit"
                     disabled={submitting || isValidating}
                     className="
-                      px-5 h-9 rounded-xl
+                      px-5 h-10 min-h-10 rounded-xl
                       bg-[#6750A4]
                       hover:bg-[#5B4294]
                       text-white font-medium text-sm
