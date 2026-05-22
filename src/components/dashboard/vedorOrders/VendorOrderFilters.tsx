@@ -70,82 +70,90 @@ export function VendorOrderFilters({
     delivered: "Completed",
   };
   return (
-    <div
-      className={`${
-        showMobile ? "block" : "hidden md:block"
-      } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
-    >
-      {/* Header – only title & utility buttons */}
-      <div className="flex items-center justify-between px-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          {/* <h2 className="text-lg font-semibold text-gray-800">Filters</h2> */}
-          {/* {hasFilters && (
-            <span className="text-xs bg-[#6750A4]/10 text-[#6750A4] px-2 py-0.5 rounded-full font-medium">
-              Active
-            </span>
-          )} */}
-        </div>
-
-        <div className="flex items-center gap-2">
+    <>
+      {/* Mobile Toggle Button - Always visible on mobile */}
+      <div className="lg:hidden mb-3">
+        <button
+          onClick={onToggleMobile}
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Filter size={16} />
+          {showMobile ? "Hide Filters" : " Filters"}
           {hasFilters && (
-            <button
-              onClick={onClear}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium
-                         border border-red-200 text-red-600 hover:bg-red-50 transition"
-            >
-              <X size={14} />
-              Clear
-            </button>
+            <span className="ml-1 w-2 h-2 rounded-full bg-indigo-500"></span>
           )}
-          <button
-            onClick={onToggleMobile}
-            className="md:hidden inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium
-                       border border-gray-200 rounded-xl bg-white shadow-sm"
-          >
-            <Filter size={14} />
-            Filters
-          </button>
-        </div>
+        </button>
       </div>
 
-      {/* Body – search + filters + page size inline */}
-      <div className="p-5 space-y-5">
+      {/* Filters Container - Hidden on mobile when showMobile is false */}
+      <div
+        className={`${
+          showMobile ? "block" : "hidden lg:block"
+        } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
+      >
+        {/* Header – only title & utility buttons */}
+        <div className="flex items-center justify-between px-3 sm:px-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-gray-700">Filters</h2>
+            {hasFilters && (
+              <span className="text-xs bg-[#6750A4]/10 text-[#6750A4] px-2 py-0.5 rounded-full font-medium">
+                Active
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {hasFilters && (
+              <button
+                onClick={onClear}
+                className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium
+                           border border-red-200 text-red-600 hover:bg-red-50 transition"
+              >
+                <X size={12} className="sm:w-[14px] sm:h-[14px]" />
+                <span className="hidden xs:inline">Clear all</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Body – search + filters + page size inline */}
+        <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
         {/* Search with Refresh Button */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search by order ID, customer name, or company..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                        focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                       outline-none transition text-sm"
+                       outline-none transition text-xs sm:text-sm"
             />
           </div>
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
+              className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
                          hover:bg-white hover:border-[#6750A4] transition-all duration-200 group flex-shrink-0"
               title="Refresh orders"
             >
-              <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4] group-hover:rotate-180 transition-all duration-300" />
+              <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] group-hover:rotate-180 transition-all duration-300" />
             </button>
           )}
         </div>
 
         {/* Filters + Page Size – all in one grid row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2 sm:gap-3">
           {/* Order Status */}
           <div className="relative">
             <select
               value={orderStatusFilter}
               onChange={(e) => onOrderStatusChange(e.target.value)}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Order Status</option>
 
@@ -160,7 +168,7 @@ export function VendorOrderFilters({
               <option value="payment_rejected">Payment Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Delivery Status */}
@@ -168,9 +176,9 @@ export function VendorOrderFilters({
             <select
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Delivery Status</option>
 
@@ -185,7 +193,7 @@ export function VendorOrderFilters({
               <option value="delivered">{ORDER_STATUS_LABELS.delivered}</option>
               <option value="failed">Failed</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Payment Method */}
@@ -193,16 +201,16 @@ export function VendorOrderFilters({
             <select
               value={paymentMethodFilter}
               onChange={(e) => onPaymentMethodChange(e.target.value)}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Payment Method</option>
               <option value="bank_transfer">Bank Transfer</option>
               <option value="chapa">Chapa</option>
               <option value="cod">COD</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Company (conditional) */}
@@ -211,9 +219,9 @@ export function VendorOrderFilters({
               <select
                 value={selectedCompanyId}
                 onChange={(e) => onCompanyChange(e.target.value)}
-                className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+                className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                            focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                           text-sm pr-8 outline-none transition"
+                           text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
               >
                 <option value=""> All Companies</option>
                 {companies.map((c) => (
@@ -222,7 +230,7 @@ export function VendorOrderFilters({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
             </div>
           )}
 
@@ -231,9 +239,9 @@ export function VendorOrderFilters({
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
+              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
                          focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
-                         text-sm pr-8 outline-none transition"
+                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value={5}>5 / page</option>
               <option value={10}>10 / page</option>
@@ -241,10 +249,11 @@ export function VendorOrderFilters({
               <option value={30}>30 / page</option>
               <option value={60}>60 / page</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
+          </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

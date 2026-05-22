@@ -94,18 +94,18 @@ export function Pagination({
     <div
       className={`
         w-full
-        flex flex-col xl:flex-row
+        flex flex-col sm:flex-row
         items-center justify-between
-        gap-4
-        px-5 py-4
-        border-t  border-gray-200
+        gap-3 sm:gap-4
+        px-3 sm:px-5 py-3 sm:py-4
+        border-t border-gray-200
         bg-gray-50
         ${className}
       `}
     >
-      {/* LEFT */}
-      <div className="flex items-center gap-4 text-sm text-gray-600">
-        <div className="px-2 py-1 bg-white rounded-full  text-sm text-gray-700 shadow-sm">
+      {/* LEFT - Page info hidden on mobile, visible on tablet/desktop */}
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+        <div className="hidden sm:block px-2 sm:px-3 py-1 sm:py-1.5 bg-white rounded-full text-xs sm:text-sm text-gray-700 shadow-sm">
           Page{" "}
           <span className="font-semibold text-gray-900">{currentPage}</span> of{" "}
           <span className="font-medium">{totalPages}</span>
@@ -116,11 +116,11 @@ export function Pagination({
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="
-              px-3 py-1.5
+              px-2 sm:px-3 py-1 sm:py-1.5
               rounded-full
               border
               bg-white
-              text-sm
+              text-xs sm:text-sm
               shadow-sm
               hover:border-gray-400
               focus:outline-none
@@ -140,13 +140,13 @@ export function Pagination({
       </div>
 
       {/* CENTER */}
-      <div className="flex items-center gap-2 bg-white  rounded-full px-2 py-1 shadow-sm">
+      <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 bg-white rounded-full px-1 sm:px-2 py-1 shadow-sm">
         {/* Prev */}
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
           className="
-            h-9 w-9
+            h-7 w-7 sm:h-9 sm:w-9
             flex items-center justify-center
             rounded-full
             hover:bg-gray-100
@@ -156,13 +156,13 @@ export function Pagination({
             transition
           "
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={14} className="sm:w-[18px] sm:h-[18px]" />
         </button>
 
         {/* Pages */}
         {pages.map((p, i) =>
           p === "..." ? (
-            <span key={i} className="px-2 text-gray-400">
+            <span key={i} className="px-1 sm:px-2 text-gray-400 text-[11px] sm:text-sm">
               ...
             </span>
           ) : (
@@ -170,10 +170,10 @@ export function Pagination({
               key={i}
               onClick={() => goToPage(p)}
               className={`
-                min-w-[36px]
-                h-9
-                px-3
-                text-sm
+                min-w-[28px] sm:min-w-[36px]
+                h-7 sm:h-9
+                px-1.5 sm:px-3
+                text-[11px] sm:text-sm
                 rounded-full
                 font-medium
                 transition
@@ -203,7 +203,7 @@ export function Pagination({
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
           className="
-            h-9 w-9
+            h-7 w-7 sm:h-9 sm:w-9
             flex items-center justify-center
             rounded-full
             hover:bg-gray-100
@@ -213,7 +213,7 @@ export function Pagination({
             transition
           "
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={14} className="sm:w-[18px] sm:h-[18px]" />
         </button>
       </div>
 
