@@ -1,4 +1,4 @@
-import { Search, X, Filter, ChevronDown, RefreshCw } from "lucide-react";
+import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -15,8 +15,8 @@ interface OrderFiltersProps {
   onPageSizeChange: (size: number) => void;
   onRefresh?: () => void;
   onClear: () => void;
-  showMobile: boolean;
-  onToggleMobile: () => void;
+  showMobile?: boolean;
+  onToggleMobile?: () => void;
 }
 
 export function OrderFilters({
@@ -34,8 +34,6 @@ export function OrderFilters({
   onPageSizeChange,
   onRefresh,
   onClear,
-  showMobile,
-  onToggleMobile,
 }: OrderFiltersProps) {
   const hasFilters =
     !!searchTerm ||
@@ -90,7 +88,7 @@ export function OrderFilters({
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          outline-none transition text-xs sm:text-sm"
             />
           </div>
@@ -98,10 +96,10 @@ export function OrderFilters({
             <button
               onClick={onRefresh}
               className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
-                         hover:bg-white hover:border-[#6750A4] transition-all duration-200 group flex-shrink-0"
+                         hover:bg-white hover:border-secondary transition-all duration-200 group flex-shrink-0"
               title="Refresh orders"
             >
-              <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] group-hover:rotate-180 transition-all duration-300" />
+              <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary group-hover:rotate-180 transition-all duration-300" />
             </button>
           )}
         </div>
@@ -114,7 +112,7 @@ export function OrderFilters({
               value={statusFilter}
               onChange={(e) => onStatusChange(e.target.value)}
               className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          text-sm pr-8 outline-none transition"
             >
               <option value="">All Order Statuses</option>
@@ -133,7 +131,7 @@ export function OrderFilters({
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
               className="w-full appearance-none px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          text-sm pr-8 outline-none transition"
             >
               <option value="">All Delivery Statuses</option>
@@ -152,7 +150,7 @@ export function OrderFilters({
               value={paymentStatusFilter}
               onChange={(e) => onPaymentStatusChange(e.target.value)}
               className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Payment Statuses</option>
@@ -171,7 +169,7 @@ export function OrderFilters({
               value={fulfillmentTypeFilter}
               onChange={(e) => onFulfillmentTypeChange(e.target.value)}
               className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Fulfillment Types</option>
@@ -190,7 +188,7 @@ export function OrderFilters({
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20
+                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
                          text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value={5}>5 / page</option>

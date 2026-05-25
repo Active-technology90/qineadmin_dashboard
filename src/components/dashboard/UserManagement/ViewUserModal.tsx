@@ -271,7 +271,7 @@ const ModalActions: React.FC<{
     </button>
     <button
       onClick={onEdit}
-      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg bg-[#6750A4] text-white text-xs xs:text-sm font-medium hover:bg-[#5a448c] transition-all duration-200 shadow-sm"
+      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg bg-secondary text-white text-xs xs:text-sm font-medium hover:bg-[#5a448c] transition-all duration-200 shadow-sm"
     >
       <Edit className="h-4 w-4 inline mr-2" />
       Edit User

@@ -339,11 +339,11 @@ export default function CategoryManagement() {
         {/* Left Section */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
           {/* Accent */}
-          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B5CF6] shrink-0" />
+          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
 
           {/* Title + Badge */}
           <div className="min-w-0 flex items-center gap-1.5 xs:gap-2 sm:gap-3 overflow-hidden">
-            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-[#6750A4] truncate leading-tight">
+            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary truncate leading-tight">
               Categories
             </h2>
 
@@ -380,7 +380,7 @@ export default function CategoryManagement() {
               inline-flex items-center justify-center
               gap-1.5 sm:gap-2
               rounded-full
-              bg-[#6750A4]
+              bg-secondary
               hover:bg-[#5a458c]
               active:scale-[0.98]
               transition-all duration-200

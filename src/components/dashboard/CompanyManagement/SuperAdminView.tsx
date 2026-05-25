@@ -180,7 +180,7 @@ export default function SuperAdminView({
             loading={loading}
             showClearButton={false}
             placeholder="Search companies..."
-            className="rounded-2xl shadow-sm border-gray-100 focus:ring-2 focus:ring-[#6750A4]/30"
+            className="rounded-2xl shadow-sm border-gray-100 focus:ring-2 focus:ring-secondary/30"
           />
         </div>
 
@@ -209,7 +209,7 @@ export default function SuperAdminView({
                     <div className="flex-shrink-0">
                       {company.logo ? (
                         <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#6750A4]/20 to-transparent rounded-full blur-sm"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-transparent rounded-full blur-sm"></div>
                           <img
                             src={company.logo}
                             alt={company.name}
@@ -304,7 +304,7 @@ export default function SuperAdminView({
               </button>
               <button
                 onClick={applyFilters}
-                className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+                className="flex-1 h-12 rounded-2xl bg-secondary text-sm font-semibold text-white shadow-lg shadow-secondary/20 active:scale-[0.98] transition-all"
               >
                 Apply Filters
               </button>
@@ -329,7 +329,7 @@ export default function SuperAdminView({
                     onClick={() => setTempSort(opt.value)}
                     className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                       tempSort === opt.value
-                        ? "bg-[#6750A4] text-white shadow-md"
+                        ? "bg-secondary text-white shadow-md"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
@@ -348,7 +348,7 @@ export default function SuperAdminView({
               </label>
               {loading ? (
                 <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary border-t-transparent" />
                   <span>Loading...</span>
                 </div>
               ) : businessTypeOptions.length === 0 ? (
@@ -377,7 +377,7 @@ export default function SuperAdminView({
               </label>
               {loading ? (
                 <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary border-t-transparent" />
                   <span>Loading...</span>
                 </div>
               ) : categoryOptions.length === 0 ? (
@@ -403,7 +403,7 @@ export default function SuperAdminView({
               </label>
               {loading ? (
                 <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#6750A4] border-t-transparent" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-secondary border-t-transparent" />
                   <span>Loading...</span>
                 </div>
               ) : subCategoryOptions.length === 0 ? (

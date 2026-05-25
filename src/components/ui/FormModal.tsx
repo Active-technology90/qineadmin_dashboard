@@ -182,10 +182,10 @@ export const FormModal: React.FC<FormModalProps> = ({
             `}
           >
             <div className="sticky top-0 z-20">
-              <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-white/20 bg-gradient-to-r from-[#6750A4]/10 via-white/80 to-white/60 backdrop-blur-xl">
+              <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-white/20 bg-gradient-to-r from-secondary/10 via-white/80 to-white/60 backdrop-blur-xl">
                 <h2
                   id="modal-title"
-                  className="text-base sm:text-lg lg:text-xl font-semibold text-[#6750A4] truncate"
+                  className="text-base sm:text-lg lg:text-xl font-semibold text-secondary truncate"
                 >
                   {title}
                 </h2>
@@ -193,7 +193,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-full bg-white/70 hover:bg-white text-red-500 hover:text-red-600 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40"
+                    className="p-2 rounded-full bg-white/70 hover:bg-white text-red-500 hover:text-red-600 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-secondary/40"
                     aria-label="Close modal"
                   >
                     <X size={18} className="sm:w-5 sm:h-5" />
@@ -216,7 +216,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98]"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-secondary/40 active:scale-[0.98]"
                   >
                     Cancel
                   </button>
@@ -224,7 +224,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-white font-medium transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#6750A4] to-[#7c63c9] hover:from-[#5a448c] hover:to-[#6d56b3]"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-white font-medium transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-secondary/40 active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-secondary to-[#7c63c9] hover:from-[#5a448c] hover:to-[#6d56b3]"
                   >
                     {submitting && (
                       <Loader2 className="h-4 w-4 animate-spin" />

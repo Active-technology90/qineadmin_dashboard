@@ -47,7 +47,7 @@ const getInitials = (name: string) =>
 // =============================================================================
 const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
-  const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
+  const base = "px-1.5 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
 
 
   // Color logic (unchanged)
@@ -117,7 +117,7 @@ const CopyButton = memo(({ text }: { text?: string | number | null }) => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={handleCopy}
-      className="text-gray-400 hover:text-[#6750A4] transition-colors p-1 rounded-md bg-white/50 backdrop-blur-sm"
+      className="text-gray-400 hover:text-secondary transition-colors p-1 rounded-md bg-white/50 backdrop-blur-sm"
       aria-label="Copy to clipboard"
     >
       {copied ? (
@@ -146,17 +146,17 @@ const Card = ({
 }) => (
   <motion.div
     variants={itemVariants}
-    className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}
+    className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-2 md:p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}
   >
     <div className="flex flex-row justify-between items-start">
-      <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-        <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-          <Icon className="h-4 w-4 text-[#6750A4]" />
+      <div className="flex items-center gap-2 mb-2 md:mb-4 pb-2 md:pb-3 w-full relative">
+        <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-secondary" />
         </div>
-        <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+        <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
           {title}
         </h4>
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full" />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary-light to-transparent rounded-full" />
       </div>
       {status && <span className={getStatusBadge(status)}>{status}</span>}
     </div>
@@ -184,7 +184,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
               className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
             />
           ) : (
-            <Store className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+            <Store className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -214,7 +214,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                       : vendorOrder.status}
         </span>
         <div className="text-right flex-shrink-0">
-          <span className="text-[11px] sm:text-lg font-bold text-[#6750A4] tracking-tight block">
+          <span className="text-[11px] sm:text-lg font-bold text-secondary tracking-tight block">
             {Number(vendorOrder.amount).toLocaleString()} ETB
           </span>
           {Number(vendorOrder.delivery_fee) > 0 && (
@@ -230,7 +230,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
     {/* Delivery tracking (if exists) – NOW USING getDeliveryStatusBadge */}
     {vendorOrder.delivery && (
       <div className="bg-gradient-to-r from-purple-50/40 to-transparent px-3 sm:px-5 md:px-6 py-2 sm:py-3 border-b border-purple-100/50 w-full">
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#6750A4] mb-2">
+        <div className="flex items-center gap-2 text-xs font-semibold text-secondary mb-2">
           <Truck className="h-3.5 w-3.5 flex-shrink-0" />
           <span>Delivery tracking</span>
         </div>
@@ -276,8 +276,8 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
         {/* ===================================================== */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-5 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl border border-[#6750A4]/15 bg-gradient-to-br from-[#6750A4]/10 to-violet-100 shadow-sm flex-shrink-0">
-              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#6750A4]" />
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl border border-secondary/15 bg-gradient-to-br from-secondary/10 to-violet-100 shadow-sm flex-shrink-0">
+              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
             </div>
 
             <div className="min-w-0 flex-1">
@@ -292,19 +292,19 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start rounded-xl sm:rounded-2xl border border-[#6750A4]/10 bg-[#6750A4]/5 px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0">
-            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#6750A4] animate-pulse" />
+          {/* <div className="inline-flex items-center gap-2 self-start rounded-xl sm:rounded-2xl border border-secondary/10 bg-secondary/5 px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0">
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-secondary animate-pulse" />
 
-            <span className="text-[9px] sm:text-[11px] font-bold tracking-wide text-[#6750A4] whitespace-nowrap">
+            <span className="text-[9px] sm:text-[11px] font-bold tracking-wide text-secondary whitespace-nowrap">
               Vendor Products
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* ===================================================== */}
         {/* Premium Container */}
         {/* ===================================================== */}
-        <div className="overflow-hidden rounded-[26px] border border-gray-200/80 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden  rounded-[26px] border border-gray-200/80 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.04)]">
           {/* Desktop Header */}
           <div className="hidden md:grid grid-cols-12 gap-4 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white px-6 py-4">
             <div className="col-span-6">
@@ -335,7 +335,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
           {/* ===================================================== */}
           {/* Items */}
           {/* ===================================================== */}
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 px-2">
             {vendorOrder.items.map((item, idx) => (
               <motion.div
                 key={item.id}
@@ -455,16 +455,16 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                     rounded-md
                     sm:rounded-2xl
                     border
-                    border-[#6750A4]/10
+                    border-secondary/10
                     bg-gradient-to-br
-                    from-[#6750A4]/8
+                    from-secondary/8
                     to-violet-50
                     px-1
                     sm:px-4
                     shadow-sm
                   "
                     >
-                      <span className="text-[8px] sm:text-sm font-black text-[#6750A4]">
+                      <span className="text-[8px] sm:text-sm font-black text-secondary">
                         ×{item.qty}
                       </span>
                     </div>
@@ -480,7 +480,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                       Unit Price
                     </span>
 
-                    <div>
+                    <div className="flex flex-row md:flex-col items-center gap-1 bg-gray-50 md:bg-white px-1">
                       <p className="text-[10px] sm:text-sm font-bold tracking-tight text-gray-700">
                         {Number(item.unit_price).toLocaleString()}
                       </p>
@@ -500,11 +500,11 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
                       Total
                     </span>
 
-                    <div>
+                    <div className="flex flex-row md:flex-col items-center gap-1 bg-gray-50 md:bg-white px-1">
                       <p className="text-[11px] sm:text-base font-black tracking-tight text-gray-900">
                         {Number(item.line_total).toLocaleString()}
                       </p>
-                      <p className="text-[7px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#6750A4]">
+                      <p className="text-[7px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-secondary">
                         ETB
                       </p>
                     </div>
@@ -525,7 +525,7 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#6750A4] via-[#5a448c] to-[#4a3a78] p-4 sm:p-6 shadow-lg w-full"
+    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-secondary via-[#5a448c] to-[#4a3a78] p-4 sm:p-6 shadow-lg w-full"
   >
     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
     <div className="relative z-10">
@@ -578,14 +578,14 @@ const TimelineCard = memo(({ order }: { order: MasterOrder }) => (
     className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm w-full"
   >
     <div className="flex items-center gap-2 mb-6">
-      <Calendar className="h-4 w-4 text-[#6750A4]" />
+      <Calendar className="h-4 w-4 text-secondary" />
       <h4 className="text-sm font-semibold text-gray-900">Timeline</h4>
     </div>
     <div className="space-y-6">
       <div className="relative flex gap-4">
         <div className="flex flex-col items-center">
           <div className="relative">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#6750A4] ring-4 ring-[#6750A4]/10" />
+            <div className="w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-secondary/10" />
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-px h-8 bg-gray-200" />
           </div>
         </div>
@@ -597,7 +597,7 @@ const TimelineCard = memo(({ order }: { order: MasterOrder }) => (
       <div className="relative flex gap-4">
         <div className="flex flex-col items-center">
           <div className="relative">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#6750A4] ring-4 ring-[#6750A4]/10" />
+            <div className="w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-secondary/10" />
           </div>
         </div>
         <div className="flex-1">
@@ -613,12 +613,12 @@ TimelineCard.displayName = "TimelineCard";
 // Customer Profile Card (simplified for master order)
 const CustomerCard = memo(({ order }: { order: MasterOrder }) => (
   <Card title="Customer Profile" icon={User}>
-    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
-      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-lg sm:text-xl flex-shrink-0">
+    <div className="flex flex-row items-start gap-3 sm:gap-4">
+      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-secondary font-black text-lg sm:text-xl flex-shrink-0">
         {getInitials(order.recipient_name || "?")}
       </div>
-      <div className="space-y-1 text-center sm:text-left">
-        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent break-words">
+      <div className="space-y-1 text-start sm:text-left">
+        <p className="font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent break-words">
           {order.recipient_name || "N/A"}
         </p>
         <div className="flex items-center justify-center sm:justify-start gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg w-full sm:w-fit border border-blue-200 shadow-sm">
@@ -638,9 +638,9 @@ CustomerCard.displayName = "CustomerCard";
 const ShippingCard = memo(({ order }: { order: MasterOrder }) => (
   <Card title="Shipping Destination" icon={MapPin}>
     <div className="space-y-3">
-      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
         <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Recipient:</span>
-        <span className="text-xs sm:text-sm font-bold text-[#6750A4] break-words">{order.recipient_name || "N/A"}</span>
+        <span className="text-xs sm:text-sm font-bold text-secondary break-words">{order.recipient_name || "N/A"}</span>
       </div>
       <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-blue-50/30 border-l-4 border-green-500">
         <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Phone:</span>
@@ -650,7 +650,7 @@ const ShippingCard = memo(({ order }: { order: MasterOrder }) => (
           <CopyButton text={order.shipping_phone} />
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+      <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
         <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Address:</span>
         <span className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">{order.shipping_address_text || "N/A"}</span>
       </div>
@@ -774,11 +774,11 @@ export function OrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Glass Header */}
-          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/10 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
+          <div className="bg-secondary/20 backdrop-blur-md border-b border-secondary/10 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
             {/* Top row: Icon on left, Buttons on right */}
             <div className="flex flex-row justify-between items-start gap-2">
               {/* Left side - Package Icon */}
-              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
+              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-secondary to-secondary-light rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
                 <Package className="text-white h-4 w-4 sm:h-6 sm:w-6 drop-shadow-sm" />
               </div>
 
@@ -794,11 +794,11 @@ export function OrderDetailModal({
                    disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                   >
                     {refreshing ? (
-                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#6750A4] animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-secondary animate-spin" />
                     ) : (
-                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
+                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary transition-colors" />
                     )}
-                    <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
+                    <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-secondary">
                       {refreshing ? "Refreshing..." : "Refresh"}
                     </span>
                   </button>
@@ -817,21 +817,21 @@ export function OrderDetailModal({
             {/* Bottom row: Order details */}
             <div className="mt-1.5 sm:mt-4">
               <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
-                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight break-words">
+                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent tracking-tight break-words">
                   Order #{order.id}
                 </h2>
                 <span className={getStatusBadge(order.status)}>{order.status}</span>
               </div>
               <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
-                <span className="flex items-center gap-1 sm:gap-2 bg-[#6750A4]/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
-                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />
+                <span className="flex items-center gap-1 sm:gap-2 bg-secondary/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-secondary/20 shadow-sm">
+                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-secondary" />
                   <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
                     {new Date(order.created_at).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}{" "}
-                    <span className="text-[#6750A4] mx-0.5">•</span>{" "}
+                    <span className="text-secondary mx-0.5">•</span>{" "}
                     {new Date(order.created_at).toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -873,7 +873,7 @@ export function OrderDetailModal({
                   {order.vendor_orders && order.vendor_orders.length > 0 ? (
                     <div className="space-y-4 sm:space-y-6 min-w-0">
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-[#6750A4]" />
+                        <Building2 className="h-5 w-5 text-secondary" />
                         <h4 className="text-base font-semibold text-gray-800">
                           Company orders ({order.vendor_orders.length})
                         </h4>

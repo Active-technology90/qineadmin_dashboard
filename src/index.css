@@ -2,16 +2,17 @@
 
 :root {
   --color-secondary: #6750A4;
+  --color-secondary-dark: #3B1E70;
 }
 
-@layer utilities {
-  .text-secondary {
-    color: var(--color-secondary);
-  }
+@theme {
+  --color-secondary: var(--color-secondary);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-secondary-light: var(--color-secondary-light);
+}
 
-  .bg-secondary {
-    background-color: var(--color-secondary);
-  }
+.bg-sidebar-gradient {
+  background: linear-gradient(to bottom, var(--color-secondary-dark), var(--color-secondary));
 }
 .scrollbar-thin::-webkit-scrollbar {
   width: 8px;
@@ -19,18 +20,18 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #6750A4; /* Updated background color */
+  background: var(--color-secondary); /* Updated background color */
   border-radius: 9999px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #6750A4; /* Light gray thumb */
+  background: var(--color-secondary); /* Light gray thumb */
   border-radius: 9999px;
-  border: 2px solid #6750A4; /* Padding effect using same bg */
+  border: 2px solid var(--color-secondary); /* Padding effect using same bg */
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #6750A4; /* Darker gray on hover */
+  background: var(--color-secondary); /* Darker gray on hover */
 }
 
 .scrollbar-thin::-webkit-scrollbar-button {
@@ -40,6 +41,6 @@
 /* Firefox support */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #6750A4 #D1D5DB; /* thumb color | track color */
+  scrollbar-color: var(--color-secondary) #D1D5DB; /* thumb color | track color */
   
 }

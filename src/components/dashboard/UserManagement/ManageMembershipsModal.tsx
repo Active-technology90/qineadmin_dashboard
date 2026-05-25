@@ -266,7 +266,7 @@ const ManageMembershipsModal: React.FC<ManageMembershipsModalProps> = ({
                   <button
                     onClick={handleAdd}
                     disabled={!selectedCompanyId || loading}
-                    className="w-full sm:w-auto px-4 xs:px-5 py-2 xs:py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 text-xs xs:text-sm whitespace-nowrap"
+                    className="w-full sm:w-auto px-4 xs:px-5 py-2 xs:py-2.5 bg-secondary text-white rounded-xl font-medium hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 text-xs xs:text-sm whitespace-nowrap"
                   >
                     {loading ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />

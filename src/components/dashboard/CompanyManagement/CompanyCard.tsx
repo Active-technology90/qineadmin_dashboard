@@ -24,7 +24,7 @@ export default function CompanyCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-[#6750A4] via-[#7c63b8] to-[#9b87f5]" />
+          <div className="w-full h-full bg-gradient-to-r from-secondary via-secondary-light to-[#9b87f5]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
       </div>
@@ -41,7 +41,7 @@ export default function CompanyCard({
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-4 border-white shadow-2xl"
               />
             ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#6750A4] to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-secondary to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
                 <Building2 size={32} className="text-white" />
               </div>
             )}
@@ -50,7 +50,7 @@ export default function CompanyCard({
             <h3 className="font-bold text-xl sm:text-2xl mb-1 line-clamp-2 break-words drop-shadow-lg text-white [text-shadow:_0_1px_4px_rgb(0_0_0_/_0.5)]">
               {company.name}
             </h3>
-            <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-[#6750A4]/50 shadow-lg truncate max-w-full">
+            <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-secondary/50 shadow-lg truncate max-w-full">
               {company.slug}
             </p>
           </div>
@@ -109,7 +109,7 @@ export default function CompanyCard({
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
-              <Building2 size={14} className="text-[#6750A4]" />
+              <Building2 size={14} className="text-secondary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">

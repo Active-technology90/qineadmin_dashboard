@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Eye, Package, Truck, Filter, Search, X } from "lucide-react";
+import { Eye, Package, Truck, Search, X } from "lucide-react";
 import { getAdminMasterOrders } from "../../../services/api";
 import type { MasterOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
@@ -365,19 +365,19 @@ export default function Orders() {
       {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
       <button
         onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-secondary shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
       >
         <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
           {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
           )}
         </div>
-        <span className="text-sm font-bold tracking-wide text-[#6750A4]">Filter</span>
+        <span className="text-sm font-bold tracking-wide text-secondary">Filter</span>
         {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-secondary/10 text-secondary rounded-full">
             Active
           </span>
         )}
@@ -422,7 +422,7 @@ export default function Orders() {
                     placeholder="Search by order ID, customer name, phone, or address..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -435,7 +435,7 @@ export default function Orders() {
                 <select
                   value={paymentStatusFilter}
                   onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
                 >
                   <option value="">All Payment Statuses</option>
                   <option value="Paid">Paid</option>
@@ -454,7 +454,7 @@ export default function Orders() {
                 <select
                   value={fulfillmentTypeFilter}
                   onChange={(e) => setFulfillmentTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
                 >
                   <option value="">All Fulfillment Types</option>
                   <option value="delivery">Delivery</option>
@@ -473,7 +473,7 @@ export default function Orders() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
                 >
                   <option value={5}>5 / page</option>
                   <option value={10}>10 / page</option>

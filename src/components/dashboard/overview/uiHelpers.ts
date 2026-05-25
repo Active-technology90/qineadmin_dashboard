@@ -1,6 +1,6 @@
 // src/components/admin/overview/components/uiHelpers.ts
 
-// const CHART_COLORS = ["#6750A4", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
+// const CHART_COLORS = ["var(--color-secondary)", "#9B7DD4", "#B794F4", "#D6BCFA", "#E9D8FD"];
 export const CHART_COLORS = [
   "#6366F1", // indigo
   "#10B981", // emerald

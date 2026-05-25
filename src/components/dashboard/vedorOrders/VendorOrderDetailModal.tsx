@@ -81,7 +81,7 @@ const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
 
   const base =
-    "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm";
+    "px-2 md:px-3 py-1 text-[8px] md:text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm";
 
   if (s === "completed" || s === "delivered" || s === "approved")
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -103,19 +103,19 @@ const getStatusBadge = (status: string) => {
 const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
   <motion.div
     variants={itemVariants}
-    className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}
+    className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100/20 p-2 md:p-5 shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}
   >
     <div className="flex flex-row justify-between items-start">
-      <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-        <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-          <Icon className="h-4 w-4 text-[#6750A4]" />
+      <div className="flex items-center gap-2 mb-2 md:mb-4 pb-2 md:pb-3 w-full relative">
+        <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-secondary" />
         </div>
 
-        <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+        <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
           {title}
         </h4>
         {/* Decorative gradient line under header */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary-light to-transparent rounded-full"></div>
       </div>
       {status && (
         <div className="flex flex-row justify-start">
@@ -159,7 +159,7 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
         }`}
     >
       {displayStatus}
@@ -177,7 +177,7 @@ const CopyButton = ({ text }: { text?: string | null }) => {
   return (
     <button
       onClick={handleCopy}
-      className="text-gray-400 hover:text-[#6750A4] transition-colors"
+      className="text-gray-400 hover:text-secondary transition-colors"
     >
       {copied ? (
         <Check className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                           delivery.delivery_person_username ||
                           delivery.delivery_person_name
                         }
-                        className="w-14 h-14 rounded-full object-cover ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300"
+                        className="w-14 h-14 rounded-full object-contain ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300"
                       />
                       <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                         <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
@@ -358,7 +358,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     ((canManage) && (
                       <button
                         onClick={() => setShowAssignForm(true)}
-                        className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
+                        className="w-full py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
                       >
                         Assign Delivery person
                       </button>
@@ -391,7 +391,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 <button
                   onClick={handleAssign}
                   disabled={assigning || !selectedUserId}
-                  className="flex-1 bg-[#6750A4] text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+                  className="flex-1 bg-secondary text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
                 >
                   {assigning ? (
                     <Loader2 className="h-3 w-3 animate-spin mx-auto" />
@@ -529,8 +529,8 @@ const ReceiptReviewCard = ({
         <div className="flex flex-col items-center ">
 
           <div className="flex items-center gap-2 bg-white px-4 ">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
-              <ShieldCheck className="h-8 w-8 text-indigo-600" />
+            <div className="w-9 md:w-12 h-9 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
+              <ShieldCheck className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
             </div>
 
             <p className="text-sm font-semibold text-gray-700">Verified by</p>
@@ -631,7 +631,7 @@ const ReceiptReviewCard = ({
             Payment Receipt
           </h4>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary-light to-transparent rounded-full"></div>
         <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl">
           <AlertCircle className="h-6 w-6 text-gray-300 mx-auto mb-2" />
 
@@ -691,25 +691,25 @@ const ReceiptReviewCard = ({
       <div className="flex items-center gap-2 mb-2">
         <div className="flex w-full flex-row justify-between items-start">
           <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-            <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-              <Banknote className="h-4 w-4 text-[#6750A4]" />
+            <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+              <Banknote className="h-4 w-4 text-secondary" />
             </div>
 
-            <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
               Payment Receipt
             </h4>
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary-light to-transparent rounded-full"></div>
             {/* <div className="flex flex-row justify-between items-start">
       <div className="flex items-center gap-2 mb-4 pb-3 w-full relative"> */}
-            {/* <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-          <Icon className="h-4 w-4 text-[#6750A4]" />
+            {/* <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-secondary" />
         </div> */}
 
-            {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            {/* <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
           {title}
         </h4> */}
             {/* Decorative gradient line under header */}
-            {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary-light to-transparent rounded-full"></div>
               </div> */}
           </div>
           <div>
@@ -748,7 +748,7 @@ const ReceiptReviewCard = ({
         )}
         {/* BANK */}
         <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-4 rounded-xl border border-purple-100">
-          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest mb-1">
+          <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mb-1">
             Bank Details
           </p>
 
@@ -765,7 +765,7 @@ const ReceiptReviewCard = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add review notes..."
               rows={2}
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4] transition resize-none"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-secondary transition resize-none"
             />
 
             <div className="flex gap-2">
@@ -933,7 +933,7 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
               {!readOnly && (
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#6750A4] to-[#6750A4] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-secondary to-secondary text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Mark as Prepared
@@ -1002,14 +1002,49 @@ export function VendorOrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header */}
-          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/15 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
+          <div className="bg-secondary/20 backdrop-blur-md border-b border-secondary/15 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
             {/* Top row: Icon on left, Buttons on right */}
             <div className="flex flex-row justify-between items-start gap-2">
               {/* Left side - Package Icon */}
-              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
+              {/* <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-secondary to-secondary-light rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
                 <Package className="text-white h-4 w-4 sm:h-6 sm:w-6 drop-shadow-sm" />
+              </div> */}
+              {/* Bottom row: Order details */}
+              <div className="mt-1.5  ">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
+                  <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent tracking-tight break-words">
+                    Order #{order.id}
+                  </h2>
+                  <StatusBadge
+                    status={order.status}
+                    customLabels={{
+                      pending: "Pending",
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
+                  <span className="flex items-center gap-1 sm:gap-2 bg-secondary/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-secondary/20 shadow-sm">
+                    <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-secondary" />
+                    <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
+                      {new Date(order.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
+                      <span className="text-secondary mx-0.5">•</span>{" "}
+                      {new Date(order.created_at).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
+                    <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-secondary" />{" "}
+                    <span className="font-medium text-[9px] sm:text-sm">{order.company?.name}</span>
+                  </span>
+                </div>
               </div>
-
               {/* Right side - Buttons */}
               <div className="flex items-center gap-1 sm:gap-2">
                 {/* REFRESH */}
@@ -1022,14 +1057,14 @@ export function VendorOrderDetailModal({
                  disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 >
                   {refreshing ? (
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#6750A4] animate-spin" />
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-secondary animate-spin" />
                   ) : (
-                    <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
+                    <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary transition-colors" />
                   )}
 
-                  <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
+                  {/* <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-secondary">
                     {refreshing ? "Refreshing..." : "Refresh"}
-                  </span>
+                  </span> */}
                 </button>
 
                 {/* CLOSE */}
@@ -1044,42 +1079,7 @@ export function VendorOrderDetailModal({
               </div>
             </div>
 
-            {/* Bottom row: Order details */}
-            <div className="mt-1.5 sm:mt-4">
-              <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
-                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight break-words">
-                  Order #{order.id}
-                </h2>
-                <StatusBadge
-                  status={order.status}
-                  customLabels={{
-                    pending: "Pending",
-                  }}
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
-                <span className="flex items-center gap-1 sm:gap-2 bg-[#6750A4]/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
-                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />
-                  <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
-                    {new Date(order.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}{" "}
-                    <span className="text-[#6750A4] mx-0.5">•</span>{" "}
-                    {new Date(order.created_at).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
-                  <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />{" "}
-                  <span className="font-medium text-[9px] sm:text-sm">{order.company?.name}</span>
-                </span>
-              </div>
-            </div>
+
           </div>
 
           {/* Scrollable Content Grid */}
@@ -1095,19 +1095,19 @@ export function VendorOrderDetailModal({
                         <img
                           src={order.recipient_image}
                           alt="Recipient"
-                          className="w-14 h-14 rounded-full ring-2 ring-purple-200"
+                          className="w-10 md:w-14 h-10 object-contain md:h-14 rounded-full ring-2 ring-purple-200"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-xl">
+                        <div className="w-10 md:w-14 h-10 md:h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-secondary font-black text-xl">
                           {getInitials(order.recipient_name)}
                         </div>
                       )}
                       <div className="space-y-1">
-                        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+                        <p className="text-sm md:text-base font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
                           {order.recipient_name}
                         </p>
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-3 py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
-                          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 md:px-3 py-0.5 md:px-3 md:py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
+                          <PhoneCall className="h-2.5 md:h-3.5 w-2.5 md:w-3.5 text-green-600" />
                           <span className="text-xs font-mono font-bold text-green-700 tracking-tight">
                             {order.shipping_phone}
                           </span>
@@ -1119,11 +1119,11 @@ export function VendorOrderDetailModal({
 
                   <Card title="Shipping Destination" icon={MapPin}>
                     <div className="space-y-3">
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Recipient Name:
                         </span>
-                        <span className="text-sm font-bold text-[#6750A4]">
+                        <span className="text-sm font-bold text-secondary">
                           {order.recipient_name ||
                             "No recipient name provided."}
                         </span>
@@ -1141,11 +1141,11 @@ export function VendorOrderDetailModal({
                           <CopyButton text={order.shipping_phone} />
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Shipping Address:
                         </span>
-                        <span className="text-sm font-bold text-[#6750A4]">
+                        <span className="text-sm font-bold text-secondary">
                           {order.shipping_address_text ||
                             "No address provided."}
                         </span>
@@ -1159,7 +1159,7 @@ export function VendorOrderDetailModal({
                   variants={itemVariants}
                   className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm"
                 >
-                  <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                  <div className="px-4 md:px-6 py-2 md:py-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
                     <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
                       Item List
                     </h4>
@@ -1172,10 +1172,10 @@ export function VendorOrderDetailModal({
                     <table className="w-full">
                       <thead>
                         <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
-                          <th className="px-6 py-4 text-left">Description</th>
-                          <th className="px-6 py-4 text-center">Qty</th>
-                          <th className="px-6 py-4 text-right">Unit Price</th>
-                          <th className="px-6 py-4 text-right">Total</th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-left">Description</th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-center">Qty</th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">Unit Price</th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -1184,7 +1184,7 @@ export function VendorOrderDetailModal({
                             key={item.id}
                             className="group hover:bg-gray-50/80 transition-all"
                           >
-                            <td className="px-6 py-4">
+                            <td className="px-4 md:px-6 py-2 md:py-4">
                               <div className="flex items-center gap-4">
                                 <div className="h-10 w-10 bg-gray-100 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
                                   {item.product_image ? (
@@ -1233,12 +1233,12 @@ export function VendorOrderDetailModal({
                 {/* 3. Financial Summary Card */}
                 <motion.div
                   variants={itemVariants}
-                  className="bg-gradient-to-br from-[#6750A4] via-[#7B5CB5] to-[#9370DB] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
+                  className="bg-gradient-to-br from-secondary to-secondary-light rounded-[32px] p-4 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
                 >
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-white/5 rounded-full blur-2xl" />
                   <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-5">
+                    <div className="flex justify-between items-start mb-2 md:mb-5">
                       <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
                         <Receipt className="h-5 w-5" />
                       </div>
@@ -1246,7 +1246,7 @@ export function VendorOrderDetailModal({
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
                           Total Amount
                         </p>
-                        <h3 className="text-3xl font-black">
+                        <h3 className="text-xl md:text-3xl font-black">
                           {Number(order.amount).toLocaleString()}{" "}
                           <span className="text-sm opacity-60">ETB</span>
                         </h3>

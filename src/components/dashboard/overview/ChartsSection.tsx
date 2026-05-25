@@ -75,7 +75,7 @@ export default function ChartsSection({
                   {/* Legend */}
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#6750A4]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-secondary" />
                       <span className="text-xs text-gray-500">Current</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -93,7 +93,7 @@ export default function ChartsSection({
                         onClick={() => setPeriod(p)}
                         className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
                           period === p
-                            ? "bg-white shadow text-[#6750A4] ring-1 ring-gray-200/50"
+                            ? "bg-white shadow text-secondary ring-1 ring-gray-200/50"
                             : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                         }`}
                       >
@@ -102,7 +102,7 @@ export default function ChartsSection({
                     ))}
                   </div>
                   <div className="p-2 bg-purple-50 rounded-xl hidden sm:block">
-                    <TrendingUp className="h-5 w-5 text-[#6750A4]" />
+                    <TrendingUp className="h-5 w-5 text-secondary" />
                   </div>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export default function ChartsSection({
                       />
                       <Bar
                         dataKey="revenue"
-                        fill="#6750A4"
+                        fill="var(--color-secondary)"
                         radius={[6, 6, 0, 0]}
                         barSize={28}
                       />
@@ -339,7 +339,7 @@ export default function ChartsSection({
                 <button
                   type="button"
                   onClick={() => onNavigate?.("products")}
-                  className="text-xs font-medium text-[#6750A4] hover:underline cursor-pointer"
+                  className="text-xs font-medium text-secondary hover:underline cursor-pointer"
                 >
                   View all
                 </button>

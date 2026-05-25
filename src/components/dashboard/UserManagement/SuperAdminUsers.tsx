@@ -185,7 +185,7 @@ const UserFilters: React.FC<FiltersProps> = ({
         {/* SEARCH */}
         <div className="relative flex-1 min-w-0">
           {/* Glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#6750A4]/10 to-purple-300/10 blur-xl opacity-70" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/10 to-purple-300/10 blur-xl opacity-70" />
 
           <div
             className="
@@ -198,8 +198,8 @@ const UserFilters: React.FC<FiltersProps> = ({
               shadow-sm
               hover:shadow-md
               focus-within:ring-4
-              focus-within:ring-[#6750A4]/10
-              focus-within:border-[#6750A4]/30
+              focus-within:ring-secondary/10
+              focus-within:border-secondary/30
               transition-all duration-300
             "
           >
@@ -269,7 +269,7 @@ const UserFilters: React.FC<FiltersProps> = ({
                 px-3
                 rounded-2xl
                 bg-gradient-to-r
-                from-[#6750A4]
+                from-secondary
                 to-purple-500
                 text-white
                 text-sm font-semibold
@@ -333,7 +333,7 @@ const UserFilters: React.FC<FiltersProps> = ({
               onClick={() => setRoleFilter("all")}
               className="
                 text-xs font-semibold
-                text-[#6750A4]
+                text-secondary
                 hover:underline
               "
             >
@@ -367,7 +367,7 @@ const UserFilters: React.FC<FiltersProps> = ({
                     roleFilter === opt.value
                       ? `
                         bg-gradient-to-br
-                        from-[#6750A4]
+                        from-secondary
                         to-purple-500
                         border-purple-500
                         text-white
@@ -377,7 +377,7 @@ const UserFilters: React.FC<FiltersProps> = ({
                         bg-gray-50
                         border-gray-200
                         text-gray-700
-                        hover:border-[#6750A4]/30
+                        hover:border-secondary/30
                         hover:bg-purple-50
                       `
                   }
@@ -1099,7 +1099,7 @@ const SuperAdminUsers: React.FC = () => {
           <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               
-              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-[#6750A4] to-purple-400 shadow-sm" />
+              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-secondary to-purple-400 shadow-sm" />
 
               <div className="min-w-0">
                 <h1
@@ -1113,7 +1113,7 @@ const SuperAdminUsers: React.FC = () => {
           leading-tight
           bg-gradient-to-r
           from-purple-900
-          via-[#6750A4]
+          via-secondary
           to-purple-500
           bg-clip-text
           text-transparent
@@ -1140,7 +1140,7 @@ const SuperAdminUsers: React.FC = () => {
             </div>
 
             {/* Decorative line */}
-            <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-[#6750A4] to-purple-300 opacity-80" />
+            <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-secondary to-purple-300 opacity-80" />
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">

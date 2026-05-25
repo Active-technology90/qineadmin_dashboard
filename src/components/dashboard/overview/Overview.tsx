@@ -431,7 +431,7 @@ export default function Overview({
             {isSuperAdmin && (
               <div className="hidden sm:flex items-center gap-2 xs:gap-3 sm:gap-4 min-w-0">
                 <div className="relative shrink-0">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6750A4] to-[#9b87f5] rounded-full blur opacity-70"></div>
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-secondary to-[#9b87f5] rounded-full blur opacity-70"></div>
                   <div className="absolute inset-0 rounded-full shadow-inner"></div>
                   {selectedCompanyLogo && company?.slug ? (
                     <div className="relative w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-lg">
@@ -442,7 +442,7 @@ export default function Overview({
                       />
                     </div>
                   ) : (
-                    <div className="relative w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-lg">
+                    <div className="relative w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-secondary to-secondary-light flex items-center justify-center shadow-lg">
                       <Building2 className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                   )}
@@ -450,12 +450,12 @@ export default function Overview({
               
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 xs:gap-2">
-                    <div className="w-1 h-3 xs:h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#9b87f5] shrink-0"></div>
+                    <div className="w-1 h-3 xs:h-4 rounded-full bg-gradient-to-b from-secondary to-[#9b87f5] shrink-0"></div>
                     <p className="text-[9px] xs:text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                       Currently Viewing
                     </p>
                   </div>
-                  <h2 className="text-sm xs:text-lg sm:text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-[#6750A4] to-[#7c63b8] bg-clip-text text-transparent truncate">
+                  <h2 className="text-sm xs:text-lg sm:text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent truncate">
                     {selectedCompanyName}
                   </h2>
                   <div className="flex items-center gap-1 xs:gap-1.5 mt-0.5">
@@ -473,7 +473,7 @@ export default function Overview({
                   Select Company
                 </span>
                 <div className="relative flex-1 lg:flex-initial min-w-0 max-w-full">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6750A4] hidden sm:block" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary hidden sm:block" />
                   <CompanySelect
                     scopeOptions={scopeOptions}
                     company={

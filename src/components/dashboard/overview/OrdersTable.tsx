@@ -73,7 +73,7 @@ export default function OrdersTable({
                     h-9 w-9 sm:h-10 sm:w-10
                     rounded-2xl
                     bg-gradient-to-br
-                    from-[#6750A4]
+                    from-secondary
                     to-purple-500
                     shadow-lg shadow-purple-500/20
                   "
@@ -125,8 +125,8 @@ export default function OrdersTable({
                 px-4 py-2
                 rounded-xl
                 bg-purple-50
-                hover:bg-[#6750A4]
-                text-[#6750A4]
+                hover:bg-secondary
+                text-secondary
                 hover:text-white
                 text-xs sm:text-sm
                 font-semibold
@@ -169,7 +169,7 @@ export default function OrdersTable({
                         className="
                           text-xs
                           font-bold
-                          text-[#6750A4]
+                          text-secondary
                           truncate
                         "
                       >
@@ -335,7 +335,7 @@ export default function OrdersTable({
                             className="
                               text-sm lg:text-[15px]
                               font-bold
-                              text-[#6750A4]
+                              text-secondary
                               whitespace-nowrap
                             "
                           >

@@ -206,10 +206,10 @@ export function ProductModal({
     >
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-3xl w-full max-w-[95%] sm:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#6750A4]/20 backdrop-blur-sm border-b border-[#6750A4]/20 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="sticky top-0 z-10 bg-secondary/20 backdrop-blur-sm border-b border-secondary/20 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base sm:text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent break-words">
+              <h3 className="text-base sm:text-xl font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent break-words">
                 {editingProduct ? 'Product Details' : 'New Product'}
                 {isReadOnlyBasic && <span className="ml-2 text-[10px] sm:text-sm font-normal text-amber-600">(View only)</span>}
                 {!isReadOnlyBasic && isPricingDisabled && isEditMode && (
@@ -224,7 +224,7 @@ export function ProductModal({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-[#6750A4] hover:bg-[#6750A4]/10 transition flex-shrink-0"
+              className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-secondary hover:bg-secondary/10 transition flex-shrink-0"
               aria-label="Close"
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -306,7 +306,7 @@ export function ProductModal({
                     className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                       errors.title
                         ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-secondary focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20'
+                        : 'border-gray-200 focus:border-secondary focus:border-secondary focus:ring-2 focus:ring-secondary/20'
                     } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                     placeholder="Product name"
                     disabled={isSubmitting || isReadOnlyBasic}
@@ -448,7 +448,7 @@ export function ProductModal({
                   type="submit"
                   form="product-details-form"
                   disabled={isSubmitting}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-secondary text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
                 >
                   {isSubmitting && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
                   Continue to Images <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -468,7 +468,7 @@ export function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-secondary text-white font-medium hover:bg-[#5a448c] transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
               >
                 Done
               </button>

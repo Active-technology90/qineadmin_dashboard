@@ -50,8 +50,8 @@ export function CompanyUsersTable({
           border border-gray-200
           rounded-xl
           focus:outline-none
-          focus:ring-2 focus:ring-[#6750A4]
-          focus:border-[#6750A4]
+          focus:ring-2 focus:ring-secondary
+          focus:border-secondary
         "
       />
     </div> */}

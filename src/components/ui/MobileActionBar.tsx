@@ -49,7 +49,7 @@ const MobileActionBar: React.FC<MobileActionBarProps> = ({
               shadow-sm
               active:scale-[0.97]
               hover:shadow-md
-              hover:border-[#6750A4]/30
+              hover:border-secondary/30
               hover:bg-[#F7F4FF]
               transition-all duration-200
               touch-manipulation
@@ -68,7 +68,7 @@ const MobileActionBar: React.FC<MobileActionBarProps> = ({
                   px-1.5
                   flex items-center justify-center
                   rounded-full
-                  bg-[#6750A4]
+                  bg-secondary
                   text-white
                   text-[11px]
                   font-bold
@@ -96,7 +96,7 @@ const MobileActionBar: React.FC<MobileActionBarProps> = ({
             shadow-sm
             active:scale-[0.97]
             hover:shadow-md
-            hover:border-[#6750A4]/30
+            hover:border-secondary/30
             hover:bg-[#F7F4FF]
             transition-all duration-200
             touch-manipulation

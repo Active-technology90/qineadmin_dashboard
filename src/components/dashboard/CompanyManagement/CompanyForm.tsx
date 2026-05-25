@@ -81,7 +81,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs transition-all ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             }`}
           />
           {formErrors.name && (
@@ -105,7 +105,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             }`}
           />
         </div>
@@ -148,7 +148,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             } ${formErrors.category ? "border-red-500" : ""}`}
           >
             <option value={0}>Select Category</option>
@@ -184,7 +184,7 @@ export default function CompanyForm({
                 ? "bg-gray-50 border-gray-200"
                 : !formData.category
                 ? "bg-gray-100 text-gray-500 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             } ${formErrors.sub_category ? "border-red-500" : ""} ${
               !formData.category ? "cursor-not-allowed" : ""
             }`}
@@ -246,7 +246,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             } ${formErrors.business_type ? "border-red-500" : ""}`}
           >
             <option value="">Select Business Type</option>
@@ -277,7 +277,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs resize-none ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-[#6750A4]/30 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-secondary/30 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             }`}
           />
         </div>
@@ -303,7 +303,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             }`}
           />
           <p className="text-[10px] text-gray-400 mt-0.5">
@@ -321,7 +321,7 @@ export default function CompanyForm({
               <button
                 type="button"
                 onClick={() => setShowMapPicker(true)}
-                className="text-[10px] text-[#6750A4] hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
+                className="text-[10px] text-secondary hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
               >
                 <MapPin className="h-3 w-3" />
                 Pick on Map
@@ -346,7 +346,7 @@ export default function CompanyForm({
                 className={`w-full border rounded-md p-1.5 pr-8 text-xs ${
                   !isEditingActive
                     ? "bg-gray-50 border-gray-200"
-                    : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                    : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
                 }`}
               />
               <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LAT</span>
@@ -367,7 +367,7 @@ export default function CompanyForm({
                 className={`w-full border rounded-md p-1.5 pr-8 text-xs ${
                   !isEditingActive
                     ? "bg-gray-50 border-gray-200"
-                    : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                    : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
                 }`}
               />
               <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LON</span>
@@ -378,7 +378,7 @@ export default function CompanyForm({
             <button
               type="button"
               onClick={() => setShowMapPicker(true)}
-              className="mt-2 w-full py-2 border border-dashed border-[#6750A4]/40 hover:border-[#6750A4] hover:bg-purple-50/30 text-[#6750A4] rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
+              className="mt-2 w-full py-2 border border-dashed border-secondary/40 hover:border-secondary hover:bg-purple-50/30 text-secondary rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
             >
               <MapPin className="h-3.5 w-3.5" />
               Choose Location on Map Picker
@@ -407,7 +407,7 @@ export default function CompanyForm({
             className={`w-full border rounded-md p-1.5 text-xs ${
               !isEditingActive
                 ? "bg-gray-50 border-gray-200"
-                : "bg-white border-gray-300 focus:ring-1 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
             }`}
           />
         </div>
@@ -425,7 +425,7 @@ export default function CompanyForm({
                 }))
               }
               disabled={!isEditingActive}
-              className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
+              className="h-3.5 w-3.5 text-secondary rounded border-gray-300"
             />
             <span
               className={`text-[14px] ${
@@ -446,7 +446,7 @@ export default function CompanyForm({
                 }))
               }
               disabled={!isEditingActive}
-              className="h-3.5 w-3.5 text-[#6750A4] rounded border-gray-300"
+              className="h-3.5 w-3.5 text-secondary rounded border-gray-300"
             />
             <span
               className={`text-[14px] ${
@@ -461,7 +461,7 @@ export default function CompanyForm({
         {/* Cover Image Upload */}
         <div className="relative w-full">
           <div className={!isEditingActive ? "opacity-70" : ""}>
-            <div className="w-full bg-gradient-to-r from-purple-100/40 to-indigo-100/40 rounded-xl p-2 border-2 border-[#6750A4]/30 shadow-sm">
+            <div className="w-full bg-gradient-to-r from-purple-100/40 to-indigo-100/40 rounded-xl p-2 border-2 border-secondary/30 shadow-sm">
               <DragDropImageUpload
                 label="🎬 COVER IMAGE (Wide Banner)"
                 value={formData.cover_image}

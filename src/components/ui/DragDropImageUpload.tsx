@@ -217,10 +217,10 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
             disabled
               ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-70"
               : dragActive
-                ? "border-[#6750A4] bg-[#6750A4]/5 scale-[1.01] shadow-lg shadow-[#6750A4]/10"
+                ? "border-secondary bg-secondary/5 scale-[1.01] shadow-lg shadow-secondary/10"
                 : error
                   ? "border-red-300 bg-red-50/40 hover:border-red-400"
-                  : "border-gray-300 bg-gradient-to-b from-gray-50 to-white hover:border-[#6750A4]/50 hover:bg-[#6750A4]/[0.03]"
+                  : "border-gray-300 bg-gradient-to-b from-gray-50 to-white hover:border-secondary/50 hover:bg-secondary/[0.03]"
           }
 
         ${sizeConfig[size].drop}
@@ -304,8 +304,8 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
                 transition-all duration-300
                 ${
                   dragActive
-                    ? "bg-[#6750A4] text-white scale-110"
-                    : "bg-[#6750A4]/10 text-[#6750A4]"
+                    ? "bg-secondary text-white scale-110"
+                    : "bg-secondary/10 text-secondary"
                 }
               `}
             >
@@ -344,11 +344,11 @@ export const DragDropImageUpload: React.FC<DragDropImageUploadProps> = ({
               type="button"
               className="
                 mt-6 h-11 px-5 rounded-2xl
-                bg-[#6750A4]
+                bg-secondary
                 hover:bg-[#5B4294]
                 text-white font-semibold text-sm
                 transition-all duration-200
-                shadow-lg shadow-[#6750A4]/20
+                shadow-lg shadow-secondary/20
               "
             >
               Choose File

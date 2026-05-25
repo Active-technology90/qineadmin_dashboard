@@ -100,8 +100,8 @@ export function CompanySelect({
           w-full flex items-center justify-between gap-3
           px-4 py-3 bg-white border border-gray-200
           rounded-xl shadow-sm
-          hover:border-[#6750A4]/60 hover:shadow-md
-          focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20
+          hover:border-secondary/60 hover:shadow-md
+          focus:outline-none focus:ring-2 focus:ring-secondary/20
           transition-all
         "
       >
@@ -206,7 +206,7 @@ export function CompanySelect({
 
                     {/* Checkmark */}
                     {isSelected && (
-                      <Check className="w-4 h-4 text-[#6750A4] shrink-0" />
+                      <Check className="w-4 h-4 text-secondary shrink-0" />
                     )}
                   </div>
                 );

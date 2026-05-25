@@ -129,7 +129,7 @@ import { getAds, createAd, updateAd, deleteAd } from "../../services/api";
 const ITEMS_PER_PAGE = 6;
 
 // ----------------------------------------------------------------------
-// Reusable UI Components (inline, uses dashboard color #6750A4)
+// Reusable UI Components (inline, uses dashboard color var(--color-secondary))
 // ----------------------------------------------------------------------
 const Button: React.FC<{
   children: React.ReactNode;
@@ -154,7 +154,7 @@ const Button: React.FC<{
       "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
     const variants = {
       primary:
-        "bg-[#6750A4] text-white shadow-md hover:shadow-lg focus:ring-[#6750A4]",
+        "bg-secondary text-white shadow-md hover:shadow-lg focus:ring-secondary",
       secondary:
         "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
       outline:
@@ -207,7 +207,7 @@ const Input: React.FC<{
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+        className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
           }`}
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
@@ -335,13 +335,13 @@ const ImageUploader: React.FC<{
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-[#6750A4] ring-offset-2 bg-[#6750A4]/5" : ""
+        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-secondary ring-offset-2 bg-secondary/5" : ""
           }`}
       >
         {!preview ? (
           <div
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${isDragging
-                ? "border-[#6750A4] bg-[#6750A4]/5"
+                ? "border-secondary bg-secondary/5"
                 : "border-gray-200"
               }`}
             onClick={() => fileInputRef.current?.click()}
@@ -438,7 +438,7 @@ const AdCard: React.FC<{
             href={ad.target_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-[#6750A4] hover:underline gap-1 mb-4"
+            className="inline-flex items-center text-sm text-secondary hover:underline gap-1 mb-4"
           >
             <Globe className="w-3.5 h-3.5" />{" "}
             {ad.target_link.replace(/^https?:\/\//, "")}
@@ -596,7 +596,7 @@ const SearchFilterBar: React.FC<{
           placeholder="Search Ads by title..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition-all"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
         />
       </div>
       <div className="flex gap-2">
@@ -606,7 +606,7 @@ const SearchFilterBar: React.FC<{
             whileTap={{ scale: 0.97 }}
             onClick={() => onFilterChange(status)}
             className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${filterStatus === status
-                ? "bg-[#6750A4] text-white shadow-md"
+                ? "bg-secondary text-white shadow-md"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
               }`}
           >
@@ -1028,7 +1028,7 @@ export default function AdManagement() {
             animate={{ scale: 1 }}
             whileTap={{ scale: 0.9 }}
             onClick={openCreateModal}
-            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-[#6750A4] text-white shadow-xl flex items-center justify-center z-40"
+            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-secondary text-white shadow-xl flex items-center justify-center z-40"
           >
             <Plus className="w-6 h-6" />
           </motion.button>
@@ -1064,7 +1064,7 @@ export default function AdManagement() {
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4]"
+                className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary"
               />
               <label
                 htmlFor="isActive"

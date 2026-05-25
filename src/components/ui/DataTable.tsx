@@ -162,7 +162,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
             <button
               onClick={() => onPageChange(currentPage! - 1)}
               disabled={currentPage === 1}
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/50"
               aria-label="Previous page"
             >
               <ChevronLeft size={16} className="h-4 w-4 sm:h-4 sm:w-4" />
@@ -173,7 +173,7 @@ export function DataTable<T extends { id?: number | string; slug?: string }>({
             <button
               onClick={() => onPageChange(currentPage! + 1)}
               disabled={currentPage === totalPages}
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/50"
               aria-label="Next page"
             >
               <ChevronRight size={16} className="h-4 w-4 sm:h-4 sm:w-4" />

@@ -464,9 +464,9 @@ export default function SubCategoryManagement() {
       {/* Header */}
       <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0 w-full overflow-hidden">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
-          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B5CF6] shrink-0" />
+          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
           <div className="min-w-0 flex items-center gap-1.5 xs:gap-2 sm:gap-3 overflow-hidden">
-            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-[#6750A4] truncate leading-tight">
+            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary truncate leading-tight">
               SubCategories
             </h2>
             {readOnly && (
@@ -482,7 +482,7 @@ export default function SubCategoryManagement() {
               resetForm();
               setModalOpen(true);
             }}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-[#6750A4] hover:bg-[#5a458c] active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md text-white font-semibold text-[11px] xs:text-xs sm:text-sm px-2.5 xs:px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 min-h-[28px] xs:min-h-[42px] sm:min-h-[40px] max-w-[165px] xs:max-w-none whitespace-nowrap overflow-hidden"
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-secondary hover:bg-secondary-dark active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md text-white font-semibold text-[11px] xs:text-xs sm:text-sm px-2.5 xs:px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 min-h-[28px] xs:min-h-[42px] sm:min-h-[40px] max-w-[165px] xs:max-w-none whitespace-nowrap overflow-hidden"
             aria-label="Add SubCategory"
           >
             <Plus
@@ -623,7 +623,7 @@ export default function SubCategoryManagement() {
                   <div className="flex gap-2 pt-2 border-t">
                     <button
                       onClick={() => openEdit(sub)}
-                      className="flex-1 bg-[#6750A4]/10 text-[#6750A4] text-xs font-medium px-3 py-2 rounded-lg hover:bg-[#6750A4]/20 min-h-[44px]"
+                      className="flex-1 bg-secondary/10 text-secondary text-xs font-medium px-3 py-2 rounded-lg hover:bg-secondary/20 min-h-[44px]"
                     >
                       <Edit size={14} className="inline-block mr-1" />
                       Edit
@@ -715,10 +715,10 @@ export default function SubCategoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px] ${
+                  className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 min-h-[44px] ${
                     formErrors.name
                       ? "border-red-500 bg-red-50"
-                      : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                      : "border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                   }`}
                   required
                 />
@@ -738,7 +738,7 @@ export default function SubCategoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, name_am: e.target.value })
                   }
-                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
                 />
               </div>
             </div>
@@ -757,10 +757,10 @@ export default function SubCategoryManagement() {
                     setFormData({ ...formData, slug: e.target.value })
                   }
                   disabled={!!editingId}
-                  className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px] ${
+                  className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 min-h-[44px] ${
                     formErrors.slug
                       ? "border-red-500 bg-red-50"
-                      : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                      : "border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                   } ${editingId ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
                 />
                 {formErrors.slug && (
@@ -802,7 +802,7 @@ export default function SubCategoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, item_code: e.target.value })
                   }
-                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
                 />
               </div>
               <div>
@@ -819,7 +819,7 @@ export default function SubCategoryManagement() {
                       order: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
                 />
                 {formErrors.order && (
                   <p className="text-red-500 text-xs mt-1.5">
@@ -836,7 +836,7 @@ export default function SubCategoryManagement() {
                   Sub Category Icon
                 </label>
                 <div
-                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-2 flex flex-col items-center justify-center transition-all duration-300 hover:border-[#6750A4] hover:bg-gray-50/80"
+                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-2 flex flex-col items-center justify-center transition-all duration-300 hover:border-secondary hover:bg-gray-50/80"
                   style={{ height: "130px" }}
                 >
                   <input
@@ -865,7 +865,7 @@ export default function SubCategoryManagement() {
                         <img
                           src={formData.iconPreview}
                           alt="Preview"
-                          className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-[#6750A4]/20"
+                          className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-secondary/20"
                         />
                         <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
                           <span className="text-white text-[10px] font-medium">
@@ -909,9 +909,9 @@ export default function SubCategoryManagement() {
                       htmlFor="subcategory-icon-upload"
                       className="flex flex-col items-center justify-center cursor-pointer w-full h-full transition-all duration-200 hover:scale-102"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6750A4]/10 to-[#6750A4]/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
                         <svg
-                          className="w-5 h-5 text-[#6750A4]"
+                          className="w-5 h-5 text-secondary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -943,7 +943,7 @@ export default function SubCategoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 resize-none min-h-[44px]"
+                  className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 resize-none min-h-[44px]"
                   style={{ height: "130px" }}
                 />
               </div>
@@ -958,7 +958,7 @@ export default function SubCategoryManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, is_active: e.target.checked })
                 }
-                className="h-5 w-5 text-[#6750A4] focus:ring-[#6750A4] focus:ring-2 border-gray-300 rounded cursor-pointer transition-all"
+                className="h-5 w-5 text-secondary focus:ring-secondary focus:ring-2 border-gray-300 rounded cursor-pointer transition-all"
               />
               <label
                 htmlFor="is_active"

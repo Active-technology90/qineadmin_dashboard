@@ -49,7 +49,7 @@ const FormInput: React.FC<FormInputProps> = ({
       <div
         className={`relative rounded-xl transition-all duration-200 ${
           focused
-            ? "ring-2 ring-[#6750A4]/30 border-[#6750A4]"
+            ? "ring-2 ring-secondary/30 border-secondary"
             : "border-gray-200"
         } ${error ? "border-red-300 ring-red-100" : ""}`}
       >
@@ -75,14 +75,14 @@ const FormInput: React.FC<FormInputProps> = ({
           } ${
             error
               ? "border-red-300 focus:border-red-500"
-              : "border-gray-200 focus:border-[#6750A4]"
+              : "border-gray-200 focus:border-secondary"
           } text-gray-900 placeholder-gray-400`}
         />
         <label
           htmlFor={id}
           className={`absolute left-3 transition-all duration-200 pointer-events-none px-1 bg-white/80 backdrop-blur-sm text-xs xs:text-sm ${
             focused || hasValue
-              ? "text-[10px] xs:text-xs -top-2.5 text-[#6750A4]"
+              ? "text-[10px] xs:text-xs -top-2.5 text-secondary"
               : "text-xs xs:text-sm top-1/2 -translate-y-1/2 text-gray-500"
           } ${icon ? "left-8 xs:left-10" : "left-3"}`}
         >
@@ -126,8 +126,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 xs:h-6 w-9 xs:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 ${
-          checked ? "bg-[#6750A4]" : "bg-gray-300"
+        className={`relative inline-flex h-5 xs:h-6 w-9 xs:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+          checked ? "bg-secondary" : "bg-gray-300"
         }`}
       >
         <span
@@ -183,7 +183,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 //         onHoverEnd={() => setIsHovering(false)}
 //         onClick={() => fileInputRef.current?.click()}
 //       >
-//         <div className="h-20 w-20 rounded-full bg-[#6750A4] flex items-center justify-center overflow-hidden shadow-lg">
+//         <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shadow-lg">
 //           {preview ? (
 //             <img
 //               src={preview}
@@ -214,7 +214,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 //       <button
 //         type="button"
 //         onClick={() => fileInputRef.current?.click()}
-//         className="text-xs text-[#6750A4] hover:underline"
+//         className="text-xs text-secondary hover:underline"
 //       >
 //         Change photo
 //       </button>
@@ -279,7 +279,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     "px-4 xs:px-5 py-2 xs:py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 text-xs xs:text-sm sm:text-base";
   const variants = {
     primary:
-      "bg-[#6750A4] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0",
+      "bg-secondary text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0",
     secondary:
       "bg-white/80 backdrop-blur-sm border border-gray-300 text-gray-700 hover:bg-white",
   };
@@ -430,7 +430,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-[#6750A4] py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
+              <div className="sticky top-0 z-10 bg-secondary py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
                 <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6">
                   <div>
                     <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-white">

@@ -235,8 +235,8 @@ export default function LocationPickerModal({
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50/50 via-white to-indigo-50/50 shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="p-2.5 bg-gradient-to-br from-[#6750A4]/15 to-[#8B6BB5]/15 rounded-2xl shadow-inner shrink-0">
-              <MapPin className="h-5 w-5 text-[#6750A4]" />
+            <div className="p-2.5 bg-gradient-to-br from-secondary/15 to-secondary-light/15 rounded-2xl shadow-inner shrink-0">
+              <MapPin className="h-5 w-5 text-secondary" />
             </div>
             <div className="min-w-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight truncate">
@@ -293,7 +293,7 @@ border-gray-100
           >
             {!leafletLoaded ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 gap-3">
-                <Loader2 className="h-8 w-8 text-[#6750A4] animate-spin" />
+                <Loader2 className="h-8 w-8 text-secondary animate-spin" />
                 <p className="text-xs text-gray-500 font-medium">
                   Initializing Map Engine...
                 </p>
@@ -312,9 +312,9 @@ border-gray-100
                 className="absolute top-4 left-4 z-10 bg-white hover:bg-gray-50 text-gray-800 p-3 rounded-2xl shadow-lg border border-gray-100 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 font-bold text-xs max-w-[calc(100%-32px)]"
               >
                 {detecting ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-[#6750A4]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-secondary" />
                 ) : (
-                  <Navigation className="h-4 w-4 text-[#6750A4]" />
+                  <Navigation className="h-4 w-4 text-secondary" />
                 )}
                 <span className="truncate">
                   {detecting ? "Locating..." : "Use My GPS Location"}
@@ -334,13 +334,13 @@ border-gray-100
                   placeholder="Search address or area..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all bg-white shadow-sm"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all bg-white shadow-sm"
                 />
                 <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-gray-400" />
                 <button
                   type="submit"
                   disabled={searching}
-                  className="absolute right-2.5 top-2 p-1.5 bg-gray-100 hover:bg-[#6750A4] text-gray-500 hover:text-white rounded-lg transition-all"
+                  className="absolute right-2.5 top-2 p-1.5 bg-gray-100 hover:bg-secondary text-gray-500 hover:text-white rounded-lg transition-all"
                 >
                   {searching ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -352,7 +352,7 @@ border-gray-100
 
               {/* Coordinates Card */}
               <div className="bg-gradient-to-br from-purple-50/60 to-indigo-50/60 p-4 rounded-2xl border border-purple-100/50 space-y-3 shadow-inner">
-                <h4 className="text-[10px] sm:text-xs text-[#6750A4] font-bold uppercase tracking-wider">
+                <h4 className="text-[10px] sm:text-xs text-secondary font-bold uppercase tracking-wider">
                   Target Coordinates
                 </h4>
 
@@ -406,7 +406,7 @@ border-gray-100
               <button
                 type="button"
                 onClick={handleSave}
-                className="flex-1 py-3 bg-[#6750A4] hover:bg-[#5b4694] text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 bg-secondary hover:bg-[#5b4694] text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 <Check className="h-4 w-4" />
                 Apply Location

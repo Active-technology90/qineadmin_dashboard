@@ -73,7 +73,7 @@ function Header({
         </button>
       )}
       <div>
-        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-[#6750A4] to-[#8B5CF6] bg-clip-text text-transparent">
+        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-secondary to-[#8B5CF6] bg-clip-text text-transparent">
           {title}
         </h2>
         {subtitle && (
@@ -98,7 +98,7 @@ function SearchInput({
     <div className="relative">
       <Search
         className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 transition-colors ${
-          isFocused ? 'text-[#6750A4]' : 'text-gray-400'
+          isFocused ? 'text-secondary' : 'text-gray-400'
         }`}
       />
       <input
@@ -110,7 +110,7 @@ function SearchInput({
         placeholder={placeholder}
         className="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border bg-gray-50/90 backdrop-blur-sm text-sm sm:text-base
           transition-all duration-200 outline-none
-          focus:bg-white focus:border-[#6750A4]/60 focus:ring-4 focus:ring-[#6750A4]/10
+          focus:bg-white focus:border-secondary/60 focus:ring-4 focus:ring-secondary/10
           hover:border-gray-300 placeholder-gray-400"
         aria-label="Search companies"
       />
@@ -194,16 +194,16 @@ function CompanyGridCard({
       className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
         border border-gray-200 bg-white/80 backdrop-blur-sm text-center
         transition-all duration-300 ease-out
-        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
-        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
+        hover:border-secondary/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-secondary/20
         active:scale-[0.98]"
     >
       {/* Logo / Icon */}
       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
         border border-gray-200 bg-gray-50 overflow-hidden
-        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
+        group-hover:border-secondary/40 group-hover:shadow-md transition-all duration-300">
         {showIcon ? (
-          <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
+          <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-secondary" />
         ) : (
           <img
             src={logoUrl}
@@ -249,14 +249,14 @@ function ProductCard({
       className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
         border border-gray-200 bg-white/80 backdrop-blur-sm text-center
         transition-all duration-300 ease-out
-        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
-        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
+        hover:border-secondary/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-secondary/20
         active:scale-[0.98]"
     >
       {/* Product Image */}
       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
         border border-gray-200 bg-gray-50 overflow-hidden
-        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
+        group-hover:border-secondary/40 group-hover:shadow-md transition-all duration-300">
         {product.primary_image ? (
           <img
             src={product.primary_image}
@@ -264,7 +264,7 @@ function ProductCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <Package className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
+          <Package className="h-6 w-6 sm:h-7 sm:w-7 text-secondary" />
         )}
       </div>
 
@@ -276,7 +276,7 @@ function ProductCard({
         <p className="text-xs text-gray-500 truncate mt-0.5">
           {product.company_name || product.company}
         </p>
-        <p className="text-xs sm:text-sm font-bold text-[#6750A4] mt-1">
+        <p className="text-xs sm:text-sm font-bold text-secondary mt-1">
           {Number(product.price).toLocaleString()} ETB
         </p>
       </div>
@@ -396,7 +396,7 @@ export function CompanySelector({
               {filteredCompanies.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mb-4 mt-2">
-                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
                     <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                       Companies ({filteredCompanies.length})
                     </h3>
@@ -421,7 +421,7 @@ export function CompanySelector({
               {!disableProductSearch && productResults.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mb-4 mt-2">
-                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
                     <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                       Products ({productResults.length})
                     </h3>
@@ -455,7 +455,7 @@ export function CompanySelector({
           {!isLoading && !searchingProducts && !searchTerm && (
             <>
               <div className="flex items-center gap-2 mb-4 mt-2">
-                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
                 <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                   All Companies
                 </h3>

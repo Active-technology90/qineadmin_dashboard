@@ -271,9 +271,9 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                 relative transition-all duration-300
                 ${
                   active
-                    ? "w-10 bg-[#6750A4]"
+                    ? "w-10 bg-secondary"
                     : completed
-                      ? "w-3 bg-[#6750A4]/40"
+                      ? "w-3 bg-secondary/40"
                       : "w-3 bg-gray-300"
                 }
                 h-3 rounded-full
@@ -329,11 +329,11 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           `}
         >
           {/* HEADER */}
-          <div className="sticky top-0 z-20 bg-[#6750A4]/30 backdrop-blur-xl border-b border-[#6750A4]/30">
+          <div className="sticky top-0 z-20 bg-secondary/30 backdrop-blur-xl border-b border-secondary/30">
             <div className="px-4 sm:px-6 md:px-7 pt-2 pb-2">
               <div className="flex items-start justify-between">
                 <div className="pr-4 min-w-0 flex-1">
-                  <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-[#6750A4] bg-[#6750A4]/10 px-2 py-0.5 rounded-full mb-1.5 uppercase tracking-wide">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full mb-1.5 uppercase tracking-wide">
                     Step {currentStep + 1} of {steps.length}
                   </div>
 
@@ -374,7 +374,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
               <div
                 className="
                   h-full rounded-full
-                  bg-gradient-to-r from-[#6750A4] to-[#8B5CF6]
+                  bg-gradient-to-r from-secondary to-[#8B5CF6]
                   transition-all duration-500 ease-out
                 "
                 style={{ width: `${progress}%` }}
@@ -437,13 +437,13 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     disabled={isValidating}
                     className="
                       px-5 h-10 min-h-10 rounded-xl
-                      bg-[#6750A4]
+                      bg-secondary
                       hover:bg-[#5B4294]
                       text-white font-medium text-sm
                       transition-all duration-200
                       disabled:opacity-50
                       flex items-center justify-center gap-1.5
-                      shadow-md shadow-[#6750A4]/20
+                      shadow-md shadow-secondary/20
                     "
                   >
                     {isValidating && (
@@ -458,13 +458,13 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
                     disabled={submitting || isValidating}
                     className="
                       px-5 h-10 min-h-10 rounded-xl
-                      bg-[#6750A4]
+                      bg-secondary
                       hover:bg-[#5B4294]
                       text-white font-medium text-sm
                       transition-all duration-200
                       disabled:opacity-50
                       flex items-center justify-center gap-1.5
-                      shadow-md shadow-[#6750A4]/20
+                      shadow-md shadow-secondary/20
                     "
                   >
                     {submitting ? (

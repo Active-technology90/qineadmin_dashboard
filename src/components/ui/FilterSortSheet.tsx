@@ -46,7 +46,7 @@ const FilterSortSheet: React.FC<FilterSortSheetProps> = ({
         </button>
         <button
           onClick={onApply}
-          className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+          className="flex-1 h-12 rounded-2xl bg-secondary text-sm font-semibold text-white shadow-lg shadow-secondary/20 active:scale-[0.98] transition-all"
         >
           Apply Filters
         </button>

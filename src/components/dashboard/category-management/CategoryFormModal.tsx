@@ -61,10 +61,10 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px] ${
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 min-h-[44px] ${
                 formErrors.name
                   ? "border-red-500 bg-red-50 focus:border-red-500"
-                  : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                  : "border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
               }`}
               required
             />
@@ -88,7 +88,7 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name_am: e.target.value })
               }
-              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
             />
           </div>
         </div>
@@ -108,10 +108,10 @@ export default function CategoryFormModal({
                 setFormData({ ...formData, slug: e.target.value })
               }
               disabled={!!editingId}
-              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px] ${
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/20 min-h-[44px] ${
                 formErrors.slug
                   ? "border-red-500 bg-red-50 focus:border-red-500"
-                  : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                  : "border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
               } ${editingId ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
             />
             {formErrors.slug && (
@@ -134,7 +134,7 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, code: e.target.value })
               }
-              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
             />
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function CategoryFormModal({
                 order: parseInt(e.target.value) || 0,
               })
             }
-            className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 min-h-[44px]"
+            className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 min-h-[44px]"
           />
           {formErrors.order && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1.5">
@@ -187,7 +187,7 @@ export default function CategoryFormModal({
               Category Icon
             </label>
             <div
-              className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-2 flex flex-col items-center justify-center transition-all duration-300 hover:border-[#6750A4] hover:bg-gray-50/80"
+              className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-2 flex flex-col items-center justify-center transition-all duration-300 hover:border-secondary hover:bg-gray-50/80"
               style={{ height: "130px" }}
             >
               <input
@@ -216,7 +216,7 @@ export default function CategoryFormModal({
                     <img
                       src={formData.iconPreview}
                       alt="Preview"
-                      className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-[#6750A4]/20"
+                      className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-secondary/20"
                     />
                     <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-white text-[10px] font-medium">
@@ -260,9 +260,9 @@ export default function CategoryFormModal({
                   htmlFor="category-icon-upload"
                   className="flex flex-col items-center justify-center cursor-pointer w-full h-full transition-all duration-200 hover:scale-102"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6750A4]/10 to-[#6750A4]/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
                     <svg
-                      className="w-5 h-5 text-[#6750A4]"
+                      className="w-5 h-5 text-secondary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -297,7 +297,7 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 resize-none min-h-[44px]"
+              className="w-full border-2 border-gray-200 bg-gray-50/80 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 resize-none min-h-[44px]"
               style={{ height: "130px" }}
             />
           </div>
@@ -318,7 +318,7 @@ export default function CategoryFormModal({
                       is_active: e.target.checked,
                     })
                   }
-                  className="h-5 w-5 text-[#6750A4] focus:ring-[#6750A4] focus:ring-2 border-gray-300 rounded cursor-pointer transition-all"
+                  className="h-5 w-5 text-secondary focus:ring-secondary focus:ring-2 border-gray-300 rounded cursor-pointer transition-all"
                 />
               </div>
               <label

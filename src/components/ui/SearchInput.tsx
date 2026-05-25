@@ -113,7 +113,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             text-sm
             transition-all duration-200
 
-            focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4]
+            focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
             disabled:bg-gray-100 disabled:cursor-not-allowed
           `}
         />
@@ -122,7 +122,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-secondary"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
