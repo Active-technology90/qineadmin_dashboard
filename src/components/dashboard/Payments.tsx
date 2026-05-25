@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Download, Loader2, RefreshCw, X } from "lucide-react";
+import { Search, Download, Loader2, RefreshCw, X, Building2 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
 import { Pagination } from "../ui/Pagination";
@@ -10,6 +10,8 @@ import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../hooks/useCompaniesList";
 import { CompanySelector } from "./company-products/CompanySelector";
 import type { VendorOrder } from "../../types";
+import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
+import { SearchInput } from "../ui/SearchInput";
 
 interface Payout {
   id: number;
@@ -62,6 +64,23 @@ export default function Payments() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { toast, showToast } = useToast();
+    const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
+    // Options for Page Size dropdown
+  const pageSizeOptions: SelectOption[] = [
+    { value: "5", label: "5 / page" },
+    { value: "10", label: "10 / page" },
+    { value: "15", label: "15 / page" },
+    { value: "30", label: "30 / page" },
+    { value: "60", label: "60 / page" },
+  ];
+
+  // Active filter count for mobile filter badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchTerm) count++;
+    if (statusFilter) count++;
+    return count;
+  }, [searchTerm, statusFilter]);
 
   const fetchPayouts = async () => {
     setLoading(true);
@@ -162,34 +181,32 @@ export default function Payments() {
       <Toast toast={toast} />
 
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div className="flex flex-row items-center justify-between gap-3 mb-4">
         <div>
-          {/* <h2 className="text-xl font-bold text-[#6750A4]">
-            {isAllPayouts ? "All Payouts" : `Payouts – ${companyName}`}
-          </h2> */}
-          <p className=" text-xl font-bold text-[#6750A4] mt-1">
+          <p className="text-xs sm:text-base font-bold text-[#6750A4]">
             {isAllPayouts
               ? "Showing payouts across all companies"
               : `Payouts for ${companyName}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-
           {isSuperAdmin && (
             <button
               onClick={() => setIsCompanySelectorOpen(true)}
-              className="px-4 py-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+              className="px-2 sm:px-3 py-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition"
             >
-              <RefreshCw className="h-4 w-4" /> Select Company
+              <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> 
+              <span className="hidden xs:inline">Select Company</span>
+              <span className="inline xs:hidden">Select</span>
             </button>
           )}
           {isSuperAdmin && companySlug && (
             <button
               onClick={() => clearCompany()}
-              className="px p-2 rounded-full border text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
+              className="p-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+              aria-label="Clear company"
             >
-              <X className="h-4 w-4" />
-              {/* Clear Company */}
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           )}
         </div>
@@ -216,9 +233,40 @@ export default function Payments() {
           </div>
         </div>
       )}
+            {/* Mobile Search + Filter Row - MOBILE ONLY */}
+      <div className="mb-4 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex-[2]">
+            <SearchInput
+              value={searchTerm}
+              onChange={(val) => {
+                setSearchTerm(val);
+                setCurrentPage(1);
+              }}
+              placeholder="Search by company or status..."
+              loading={loading}
+              showMobileFilter={true}
+              onMobileFilterClick={() => setShowMobileFilterModal(true)}
+              activeFilterCount={activeFilterCount}
+            />
+          </div>
+          <div className="flex-1">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => {
+                setPageSize(Number(val));
+                setCurrentPage(1);
+              }}
+              options={pageSizeOptions}
+              placeholder="5"
+            />
+          </div>
+        </div>
+      </div>
 
-      {/* Table Controls */}
-      <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+       {/* Table Controls - DESKTOP ONLY (hidden on mobile) */}
+      <div className="hidden lg:block">
+        <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
           <div className="flex-1">
             <div className="relative">
@@ -266,114 +314,150 @@ export default function Payments() {
             </button>
           )}
         </div>
-      </TableControls>
+        </TableControls>
+      </div>
 
       {/* Payouts Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
+        <table className="min-w-[800px] lg:min-w-full divide-y divide-gray-200">
+          <thead className="sticky top-0 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm z-10 shadow-sm">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company Order ID
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Order ID
+                </span>
               </th>
               {isAllPayouts && (
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
+                <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Company
+                  </span>
                 </th>
               )}
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Gross (ETB)
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Gross (ETB)
+                </span>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Platform Fee
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Platform Fee
+                </span>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Net (ETB)
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Net (ETB)
+                </span>
               </th>
-               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-               payment Status
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Status
+                </span>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Payment Method
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Payment Method
+                </span>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Payout Date
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Payout Date</span>
+                </div>
               </th>
-              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Actions
+                </span>
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-100 bg-white">
             {loading ? (
               <tr>
-                <td colSpan={8} className="text-center py-12">
+                <td colSpan={9} className="text-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto" />
                   <p className="mt-2 text-gray-500">Loading payouts...</p>
                 </td>
-              </tr>
+               </tr>
             ) : paginatedPayouts.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-gray-500">
+                <td colSpan={9} className="text-center py-12 text-gray-500">
                   No payouts found
                 </td>
-              </tr>
+               </tr>
             ) : (
               paginatedPayouts.map((payout) => (
-                <tr key={payout.id} className="hover:bg-gray-50 transition">
-                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {payout.vendor_order}
+                <tr key={payout.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-indigo-600 truncate max-w-[80px] sm:max-w-none">
+                    #{payout.vendor_order}
                   </td>
-                      {isAllPayouts && (
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      {payout.company_logo ? (
-                        <img
-                          src={payout.company_logo}
-                          alt={payout.company_name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-gray-200 rounded-full" />
-                      )}
-                      <span>{payout.company_name}</span>
-                    </div>
-                  </td>
-                    )}
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                  {isAllPayouts && (
+                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        {payout.company_logo ? (
+                          <img
+                            src={payout.company_logo}
+                            alt={payout.company_name}
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                            <Building2 className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                          </div>
+                        )}
+                        <span className="text-[10px] sm:text-sm font-medium text-gray-700 truncate max-w-[100px] sm:max-w-none">
+                          {payout.company_name}
+                        </span>
+                      </div>
+                     </td>
+                  )}
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                     {Number(payout.gross_amount).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-600">
                     {Number(payout.platform_fee).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                     {Number(payout.net_amount).toLocaleString()}
-                  </td>
-
-                  <td className="px-3 py-2 whitespace-nowrap">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payout.status)}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(payout.status)}`}
                     >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
                       {payout.status}
                     </span>
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-600">
                     {payout?.vendor_order_details?.payment_method?.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || 'N/A'}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap">
                     {new Date(payout.scheduled_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
+                    </td>
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-right">
                     <button
                       type="button"
                       onClick={() => handleDownloadReceipt(payout.id)}
-                      className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
                       title="Download receipt"
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Receipt</span>
                     </button>
-                  </td>
-                </tr>
+                    </td>
+                 </tr>
               ))
             )}
           </tbody>
@@ -386,6 +470,74 @@ export default function Payments() {
           totalPages={totalPages}
           onPageChange={goToPage}
         />
+      )}
+
+      {/* Mobile Filter Modal - Bottom Sheet */}
+      {showMobileFilterModal && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setShowMobileFilterModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
+              <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
+              <button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Status
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                >
+                  <option value="">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("");
+                      setCurrentPage(1);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMobileFilterModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -7,6 +7,8 @@ import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { OrderDetailModal } from "./OrderDetailModal";
 import { OrderFilters } from "./OrderFilters";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { SearchInput } from "../../ui/SearchInput";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -98,6 +100,41 @@ export default function Orders() {
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+    // Options for Payment Status dropdown
+  const paymentStatusOptions: SelectOption[] = [
+    { value: "", label: "All Payment Statuses" },
+    { value: "Paid", label: "Paid" },
+    { value: "Verifying Receipt", label: "Verifying Receipt" },
+    { value: "Pay on Delivery", label: "Pay on Delivery" },
+    { value: "Checkout Initiated", label: "Checkout Initiated" },
+    { value: "Awaiting Bank Transfer", label: "Awaiting Bank Transfer" },
+  ];
+
+  // Options for Fulfillment Type dropdown
+  const fulfillmentTypeOptions: SelectOption[] = [
+    { value: "", label: "All Fulfillment Types" },
+    { value: "delivery", label: "Delivery" },
+    { value: "pickup", label: "Pickup" },
+  ];
+
+  // Options for Page Size dropdown
+  const pageSizeOptions: SelectOption[] = [
+    { value: "5", label: "5 / page" },
+    { value: "10", label: "10 / page" },
+    { value: "15", label: "15 / page" },
+    { value: "30", label: "30 / page" },
+    { value: "60", label: "60 / page" },
+  ];
+    // Active filter count for mobile filter badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchTerm) count++;
+    if (statusFilter) count++;
+    if (deliveryStatusFilter) count++;
+    if (paymentStatusFilter) count++;
+    if (fulfillmentTypeFilter) count++;
+    return count;
+  }, [searchTerm, statusFilter, deliveryStatusFilter, paymentStatusFilter, fulfillmentTypeFilter]);
 
   // Helper: get aggregated delivery status for a master order
   const getOrderDeliveryStatus = (order: MasterOrder): string => {
@@ -211,17 +248,44 @@ export default function Orders() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <Toast toast={toast} />
 
-      {/* Header with title and mobile filter button */}
+      {/* Header with title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight">All Master Orders</h2>
+<h2 className="text-base sm:text-2xl font-extrabold text-secondary tracking-tight">All Master Orders</h2>
           <p className="text-xs sm:text-sm text-secondary mt-0.5">Manage and track all customer orders</p>
         </div>
-
       </div>
 
-      {/* Filters row */}
-      <div className={`${showMobileFilters ? 'block' : 'hidden lg:block'} mb-6`}>
+      {/* Search Bar with Mobile Filter Button Inside - HIDDEN ON DESKTOP, VISIBLE ON MOBILE */}
+      <div className="mb-4 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by order ID, customer name, phone, or address..."
+              loading={loading}
+              showMobileFilter={true}
+              onMobileFilterClick={() => setShowMobileFilterModal(true)}
+              activeFilterCount={activeFilterCount}
+            />
+          </div>
+          <div className="w-24 flex-shrink-0">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => {
+                setPageSize(Number(val));
+                setCurrentPage(1);
+              }}
+              options={pageSizeOptions}
+              placeholder="5"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters row - visible on desktop, hidden on mobile (filter button opens modal) */}
+      <div className="hidden lg:block mb-6">
         <OrderFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -362,27 +426,6 @@ export default function Orders() {
       {/* Detail Modal */}
       <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
 
-      {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
-      <button
-        onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
-      >
-        <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-          )}
-        </div>
-        <span className="text-sm font-bold tracking-wide text-[#6750A4]">Filter</span>
-        {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
-            Active
-          </span>
-        )}
-      </button>
-
       {/* Mobile Filter Modal - Bottom Sheet */}
       {showMobileFilterModal && (
         <div
@@ -410,40 +453,19 @@ export default function Orders() {
 
             {/* Content */}
             <div className="p-4 space-y-4">
-              {/* Search */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Search
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by order ID, customer name, phone, or address..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                  />
-                </div>
-              </div>
+
 
               {/* Payment Status Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Payment Status
                 </label>
-                <select
+                <CustomSelect
                   value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                >
-                  <option value="">All Payment Statuses</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Verifying Receipt">Verifying Receipt</option>
-                  <option value="Pay on Delivery">Pay on Delivery</option>
-                  <option value="Checkout Initiated">Checkout Initiated</option>
-                  <option value="Awaiting Bank Transfer">Awaiting Bank Transfer</option>
-                </select>
+                  onChange={setPaymentStatusFilter}
+                  options={paymentStatusOptions}
+                  placeholder="All Payment Statuses"
+                />
               </div>
 
               {/* Fulfillment Type Filter */}
@@ -451,37 +473,15 @@ export default function Orders() {
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Fulfillment Type
                 </label>
-                <select
+                <CustomSelect
                   value={fulfillmentTypeFilter}
-                  onChange={(e) => setFulfillmentTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                >
-                  <option value="">All Fulfillment Types</option>
-                  <option value="delivery">Delivery</option>
-                  <option value="pickup">Pickup</option>
-                </select>
+                  onChange={setFulfillmentTypeFilter}
+                  options={fulfillmentTypeOptions}
+                  placeholder="All Fulfillment Types"
+                />
               </div>
 
-              {/* Page Size */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Items per page
-                </label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                >
-                  <option value={5}>5 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={15}>15 / page</option>
-                  <option value={30}>30 / page</option>
-                  <option value={60}>60 / page</option>
-                </select>
-              </div>
+
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2">

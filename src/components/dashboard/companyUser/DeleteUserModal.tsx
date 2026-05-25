@@ -26,8 +26,8 @@ export function DeleteUserModal({
             <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-        <div className="p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="p-4 sm:p-5 pb-2 sm:pb-2">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
               <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
             </div>
@@ -40,12 +40,17 @@ export function DeleteUserModal({
             </div>
           </div>
         </div>
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-5 bg-gray-50 rounded-b-xl sm:rounded-b-2xl">
-          <button onClick={onClose} className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base w-full sm:w-auto order-2 sm:order-1">Cancel</button>
+        <div className="flex flex-row justify-end gap-3 p-3 sm:p-4 bg-gray-50 rounded-b-xl sm:rounded-b-2xl">
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
+          >
+            Cancel
+          </button>
           <button
             onClick={onConfirm}
             disabled={deleting}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto order-1 sm:order-2"
+            className="px-4 py-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {deleting ? "Removing..." : "Remove User"}
           </button>

@@ -28,6 +28,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = options.find((o) => o.value === value);
+    // Log when selected changes (for debugging)
+  useEffect(() => {
+    if (selected) {
+      console.log('CustomSelect - Displaying:', selected.label);
+    }
+  }, [selected, value]);
 
   // ✅ close on outside click (optimized)
   useEffect(() => {
@@ -57,28 +63,33 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       
       {/* TRIGGER */}
       <button
+        key={value}
         type="button"
         onClick={() => setOpen((p) => !p)}
         className="
           w-full flex items-center justify-between
-          px-4 py-2.5 rounded-xl
+          px-3 py-1 rounded-full
           border border-gray-200
-          bg-white
-          hover:bg-gray-50
+          bg-gray-50
+          hover:bg-white hover:border-[#6750A4] hover:shadow-sm
+          focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 focus:border-[#6750A4]
           transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-purple-500/20
           active:scale-[0.99]
         "
       >
         <div className="flex items-center gap-2 text-sm text-gray-700 truncate">
           {selected?.icon}
-          <span className="truncate">
-            {selected?.label || placeholder}
+          <span key={value} className="truncate">
+            {(() => {
+              const displayText = selected?.label || placeholder;
+              console.log("🔵 CustomSelect rendering - value:", value, "displayText:", displayText);
+              return displayText;
+            })()}
           </span>
         </div>
 
         <ChevronDown
-          className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -88,13 +99,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {open && (
         <div
           className="
-            absolute z-50 mt-2 w-full
+            absolute z-50 mt-1 w-full
             bg-white
             border border-gray-200
             rounded-xl
             shadow-xl
             overflow-hidden
-            animate-in fade-in zoom-in-95
+            origin-top
+            animate-in slide-in-from-top-2 fade-in duration-200
           "
         >
           {/* SCROLL CONTAINER (LIMIT HEIGHT) */}
@@ -116,13 +128,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   }}
                   className={`
                     w-full flex items-center gap-2
-                    px-4 py-2.5 text-sm
+                    px-3 py-1.5 text-sm
                     transition-all duration-150
-                    hover:bg-purple-50
+                    hover:bg-[#6750A4]/10 hover:pl-4
                     text-left
                     ${
                       value === opt.value
-                        ? "bg-purple-50 text-purple-700 font-medium"
+                        ? "bg-[#6750A4]/10 text-[#6750A4] font-semibold"
                         : "text-gray-700"
                     }
                   `}
