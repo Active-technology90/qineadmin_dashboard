@@ -7,59 +7,10 @@ import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { OrderDetailModal } from "./OrderDetailModal";
 import { OrderFilters } from "./OrderFilters";
-import { TableControls } from "../../ui/TableControls";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 // ---------- Premium UI Subcomponents ----------
-const StatusBadge = ({ status }: { status: string }) => {
-  // Updated labels according to requirements:
-  // - contacted → Confirmed (backend expects this key)
-  // - processing → Prepared
-  // - shipped → In Transit
-  // - fulfilled → Delivered (also handles "fullfilled" typo if present)
-  const statusLabels: Record<string, string> = {
-    pending: "Pending",
-    processing: "Prepared",           // changed
-    shipped: "In Transit",            // changed
-    delivered: "Delivered",
-    completed: "Completed",
-    cancelled: "Cancelled",
-    approved: "Approved",
-    rejected: "Rejected",
-    contacted: "Confirmed",           // new mapping
-    fulfilled: "Delivered",           // new mapping for "fulfilled"
-    fullfilled: "Delivered",          // handle possible typo
-  };
-
-  const colors: Record<string, string> = {
-    completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    approved: "bg-green-50 text-green-700 border-green-200",
-    paid: "bg-blue-50 text-blue-700 border-blue-200",
-    pending: "bg-amber-50 text-amber-700 border-amber-200",
-    processing: "bg-orange-50 text-orange-700 border-orange-200",
-    shipped: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    cancelled: "bg-red-50 text-red-700 border-red-200",
-    rejected: "bg-rose-50 text-rose-700 border-rose-200",
-    contacted: "bg-blue-50 text-blue-700 border-blue-200",  // added
-    fulfilled: "bg-emerald-50 text-emerald-700 border-emerald-200", // added
-    fullfilled: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  };
-
-  const normalized = status?.toLowerCase?.() || "";
-  const display = statusLabels[normalized] || normalized.replace(/_/g, " ");
-  const color = colors[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {display}
-    </span>
-  );
-};
 
 const PaymentStatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
@@ -78,37 +29,6 @@ const PaymentStatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const DeliveryStatusBadge = ({ status }: { status: string }) => {
-  // Updated delivery status labels:
-  // pending → Assigned
-  // out for delivery → In Transit
-  // delivered → Completed
-  const displayMap: Record<string, string> = {
-    pending: "Assigned",
-    out_for_delivery: "In Transit",
-    delivered: "Completed",
-    shipped: "In Transit",        
-    multiple: "Multiple",
-    
-  };
-
-  const colors: Record<string, string> = {
-    delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    shipped: "bg-blue-50 text-blue-700 border-blue-200",
-    out_for_delivery: "bg-violet-50 text-violet-700 border-violet-200",
-    pending: "bg-amber-50 text-amber-700 border-amber-200",
-    multiple: "bg-gray-300 text-gray-700 border-gray-300",
-  };
-  const normalized = status?.toLowerCase?.() || "n/a";
-  const display = displayMap[normalized] || normalized.replace(/_/g, " ");
-  const color = colors[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {display}
-    </span>
-  );
-};
 
 const OrderDate = ({ dateString }: { dateString?: string }) => {
   if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
@@ -183,7 +103,7 @@ export default function Orders() {
     const statuses = order.vendor_orders?.map(vo => vo.delivery_status).filter(s => !!s) || [];
     if (statuses.length === 0) return "N/A";
     const unique = [...new Set(statuses)];
-    if (unique.length === 1) return unique[0];
+    if (unique.length === 1) return unique[0] || "N/A";
     return "multiple";
   };
 
@@ -208,7 +128,8 @@ export default function Orders() {
         page_size: pageSize,
         status: status || undefined,
         ordering: "-created_at",
-      }, { signal: controller.signal });
+        signal: controller.signal
+      });
       if (!controller.signal.aborted) {
         setOrders(res.data.results);
       }
@@ -313,9 +234,7 @@ export default function Orders() {
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
-          onStatusChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
           deliveryStatusFilter={deliveryStatusFilter}
-          onDeliveryStatusChange={(val) => { setDeliveryStatusFilter(val); setCurrentPage(1); }}
           paymentStatusFilter={paymentStatusFilter}
           onPaymentStatusChange={(val) => { setPaymentStatusFilter(val); setCurrentPage(1); }}
           fulfillmentTypeFilter={fulfillmentTypeFilter}

@@ -1,14 +1,9 @@
-import { Search, Edit, Trash2, Loader2, User as UserIcon } from "lucide-react";
-import { TableControls } from "../../ui/TableControls";
+import { Edit, Trash2, Loader2, User as UserIcon } from "lucide-react";
 
 interface CompanyUsersTableProps {
   users: any[];
   loading: boolean;
-  search: string;
-  onSearchChange: (val: string) => void;
 
-  pageSize: number;
-  onPageSizeChange: (size: number) => void;
 
   onEdit: (user: any) => void;
   onDelete: (user: any) => void;
@@ -19,11 +14,7 @@ interface CompanyUsersTableProps {
 export function CompanyUsersTable({
   users,
   loading,
-  search,
-  onSearchChange,
 
-  pageSize,
-  onPageSizeChange,
 
   onEdit,
   onDelete,

@@ -49,15 +49,6 @@ const getStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
   const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
 
-  // Display text mapping (order status only)
-  let displayStatus = status;
-  if (s === "processing") displayStatus = "Prepared";
-  else if (s === "shipped") displayStatus = "In Transit";
-  else if (s === "fulfilled" || s === "fullfilled") displayStatus = "Delivered";
-  else if (s === "contacted") displayStatus = "Confirmed";
-  else if (s === "approved" || s === "accepted") displayStatus = "Approved";
-  else if (s === "rejected" || s === "cancelled") displayStatus = "Cancelled";
-  else displayStatus = status; // keep original for pending, completed, etc.
 
   // Color logic (unchanged)
   if (s === "completed" || s === "delivered")
@@ -86,11 +77,6 @@ const getDeliveryStatusBadge = (status: string) => {
   const s = status?.toLowerCase();
   const base = "px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ";
 
-  let displayStatus = status;
-  if (s === "pending") displayStatus = "Assigned";
-  else if (s === "out_for_delivery") displayStatus = "In Transit";
-  else if (s === "delivered") displayStatus = "Completed";
-  else displayStatus = status;
 
   // Color logic (reuse same colors as order status)
   if (s === "delivered")

@@ -8,10 +8,7 @@ import { Pagination } from '../../ui/Pagination';
 import { TableControls } from '../../ui/TableControls';
 import { SearchInput } from '../../ui/SearchInput';
 import { CustomSelect, type SelectOption } from '../../ui/CustomSelect';
-import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
-import MobileActionBar from "../../ui/MobileActionBar";
-import SortSheet from "../../ui/SortSheet";
-import FilterSortSheet from "../../ui/FilterSortSheet";
+import MobileCardSkeleton from '../../ui/MobileCardSkeleton';
 import type { Category } from '../../../types';
 
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
@@ -239,7 +236,7 @@ export default function CategoryTable({
           onEdit={readOnly ? undefined : onEdit}
           onDelete={readOnly ? undefined : onDelete}
           sortField={sortField}
-          sortOrder={sortOrder}
+          sortOrder={sortOrder as "asc" | "desc"}
           onSort={onSort}
         />
       </div>

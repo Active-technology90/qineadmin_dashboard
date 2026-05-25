@@ -551,7 +551,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                   loading={loading}
                   variant="primary"
                   type="submit"
-                  onClick={handleSubmit}
+                  onClick={handleSubmit as any}
                 >
                   <Save className="h-4 w-4" />
                   Save Changes

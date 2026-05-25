@@ -628,6 +628,7 @@ export default function CompanyUsers() {
           <>
             <CompanyUsersTable
               users={paginatedUsers}
+              loading={loading}
               currentUser={currentUser}
               isAdmin={canManageUsers}
               onEdit={(user) => setEditingUser({ ...user, user_id: user.id })}

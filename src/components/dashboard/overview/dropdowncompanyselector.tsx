@@ -14,7 +14,7 @@ export function CompanySelect({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const isAllCompanies = !company?.slug;
+
 
   /* Close on outside click */
   useEffect(() => {

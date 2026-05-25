@@ -461,7 +461,6 @@ export default function CategoryManagement() {
           setFormData={setFormData}
           formErrors={formErrors}
           editingId={editingId}
-          readOnly={readOnly}
         />
       )}
 

@@ -24,7 +24,6 @@ interface CategoryFormModalProps {
   setFormData: React.Dispatch<React.SetStateAction<CategoryFormData>>;
   formErrors: Record<string, string>;
   editingId: number | null;
-  readOnly: boolean;
 }
 
 export default function CategoryFormModal({
@@ -37,7 +36,6 @@ export default function CategoryFormModal({
   setFormData,
   formErrors,
   editingId,
-  readOnly,
 }: CategoryFormModalProps) {
   return (
     <FormModal

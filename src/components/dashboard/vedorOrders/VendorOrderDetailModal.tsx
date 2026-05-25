@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -27,7 +27,7 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
-  getDeliveries, // ADD THIS
+
   updateDeliveryPerson,
   prepareVendorOrder,
   confirmCODPayment,
@@ -461,7 +461,7 @@ const ReceiptReviewCard = ({
   companySlug,
   orderStatus,
 }: {
-  receipt?: OrderReceipt | null;
+  receipt?: any | null;
   paymentMethod?: string;
   onUpdate: () => void;
   readOnly: boolean;

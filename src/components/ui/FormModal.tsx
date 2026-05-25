@@ -1,7 +1,7 @@
 // src/components/ui/FormModal.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface FormModalProps {
   isOpen: boolean;
@@ -55,19 +55,19 @@ const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active:
   }, [active, containerRef]);
 };
 
-const backdropVariants = {
+const backdropVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.25 } },
   exit: { opacity: 0, transition: { duration: 0.2 } },
 };
 
-const modalVariants = {
+const modalVariants: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 12 },
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.25, ease: "easeOut" },
   },
   exit: {
     opacity: 0,

@@ -437,8 +437,8 @@ export default function CompanyManagement() {
           setFormData(newFormData);
           setOriginalFormData({
             ...newFormData,
-            logo: first.logo,
-            cover_image: first.cover_image,
+            logo: first.logo as any,
+            cover_image: first.cover_image as any,
           });
           if (first.logo) setLogoPreview(first.logo);
           if (first.cover_image) setCoverPreview(first.cover_image);
@@ -752,8 +752,8 @@ export default function CompanyManagement() {
       // Save original data for change detection (including original image URLs)
       setOriginalFormData({
         ...newFormData,
-        logo: company.logo,
-        cover_image: company.cover_image,
+        logo: company.logo as any,
+        cover_image: company.cover_image as any,
       });
       if (company.logo) setLogoPreview(company.logo);
       if (company.cover_image) setCoverPreview(company.cover_image);
@@ -1255,7 +1255,6 @@ export default function CompanyManagement() {
               businessTypeOptions={businessTypeOptions}
               categoryOptions={categoryOptions}
               subCategoryOptions={subCategoryOptions}
-              hasActiveFilters={hasActiveFilters}
               onClearAll={clearAllFilters}
             />
           </div>

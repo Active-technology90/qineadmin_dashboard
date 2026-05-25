@@ -1,5 +1,5 @@
 // src/components/admin/SuperAdminView.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Edit,
   Trash2,
@@ -41,7 +41,6 @@ interface SuperAdminViewProps {
   businessTypeOptions: string[];
   categoryOptions: string[];
   subCategoryOptions: string[];
-  hasActiveFilters: boolean;
   onClearAll: () => void;
 }
 
@@ -69,7 +68,6 @@ export default function SuperAdminView({
   businessTypeOptions,
   categoryOptions,
   subCategoryOptions,
-  hasActiveFilters,
   onClearAll,
 }: SuperAdminViewProps) {
   // ---- Mobile filter sheet ----

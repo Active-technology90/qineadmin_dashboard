@@ -18,7 +18,7 @@ import {
   Truck,
   Briefcase,
 } from "lucide-react";
-import type { User, Membership, UserRole } from "../../../types";
+import type { User, Membership } from "../../../types";
 
 // Extended User type for additional fields
 interface ExtendedUser extends User {

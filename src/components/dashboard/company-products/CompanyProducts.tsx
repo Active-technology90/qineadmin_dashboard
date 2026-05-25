@@ -12,7 +12,6 @@ import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
 // import { NoCompanyView } from './NoCompanyView';
-import { TableControls } from "../../ui/TableControls";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 
@@ -26,7 +25,7 @@ export default function CompanyProducts() {
   // Get logo from companies list (since CurrentCompany doesn't have logo)
   const companyLogo = useMemo(() => {
     if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: CompanyListItem) => c.slug === companySlug);
+    const foundCompany = companies.find((c: any) => c.slug === companySlug);
     return foundCompany?.logo || null;
   }, [companySlug, companies]);
 

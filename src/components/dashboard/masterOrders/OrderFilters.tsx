@@ -4,9 +4,9 @@ interface OrderFiltersProps {
   searchTerm: string;
   onSearchChange: (val: string) => void;
   statusFilter: string;
-  onStatusChange: (val: string) => void;
+  // onStatusChange: (val: string) => void;
   deliveryStatusFilter: string;
-  onDeliveryStatusChange: (val: string) => void;
+  // onDeliveryStatusChange: (val: string) => void;
   paymentStatusFilter: string;
   onPaymentStatusChange: (val: string) => void;
   fulfillmentTypeFilter: string;
@@ -23,9 +23,9 @@ export function OrderFilters({
   searchTerm,
   onSearchChange,
   statusFilter,
-  onStatusChange,
+  // onStatusChange,
   deliveryStatusFilter,
-  onDeliveryStatusChange,
+  // onDeliveryStatusChange,
   paymentStatusFilter,
   onPaymentStatusChange,
   fulfillmentTypeFilter,
@@ -44,26 +44,6 @@ export function OrderFilters({
     !!paymentStatusFilter ||
     !!fulfillmentTypeFilter;
 
-  // Order status: backend keys → frontend labels
-  const orderStatusLabels: Record<string, string> = {
-    pending: "Pending",
-    contacted: "Confirmed",
-    processing: "Prepared",
-    fulfilled: "Delivered",
-    shipped: "In Transit",
-    payment_rejected: "Payment Rejected",
-    cancelled: "Cancelled",
-  };
-
-  // Delivery status: backend keys → frontend labels
-  const deliveryStatusLabels: Record<string, string> = {
-    pending: "Assigned",
-    accepted: "Accepted",
-    picked_up: "Picked Up",
-    out_for_delivery: "In Transit",
-    delivered: "Completed",
-    failed: "Failed",
-  };
 
   const paymentStatusLabels: Record<string, string> = {
     Paid: "Paid",

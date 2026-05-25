@@ -1197,7 +1197,7 @@ const SuperAdminUsers: React.FC = () => {
             <TableControls
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
-              className="w-full"
+              // className="w-full"
             >
               <UserFilters
                 searchTerm={searchTerm}

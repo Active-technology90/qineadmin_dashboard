@@ -13,7 +13,7 @@ interface Order {
   amount: number;
   status: string;
   paymentStatus: string;
-  vendors: string;
+  vendors: string | number;
   date: string;
 }
 
