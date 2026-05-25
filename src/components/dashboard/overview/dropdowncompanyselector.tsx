@@ -14,8 +14,6 @@ export function CompanySelect({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-
-
   /* Close on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -38,7 +36,7 @@ export function CompanySelect({
 
   /* Filtered list */
   const filtered = scopeOptions.filter((opt: any) =>
-    opt.label.toLowerCase().includes(search.toLowerCase())
+    opt.label.toLowerCase().includes(search.toLowerCase()),
   );
 
   /* Reset active index when filter changes */
@@ -65,9 +63,7 @@ export function CompanySelect({
 
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((prev) =>
-        prev === 0 ? filtered.length - 1 : prev - 1
-      );
+      setActiveIndex((prev) => (prev === 0 ? filtered.length - 1 : prev - 1));
     }
 
     if (e.key === "Enter") {
@@ -85,8 +81,7 @@ export function CompanySelect({
   };
 
   /* Selected label resolver (Stripe style) */
-  const selectedLabel =
-    company?.label || company?.name || "All Companies";
+  const selectedLabel = company?.label || company?.name || "All Companies";
 
   const selectedLogo = company?.logo;
 
@@ -100,8 +95,8 @@ export function CompanySelect({
           w-full flex items-center justify-between gap-3
           px-4 py-3 bg-white border border-gray-200
           rounded-xl shadow-sm
-          hover:border-[#6750A4]/60 hover:shadow-md
-          focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20
+          hover:border-[#674FA3]/60 hover:shadow-md
+          focus:outline-none focus:ring-2 focus:ring-[#674FA3]/20
           transition-all
         "
       >
@@ -206,7 +201,7 @@ export function CompanySelect({
 
                     {/* Checkmark */}
                     {isSelected && (
-                      <Check className="w-4 h-4 text-[#6750A4] shrink-0" />
+                      <Check className="w-4 h-4 text-[#674FA3] shrink-0" />
                     )}
                   </div>
                 );

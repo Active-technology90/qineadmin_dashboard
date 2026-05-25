@@ -337,19 +337,18 @@ export default function CompanyUsers() {
           {/* Logo only shows for Super Admin */}
           {isSuperAdmin && (
             <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
-            {companyLogo ? (
-              <img
-                src={companyLogo}
-                alt={companyName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
-              </div>
-            )}
-          </div>
-
+              {companyLogo ? (
+                <img
+                  src={companyLogo}
+                  alt={companyName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                  <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
+                </div>
+              )}
+            </div>
           )}
           <div className="min-w-0">
             <h1 className="text-sm sm:text-2xl font-extrabold text-secondary leading-tight break-words">
@@ -431,18 +430,18 @@ export default function CompanyUsers() {
               setCurrentPage(1);
             }}
           >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-            {/* LEFT SIDE - SEARCH (Hidden on mobile) */}
-            <div className="hidden sm:flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
-              {/* SEARCH */}
-              <div className="relative w-full sm:w-[380px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  className="
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
+              {/* LEFT SIDE - SEARCH (Hidden on mobile) */}
+              <div className="hidden sm:flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+                {/* SEARCH */}
+                <div className="relative w-full sm:w-[380px]">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={tableSearch}
+                    onChange={(e) => setTableSearch(e.target.value)}
+                    className="
                     w-full h-11
                     pl-10 pr-10
                     rounded-xl
@@ -456,11 +455,11 @@ export default function CompanyUsers() {
                     focus:border-gray-300
                     transition-all
                   "
-                />
-                {tableSearch && (
-                  <button
-                    onClick={() => setTableSearch("")}
-                    className="
+                  />
+                  {tableSearch && (
+                    <button
+                      onClick={() => setTableSearch("")}
+                      className="
                       absolute right-2.5 top-1/2 -translate-y-1/2
                       h-6 w-6
                       rounded-md
@@ -469,29 +468,29 @@ export default function CompanyUsers() {
                       active:scale-95
                       transition
                     "
-                  >
-                    <X className="h-3.5 w-3.5 text-gray-500" />
-                  </button>
-                )}
+                    >
+                      <X className="h-3.5 w-3.5 text-gray-500" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            {/* RIGHT SIDE */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* ROLE FILTERS (Hidden on mobile) */}
-              <div className="hidden sm:block relative w-44">
-                <select
-                  value={roleFilter}
-                  onChange={(e) =>
-                    setRoleFilter(
-                      e.target.value as
-                        | "all"
-                        | "admin"
-                        | "staff"
-                        | "viewer"
-                        | "delivery"
-                    )
-                  }
-                  className="
+              {/* RIGHT SIDE */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* ROLE FILTERS (Hidden on mobile) */}
+                <div className="hidden sm:block relative w-44">
+                  <select
+                    value={roleFilter}
+                    onChange={(e) =>
+                      setRoleFilter(
+                        e.target.value as
+                          | "all"
+                          | "admin"
+                          | "staff"
+                          | "viewer"
+                          | "delivery",
+                      )
+                    }
+                    className="
                     w-full h-9 px-3 pr-8
                     rounded-xl
                     border border-gray-200
@@ -503,27 +502,35 @@ export default function CompanyUsers() {
                     focus:ring-2 focus:ring-gray-200
                     transition
                   "
-                >
-                  <option value="all">All</option>
-                  <option value="admin">Admin ({roleCounts.admin || 0})</option>
-                  <option value="staff">Staff ({roleCounts.staff || 0})</option>
-                  <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
-                  <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
-                </select>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <ChevronDown className="h-3 w-3" />
+                  >
+                    <option value="all">All</option>
+                    <option value="admin">
+                      Admin ({roleCounts.admin || 0})
+                    </option>
+                    <option value="staff">
+                      Staff ({roleCounts.staff || 0})
+                    </option>
+                    <option value="viewer">
+                      Viewer ({roleCounts.viewer || 0})
+                    </option>
+                    <option value="delivery">
+                      Delivery ({roleCounts.delivery || 0})
+                    </option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <ChevronDown className="h-3 w-3" />
+                  </div>
                 </div>
-              </div>
-              {/* DESKTOP: Buttons on right side (original layout) */}
-              <div className="hidden lg:flex items-center gap-2">
-                {canManageUsers && (
-                  <>
-                    <button
-                      onClick={() => setShowAddModal(true)}
-                      className="
+                {/* DESKTOP: Buttons on right side (original layout) */}
+                <div className="hidden lg:flex items-center gap-2">
+                  {canManageUsers && (
+                    <>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="
                         h-9 px-3.5
                         rounded-xl
-                        bg-[#6750A4]
+                        bg-[#674FA3]
                         text-white
                         text-xs font-medium
                         hover:bg-[#4c3789]
@@ -531,31 +538,31 @@ export default function CompanyUsers() {
                         flex items-center gap-1.5
                         shadow-sm
                       "
-                    >
-                      <UserPlus className="h-3.5 w-3.5" />
-                      Add Member
-                    </button>
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Add Member
+                      </button>
+                      <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="
                         h-9 px-3.5
                         rounded-xl
-                        border-2 border-[#6750A4]
+                        border-2 border-[#674FA3]
                         bg-white
-                        text-xs font-medium text-[#6750A4]
+                        text-xs font-medium text-[#674FA3]
                         hover:bg-secondary/5
                         transition-all
                         flex items-center gap-1.5
                       "
-                    >
-                      <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
-                      Create User
-                    </button>
-                  </>
-                )}
+                      >
+                        <UserPlus className="h-3.5 w-3.5 text-[#674FA3]" />
+                        Create User
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
           </TableControls>
         </div>
 
@@ -568,15 +575,15 @@ export default function CompanyUsers() {
                 className="
                   h-9 px-3.5
                   rounded-xl
-                  border-2 border-[#6750A4]
+                  border-2 border-[#674FA3]
                   bg-white
-                  text-xs font-medium text-[#6750A4]
+                  text-xs font-medium text-[#674FA3]
                   hover:bg-secondary/5
                   transition-all
                   flex items-center gap-1.5
                 "
               >
-                <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
+                <UserPlus className="h-3.5 w-3.5 text-[#674FA3]" />
                 Create User
               </button>
               <button
@@ -584,15 +591,15 @@ export default function CompanyUsers() {
                 className="
                   h-9 px-3.5
                   rounded-xl
-                  border-2 border-[#6750A4]
+                  border-2 border-[#674FA3]
                   bg-white
-                  text-xs font-medium text-[#6750A4]
+                  text-xs font-medium text-[#674FA3]
                   hover:bg-secondary/5
                   transition-all
                   flex items-center gap-1.5
                 "
               >
-                <UserPlus className="h-3.5 w-3.5 text-[#6750A4]" />
+                <UserPlus className="h-3.5 w-3.5 text-[#674FA3]" />
                 Add Member
               </button>
             </>
@@ -617,7 +624,7 @@ export default function CompanyUsers() {
             {canManageUsers && !tableSearch && roleFilter === "all" && (
               <button
                 onClick={() => setShowAddModal(true)}
-                className="mt-2 inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[#6750A4] text-white text-[10px] sm:text-xs font-medium hover:bg-[#4c3789] transition"
+                className="mt-2 inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[#674FA3] text-white text-[10px] sm:text-xs font-medium hover:bg-[#4c3789] transition"
               >
                 <UserPlus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 Add member
@@ -654,19 +661,31 @@ export default function CompanyUsers() {
       {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
       <button
         onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#674FA3] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
       >
         <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          <svg
+            className="w-5 h-5 text-[#674FA3]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
           </svg>
           {(tableSearch || roleFilter !== "all") && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
           )}
         </div>
-        <span className="text-sm font-semibold tracking-wide text-[#6750A4]">Filter</span>
+        <span className="text-sm font-semibold tracking-wide text-[#674FA3]">
+          Filter
+        </span>
         {(tableSearch || roleFilter !== "all") && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#674FA3]/10 text-[#674FA3] rounded-full">
             Active
           </span>
         )}
@@ -680,7 +699,7 @@ export default function CompanyUsers() {
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          
+
           {/* Bottom Sheet Content */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
@@ -710,7 +729,7 @@ export default function CompanyUsers() {
                     placeholder="Search users..."
                     value={tableSearch}
                     onChange={(e) => setTableSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -723,13 +742,17 @@ export default function CompanyUsers() {
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value as any)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="all">All Roles</option>
                   <option value="admin">Admin ({roleCounts.admin || 0})</option>
                   <option value="staff">Staff ({roleCounts.staff || 0})</option>
-                  <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
-                  <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
+                  <option value="viewer">
+                    Viewer ({roleCounts.viewer || 0})
+                  </option>
+                  <option value="delivery">
+                    Delivery ({roleCounts.delivery || 0})
+                  </option>
                 </select>
               </div>
 
@@ -744,7 +767,7 @@ export default function CompanyUsers() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value={5}>5 / page</option>
                   <option value={10}>10 / page</option>

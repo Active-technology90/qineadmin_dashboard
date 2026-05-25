@@ -20,30 +20,42 @@ const PaymentStatusBadge = ({ status }: { status: string }) => {
     cancelled: "bg-red-50 text-red-700 border-red-200",
   };
   const normalized = status?.toLowerCase?.() || "";
-  const color = colors[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
+  const color =
+    colors[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}
+    >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {status || "Unknown"}
     </span>
   );
 };
 
-
 const OrderDate = ({ dateString }: { dateString?: string }) => {
   if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
+  const isYesterday =
+    new Date(now.setDate(now.getDate() - 1)).toDateString() ===
+    date.toDateString();
 
-  const formatTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const formatDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatTime = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const formatDate = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-sm font-medium text-gray-900">
-        {isToday ? 'Today' : isYesterday ? 'Yesterday' : formatDate}
+        {isToday ? "Today" : isYesterday ? "Yesterday" : formatDate}
       </span>
       <span className="text-xs text-gray-500 font-mono">{formatTime}</span>
     </div>
@@ -70,11 +82,20 @@ const EmptyState = () => (
   </tr>
 );
 
-const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+const ErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: string;
+  onRetry: () => void;
+}) => (
   <tr>
     <td colSpan={10} className="text-center py-10">
       <div className="text-red-600 mb-4">{error}</div>
-      <button onClick={onRetry} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+      <button
+        onClick={onRetry}
+        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+      >
         Retry
       </button>
     </td>
@@ -101,7 +122,9 @@ export default function Orders() {
 
   // Helper: get aggregated delivery status for a master order
   const getOrderDeliveryStatus = (order: MasterOrder): string => {
-    const statuses = order.vendor_orders?.map(vo => vo.delivery_status).filter(s => !!s) || [];
+    const statuses =
+      order.vendor_orders?.map((vo) => vo.delivery_status).filter((s) => !!s) ||
+      [];
     if (statuses.length === 0) return "N/A";
     const unique = [...new Set(statuses)];
     if (unique.length === 1) return unique[0] || "N/A";
@@ -109,44 +132,50 @@ export default function Orders() {
   };
 
   // Fetch orders with abort support
-  const fetchOrders = useCallback(async (page: number, status: string) => {
-    const token = localStorage.getItem("access");
-    if (!token) {
-      setError("Please log in to view orders");
-      setLoading(false);
-      return;
-    }
-
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getAdminMasterOrders({
-        page,
-        page_size: pageSize,
-        status: status || undefined,
-        ordering: "-created_at",
-        signal: controller.signal
-      });
-      if (!controller.signal.aborted) {
-        setOrders(res.data.results);
+  const fetchOrders = useCallback(
+    async (page: number, status: string) => {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        setError("Please log in to view orders");
+        setLoading(false);
+        return;
       }
-    } catch (err: any) {
-      if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
-      const message = err.message === "SESSION_EXPIRED"
-        ? "Your session has expired. Please log in again."
-        : err.response?.data?.detail || err.message || "Failed to load orders";
-      if (!controller.signal.aborted) {
-        setError(message);
-        showToast("error", message);
+
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getAdminMasterOrders({
+          page,
+          page_size: pageSize,
+          status: status || undefined,
+          ordering: "-created_at",
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) {
+          setOrders(res.data.results);
+        }
+      } catch (err: any) {
+        if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
+        const message =
+          err.message === "SESSION_EXPIRED"
+            ? "Your session has expired. Please log in again."
+            : err.response?.data?.detail ||
+              err.message ||
+              "Failed to load orders";
+        if (!controller.signal.aborted) {
+          setError(message);
+          showToast("error", message);
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    } finally {
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }, [pageSize, showToast]);
+    },
+    [pageSize, showToast],
+  );
 
   // Reset page when pageSize changes
   useEffect(() => setCurrentPage(1), [pageSize]);
@@ -168,21 +197,35 @@ export default function Orders() {
     let result = orders;
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      result = result.filter(o =>
-        String(o.id).includes(lower) ||
-        o.recipient_name?.toLowerCase().includes(lower) ||
-        o.shipping_phone?.toLowerCase().includes(lower) ||
-        o.shipping_address_text?.toLowerCase().includes(lower)
+      result = result.filter(
+        (o) =>
+          String(o.id).includes(lower) ||
+          o.recipient_name?.toLowerCase().includes(lower) ||
+          o.shipping_phone?.toLowerCase().includes(lower) ||
+          o.shipping_address_text?.toLowerCase().includes(lower),
       );
     }
-    if (statusFilter) result = result.filter(o => o.status === statusFilter);
+    if (statusFilter) result = result.filter((o) => o.status === statusFilter);
     if (deliveryStatusFilter) {
-      result = result.filter(o => getOrderDeliveryStatus(o) === deliveryStatusFilter);
+      result = result.filter(
+        (o) => getOrderDeliveryStatus(o) === deliveryStatusFilter,
+      );
     }
-    if (paymentStatusFilter) result = result.filter(o => o.payment_status === paymentStatusFilter);
-    if (fulfillmentTypeFilter) result = result.filter(o => o.fulfillment_type === fulfillmentTypeFilter);
+    if (paymentStatusFilter)
+      result = result.filter((o) => o.payment_status === paymentStatusFilter);
+    if (fulfillmentTypeFilter)
+      result = result.filter(
+        (o) => o.fulfillment_type === fulfillmentTypeFilter,
+      );
     return result;
-  }, [orders, searchTerm, statusFilter, deliveryStatusFilter, paymentStatusFilter, fulfillmentTypeFilter]);
+  }, [
+    orders,
+    searchTerm,
+    statusFilter,
+    deliveryStatusFilter,
+    paymentStatusFilter,
+    fulfillmentTypeFilter,
+  ]);
 
   const paginatedOrders = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -191,7 +234,8 @@ export default function Orders() {
 
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
 
-  const goToPage = (page: number) => setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  const goToPage = (page: number) =>
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
 
   // Reset page when filters change
   useEffect(() => {
@@ -214,23 +258,34 @@ export default function Orders() {
       {/* Header with title and mobile filter button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight">All Master Orders</h2>
-          <p className="text-xs sm:text-sm text-secondary mt-0.5">Manage and track all customer orders</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight">
+            All Master Orders
+          </h2>
+          <p className="text-xs sm:text-sm text-secondary mt-0.5">
+            Manage and track all customer orders
+          </p>
         </div>
-
       </div>
 
       {/* Filters row */}
-      <div className={`${showMobileFilters ? 'block' : 'hidden lg:block'} mb-6`}>
+      <div
+        className={`${showMobileFilters ? "block" : "hidden lg:block"} mb-6`}
+      >
         <OrderFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
           deliveryStatusFilter={deliveryStatusFilter}
           paymentStatusFilter={paymentStatusFilter}
-          onPaymentStatusChange={(val) => { setPaymentStatusFilter(val); setCurrentPage(1); }}
+          onPaymentStatusChange={(val) => {
+            setPaymentStatusFilter(val);
+            setCurrentPage(1);
+          }}
           fulfillmentTypeFilter={fulfillmentTypeFilter}
-          onFulfillmentTypeChange={(val) => { setFulfillmentTypeFilter(val); setCurrentPage(1); }}
+          onFulfillmentTypeChange={(val) => {
+            setFulfillmentTypeFilter(val);
+            setCurrentPage(1);
+          }}
           pageSize={pageSize}
           onPageSizeChange={setPageSize}
           onClear={clearFilters}
@@ -250,46 +305,56 @@ export default function Orders() {
                   Order ID
                 </span>
               </th>
-<th className="w-[140px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[140px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Customer
                 </span>
               </th>
-<th className="w-[110px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[110px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Total
                 </span>
               </th>
-<th className="w-[120px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[120px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Fulfillment
                 </span>
               </th>
-<th className="w-[130px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[130px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Payment Status
                 </span>
               </th>
-<th className="w-[90px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[90px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Companies
                 </span>
               </th>
-<th className="w-[150px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[150px] px-1.5 sm:px-4 py-2 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <span>Date & Time</span>
                 </div>
               </th>
-<th className="w-[90px] px-1.5 sm:px-4 py-2 sm:py-3 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="w-[90px] px-1.5 sm:px-4 py-2 sm:py-3 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Actions
@@ -299,20 +364,33 @@ export default function Orders() {
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {loading ? (
-              Array.from({ length: pageSize }).map((_, i) => <SkeletonRow key={i} />)
+              Array.from({ length: pageSize }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))
             ) : error ? (
-              <ErrorState error={error} onRetry={() => fetchOrders(currentPage, statusFilter)} />
+              <ErrorState
+                error={error}
+                onRetry={() => fetchOrders(currentPage, statusFilter)}
+              />
             ) : filteredOrders.length === 0 ? (
               <EmptyState />
             ) : (
               paginatedOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-4 py-3 text-sm font-semibold text-indigo-600 truncate">#{order.id}</td>
+                <tr
+                  key={order.id}
+                  className="hover:bg-gray-50/80 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm font-semibold text-indigo-600 truncate">
+                    #{order.id}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-700 truncate">
-                    {order.recipient_name || <span className="text-gray-400 italic">Pickup</span>}
+                    {order.recipient_name || (
+                      <span className="text-gray-400 italic">Pickup</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900 truncate">
-                    {Number(order.total_amount).toLocaleString()} <span className="text-xs text-gray-500">ETB</span>
+                    {Number(order.total_amount).toLocaleString()}{" "}
+                    <span className="text-xs text-gray-500">ETB</span>
                   </td>
                   <td className="px-2 sm:px-4 py-2 sm:py-3">
                     <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
@@ -321,14 +399,22 @@ export default function Orders() {
                       ) : (
                         <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
                       )}
-                      <span className="capitalize truncate">{order.fulfillment_type}</span>
+                      <span className="capitalize truncate">
+                        {order.fulfillment_type}
+                      </span>
                     </div>
-                   </td>
-                  <td className="px-4 py-3"><PaymentStatusBadge status={order.payment_status} /></td>
+                  </td>
+                  <td className="px-4 py-3">
+                    <PaymentStatusBadge status={order.payment_status} />
+                  </td>
                   {/* <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                   <td className="px-4 py-3"><DeliveryStatusBadge status={getOrderDeliveryStatus(order)} /></td> */}
-                  <td className="px-4 py-3 text-sm font-medium text-gray-700 truncate">{order.vendor_orders?.length ?? 0}</td>
-                  <td className="px-4 py-3"><OrderDate dateString={order.created_at} /></td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-700 truncate">
+                    {order.vendor_orders?.length ?? 0}
+                  </td>
+                  <td className="px-4 py-3">
+                    <OrderDate dateString={order.created_at} />
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setSelectedOrder(order)}
@@ -360,24 +446,47 @@ export default function Orders() {
       )}
 
       {/* Detail Modal */}
-      <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      <OrderDetailModal
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+      />
 
       {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
       <button
         onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#674FA3] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
       >
         <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          <svg
+            className="w-5 h-5 text-[#674FA3]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
           </svg>
-          {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
+          {(searchTerm ||
+            statusFilter ||
+            deliveryStatusFilter ||
+            paymentStatusFilter ||
+            fulfillmentTypeFilter) && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
           )}
         </div>
-        <span className="text-sm font-bold tracking-wide text-[#6750A4]">Filter</span>
-        {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+        <span className="text-sm font-bold tracking-wide text-[#674FA3]">
+          Filter
+        </span>
+        {(searchTerm ||
+          statusFilter ||
+          deliveryStatusFilter ||
+          paymentStatusFilter ||
+          fulfillmentTypeFilter) && (
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#674FA3]/10 text-[#674FA3] rounded-full">
             Active
           </span>
         )}
@@ -391,7 +500,7 @@ export default function Orders() {
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          
+
           {/* Bottom Sheet Content */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
@@ -422,7 +531,7 @@ export default function Orders() {
                     placeholder="Search by order ID, customer name, phone, or address..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -435,14 +544,16 @@ export default function Orders() {
                 <select
                   value={paymentStatusFilter}
                   onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="">All Payment Statuses</option>
                   <option value="Paid">Paid</option>
                   <option value="Verifying Receipt">Verifying Receipt</option>
                   <option value="Pay on Delivery">Pay on Delivery</option>
                   <option value="Checkout Initiated">Checkout Initiated</option>
-                  <option value="Awaiting Bank Transfer">Awaiting Bank Transfer</option>
+                  <option value="Awaiting Bank Transfer">
+                    Awaiting Bank Transfer
+                  </option>
                 </select>
               </div>
 
@@ -454,7 +565,7 @@ export default function Orders() {
                 <select
                   value={fulfillmentTypeFilter}
                   onChange={(e) => setFulfillmentTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="">All Fulfillment Types</option>
                   <option value="delivery">Delivery</option>
@@ -473,7 +584,7 @@ export default function Orders() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value={5}>5 / page</option>
                   <option value={10}>10 / page</option>
@@ -485,7 +596,11 @@ export default function Orders() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
-                {(searchTerm || statusFilter || deliveryStatusFilter || paymentStatusFilter || fulfillmentTypeFilter) && (
+                {(searchTerm ||
+                  statusFilter ||
+                  deliveryStatusFilter ||
+                  paymentStatusFilter ||
+                  fulfillmentTypeFilter) && (
                   <button
                     onClick={() => {
                       setSearchTerm("");

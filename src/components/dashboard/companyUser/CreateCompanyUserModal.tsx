@@ -184,7 +184,7 @@ export function CreateCompanyUserModal({
     ${
       touched[field] && errors[field]
         ? "border-red-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"
-        : "border-gray-200 focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4]"
+        : "border-gray-200 focus:ring-4 focus:ring-[#674FA3]/10 focus:border-[#674FA3]"
     }
   `;
 
@@ -200,9 +200,11 @@ export function CreateCompanyUserModal({
         className="w-full max-w-[95%] sm:max-w-5xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] sm:max-h-[85vh] flex flex-col"
       >
         {/* HEADER */}
-        <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#6750A4]/5 to-indigo-50 backdrop-blur-sm bg-opacity-95">
+        <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-[#674FA3]/5 to-indigo-50 backdrop-blur-sm bg-opacity-95">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-secondary">Create User</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-secondary">
+              Create User
+            </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Create and onboard a company user instantly
             </p>
@@ -259,7 +261,8 @@ export function CreateCompanyUserModal({
               </div>
               {touched.last_name && errors.last_name && (
                 <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.last_name}
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+                  {errors.last_name}
                 </p>
               )}
             </div>
@@ -284,7 +287,8 @@ export function CreateCompanyUserModal({
               </div>
               {touched.username && errors.username && (
                 <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.username}
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+                  {errors.username}
                 </p>
               )}
             </div>
@@ -307,7 +311,8 @@ export function CreateCompanyUserModal({
               </div>
               {touched.email && errors.email && (
                 <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.email}
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+                  {errors.email}
                 </p>
               )}
             </div>
@@ -339,7 +344,8 @@ export function CreateCompanyUserModal({
               </div>
               {touched.phone_number && errors.phone_number && (
                 <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.phone_number}
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+                  {errors.phone_number}
                 </p>
               )}
               {!errors.phone_number && (
@@ -358,7 +364,7 @@ export function CreateCompanyUserModal({
                 <select
                   value={formData.role}
                   onChange={(e) => handleChange("role", e.target.value)}
-                  className="w-full appearance-none pl-8 sm:pl-10 pr-8 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] outline-none transition"
+                  className="w-full appearance-none pl-8 sm:pl-10 pr-8 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-[#674FA3]/10 focus:border-[#674FA3] outline-none transition"
                 >
                   <option value="admin">Admin</option>
                   <option value="staff">Staff</option>
@@ -433,7 +439,8 @@ export function CreateCompanyUserModal({
               )}
               {touched.password && errors.password && (
                 <p className="mt-1.5 text-xs sm:text-sm text-red-500 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {errors.password}
+                  <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />{" "}
+                  {errors.password}
                 </p>
               )}
             </div>
@@ -488,11 +495,12 @@ export function CreateCompanyUserModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl bg-[#6750A4] hover:bg-[#5b4694] text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto"
+            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl bg-[#674FA3] hover:bg-[#5b4694] text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto"
           >
             {loading ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Creating...
+                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />{" "}
+                Creating...
               </>
             ) : (
               <>

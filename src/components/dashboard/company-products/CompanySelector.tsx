@@ -1,6 +1,6 @@
 // src/components/dashboard/CompanySelector.tsx
-import { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Building2,
@@ -8,10 +8,10 @@ import {
   X,
   AlertCircle,
   Package,
-} from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
-import type { CompanyListItem } from '../../../types';
-import { searchProducts } from '../../../services/api';
+} from "lucide-react";
+import { useAuth } from "../../../hooks/useAuth";
+import type { CompanyListItem } from "../../../types";
+import { searchProducts } from "../../../services/api";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,7 +43,9 @@ function AccessDenied() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Access Denied</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
+          Access Denied
+        </h3>
         <p className="text-sm text-gray-500">
           Only super administrators can switch companies.
         </p>
@@ -73,7 +75,7 @@ function Header({
         </button>
       )}
       <div>
-        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-[#6750A4] to-[#8B5CF6] bg-clip-text text-transparent">
+        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-[#674FA3] to-[#8B5CF6] bg-clip-text text-transparent">
           {title}
         </h2>
         {subtitle && (
@@ -98,7 +100,7 @@ function SearchInput({
     <div className="relative">
       <Search
         className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 transition-colors ${
-          isFocused ? 'text-[#6750A4]' : 'text-gray-400'
+          isFocused ? "text-[#674FA3]" : "text-gray-400"
         }`}
       />
       <input
@@ -110,13 +112,13 @@ function SearchInput({
         placeholder={placeholder}
         className="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border bg-gray-50/90 backdrop-blur-sm text-sm sm:text-base
           transition-all duration-200 outline-none
-          focus:bg-white focus:border-[#6750A4]/60 focus:ring-4 focus:ring-[#6750A4]/10
+          focus:bg-white focus:border-[#674FA3]/60 focus:ring-4 focus:ring-[#674FA3]/10
           hover:border-gray-300 placeholder-gray-400"
         aria-label="Search companies"
       />
       {value && (
         <button
-          onClick={() => onChange('')}
+          onClick={() => onChange("")}
           className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
           aria-label="Clear search"
         >
@@ -194,16 +196,18 @@ function CompanyGridCard({
       className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
         border border-gray-200 bg-white/80 backdrop-blur-sm text-center
         transition-all duration-300 ease-out
-        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
-        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
+        hover:border-[#674FA3]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#674FA3]/20
         active:scale-[0.98]"
     >
       {/* Logo / Icon */}
-      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
+      <div
+        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
         border border-gray-200 bg-gray-50 overflow-hidden
-        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
+        group-hover:border-[#674FA3]/40 group-hover:shadow-md transition-all duration-300"
+      >
         {showIcon ? (
-          <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
+          <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-[#674FA3]" />
         ) : (
           <img
             src={logoUrl}
@@ -220,7 +224,7 @@ function CompanyGridCard({
           {company.name}
         </p>
         <p className="text-xs text-gray-500 truncate capitalize mt-0.5">
-          {company.business_type || 'Company'}
+          {company.business_type || "Company"}
         </p>
       </div>
     </motion.button>
@@ -243,20 +247,25 @@ function ProductCard({
       transition={{ duration: 0.2 }}
       onClick={() => {
         if (product.company_slug) {
-          onSelect(product.company_slug, product.company_name || product.company);
+          onSelect(
+            product.company_slug,
+            product.company_name || product.company,
+          );
         }
       }}
       className="group flex flex-col items-center gap-3 p-4 sm:p-5 rounded-2xl
         border border-gray-200 bg-white/80 backdrop-blur-sm text-center
         transition-all duration-300 ease-out
-        hover:border-[#6750A4]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
-        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6750A4]/20
+        hover:border-[#674FA3]/40 hover:bg-white hover:shadow-lg hover:scale-[1.02]
+        focus:outline-none focus-visible:ring-4 focus-visible:ring-[#674FA3]/20
         active:scale-[0.98]"
     >
       {/* Product Image */}
-      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
+      <div
+        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center
         border border-gray-200 bg-gray-50 overflow-hidden
-        group-hover:border-[#6750A4]/40 group-hover:shadow-md transition-all duration-300">
+        group-hover:border-[#674FA3]/40 group-hover:shadow-md transition-all duration-300"
+      >
         {product.primary_image ? (
           <img
             src={product.primary_image}
@@ -264,7 +273,7 @@ function ProductCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <Package className="h-6 w-6 sm:h-7 sm:w-7 text-[#6750A4]" />
+          <Package className="h-6 w-6 sm:h-7 sm:w-7 text-[#674FA3]" />
         )}
       </div>
 
@@ -276,7 +285,7 @@ function ProductCard({
         <p className="text-xs text-gray-500 truncate mt-0.5">
           {product.company_name || product.company}
         </p>
-        <p className="text-xs sm:text-sm font-bold text-[#6750A4] mt-1">
+        <p className="text-xs sm:text-sm font-bold text-[#674FA3] mt-1">
           {Number(product.price).toLocaleString()} ETB
         </p>
       </div>
@@ -299,7 +308,7 @@ export function CompanySelector({
   searchPlaceholder = "Search by name or type...",
 }: CompanySelectorProps) {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [productResults, setProductResults] = useState<any[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
@@ -313,7 +322,7 @@ export function CompanySelector({
   const filteredCompanies = companies.filter(
     (c) =>
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.business_type?.toLowerCase().includes(searchTerm.toLowerCase())
+      c.business_type?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Search products whenever searchTerm changes (only if product search is enabled)
@@ -334,7 +343,7 @@ export function CompanySelector({
         const response = await searchProducts({ search: searchTerm });
         setProductResults(response.data.results || []);
       } catch (err) {
-        console.error('Failed to search products:', err);
+        console.error("Failed to search products:", err);
         setProductResults([]);
       } finally {
         setSearchingProducts(false);
@@ -354,14 +363,10 @@ export function CompanySelector({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-3xl shadow-2xl border border-gray-100/80 max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
-      style={{ maxHeight: 'calc(100vh - 120px)' }}
+      style={{ maxHeight: "calc(100vh - 120px)" }}
     >
       {/* Header – fixed at top */}
-      <Header
-        title={title}
-        subtitle={subtitle}
-        onBack={onBack}
-      />
+      <Header title={title} subtitle={subtitle} onBack={onBack} />
 
       {/* Scrollable content area (search + grid) */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
@@ -396,7 +401,7 @@ export function CompanySelector({
               {filteredCompanies.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mb-4 mt-2">
-                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#674FA3]" />
                     <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                       Companies ({filteredCompanies.length})
                     </h3>
@@ -421,7 +426,7 @@ export function CompanySelector({
               {!disableProductSearch && productResults.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mb-4 mt-2">
-                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#674FA3]" />
                     <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                       Products ({productResults.length})
                     </h3>
@@ -441,13 +446,14 @@ export function CompanySelector({
               )}
 
               {/* No Results */}
-              {filteredCompanies.length === 0 && productResults.length === 0 && (
-                <EmptyState
-                  icon={Search}
-                  title="No results found"
-                  message={`No companies or products match "${searchTerm}"`}
-                />
-              )}
+              {filteredCompanies.length === 0 &&
+                productResults.length === 0 && (
+                  <EmptyState
+                    icon={Search}
+                    title="No results found"
+                    message={`No companies or products match "${searchTerm}"`}
+                  />
+                )}
             </>
           )}
 
@@ -455,7 +461,7 @@ export function CompanySelector({
           {!isLoading && !searchingProducts && !searchTerm && (
             <>
               <div className="flex items-center gap-2 mb-4 mt-2">
-                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#6750A4]" />
+                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#674FA3]" />
                 <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                   All Companies
                 </h3>
@@ -484,12 +490,15 @@ export function CompanySelector({
           <p className="text-xs sm:text-sm text-gray-500">
             {searchTerm ? (
               <>
-                Found {filteredCompanies.length + productResults.length}{' '}
-                result{(filteredCompanies.length + productResults.length) !== 1 ? 's' : ''}
+                Found {filteredCompanies.length + productResults.length} result
+                {filteredCompanies.length + productResults.length !== 1
+                  ? "s"
+                  : ""}
               </>
             ) : (
               <>
-                Showing {companies.length} compan{companies.length !== 1 ? 'ies' : 'y'}
+                Showing {companies.length} compan
+                {companies.length !== 1 ? "ies" : "y"}
               </>
             )}
           </p>

@@ -41,7 +41,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
               <div className="flex items-center gap-2 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
-                <h2 className="text-xl font-bold">{title}</h2>
+                <h2 className="text-base sm:text-xl font-bold">{title}</h2>
               </div>
               <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100">
                 <X className="h-5 w-5 text-gray-500" />

@@ -15,7 +15,7 @@ import {
   Users,
   Building2,
   CheckCircle,
-  Filter,
+
   Briefcase,
   UserCheck,
   UserMinus,
@@ -24,6 +24,7 @@ import {
   Minus,
   X,
   ChevronRight,
+  ListFilter,
 } from "lucide-react";
 import {
   deleteUser,
@@ -156,10 +157,9 @@ const StatCard: React.FC<StatCardProps> = ({
 // ============================================================
 interface FiltersProps {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: (term: string) => void;
   roleFilter: string;
-  setRoleFilter: (value: string) => void;
-  onRefresh: () => void;
+  setRoleFilter: (role: string) => void;
 }
 
 const UserFilters: React.FC<FiltersProps> = ({
@@ -172,147 +172,51 @@ const UserFilters: React.FC<FiltersProps> = ({
 
   return (
     <>
-      <div
-        className="
-          w-full
-          flex flex-col
-          lg:flex-row
-          lg:items-center
-          gap-3
-          lg:gap-4
-        "
-      >
-        {/* SEARCH */}
+      <div className="w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+        {/* SEARCH + FILTER INSIDE INPUT */}
         <div className="relative flex-1 min-w-0">
-          {/* Glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#6750A4]/10 to-purple-300/10 blur-xl opacity-70" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#674FA3]/10 to-purple-300/10 blur-xl opacity-70" />
 
-          <div
-            className="
-              relative
-              flex items-center
-              rounded-2xl
-              border border-gray-200/70
-              bg-white/80
-              backdrop-blur-xl
-              shadow-sm
-              hover:shadow-md
-              focus-within:ring-4
-              focus-within:ring-[#6750A4]/10
-              focus-within:border-[#6750A4]/30
-              transition-all duration-300
-            "
-          >
-            <Search
-              className="
-                absolute left-3 sm:left-4
-                h-4 w-4 sm:h-5 sm:w-5
-                text-gray-400
-              "
-            />
+          <div className="relative flex items-center rounded-2xl border border-gray-200/70 bg-white/80 backdrop-blur-xl shadow-sm hover:shadow-md focus-within:ring-4 focus-within:ring-[#674FA3]/10 focus-within:border-[#674FA3]/30 transition-all duration-300">
+            {/* search icon */}
+            <Search className="absolute left-3 sm:left-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
 
             <input
               type="text"
               placeholder="Search users, email, role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="
-                w-full
-                bg-transparent
-                pl-10 sm:pl-12
-                pr-10
-                py-2 sm:py-2.5
-                text-sm sm:text-[15px]
-                text-gray-700
-                placeholder:text-gray-400
-                rounded-2xl
-                outline-none
-              "
+              className="w-full bg-transparent pl-10 sm:pl-12 pr-24 py-2 sm:py-2.5 text-sm sm:text-[15px] text-gray-700 placeholder:text-gray-400 rounded-full border border-[#674FA3] outline-none"
             />
 
+            {/* CLEAR */}
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="
-                  absolute right-3
-                  flex items-center justify-center
-                  h-7 w-7
-                  rounded-full
-                  bg-gray-100
-                  hover:bg-red-50
-                  hover:text-red-500
-                  transition-all duration-200
-                  active:scale-90
-                "
+                className="absolute right-14 flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
+
+            {/* FILTER BUTTON (INSIDE INPUT RIGHT SIDE) */}
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="absolute right-4 flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-full bg-[#674FA3] text-white text-xs font-semibold shadow-md hover:scale-[1.02] active:scale-95 transition"
+            >
+              <ListFilter className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {/* RIGHT ACTIONS */}
-        <div
-          className="
-            flex items-center
-            gap-2 sm:gap-3
-            w-full lg:w-auto
-          "
-        >
-          {/* MOBILE FILTER BUTTON */}
-          <div className="flex md:hidden flex-1 gap-2">
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="
-                flex-1
-                flex items-center justify-center gap-2
-                px-3
-                rounded-2xl
-                bg-gradient-to-r
-                from-[#6750A4]
-                to-purple-500
-                text-white
-                text-sm font-semibold
-                shadow-lg shadow-purple-500/20
-                hover:scale-[1.01]
-                active:scale-[0.98]
-                transition-all duration-200
-              "
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-            </button>
-
-            <button
-              onClick={() => setRoleFilter("all")}
-              className="
-                px-4 py-3
-                rounded-2xl
-                border border-gray-200
-                bg-white/80
-                backdrop-blur-md
-                text-gray-700
-                text-sm font-medium
-                hover:bg-gray-50
-                active:scale-95
-                transition-all duration-200
-              "
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* DESKTOP FILTER */}
-          <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
-            <div className="w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-              <CustomSelect
-                value={roleFilter}
-                onChange={setRoleFilter}
-                options={roleOptions}
-                placeholder="Filter by role"
-              />
-            </div>
-          </div>
+        {/* DESKTOP DROPDOWN FILTER (UNCHANGED) */}
+        <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
+          <CustomSelect
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={roleOptions}
+            placeholder="Filter by role"
+          />
         </div>
       </div>
 
@@ -323,25 +227,22 @@ const UserFilters: React.FC<FiltersProps> = ({
         title="Filter Users"
       >
         <div className="space-y-4">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
               Select a role to filter users
             </p>
 
+            {/* RESET COMMENTED OUT (as requested) */}
+            {/*
             <button
               onClick={() => setRoleFilter("all")}
-              className="
-                text-xs font-semibold
-                text-[#6750A4]
-                hover:underline
-              "
+              className="text-xs font-semibold text-[#674FA3] hover:underline"
             >
               Reset All
             </button>
+            */}
           </div>
 
-          {/* Options */}
           <div className="grid grid-cols-2 gap-3">
             {roleOptions.map((opt) => (
               <button
@@ -351,45 +252,18 @@ const UserFilters: React.FC<FiltersProps> = ({
                   setSheetOpen(false);
                 }}
                 className={`
-                  group
-                  relative
-                  flex flex-col items-center justify-center
-                  gap-2
-                  min-h-[88px]
-                  rounded-2xl
-                  border
-                  px-3 py-4
-                  text-sm font-semibold
-                  transition-all duration-200
-                  active:scale-[0.97]
-
+                  flex flex-col items-center justify-center gap-2
+                  min-h-[88px] rounded-2xl border px-3 py-4
+                  text-sm font-semibold transition-all active:scale-[0.97]
                   ${
                     roleFilter === opt.value
-                      ? `
-                        bg-gradient-to-br
-                        from-[#6750A4]
-                        to-purple-500
-                        border-purple-500
-                        text-white
-                        shadow-lg shadow-purple-500/20
-                      `
-                      : `
-                        bg-gray-50
-                        border-gray-200
-                        text-gray-700
-                        hover:border-[#6750A4]/30
-                        hover:bg-purple-50
-                      `
+                      ? "bg-gradient-to-br from-[#674FA3] to-purple-500 border-purple-500 text-white shadow-lg"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
                   }
                 `}
               >
-                <div className="text-lg">
-                  {opt.icon}
-                </div>
-
-                <span className="text-center leading-tight">
-                  {opt.label}
-                </span>
+                <div>{opt.icon}</div>
+                <span className="text-center">{opt.label}</span>
               </button>
             ))}
           </div>
@@ -546,14 +420,14 @@ max-w-[calc(100vw-24px)]
         `}
       >
         {/* Header */}
-        <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
+        <div className="px-4 sm:px-5 py-2 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
             User Actions
           </p>
         </div>
 
         {/* Menu */}
-        <div className="p-2">
+        <div className=" p-1 md:p-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
 
@@ -570,8 +444,8 @@ max-w-[calc(100vw-24px)]
                   flex items-center justify-between
                   w-full
                   rounded-2xl
-                  px-3 sm:px-4
-                  py-3 sm:py-3.5
+                  px-2 sm:px-4
+                  py-1 sm:py-3.5
                   transition-all duration-200
                   active:scale-[0.98]
                   ${item.hover}
@@ -593,13 +467,13 @@ max-w-[calc(100vw-24px)]
                     `}
                   >
                     <Icon
-                      className={`h-4 w-4 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
+                      className={`h-3 w-3 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
                     />
                   </div>
 
                   <span
                     className="
-                      text-sm sm:text-[15px]
+                      text-xs sm:text-[15px]
                       font-medium
                       truncate
                     "
@@ -1098,8 +972,7 @@ const SuperAdminUsers: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              
-              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-[#6750A4] to-purple-400 shadow-sm" />
+              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-[#674FA3] to-purple-400 shadow-sm" />
 
               <div className="min-w-0">
                 <h1
@@ -1113,7 +986,7 @@ const SuperAdminUsers: React.FC = () => {
           leading-tight
           bg-gradient-to-r
           from-purple-900
-          via-[#6750A4]
+          via-[#674FA3]
           to-purple-500
           bg-clip-text
           text-transparent
@@ -1140,7 +1013,7 @@ const SuperAdminUsers: React.FC = () => {
             </div>
 
             {/* Decorative line */}
-            <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-[#6750A4] to-purple-300 opacity-80" />
+            <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-[#674FA3] to-purple-300 opacity-80" />
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">

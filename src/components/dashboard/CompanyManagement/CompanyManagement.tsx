@@ -789,7 +789,7 @@ export default function CompanyManagement() {
     () => [
       {
         id: "basic",
-        title: <span className="text-[#6750A4]">Basic Information</span>,
+        title: <span className="text-[#674FA3]">Basic Information</span>,
         content: (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 gap-y-5">
             <div>
@@ -803,7 +803,7 @@ export default function CompanyManagement() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3] ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
               />
               {formErrors.name && (
                 <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
@@ -820,7 +820,7 @@ export default function CompanyManagement() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name_am: e.target.value }))
                 }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4]"
+                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3]"
               />
             </div>
             <div>
@@ -837,7 +837,7 @@ export default function CompanyManagement() {
                     sub_category: 0,
                   }));
                 }}
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3] ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
               >
                 <option value={0}>Select Category</option>
                 {categories.map((cat) => (
@@ -864,7 +864,7 @@ export default function CompanyManagement() {
                     sub_category: Number(e.target.value),
                   }))
                 }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3] ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
                 disabled={!formData.category}
                 style={{
                   cursor: !formData.category ? "not-allowed" : "default",
@@ -897,7 +897,7 @@ export default function CompanyManagement() {
                     business_type: e.target.value,
                   }))
                 }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3] ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
               >
                 <option value="">Select Business Type</option>
                 <option value="brand">Company</option>
@@ -922,7 +922,7 @@ export default function CompanyManagement() {
                   setFormData((prev) => ({ ...prev, slug: e.target.value }))
                 }
                 disabled={!!editingSlug}
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4] ${formErrors.slug ? "border-red-500" : "border-gray-300"}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3] ${formErrors.slug ? "border-red-500" : "border-gray-300"}
                ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
               />
               {formErrors.slug && (
@@ -942,7 +942,7 @@ export default function CompanyManagement() {
                     description: e.target.value,
                   }))
                 }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-opacity-30 focus:border-[#6750A4]"
+                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#674FA3] focus:ring-opacity-30 focus:border-[#674FA3]"
                 rows={3}
               />
             </div>
@@ -952,13 +952,13 @@ export default function CompanyManagement() {
       },
       {
         id: "images",
-        title: <span className="text-[#6750A4]">Images & Status</span>,
+        title: <span className="text-[#674FA3]">Images & Status</span>,
         content: (
           <div className="space-y-8">
             {/* Logo and Cover Image - Side by Side */}
             <div>
               <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B6BB5]"></div>
+                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#674FA3] to-[#8B6BB5]"></div>
                 Company Images
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -983,7 +983,7 @@ export default function CompanyManagement() {
                       Logo
                     </label>
                     <div
-                      className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-3 flex flex-col items-center justify-center transition-all duration-300 hover:border-[#6750A4] hover:bg-gray-50/80 min-h-[140px] sm:min-h-[160px]"
+                      className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-3 flex flex-col items-center justify-center transition-all duration-300 hover:border-[#674FA3] hover:bg-gray-50/80 min-h-[140px] sm:min-h-[160px]"
                       style={{ height: "auto" }}
                     >
                       <input
@@ -1009,7 +1009,7 @@ export default function CompanyManagement() {
                             <img
                               src={logoPreview}
                               alt="Logo Preview"
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shadow-lg ring-2 ring-[#6750A4]/20"
+                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shadow-lg ring-2 ring-[#674FA3]/20"
                             />
                             <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
                               <span className="text-white text-[10px] font-medium">
@@ -1050,9 +1050,9 @@ export default function CompanyManagement() {
                           htmlFor="company-logo-upload"
                           className="flex flex-col items-center justify-center cursor-pointer w-full h-full transition-all duration-200 hover:scale-102 py-4"
                         >
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#6750A4]/10 to-[#6750A4]/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#674FA3]/10 to-[#674FA3]/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
                             <svg
-                              className="w-5 h-5 sm:w-6 sm:h-6 text-[#6750A4]"
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-[#674FA3]"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -1100,7 +1100,7 @@ export default function CompanyManagement() {
             {/* Status Settings */}
             <div>
               <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#6750A4] to-[#8B6BB5]"></div>
+                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-[#674FA3] to-[#8B6BB5]"></div>
                 Status Settings
               </h4>
               <div className="bg-gray-50/50 rounded-xl p-5 border border-gray-100">
@@ -1115,10 +1115,10 @@ export default function CompanyManagement() {
                           is_active: e.target.checked,
                         }))
                       }
-                      className="h-4 w-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4] focus:ring-2 cursor-pointer"
+                      className="h-4 w-4 text-[#674FA3] rounded border-gray-300 focus:ring-[#674FA3] focus:ring-2 cursor-pointer"
                     />
                     <div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#6750A4] transition-colors">
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#674FA3] transition-colors">
                         Active
                       </span>
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -1136,10 +1136,10 @@ export default function CompanyManagement() {
                           is_featured: e.target.checked,
                         }))
                       }
-                      className="h-4 w-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4] focus:ring-2 cursor-pointer"
+                      className="h-4 w-4 text-[#674FA3] rounded border-gray-300 focus:ring-[#674FA3] focus:ring-2 cursor-pointer"
                     />
                     <div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#6750A4] transition-colors">
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#674FA3] transition-colors">
                         Featured
                       </span>
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -1167,18 +1167,18 @@ export default function CompanyManagement() {
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
   return (
-    <div className="max-w-full bg-gray-50 min-h-screen">
+    <div className="max-w-full  min-h-screen">
       <Toast toast={toast} />
-      <div className="p-3 sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
+      <div className="p-2  sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
         {/* Header Section - Premium & Responsive */}
-        <div className="flex justify-between items-center gap-3 flex-wrap">
+        <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#6750A4] truncate">
+            <h2 className="text-base pt-2 sm:text-sm md:text-xl font-bold text-[#674FA3] truncate">
               {isSuperAdmin ? "Companies" : "Company Detail"}
             </h2>
             {!isSuperAdmin && (
               <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-[#6750A4]"></span>
+                <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
                 Manage your company details and settings
               </p>
             )}
@@ -1189,11 +1189,11 @@ export default function CompanyManagement() {
                 resetForm();
                 setModalOpen(true);
               }}
-              className="bg-[#6750A4] text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
+              className="bg-[#674FA3] text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
             >
-              <Plus size={18} className="sm:w-5 sm:h-5" />
+              <Plus size={18} className=" w-3 h-3 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Add Company</span>
-              <span className="inline xs:hidden">Add</span>
+              <span className="inline xs:hidden text-xs">Add</span>
             </button>
           )}
         </div>
@@ -1228,7 +1228,7 @@ export default function CompanyManagement() {
 
         {/* Main content views with responsive overflow handling */}
         {isSuperAdmin ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className=" ">
             <SuperAdminView
               // Original data / layout props
               paginatedItems={paginatedItemsWithRowNumber}

@@ -87,7 +87,7 @@ export default function CompanyProducts() {
     message: string;
   } | null>(null);
   const [toastZIndex, setToastZIndex] = useState(50);
-    const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -95,7 +95,10 @@ export default function CompanyProducts() {
   };
 
   // Increase toast z-index when modal is open
-  const showToastWithHigherZIndex = (type: "success" | "error", message: string) => {
+  const showToastWithHigherZIndex = (
+    type: "success" | "error",
+    message: string,
+  ) => {
     setToastZIndex(100); // Higher z-index for modal visibility
     setToast({ type, message });
     setTimeout(() => {
@@ -200,303 +203,323 @@ export default function CompanyProducts() {
     <>
       <Toast toast={toast} zIndex={toastZIndex} />
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
-      <DeleteConfirmModal
-        isOpen={!!deleteTarget}
-        title={deleteTarget?.title || ""}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-      <ProductModal
-        isOpen={isModalOpen}
-        editingProduct={editingProduct}
-        companySlug={companySlug}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        onProductUpdated={refetch}
-        // Staff: can edit everything on create, but price/stock read‑only on edit
-        isStaff={companyRole === "staff"}
-        canEditBasic={canEditBasic} // true for staff & admin
-        canEditPricing={true} // let the isStaff logic handle edit restriction
-        onShowToast={showToastWithHigherZIndex}
-      />
+        <DeleteConfirmModal
+          isOpen={!!deleteTarget}
+          title={deleteTarget?.title || ""}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+        <ProductModal
+          isOpen={isModalOpen}
+          editingProduct={editingProduct}
+          companySlug={companySlug}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
+          onProductUpdated={refetch}
+          // Staff: can edit everything on create, but price/stock read‑only on edit
+          isStaff={companyRole === "staff"}
+          canEditBasic={canEditBasic} // true for staff & admin
+          canEditPricing={true} // let the isStaff logic handle edit restriction
+          onShowToast={showToastWithHigherZIndex}
+        />
 
-      <div className="px-3 sm:px-5 md:px-6">
-        {/* TITLE SECTION - Full width on top */}
-        <div className="w-full">
-          {isSuperAdmin ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              {companyLogo ? (
-                <img
-                  src={companyLogo}
-                  alt={companyName}
-                  className="w-6 h-6 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200"
-                />
-              ) : (
-                <Building2 className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400" />
-              )}
-              <div>
-                <h2 className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">{companyName}</h2>
+        <div className="px-3 sm:px-5 md:px-6">
+          {/* TITLE SECTION - Full width on top */}
+          <div className="w-full">
+            {isSuperAdmin ? (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {companyLogo ? (
+                  <img
+                    src={companyLogo}
+                    alt={companyName}
+                    className="w-6 h-6 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <Building2 className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400" />
+                )}
+                <div>
+                  <h2 className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
+                    {companyName}
+                  </h2>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div>
-              <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">All Products</p>
-            </div>
-          )}
-        </div>
-
-        {/* BUTTONS SECTION - Switch on LEFT (mobile) / BOTH on RIGHT (desktop) */}
-        <div className="flex flex-row justify-between lg:justify-end items-center gap-3 mt-3 sm:mt-4">
-          {/* LEFT SIDE - Switch button (visible on mobile, hidden on desktop) */}
-          <div className="flex-shrink-0 lg:hidden">
-            {isSuperAdmin && (
-              <button
-                onClick={clearCompany}
-                className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#6750A4] bg-white text-[#6750A4] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
-              >
-                <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" /> Switch
-              </button>
+            ) : (
+              <div>
+                <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
+                  All Products
+                </p>
+              </div>
             )}
           </div>
 
-          {/* RIGHT SIDE - Switch (desktop only) + Add Product button */}
-          <div className="flex items-center gap-3">
-            {/* Desktop Switch button - secondary outline style */}
-            <div className="hidden lg:block">
+          {/* BUTTONS SECTION - Switch on LEFT (mobile) / BOTH on RIGHT (desktop) */}
+          <div className="flex flex-row justify-between lg:justify-end items-center gap-3 mt-3 sm:mt-4">
+            {/* LEFT SIDE - Switch button (visible on mobile, hidden on desktop) */}
+            <div className="flex-shrink-0 lg:hidden">
               {isSuperAdmin && (
                 <button
                   onClick={clearCompany}
-                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#6750A4] bg-white text-[#6750A4] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#674FA3] bg-white text-[#674FA3] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
                 >
-                  <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" /> Switch
+                  <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#674FA3]" />{" "}
+                  Switch
                 </button>
               )}
             </div>
-          {/* RIGHT SIDE - Switch (desktop only) + Add Product button */}
-          <div className="flex items-center gap-3">
-            {/* Desktop Switch button - hidden on mobile */}
-            <div className="hidden lg:block">
-              {isSuperAdmin && (
-                <button
-                  onClick={clearCompany}
-                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm shadow-sm"
-                >
-                  <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Switch
-                </button>
-              )}
-            </div>
-            
-            {/* Mobile Add Product button - filter style */}
-            <div className="lg:hidden">
-              {canEditBasic && (
-                <button
-                  onClick={handleAdd}
-                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#6750A4] bg-white text-[#6750A4] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
-                >
-                  <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" /> Add Product
-                </button>
-              )}
-            </div>
-            
-            {/* Desktop Add Product button - original style */}
-            <div className="hidden lg:block">
-              {canEditBasic && (
-                <button
-                  onClick={handleAdd}
-                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
-                >
-                  <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
-                </button>
-              )}
-            </div>
-          </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="mt-1 px-3 sm:px-5 md:px-6 py-1">
-        {/* Unified container - border only on desktop, hidden on mobile */}
-        <div className="hidden lg:flex flex-row items-center justify-between gap-2 sm:gap-3 sm:border sm:border-gray-200 sm:rounded-xl bg-white p-0 sm:p-1.5">
-          {/* LEFT SIDE - Search (reduced width on mobile) */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
-            <input
-              value={search}
-              type="search"
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Search..."
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 focus:border-[#6750A4] bg-white transition-all duration-200 [&:focus]:ring-[#6750A4] [&:focus]:border-[#6750A4]"
-              style={{ outline: "none" }}
-            />
-          </div>
-
-          {/* RIGHT SIDE - Custom Page Size Selector (reduced size) */}
-          <div className="flex-shrink-0">
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 focus:border-[#6750A4] cursor-pointer appearance-none pr-6 sm:pr-7 transition-all duration-200"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.5rem center",
-                backgroundSize: "1rem",
-              }}
-            >
-              <option value={5}>5 / page</option>
-              <option value={10}>10 / page</option>
-              <option value={15}>15 / page</option>
-              <option value={30}>30 / page</option>
-              <option value={60}>60 / page</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-3 sm:px-5 md:px-6 py-2">
-        <ProductTable
-          products={products}
-          totalItems={totalItems}
-          loading={loading}
-          onEdit={canEditBasic ? handleEdit : undefined}
-          onDelete={
-            canDelete
-              ? (id, title) => setDeleteTarget({ id, title })
-              : undefined
-          }
-        />
-        {totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              
-            />
-          </div>
-        )}
-      </div>
-            {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
-      <button
-        onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
-      >
-        <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          {(search || pageSize !== 10) && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-          )}
-        </div>
-        <span className="text-sm font-bold tracking-wide text-[#6750A4]">Filter</span>
-        {(search || pageSize !== 10) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
-            Active
-          </span>
-        )}
-      </button>
-
-      {/* Mobile Filter Modal - Bottom Sheet */}
-      {showMobileFilterModal && (
-        <div
-          className="fixed inset-0 z-50 lg:hidden"
-          onClick={() => setShowMobileFilterModal(false)}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          
-          {/* Bottom Sheet Content */}
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-              <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
-              <button
-                onClick={() => setShowMobileFilterModal(false)}
-                className="p-2 rounded-full hover:bg-gray-100 transition"
-              >
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              {/* Search */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Search
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Page Size */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Items per page
-                </label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                >
-                  <option value={5}>5 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={15}>15 / page</option>
-                  <option value={30}>30 / page</option>
-                  <option value={60}>60 / page</option>
-                </select>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 pt-2">
-                {(search || pageSize !== 10) && (
+            {/* RIGHT SIDE - Switch (desktop only) + Add Product button */}
+            <div className="flex items-center gap-3">
+              {/* Desktop Switch button - secondary outline style */}
+              <div className="hidden lg:block">
+                {isSuperAdmin && (
                   <button
-                    onClick={() => {
-                      setSearch("");
-                      setPageSize(10);
-                      setCurrentPage(1);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                    onClick={clearCompany}
+                    className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#674FA3] bg-white text-[#674FA3] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
                   >
-                    Clear all
+                    <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#674FA3]" />{" "}
+                    Switch
                   </button>
                 )}
-                <button
-                  onClick={() => setShowMobileFilterModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
-                >
-                  Apply Filters
-                </button>
+              </div>
+              {/* RIGHT SIDE - Switch (desktop only) + Add Product button */}
+              <div className="flex items-center gap-3">
+                {/* Desktop Switch button - hidden on mobile */}
+                <div className="hidden lg:block">
+                  {isSuperAdmin && (
+                    <button
+                      onClick={clearCompany}
+                      className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm shadow-sm"
+                    >
+                      <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Switch
+                    </button>
+                  )}
+                </div>
+
+                {/* Mobile Add Product button - filter style */}
+                <div className="lg:hidden">
+                  {canEditBasic && (
+                    <button
+                      onClick={handleAdd}
+                      className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-[#674FA3] bg-white text-[#674FA3] hover:bg-secondary/5 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all"
+                    >
+                      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#674FA3]" />{" "}
+                      Add Product
+                    </button>
+                  )}
+                </div>
+
+                {/* Desktop Add Product button - original style */}
+                <div className="hidden lg:block">
+                  {canEditBasic && (
+                    <button
+                      onClick={handleAdd}
+                      className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
+                    >
+                      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </div>
+
+        <div className="mt-1 px-3 sm:px-5 md:px-6 py-1">
+          {/* Unified container - border only on desktop, hidden on mobile */}
+          <div className="hidden lg:flex flex-row items-center justify-between gap-2 sm:gap-3 sm:border sm:border-gray-200 sm:rounded-xl bg-white p-0 sm:p-1.5">
+            {/* LEFT SIDE - Search (reduced width on mobile) */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+              <input
+                value={search}
+                type="search"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search..."
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#674FA3]/50 focus:border-[#674FA3] bg-white transition-all duration-200 [&:focus]:ring-[#674FA3] [&:focus]:border-[#674FA3]"
+                style={{ outline: "none" }}
+              />
+            </div>
+
+            {/* RIGHT SIDE - Custom Page Size Selector (reduced size) */}
+            <div className="flex-shrink-0">
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#674FA3]/30 focus:border-[#674FA3] cursor-pointer appearance-none pr-6 sm:pr-7 transition-all duration-200"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundSize: "1rem",
+                }}
+              >
+                <option value={5}>5 / page</option>
+                <option value={10}>10 / page</option>
+                <option value={15}>15 / page</option>
+                <option value={30}>30 / page</option>
+                <option value={60}>60 / page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-3 sm:px-5 md:px-6 py-2">
+          <ProductTable
+            products={products}
+            totalItems={totalItems}
+            loading={loading}
+            onEdit={canEditBasic ? handleEdit : undefined}
+            onDelete={
+              canDelete
+                ? (id, title) => setDeleteTarget({ id, title })
+                : undefined
+            }
+          />
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </div>
+        {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
+        <button
+          onClick={() => setShowMobileFilterModal(true)}
+          className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#674FA3] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+        >
+          <div className="relative">
+            <svg
+              className="w-5 h-5 text-[#674FA3]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
+            </svg>
+            {(search || pageSize !== 10) && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+            )}
+          </div>
+          <span className="text-sm font-bold tracking-wide text-[#674FA3]">
+            Filter
+          </span>
+          {(search || pageSize !== 10) && (
+            <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#674FA3]/10 text-[#674FA3] rounded-full">
+              Active
+            </span>
+          )}
+        </button>
+
+        {/* Mobile Filter Modal - Bottom Sheet */}
+        {showMobileFilterModal && (
+          <div
+            className="fixed inset-0 z-50 lg:hidden"
+            onClick={() => setShowMobileFilterModal(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+            {/* Bottom Sheet Content */}
+            <div
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
+                <h3 className="text-lg font-extrabold text-secondary">
+                  Filters
+                </h3>
+                <button
+                  onClick={() => setShowMobileFilterModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 space-y-4">
+                {/* Search */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Search
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Page Size */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Items per page
+                  </label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
+                  >
+                    <option value={5}>5 / page</option>
+                    <option value={10}>10 / page</option>
+                    <option value={15}>15 / page</option>
+                    <option value={30}>30 / page</option>
+                    <option value={60}>60 / page</option>
+                  </select>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  {(search || pageSize !== 10) && (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setPageSize(10);
+                        setCurrentPage(1);
+                      }}
+                      className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowMobileFilterModal(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }

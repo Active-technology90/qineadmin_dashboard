@@ -31,7 +31,12 @@ interface ChartsSectionProps {
   hasTopProductsData: boolean;
   currentData: any[];
   orderStatusData: { name: string; value: number; color: string }[];
-  productSalesData: { name: string; sales: number; company_name: string; color: string }[];
+  productSalesData: {
+    name: string;
+    sales: number;
+    company_name: string;
+    color: string;
+  }[];
   productTrendData: any[];
   topProductNames: string[];
   onNavigate?: (tab: DashboardTab) => void;
@@ -75,7 +80,7 @@ export default function ChartsSection({
                   {/* Legend */}
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#6750A4]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#674FA3]" />
                       <span className="text-xs text-gray-500">Current</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -93,7 +98,7 @@ export default function ChartsSection({
                         onClick={() => setPeriod(p)}
                         className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
                           period === p
-                            ? "bg-white shadow text-[#6750A4] ring-1 ring-gray-200/50"
+                            ? "bg-white shadow text-[#674FA3] ring-1 ring-gray-200/50"
                             : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                         }`}
                       >
@@ -102,7 +107,7 @@ export default function ChartsSection({
                     ))}
                   </div>
                   <div className="p-2 bg-purple-50 rounded-xl hidden sm:block">
-                    <TrendingUp className="h-5 w-5 text-[#6750A4]" />
+                    <TrendingUp className="h-5 w-5 text-[#674FA3]" />
                   </div>
                 </div>
               </div>
@@ -249,7 +254,9 @@ export default function ChartsSection({
                   <h3 className="text-sm sm:text-base font-semibold text-gray-700">
                     Product Sales Trend
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1">Monthly comparison</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Monthly comparison
+                  </p>
                 </div>
                 {/* Legend – wraps on small screens */}
                 <div className="flex flex-wrap items-center gap-3 xs:gap-4">
@@ -258,7 +265,8 @@ export default function ChartsSection({
                       <span
                         className="w-3 h-3 rounded-full"
                         style={{
-                          backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
+                          backgroundColor:
+                            CHART_COLORS[idx % CHART_COLORS.length],
                         }}
                       />
                       <span className="text-xs text-gray-600">{name}</span>
@@ -339,7 +347,7 @@ export default function ChartsSection({
                 <button
                   type="button"
                   onClick={() => onNavigate?.("products")}
-                  className="text-xs font-medium text-[#6750A4] hover:underline cursor-pointer"
+                  className="text-xs font-medium text-[#674FA3] hover:underline cursor-pointer"
                 >
                   View all
                 </button>

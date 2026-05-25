@@ -42,66 +42,204 @@ const FormInput: React.FC<FormInputProps> = ({
   autoComplete,
 }) => {
   const [focused, setFocused] = useState(false);
-  const hasValue = value.length > 0;
+
+  const hasValue = value?.length > 0;
+  const isActive = focused || hasValue;
 
   return (
-    <div className="relative">
-      <div
-        className={`relative rounded-xl transition-all duration-200 ${
-          focused
-            ? "ring-2 ring-[#6750A4]/30 border-[#6750A4]"
-            : "border-gray-200"
-        } ${error ? "border-red-300 ring-red-100" : ""}`}
+    <div className="w-full space-y-1.5">
+      {/* Label */}
+      <label
+        htmlFor={id}
+        className="
+          flex items-center gap-1
+          text-[11px] xs:text-xs sm:text-sm
+          font-semibold
+          text-gray-700
+          tracking-wide
+        "
       >
-        {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            <span className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-5 sm:w-5">
-              {icon}
-            </span>
-          </div>
+        <span>{label}</span>
+
+        {required && (
+          <span className="text-red-500">*</span>
         )}
-        <input
-          id={id}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholder={placeholder || (focused ? label : "")}
-          required={required}
-          autoComplete={autoComplete}
-          className={`w-full bg-white/80 backdrop-blur-sm px-3 xs:px-4 py-2.5 xs:py-3 rounded-xl border transition-all duration-200 outline-none text-xs xs:text-sm sm:text-base ${
-            icon ? "pl-8 xs:pl-10" : "pl-3 xs:pl-4"
-          } ${
-            error
-              ? "border-red-300 focus:border-red-500"
-              : "border-gray-200 focus:border-[#6750A4]"
-          } text-gray-900 placeholder-gray-400`}
+      </label>
+
+      {/* Input Wrapper */}
+      <div className="relative group">
+        {/* Glow Layer */}
+        <div
+          className={`
+            absolute inset-0 rounded-2xl transition-all duration-300
+            ${
+              focused
+                ? "bg-[#674FA3]/10 blur-md opacity-100"
+                : "opacity-0"
+            }
+          `}
         />
-        <label
-          htmlFor={id}
-          className={`absolute left-3 transition-all duration-200 pointer-events-none px-1 bg-white/80 backdrop-blur-sm text-xs xs:text-sm ${
-            focused || hasValue
-              ? "text-[10px] xs:text-xs -top-2.5 text-[#6750A4]"
-              : "text-xs xs:text-sm top-1/2 -translate-y-1/2 text-gray-500"
-          } ${icon ? "left-8 xs:left-10" : "left-3"}`}
+
+        {/* Input Container */}
+        <div
+          className={`
+            relative flex items-center
+            rounded-2xl
+            border
+            bg-white/90
+            backdrop-blur-xl
+
+            transition-all duration-200
+
+            min-h-[52px] xs:min-h-[56px]
+
+            ${
+              error
+                ? `
+                  border-red-300
+                  shadow-[0_0_0_4px_rgba(239,68,68,0.08)]
+                `
+                : focused
+                ? `
+                  border-[#674FA3]
+                  shadow-[0_0_0_4px_rgba(103,79,163,0.12)]
+                `
+                : `
+                  border-gray-200
+                  hover:border-gray-300
+                `
+            }
+          `}
         >
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
+          {/* Icon */}
+          {icon && (
+            <div
+              className={`
+                absolute left-4
+                flex items-center justify-center
+                transition-all duration-200
+                pointer-events-none
+                ${
+                  focused
+                    ? "text-[#674FA3]"
+                    : error
+                    ? "text-red-400"
+                    : "text-gray-400"
+                }
+              `}
+            >
+              <span className="flex h-5 w-5 items-center justify-center">
+                {icon}
+              </span>
+            </div>
+          )}
+
+          {/* Input */}
+          <input
+            id={id}
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder={focused ? placeholder || `Enter ${label}` : ""}
+            required={required}
+            autoComplete={autoComplete}
+            className={`
+              peer
+              w-full
+              bg-transparent
+              outline-none
+
+              text-xs md:text-sm
+              font-medium
+              text-gray-900
+              placeholder:text-gray-400
+
+              transition-all duration-200
+
+              pt-6
+              pb-2
+
+              ${
+                icon
+                  ? "pl-12 pr-4"
+                  : "px-4"
+              }
+            `}
+          />
+
+          {/* Floating Label */}
+          <motion.span
+            initial={false}
+            animate={{
+              top: isActive ? "11px" : "50%",
+              y: isActive ? 0 : "-50%",
+              scale: isActive ? 0.88 : 1,
+            }}
+            transition={{
+              duration: 0.18,
+              ease: "easeOut",
+            }}
+            className={`
+              absolute
+              pointer-events-none
+              origin-left
+
+              text-xs md:text-sm
+              font-medium
+
+              ${
+                icon
+                  ? "left-12"
+                  : "left-4"
+              }
+
+              ${
+                error
+                  ? "text-red-500"
+                  : focused
+                  ? "text-[#674FA3]"
+                  : "text-gray-500"
+              }
+            `}
+          >
+            {label}
+          </motion.span>
+        </div>
       </div>
-      {error && (
-        <motion.p
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[10px] xs:text-xs text-red-500 mt-1 ml-1"
-        >
-          {error}
-        </motion.p>
-      )}
+
+      {/* Error Message */}
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            className="
+              flex items-start gap-1.5
+              px-1
+            "
+          >
+            <div className="mt-[2px] h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+
+            <p
+              className="
+                text-[11px] xs:text-xs
+                font-medium
+                text-red-500
+                leading-relaxed
+              "
+            >
+              {error}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
-
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -119,20 +257,24 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
     <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-3 xs:p-4 bg-gray-50 rounded-xl gap-2 xs:gap-0">
       <div>
         <p className="font-medium text-gray-900 text-xs xs:text-sm">{label}</p>
-        {description && <p className="text-[10px] xs:text-xs text-gray-500">{description}</p>}
+        {description && (
+          <p className="text-[10px] xs:text-xs text-gray-500">{description}</p>
+        )}
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 xs:h-6 w-9 xs:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 ${
-          checked ? "bg-[#6750A4]" : "bg-gray-300"
+        className={`relative inline-flex h-5 xs:h-6 w-9 xs:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#674FA3]/50 ${
+          checked ? "bg-[#674FA3]" : "bg-gray-300"
         }`}
       >
         <span
           className={`inline-block h-3.5 xs:h-4 w-3.5 xs:w-4 transform rounded-full bg-white transition-transform ${
-            checked ? "translate-x-5 xs:translate-x-6" : "translate-x-0.5 xs:translate-x-1"
+            checked
+              ? "translate-x-5 xs:translate-x-6"
+              : "translate-x-0.5 xs:translate-x-1"
           }`}
         />
       </button>
@@ -183,7 +325,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 //         onHoverEnd={() => setIsHovering(false)}
 //         onClick={() => fileInputRef.current?.click()}
 //       >
-//         <div className="h-20 w-20 rounded-full bg-[#6750A4] flex items-center justify-center overflow-hidden shadow-lg">
+//         <div className="h-20 w-20 rounded-full bg-[#674FA3] flex items-center justify-center overflow-hidden shadow-lg">
 //           {preview ? (
 //             <img
 //               src={preview}
@@ -214,7 +356,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 //       <button
 //         type="button"
 //         onClick={() => fileInputRef.current?.click()}
-//         className="text-xs text-[#6750A4] hover:underline"
+//         className="text-xs text-[#674FA3] hover:underline"
 //       >
 //         Change photo
 //       </button>
@@ -257,14 +399,15 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ message, onDismiss }) => {
     </motion.div>
   );
 };
-
 interface ActionButtonProps {
   onClick?: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "danger";
   children: React.ReactNode;
   type?: "button" | "submit";
+  fullWidth?: boolean;
+  icon?: React.ReactNode;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
@@ -274,47 +417,158 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   variant = "primary",
   children,
   type = "button",
+  fullWidth = false,
+  icon,
 }) => {
-  const baseStyles =
-    "px-4 xs:px-5 py-2 xs:py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 text-xs xs:text-sm sm:text-base";
+  const isDisabled = disabled || loading;
+
+  const baseStyles = `
+    relative overflow-hidden
+    inline-flex items-center justify-center gap-2.5
+
+    min-h-[40px] xs:min-h-[50px]
+    px-5 xs:px-6
+
+    rounded-2xl
+    font-semibold
+
+    text-sm xs:text-[15px]
+
+    transition-all duration-200 ease-out
+
+    active:scale-[0.98]
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+
+    focus-visible:outline-none
+    focus-visible:ring-4
+    focus-visible:ring-offset-0
+
+    select-none
+    whitespace-nowrap
+  `;
+
   const variants = {
-    primary:
-      "bg-[#6750A4] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0",
-    secondary:
-      "bg-white/80 backdrop-blur-sm border border-gray-300 text-gray-700 hover:bg-white",
+    primary: `
+      bg-[#674FA3]
+      text-white
+
+      shadow-lg shadow-[#674FA3]/20
+
+      hover:-translate-y-0.5
+      hover:shadow-xl hover:shadow-[#674FA3]/30
+
+      focus-visible:ring-[#674FA3]/25
+    `,
+
+    secondary: `
+      bg-white/90
+      backdrop-blur-xl
+
+      border border-gray-200
+      text-gray-700
+
+      shadow-sm
+
+      hover:bg-white
+      hover:border-gray-300
+      hover:shadow-md
+
+      focus-visible:ring-gray-200
+    `,
+
+    danger: `
+      bg-red-500
+      text-white
+
+      shadow-lg shadow-red-500/20
+
+      hover:-translate-y-0.5
+      hover:bg-red-600
+      hover:shadow-xl hover:shadow-red-500/30
+
+      focus-visible:ring-red-200
+    `,
   };
 
   return (
     <motion.button
       type={type}
       onClick={onClick}
-      disabled={disabled || loading}
-      whileTap={{ scale: 0.98 }}
-      className={`${baseStyles} ${variants[variant]}`}
+      disabled={isDisabled}
+      whileTap={{ scale: 0.985 }}
+      whileHover={
+        !isDisabled
+          ? {
+              y: -1,
+            }
+          : {}
+      }
+      transition={{
+        duration: 0.18,
+        ease: "easeOut",
+      }}
+      className={`
+        ${baseStyles}
+        ${variants[variant]}
+        ${fullWidth ? "w-full" : ""}
+      `}
     >
-      {loading && (
-        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+      {/* Shine Effect */}
+      {!isDisabled && variant === "primary" && (
+        <span
+          className="
+            absolute inset-0
+            opacity-0 hover:opacity-100
+            transition-opacity duration-500
+            bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.18),transparent)]
+            translate-x-[-120%] hover:translate-x-[120%]
+          "
+        />
+      )}
+
+      {/* Loading Spinner */}
+      {loading ? (
+        <svg
+          className="h-4 w-4 animate-spin shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
           <circle
-            className="opacity-25"
+            className="opacity-20"
             cx="12"
             cy="12"
             r="10"
             stroke="currentColor"
             strokeWidth="4"
-            fill="none"
           />
+
           <path
-            className="opacity-75"
+            className="opacity-90"
             fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            d="M12 2a10 10 0 00-10 10h4a6 6 0 016-6V2z"
           />
         </svg>
-      )}
-      {children}
+      ) : icon ? (
+        <span className="flex shrink-0 items-center justify-center">
+          {icon}
+        </span>
+      ) : null}
+
+      {/* Text */}
+      <span
+        className={` 
+          relative z-10 text-xs md:text-sm
+          flex items-center justify-center
+          transition-opacity duration-200
+          ${loading ? "opacity-90" : ""}
+        `}
+      >
+        {children}
+      </span>
     </motion.button>
   );
 };
-
 // ============================================================
 // Main Modal Component
 // ============================================================
@@ -399,18 +653,27 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
     if (!isOpen) return null;
 
     // Responsive modal classes
-    const modalContainerClasses = `
-      bg-white p-4 shadow-[0_25px_80px_rgba(0,0,0,0.15)] border border-secondary/10 
-      w-full flex flex-col
-      max-[319px]:h-[100dvh] max-[319px]:rounded-none
-      xs:h-[95dvh] xs:rounded-t-3xl xs:mt-auto
-      sm:max-w-lg sm:max-h-[92dvh] sm:rounded-3xl sm:mx-auto
-      md:max-w-2xl
-      lg:max-w-4xl
-      xl:max-w-5xl
-      2xl:max-w-6xl
-    `;
+  const modalContainerClasses = `
+  bg-white shadow-[0_25px_80px_rgba(0,0,0,0.15)]
+  border border-secondary/10
+  flex flex-col overflow-hidden
 
+  w-[95vw]
+  mx-auto
+
+  h-[95dvh]
+  rounded-t-3xl
+
+  sm:w-full
+  sm:max-w-lg
+  sm:max-h-[92dvh]
+  sm:rounded-3xl
+
+  md:max-w-2xl
+  lg:max-w-4xl
+  xl:max-w-5xl
+  2xl:max-w-6xl
+`;
     return (
       <AnimatePresence>
         {isOpen && (
@@ -418,7 +681,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-0 sm:p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/80 p-0 sm:p-4"
             onClick={onClose}
           >
             <motion.div
@@ -430,7 +693,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-[#6750A4] py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
+              <div className="sticky top-0 z-10 bg-[#674FA3] py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
                 <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6">
                   <div>
                     <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-white">
@@ -453,7 +716,10 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
 
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto overscroll-contain">
-                <form onSubmit={handleSubmit} className="px-4 xs:px-5 sm:px-6 py-6 xs:py-8 space-y-5">
+                <form
+                  onSubmit={handleSubmit}
+                  className="px-4 xs:px-5 sm:px-6 py-6 xs:py-8 space-y-4"
+                >
                   {/* Avatar Upload */}
                   {/* <div className="flex justify-center">
                     <AvatarUpload
@@ -502,7 +768,9 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                       label="Email Address"
                       type="email"
                       value={formData.email}
-                      onChange={(val) => setFormData({ ...formData, email: val })}
+                      onChange={(val) =>
+                        setFormData({ ...formData, email: val })
+                      }
                       icon={<Mail className="h-4 w-4" />}
                       required
                       error={fieldErrors.email}
@@ -533,20 +801,28 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
 
                   {/* Error Message */}
                   {error && (
-                    <ErrorAlert message={error} onDismiss={() => setError("")} />
+                    <ErrorAlert
+                      message={error}
+                      onDismiss={() => setError("")}
+                    />
                   )}
                 </form>
               </div>
 
               {/* Sticky Footer with buttons */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4 flex flex-col-reverse sm:flex-row justify-end gap-2 xs:gap-3" style={{ paddingBottom: `max(env(safe-area-inset-bottom, 1rem), 1rem)` }}>
-                <ActionButton
+              <div
+                className="sticky bottom-0 bg-white border-t border-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4 flex flex-col-reverse sm:flex-row justify-end gap-2 xs:gap-3"
+                style={{
+                  paddingBottom: `max(env(safe-area-inset-bottom, 1rem), 1rem)`,
+                }}
+              >
+                {/* <ActionButton
                   onClick={onClose}
                   variant="secondary"
                   type="button"
                 >
                   Cancel
-                </ActionButton>
+                </ActionButton> */}
                 <ActionButton
                   loading={loading}
                   variant="primary"

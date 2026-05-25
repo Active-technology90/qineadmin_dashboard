@@ -404,7 +404,7 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative top-0 left-0 h-screen text-white flex flex-col shadow-2xl z-50 transform transition-all duration-300
-          bg-gradient-to-b from-purple-900 to-[#6750A4]
+          bg-gradient-to-b from-purple-900 to-[#674FA3]
           ${sidebarCollapsed ? "w-20" : "w-72"}
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden">
         <header
-          className={`h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
+          className={`h-14 md:h-20 flex items-center justify-between px-0 md:px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
             isScrolled
               ? "bg-purple-100/90 shadow-xl border-b border-purple-200"
               : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
@@ -643,14 +643,14 @@ export default function AdminDashboard() {
               <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
                 <div className="relative flex-shrink-0 group">
                   {/* Outer glow effect */}
-                  <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#6750A4] via-[#9b87f5] to-[#6750A4] opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>
+                  <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#674FA3] via-[#9b87f5] to-[#674FA3] opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>
                   {/* Animated gradient border */}
                   <div
-                    className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#6750A4] via-[#c4b5fd] to-[#6750A4] animate-spin-slow"
+                    className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#674FA3] via-[#c4b5fd] to-[#674FA3] animate-spin-slow"
                     style={{ animationDuration: "3s" }}
                   ></div>
                   {/* Logo container - Modern Squircle */}
-                  <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm flex items-center justify-center shadow-2xl border-2 border-[#6750A4]/50 shadow-[0_0_10px_rgba(103,80,164,0.3)] p-1">
+                  <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm flex items-center justify-center shadow-2xl border-2 border-[#674FA3]/50 shadow-[0_0_10px_rgba(103,80,164,0.3)] p-1">
                     {companyLogo ? (
                       <img
                         src={companyLogo}
@@ -658,7 +658,7 @@ export default function AdminDashboard() {
                         className="w-full h-full rounded-xl object-cover shadow-md"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#6750A4] to-[#7c63b8] flex items-center justify-center shadow-inner">
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#674FA3] to-[#7c63b8] flex items-center justify-center shadow-inner">
                         <Building2 className="w-6 h-6 text-white drop-shadow-sm" />
                       </div>
                     )}
@@ -687,7 +687,7 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#6750A4]"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#674FA3]"></div>
                     <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                       Active Company
                     </p>
@@ -705,7 +705,7 @@ export default function AdminDashboard() {
             <div className="relative">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gradient-to-r hover:from-[#6750A4]/5 hover:to-transparent rounded-xl p-4 transition-all duration-300 ${profileDropdownOpen ? "bg-gradient-to-r from-[#6750A4]/10 to-transparent" : ""}`}
+                className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gradient-to-r hover:from-[#674FA3]/5 hover:to-transparent rounded-xl p-4 transition-all duration-300 ${profileDropdownOpen ? "bg-gradient-to-r from-[#674FA3]/10 to-transparent" : ""}`}
               >
                 <div className="text-right hidden md:block">
                   <div className="flex flex-col">
@@ -719,12 +719,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="relative">
                   {/* Pulsing ring effect */}
-                  <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#6750A4] to-[#9b87f5] opacity-75 blur-sm animate-pulse"></div>
+                  <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#674FA3] to-[#9b87f5] opacity-75 blur-sm animate-pulse"></div>
                   {/* Outer ring - secondary color */}
-                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#6750A4] to-[#7c63b8] opacity-100"></div>
+                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#674FA3] to-[#7c63b8] opacity-100"></div>
                   {/* Avatar container */}
-                  <div className="relative h-11 w-11 rounded-full bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-xl border-2 border-[#6750A4] p-0.5 group-hover:scale-110 transition-all duration-300">
-                    <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-[#6750A4] to-[#7c63b8]">
+                  <div className="relative h-11 w-11 rounded-full bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-xl border-2 border-[#674FA3] p-0.5 group-hover:scale-110 transition-all duration-300">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-[#674FA3] to-[#7c63b8]">
                       {user?.profile_image ? (
                         <img
                           src={user.profile_image}

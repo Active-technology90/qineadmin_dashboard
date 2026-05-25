@@ -4,7 +4,6 @@ interface CompanyUsersTableProps {
   users: any[];
   loading: boolean;
 
-
   onEdit: (user: any) => void;
   onDelete: (user: any) => void;
   currentUser: any;
@@ -14,7 +13,6 @@ interface CompanyUsersTableProps {
 export function CompanyUsersTable({
   users,
   loading,
-
 
   onEdit,
   onDelete,
@@ -31,13 +29,13 @@ export function CompanyUsersTable({
 
   return (
     <>
-     {/* <div className="mt-5">
+      {/* <div className="mt-5">
   <TableControls
     pageSize={pageSize}
     onPageSizeChange={onPageSizeChange} */}
-  {/* > */}
-    {/* SEARCH INSIDE CHILDREN */}
-    {/* <div className="relative">
+      {/* > */}
+      {/* SEARCH INSIDE CHILDREN */}
+      {/* <div className="relative">
       <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
 
       <input
@@ -50,12 +48,12 @@ export function CompanyUsersTable({
           border border-gray-200
           rounded-xl
           focus:outline-none
-          focus:ring-2 focus:ring-[#6750A4]
-          focus:border-[#6750A4]
+          focus:ring-2 focus:ring-[#674FA3]
+          focus:border-[#674FA3]
         "
       />
     </div> */}
-  {/* </TableControls>
+      {/* </TableControls>
 </div> */}
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <table className="min-w-[640px] sm:min-w-full divide-y divide-gray-200">
@@ -94,12 +92,17 @@ export function CompanyUsersTable({
               <tr>
                 <td colSpan={4} className="text-center py-8 sm:py-12">
                   <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-indigo-500" />
-                  <p className="mt-2 text-xs sm:text-sm text-gray-500">Loading users...</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-500">
+                    Loading users...
+                  </p>
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 sm:py-12 text-gray-500">
+                <td
+                  colSpan={4}
+                  className="text-center py-8 sm:py-12 text-gray-500"
+                >
                   <UserIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-300 mb-2" />
                   <p className="text-xs sm:text-sm">No users found</p>
                 </td>
@@ -127,7 +130,8 @@ export function CompanyUsersTable({
                         )}
                       </div>
                       <span className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">
-                        {user.username || `${user.first_name} ${user.last_name}`}
+                        {user.username ||
+                          `${user.first_name} ${user.last_name}`}
                       </span>
                     </div>
                   </td>

@@ -24,7 +24,7 @@ export const SummaryCard = ({
       group relative
       w-full min-w-0
 
-      min-h-[120px]
+      min-h-[100px]
       xs:min-h-[130px]
       sm:min-h-[145px]
       lg:min-h-[165px]
@@ -40,7 +40,7 @@ export const SummaryCard = ({
       rounded-2xl
       sm:rounded-3xl
 
-      p-2.5
+      p-2
       xs:p-3
       sm:p-4
       lg:p-5
@@ -49,7 +49,7 @@ export const SummaryCard = ({
       border border-white/60
 
       hover:shadow-xl
-      hover:border-[#6750A4]/30
+      hover:border-[#674FA3]/30
 
       active:scale-[0.98]
 
@@ -62,12 +62,12 @@ export const SummaryCard = ({
         absolute inset-0
 
         bg-gradient-to-br
-        from-[#6750A4]/0
-        via-[#6750A4]/0
+        from-[#674FA3]/0
+        via-[#674FA3]/0
         to-[#9b87f5]/0
 
-        group-hover:from-[#6750A4]/5
-        group-hover:via-[#6750A4]/3
+        group-hover:from-[#674FA3]/5
+        group-hover:via-[#674FA3]/3
         group-hover:to-[#9b87f5]/8
 
         rounded-2xl
@@ -105,7 +105,7 @@ export const SummaryCard = ({
               opacity-0
               group-hover:opacity-100
               bg-gradient-to-r
-              from-[#6750A4]/20
+              from-[#674FA3]/20
               to-[#9b87f5]/20
               transition-all duration-300
             "
@@ -188,7 +188,7 @@ export const SummaryCard = ({
               sm:h-4
               rounded-full
               bg-gradient-to-b
-              from-[#6750A4]
+              from-[#674FA3]
               to-[#9b87f5]
               shrink-0
             "
@@ -205,7 +205,7 @@ export const SummaryCard = ({
               tracking-[0.12em]
 
               text-gray-400
-              group-hover:text-[#6750A4]
+              group-hover:text-[#674FA3]
 
               transition-colors duration-300
 
@@ -220,10 +220,10 @@ export const SummaryCard = ({
         <div className="flex items-end gap-1 min-w-0">
           <span
             className="
-              text-lg
-              xs:text-xl
-              sm:text-2xl
-              lg:text-3xl
+              text-base
+              xs:text-lg
+              sm:text-xl
+              lg:text-2xl
 
               font-black
               tracking-tight
@@ -233,7 +233,7 @@ export const SummaryCard = ({
               truncate
 
               group-hover:bg-gradient-to-r
-              group-hover:from-[#6750A4]
+              group-hover:from-[#674FA3]
               group-hover:to-[#7c63b8]
 
               group-hover:bg-clip-text
@@ -264,7 +264,7 @@ export const SummaryCard = ({
           via-gray-200
           to-transparent
 
-          group-hover:via-[#6750A4]
+          group-hover:via-[#674FA3]
 
           transition-all duration-500
         "

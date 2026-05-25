@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
@@ -21,7 +21,6 @@ import {
   Info,
 } from "lucide-react";
 import { useReadOnly } from "./AdminDashboard";
-
 
 // ----------------------------------------------------------------------
 // Types – matches the system’s expected ad structure
@@ -150,35 +149,35 @@ const Button: React.FC<{
   className = "",
   disabled = false,
 }) => {
-    const base =
-      "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
-    const variants = {
-      primary:
-        "bg-[#6750A4] text-white shadow-md hover:shadow-lg focus:ring-[#6750A4]",
-      secondary:
-        "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
-      outline:
-        "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
-      ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
-      danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-    };
-    const sizes = {
-      sm: "px-3 py-1.5 text-sm",
-      md: "px-4 py-2 text-sm",
-      lg: "px-5 py-2.5 text-base",
-    };
-    return (
-      <button
-        type={type}
-        onClick={onClick}
-        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-        disabled={disabled || isLoading}
-      >
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-        {children}
-      </button>
-    );
+  const base =
+    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
+  const variants = {
+    primary:
+      "bg-[#674FA3] text-white shadow-md hover:shadow-lg focus:ring-[#674FA3]",
+    secondary:
+      "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
+    outline:
+      "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+    ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
+    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
   };
+  const sizes = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm",
+    lg: "px-5 py-2.5 text-base",
+  };
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      disabled={disabled || isLoading}
+    >
+      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+      {children}
+    </button>
+  );
+};
 
 const Input: React.FC<{
   label?: string;
@@ -197,22 +196,23 @@ const Input: React.FC<{
   required,
   error,
 }) => (
-    <div className="space-y-1.5">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700">{label}</label>
-      )}
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
-          }`}
-      />
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-    </div>
-  );
+  <div className="space-y-1.5">
+    {label && (
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
+    )}
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#674FA3] transition-all ${
+        error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+      }`}
+    />
+    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </div>
+);
 
 const Badge: React.FC<{
   children: React.ReactNode;
@@ -259,8 +259,6 @@ const StatCard: React.FC<{
   </motion.div>
 );
 
-
-
 // ----------------------------------------------------------------------
 // Image Uploader with drag & drop and preview
 // ----------------------------------------------------------------------
@@ -275,9 +273,9 @@ const ImageUploader: React.FC<{
         ? existingImage.startsWith("http") || existingImage.startsWith("blob:")
           ? existingImage
           : existingImage.startsWith("/")
-          ? `https://backend-qine.activetechet.com${existingImage}`
-          : `https://backend-qine.activetechet.com/media/${existingImage}`
-        : null)
+            ? `https://backend-qine.activetechet.com${existingImage}`
+            : `https://backend-qine.activetechet.com/media/${existingImage}`
+        : null),
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -286,12 +284,17 @@ const ImageUploader: React.FC<{
     if (previewUrl) {
       setPreview(previewUrl);
     } else if (existingImage) {
-      if (existingImage.startsWith("http") || existingImage.startsWith("blob:")) {
+      if (
+        existingImage.startsWith("http") ||
+        existingImage.startsWith("blob:")
+      ) {
         setPreview(existingImage);
       } else if (existingImage.startsWith("/")) {
         setPreview(`https://backend-qine.activetechet.com${existingImage}`);
       } else {
-        setPreview(`https://backend-qine.activetechet.com/media/${existingImage}`);
+        setPreview(
+          `https://backend-qine.activetechet.com/media/${existingImage}`,
+        );
       }
     } else {
       setPreview(null);
@@ -335,15 +338,15 @@ const ImageUploader: React.FC<{
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-[#6750A4] ring-offset-2 bg-[#6750A4]/5" : ""
-          }`}
+        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${
+          isDragging ? "ring-2 ring-[#674FA3] ring-offset-2 bg-[#674FA3]/5" : ""
+        }`}
       >
         {!preview ? (
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${isDragging
-                ? "border-[#6750A4] bg-[#6750A4]/5"
-                : "border-gray-200"
-              }`}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${
+              isDragging ? "border-[#674FA3] bg-[#674FA3]/5" : "border-gray-200"
+            }`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="mx-auto h-10 w-10 text-gray-400" />
@@ -438,7 +441,7 @@ const AdCard: React.FC<{
             href={ad.target_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-[#6750A4] hover:underline gap-1 mb-4"
+            className="inline-flex items-center text-sm text-[#674FA3] hover:underline gap-1 mb-4"
           >
             <Globe className="w-3.5 h-3.5" />{" "}
             {ad.target_link.replace(/^https?:\/\//, "")}
@@ -596,7 +599,7 @@ const SearchFilterBar: React.FC<{
           placeholder="Search Ads by title..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition-all"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-[#674FA3] focus:border-transparent transition-all"
         />
       </div>
       <div className="flex gap-2">
@@ -605,10 +608,11 @@ const SearchFilterBar: React.FC<{
             key={status}
             whileTap={{ scale: 0.97 }}
             onClick={() => onFilterChange(status)}
-            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${filterStatus === status
-                ? "bg-[#6750A4] text-white shadow-md"
+            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${
+              filterStatus === status
+                ? "bg-[#674FA3] text-white shadow-md"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-              }`}
+            }`}
           >
             {status === "all"
               ? "All"
@@ -659,10 +663,10 @@ const Pagination: React.FC<{
 // ----------------------------------------------------------------------
 // Empty State
 // ----------------------------------------------------------------------
-const EmptyState: React.FC<{ onCreateNew: () => void; isReadOnly: boolean }> = ({
-  onCreateNew,
-  isReadOnly,
-}) => (
+const EmptyState: React.FC<{
+  onCreateNew: () => void;
+  isReadOnly: boolean;
+}> = ({ onCreateNew, isReadOnly }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -752,7 +756,7 @@ export default function AdManagement() {
       const adsList = Array.isArray(response.data)
         ? response.data
         : response.data?.results || [];
-      
+
       console.log("--- Ads Fetched Successfully ---");
       console.table(
         adsList.map((ad: Ad) => ({
@@ -763,10 +767,10 @@ export default function AdManagement() {
             ? ad.image.startsWith("http") || ad.image.startsWith("blob:")
               ? ad.image
               : ad.image.startsWith("/")
-              ? `https://backend-qine.activetechet.com${ad.image}`
-              : `https://backend-qine.activetechet.com/media/${ad.image}`
+                ? `https://backend-qine.activetechet.com${ad.image}`
+                : `https://backend-qine.activetechet.com/media/${ad.image}`
             : "",
-        }))
+        })),
       );
 
       setAds(adsList);
@@ -876,7 +880,7 @@ export default function AdManagement() {
   const totalPages = Math.ceil(filteredAds.length / ITEMS_PER_PAGE);
   const paginatedAds = filteredAds.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const totalCount = ads.length;
@@ -895,10 +899,10 @@ export default function AdManagement() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Sticky Header */}
-       <motion.div
-  initial={{ opacity: 0, y: -20 }}
-  animate={{ opacity: 1, y: 0 }}
-  className="
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="
     sticky top-0 z-20
     bg-white/80 backdrop-blur-md
     rounded-2xl
@@ -907,38 +911,41 @@ export default function AdManagement() {
     w-full
     overflow-hidden
   "
->
-  <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 min-w-0 w-full">
-    
-    {/* Left Section */}
-    <div className="min-w-0 flex-1 overflow-hidden">
-      <h1 className="
+        >
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 min-w-0 w-full">
+            {/* Left Section */}
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h1
+                className="
         text-[20px] xs:text-2xl sm:text-3xl
         font-bold
         bg-gradient-to-r from-gray-900 to-gray-600
         bg-clip-text text-transparent
         truncate leading-tight
-      ">
-        Advertisments
-      </h1>
+      "
+              >
+                Advertisments
+              </h1>
 
-      <p className="
+              <p
+                className="
         text-gray-500
         text-[11px] xs:text-xs sm:text-sm
         mt-0.5
         truncate
-      ">
-        Manage placements across your platform
-      </p>
-    </div>
+      "
+              >
+                Manage placements across your platform
+              </p>
+            </div>
 
-    {/* Right Section */}
-    {!isReadOnly && (
-      <div className="shrink-0">
-        <Button
-          onClick={openCreateModal}
-          size="lg"
-          className="
+            {/* Right Section */}
+            {!isReadOnly && (
+              <div className="shrink-0">
+                <Button
+                  onClick={openCreateModal}
+                  size="lg"
+                  className="
             shadow-sm
             inline-flex items-center justify-center
             gap-1.5 sm:gap-2
@@ -950,14 +957,14 @@ export default function AdManagement() {
             max-w-[140px] xs:max-w-none
             overflow-hidden
           "
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-          <span className="truncate">New Ads</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</motion.div>
+                >
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span className="truncate">New Ads</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        </motion.div>
         {/* Stats Grid */}
         <div className=" hidden xs:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
@@ -1028,7 +1035,7 @@ export default function AdManagement() {
             animate={{ scale: 1 }}
             whileTap={{ scale: 0.9 }}
             onClick={openCreateModal}
-            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-[#6750A4] text-white shadow-xl flex items-center justify-center z-40"
+            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-[#674FA3] text-white shadow-xl flex items-center justify-center z-40"
           >
             <Plus className="w-6 h-6" />
           </motion.button>
@@ -1064,7 +1071,7 @@ export default function AdManagement() {
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 text-[#6750A4] rounded border-gray-300 focus:ring-[#6750A4]"
+                className="w-4 h-4 text-[#674FA3] rounded border-gray-300 focus:ring-[#674FA3]"
               />
               <label
                 htmlFor="isActive"

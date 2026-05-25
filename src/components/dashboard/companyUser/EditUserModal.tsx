@@ -1,19 +1,31 @@
-import { X, Mail, Shield, Loader2, User, AtSign, Phone } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { X, Mail, Shield, Loader2, User, AtSign, Phone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 // Reusable Avatar component – kept consistent with AddUserModal
-const UserAvatar = ({ user, size = 'md' }: { user: any; size?: 'sm' | 'md' | 'lg' }) => {
+const UserAvatar = ({
+  user,
+  size = "md",
+}: {
+  user: any;
+  size?: "sm" | "md" | "lg";
+}) => {
   const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-12 h-12 text-xl',
-    lg: 'w-16 h-16 text-2xl',
+    sm: "w-8 h-8 text-xs",
+    md: "w-12 h-12 text-xl",
+    lg: "w-16 h-16 text-2xl",
   };
-  const initial = user.first_name?.[0] || user.email[0]?.toUpperCase() || '?';
+  const initial = user.first_name?.[0] || user.email[0]?.toUpperCase() || "?";
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center overflow-hidden shadow-inner flex-shrink-0`}>
+    <div
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center overflow-hidden shadow-inner flex-shrink-0`}
+    >
       {user.profile_image ? (
-        <img src={user.profile_image} alt="" className="w-full h-full object-cover" />
+        <img
+          src={user.profile_image}
+          alt=""
+          className="w-full h-full object-cover"
+        />
       ) : (
         <span className="text-secondary font-bold">{initial}</span>
       )}
@@ -30,7 +42,7 @@ interface EditUserModalProps {
     email: string;
     username: string;
     phone_number: string;
-    role: 'admin' | 'staff' | 'viewer';
+    role: "admin" | "staff" | "viewer";
     profile_image?: string;
   };
   onClose: () => void;
@@ -53,11 +65,11 @@ export function EditUserModal({
   updating,
 }: EditUserModalProps) {
   const [formData, setFormData] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    email: user?.email || '',
-    username: user?.username || '',
-    role: user?.role || 'staff',
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    email: user?.email || "",
+    username: user?.username || "",
+    role: user?.role || "staff",
   });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -78,7 +90,9 @@ export function EditUserModal({
   // Focus management
   useEffect(() => {
     if (isOpen && modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll('button, input, select');
+      const focusable = modalRef.current.querySelectorAll(
+        "button, input, select",
+      );
       if (focusable.length) (focusable[0] as HTMLElement).focus();
     }
   }, [isOpen]);
@@ -86,10 +100,10 @@ export function EditUserModal({
   // Close on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+      if (e.key === "Escape" && isOpen) onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen || !user) return null;
@@ -106,17 +120,24 @@ export function EditUserModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 transition-all duration-200" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 transition-all duration-200"
+      onClick={onClose}
+    >
       <div
         ref={modalRef}
         className="bg-white w-full max-w-[95%] sm:max-w-5xl rounded-xl sm:rounded-2xl shadow-xl transform transition-all duration-200 scale-100 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-30 flex justify-between items-center p-4 sm:p-6 border-b border-[#6750A4]/20 bg-[#6750A4]/20 backdrop-blur-sm bg-opacity-95">
+        <div className="sticky top-0 z-30 flex justify-between items-center p-4 sm:p-6 border-b border-[#674FA3]/20 bg-[#674FA3]/20 backdrop-blur-sm bg-opacity-95">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">Edit Profile & Role</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Update user information and permissions</p>
+            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent">
+              Edit Profile & Role
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+              Update user information and permissions
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -133,14 +154,23 @@ export function EditUserModal({
           <div className="bg-gradient-to-r from-indigo-50/50 to-white rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 border border-indigo-100 shadow-sm">
             <UserAvatar user={user} size="lg" />
             <div className="flex-1 min-w-0">
-              <p className="text-base sm:text-lg font-semibold text-gray-900 truncate">{user.first_name} {user.last_name}</p>
+              <p className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                {user.first_name} {user.last_name}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
+                <p className="text-xs sm:text-sm text-gray-500 truncate">
+                  {user.email}
+                </p>
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <Shield className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                <p className="text-[10px] sm:text-xs text-gray-500">Current role: <span className="font-semibold capitalize text-secondary">{user.role}</span></p>
+                <p className="text-[10px] sm:text-xs text-gray-500">
+                  Current role:{" "}
+                  <span className="font-semibold capitalize text-secondary">
+                    {user.role}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
@@ -149,13 +179,17 @@ export function EditUserModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             {/* First Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                First Name
+              </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   value={formData.first_name}
-                  onChange={(e) => handleInputChange('first_name', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("first_name", e.target.value)
+                  }
                   className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl sm:rounded-2xl border border-gray-200 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition"
                 />
               </div>
@@ -163,13 +197,17 @@ export function EditUserModal({
 
             {/* Last Name */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                Last Name
+              </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <input
                   type="text"
                   value={formData.last_name}
-                  onChange={(e) => handleInputChange('last_name', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("last_name", e.target.value)
+                  }
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition"
                 />
               </div>
@@ -177,13 +215,15 @@ export function EditUserModal({
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Email
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition"
                 />
               </div>
@@ -191,13 +231,17 @@ export function EditUserModal({
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Username
+              </label>
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition"
                 />
               </div>
@@ -206,7 +250,10 @@ export function EditUserModal({
             {/* Phone Number – DISABLED & RESTRICTED */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Phone Number <span className="text-[10px] sm:text-xs text-gray-400 ml-1">(restricted)</span>
+                Phone Number{" "}
+                <span className="text-[10px] sm:text-xs text-gray-400 ml-1">
+                  (restricted)
+                </span>
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
@@ -218,7 +265,9 @@ export function EditUserModal({
                   title="Phone number cannot be changed for security reasons"
                 />
               </div>
-              <p className="mt-1 text-[10px] sm:text-xs text-gray-400">Phone number cannot be edited</p>
+              <p className="mt-1 text-[10px] sm:text-xs text-gray-400">
+                Phone number cannot be edited
+              </p>
             </div>
 
             {/* Role */}
@@ -228,17 +277,21 @@ export function EditUserModal({
               </label>
               <select
                 value={formData.role}
-                onChange={(e) => handleInputChange('role', e.target.value)}
+                onChange={(e) => handleInputChange("role", e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-10 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem sm:right-1rem center',
-                  backgroundSize: '1rem sm:1.25rem',
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 0.75rem sm:right-1rem center",
+                  backgroundSize: "1rem sm:1.25rem",
                 }}
               >
-                <option value="admin">Admin – Full access to company management</option>
-                <option value="staff">Staff – Manage products and orders</option>
+                <option value="admin">
+                  Admin – Full access to company management
+                </option>
+                <option value="staff">
+                  Staff – Manage products and orders
+                </option>
                 <option value="viewer">Viewer – Read‑only access</option>
               </select>
             </div>
@@ -260,10 +313,11 @@ export function EditUserModal({
           >
             {updating ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Updating...
+                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />{" "}
+                Updating...
               </>
             ) : (
-              'Save changes'
+              "Save changes"
             )}
           </button>
         </div>

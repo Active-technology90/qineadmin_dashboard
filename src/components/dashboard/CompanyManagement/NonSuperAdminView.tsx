@@ -124,15 +124,23 @@ export default function NonSuperAdminView({
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <span className="text-sm font-medium text-amber-600">View Only Mode</span>
-                <span className="text-xs text-gray-400 italic">• Click "Edit Company" to make changes</span>
+                <span className="text-sm font-medium text-amber-600">
+                  View Only Mode
+                </span>
+                <span className="text-xs text-gray-400 italic">
+                  • Click "Edit Company" to make changes
+                </span>
               </div>
             )}
-            
-             {/* Edit Button */}
+
+            {/* Edit Button */}
             <button
               onClick={() => {
-                if (userCompanyRole === "owner" || userCompanyRole === "admin" || userCompanyRole === "super_admin") {
+                if (
+                  userCompanyRole === "owner" ||
+                  userCompanyRole === "admin" ||
+                  userCompanyRole === "super_admin"
+                ) {
                   onEdit(companies[0]);
                 }
               }}
@@ -153,8 +161,8 @@ export default function NonSuperAdminView({
                   userCompanyRole === "owner" ||
                   userCompanyRole === "admin" ||
                   userCompanyRole === "super_admin"
-                     ? "bg-gradient-to-r from-[#6750A4] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer hover:scale-[1.02]"
-                      : "bg-gray-300 text-gray-400 cursor-not-allowed shadow-none"
+                    ? "bg-gradient-to-r from-[#674FA3] to-[#7c63b8] hover:from-[#5b4694] hover:to-[#6b55a8] text-white shadow-lg cursor-pointer hover:scale-[1.02]"
+                    : "bg-gray-300 text-gray-400 cursor-not-allowed shadow-none"
                 }
               `}
             >
@@ -179,33 +187,32 @@ export default function NonSuperAdminView({
 
         {/* Form Container - Header removed */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
+          {/* Loading state */}
+          {companies.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#674FA3] mx-auto mb-3"></div>
+              <p className="text-sm">Loading company data...</p>
+            </div>
+          )}
 
-        {/* Loading state */}
-        {companies.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6750A4] mx-auto mb-3"></div>
-            <p className="text-sm">Loading company data...</p>
-          </div>
-        )}
-
-        {companies.length > 0 && (
-          <CompanyForm
-            formData={formData}
-            setFormData={setFormData}
-            formErrors={formErrors}
-            categories={categories}
-            subcategories={subcategories}
-            logoPreview={logoPreview}
-            coverPreview={coverPreview}
-            isEditingActive={isEditingActive}
-            submitting={submitting}
-            editingSlug={editingSlug}
-            onSubmit={onSubmit}
-            onClose={onCloseForm}
-          />
-                 )}
-          </div>
+          {companies.length > 0 && (
+            <CompanyForm
+              formData={formData}
+              setFormData={setFormData}
+              formErrors={formErrors}
+              categories={categories}
+              subcategories={subcategories}
+              logoPreview={logoPreview}
+              coverPreview={coverPreview}
+              isEditingActive={isEditingActive}
+              submitting={submitting}
+              editingSlug={editingSlug}
+              onSubmit={onSubmit}
+              onClose={onCloseForm}
+            />
+          )}
         </div>
       </div>
+    </div>
   );
 }

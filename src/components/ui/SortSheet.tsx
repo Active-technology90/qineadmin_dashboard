@@ -1,7 +1,7 @@
 // src/components/shared/SortSheet.tsx
-import React from 'react';
-import BottomSheet from './BottomSheet';
-import type { SelectOption } from '../ui/CustomSelect';
+import React from "react";
+import BottomSheet from "./BottomSheet";
+import type { SelectOption } from "../ui/CustomSelect";
 
 interface SortSheetProps {
   open: boolean;
@@ -37,7 +37,7 @@ const SortSheet: React.FC<SortSheetProps> = ({
         </button>
         <button
           onClick={onApply}
-          className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+          className="flex-1 h-12 rounded-2xl bg-[#674FA3] text-sm font-semibold text-white shadow-lg shadow-[#674FA3]/20 active:scale-[0.98] transition-all"
         >
           Apply Sort
         </button>
@@ -55,10 +55,12 @@ const SortSheet: React.FC<SortSheetProps> = ({
             key={opt.value}
             onClick={() => onChange(opt.value)}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border transition-all duration-200 active:scale-[0.98]
-              ${isActive ? 'bg-[#6750A4] text-white border-[#6750A4] shadow-md' : 'bg-white text-gray-700 border-gray-200 hover:border-[#6750A4]/40 hover:bg-gray-50'}`}
+              ${isActive ? "bg-[#674FA3] text-white border-[#674FA3] shadow-md" : "bg-white text-gray-700 border-gray-200 hover:border-[#674FA3]/40 hover:bg-gray-50"}`}
           >
             <span className="text-sm font-semibold">{opt.label}</span>
-            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-white' : 'border-gray-300'}`}>
+            <span
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? "border-white" : "border-gray-300"}`}
+            >
               {isActive && <span className="w-2 h-2 bg-white rounded-full" />}
             </span>
           </button>

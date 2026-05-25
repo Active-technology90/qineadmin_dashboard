@@ -42,12 +42,10 @@ const StatusBadge = ({
     delivered: "Completed",
   };
 
-  const labels =
-    type === "delivery" ? deliveryStatusLabels : orderStatusLabels;
+  const labels = type === "delivery" ? deliveryStatusLabels : orderStatusLabels;
 
   const displayLabel =
-    labels[normalizedStatus] ||
-    normalizedStatus.replace(/_/g, " ");
+    labels[normalizedStatus] || normalizedStatus.replace(/_/g, " ");
 
   const colors: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -79,37 +77,35 @@ const StatusBadge = ({
   );
 };
 
-
-
 // Helper component for formatted date display
 const OrderDate = ({ dateString }: { dateString?: string }) => {
   if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
-  
+
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
-  
-  const formatTime = date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: true 
+  const isYesterday =
+    new Date(now.setDate(now.getDate() - 1)).toDateString() ===
+    date.toDateString();
+
+  const formatTime = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
-  
-  const formatDate = date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: 'numeric'
+
+  const formatDate = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
-  
+
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-sm font-medium text-gray-900">
-        {isToday ? 'Today' : isYesterday ? 'Yesterday' : formatDate}
+        {isToday ? "Today" : isYesterday ? "Yesterday" : formatDate}
       </span>
-      <span className="text-xs text-gray-500 font-mono">
-        {formatTime}
-      </span>
+      <span className="text-xs text-gray-500 font-mono">{formatTime}</span>
     </div>
   );
 };
@@ -493,8 +489,18 @@ export default function CompanyOrders() {
                 <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                    <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     <span>Date & Time</span>
                   </div>
@@ -536,18 +542,23 @@ export default function CompanyOrders() {
                     )}
                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                       {Number(order.amount).toLocaleString()}{" "}
-                      <span className="text-[9px] sm:text-xs text-gray-500">ETB</span>
+                      <span className="text-[9px] sm:text-xs text-gray-500">
+                        ETB
+                      </span>
                     </td>
-                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-[10px] sm:text-sm text-gray-700">
+                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-[10px] sm:text-sm text-gray-700">
                       {order.payment_method
                         ? order.payment_method.replace(/_/g, " ")
                         : "—"}
                     </td>
                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
-                     <StatusBadge status={order.status} type="order" />
+                      <StatusBadge status={order.status} type="order" />
                     </td>
                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
-                    <StatusBadge status={order.delivery?.status || "no assigned"} type="delivery" />
+                      <StatusBadge
+                        status={order.delivery?.status || "no assigned"}
+                        type="delivery"
+                      />
                     </td>
                     {/* <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">
@@ -565,7 +576,7 @@ export default function CompanyOrders() {
                         )}
                         <div>
                           {isChangeAllowed(order) && isAssignAllowed(order) ? (
-                            <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#6750A4] text-[#6750A4] hover:bg-[#6750A4]/10">
+                            <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#674FA3] text-[#674FA3] hover:bg-[#674FA3]/10">
                               <DeliveryManager
                                 orderId={order.id}
                                 currentDelivery={order.delivery || null}
@@ -591,16 +602,16 @@ export default function CompanyOrders() {
                       </div>
                     </td>
                     */}
-                   
+
                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <OrderDate dateString={order.created_at} />
                     </td>
                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#6750A4] hover:text-[#6750A4] hover:bg-[#6750A4]/10 text-[10px] sm:text-sm font-medium transition-all duration-200 group"
+                        className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#674FA3] hover:text-[#674FA3] hover:bg-[#674FA3]/10 text-[10px] sm:text-sm font-medium transition-all duration-200 group"
                       >
-                        <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform group-hover:rotate-90" /> 
+                        <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform group-hover:rotate-90" />
                         <span>Manage</span>
                       </button>
                     </td>
@@ -638,19 +649,39 @@ export default function CompanyOrders() {
       {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
       <button
         onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#674FA3] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
       >
         <div className="relative">
-          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          <svg
+            className="w-5 h-5 text-[#674FA3]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
           </svg>
-          {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+          {(searchTerm ||
+            orderStatusFilter ||
+            deliveryStatusFilter ||
+            paymentMethodFilter ||
+            selectedCompanyId) && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
           )}
         </div>
-        <span className="text-sm font-semibold tracking-wide text-[#6750A4]">Filter</span>
-        {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+        <span className="text-sm font-semibold tracking-wide text-[#674FA3]">
+          Filter
+        </span>
+        {(searchTerm ||
+          orderStatusFilter ||
+          deliveryStatusFilter ||
+          paymentMethodFilter ||
+          selectedCompanyId) && (
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#674FA3]/10 text-[#674FA3] rounded-full">
             Active
           </span>
         )}
@@ -664,7 +695,7 @@ export default function CompanyOrders() {
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          
+
           {/* Bottom Sheet Content */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
@@ -695,7 +726,7 @@ export default function CompanyOrders() {
                     placeholder="Search by order ID, customer name, or company..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -708,7 +739,7 @@ export default function CompanyOrders() {
                 <select
                   value={orderStatusFilter}
                   onChange={(e) => setOrderStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="">All Order Status</option>
                   <option value="pending">Pending</option>
@@ -729,7 +760,7 @@ export default function CompanyOrders() {
                 <select
                   value={deliveryStatusFilter}
                   onChange={(e) => setDeliveryStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="">All Delivery Status</option>
                   <option value="pending">Assigned</option>
@@ -749,7 +780,7 @@ export default function CompanyOrders() {
                 <select
                   value={paymentMethodFilter}
                   onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value="">All Payment Method</option>
                   <option value="bank_transfer">Bank Transfer</option>
@@ -767,7 +798,7 @@ export default function CompanyOrders() {
                   <select
                     value={selectedCompanyId}
                     onChange={(e) => setSelectedCompanyId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                   >
                     <option value="">All Companies</option>
                     {companies.map((c) => (
@@ -790,7 +821,7 @@ export default function CompanyOrders() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#674FA3] focus:shadow-sm transition-all"
                 >
                   <option value={5}>5 / page</option>
                   <option value={10}>10 / page</option>
@@ -802,7 +833,11 @@ export default function CompanyOrders() {
 
               {/* Action Buttons - Equal width, side by side */}
               <div className="flex items-center gap-3 pt-2">
-                {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+                {(searchTerm ||
+                  orderStatusFilter ||
+                  deliveryStatusFilter ||
+                  paymentMethodFilter ||
+                  selectedCompanyId) && (
                   <button
                     onClick={() => {
                       setSearchTerm("");

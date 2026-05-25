@@ -1,8 +1,8 @@
 // src/components/shared/FilterSortSheet.tsx
-import React from 'react';
-import BottomSheet from './BottomSheet';
-import { CustomSelect, type SelectOption } from '../ui/CustomSelect';
-import { X } from 'lucide-react';
+import React from "react";
+import BottomSheet from "./BottomSheet";
+import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
+import { X } from "lucide-react";
 
 interface FilterSortSheetProps {
   open: boolean;
@@ -46,7 +46,7 @@ const FilterSortSheet: React.FC<FilterSortSheetProps> = ({
         </button>
         <button
           onClick={onApply}
-          className="flex-1 h-12 rounded-2xl bg-[#6750A4] text-sm font-semibold text-white shadow-lg shadow-[#6750A4]/20 active:scale-[0.98] transition-all"
+          className="flex-1 h-12 rounded-2xl bg-[#674FA3] text-sm font-semibold text-white shadow-lg shadow-[#674FA3]/20 active:scale-[0.98] transition-all"
         >
           Apply Filters
         </button>
@@ -77,13 +77,13 @@ const FilterSortSheet: React.FC<FilterSortSheetProps> = ({
           options={categoryOptions}
           className="w-full"
         />
-        {tempCategory !== 'all' && categoryNameMap[tempCategory] && (
+        {tempCategory !== "all" && categoryNameMap[tempCategory] && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
               {categoryNameMap[tempCategory]}
               <X
                 className="w-3 h-3 cursor-pointer"
-                onClick={() => onTempCategoryChange('all')}
+                onClick={() => onTempCategoryChange("all")}
               />
             </span>
           </div>

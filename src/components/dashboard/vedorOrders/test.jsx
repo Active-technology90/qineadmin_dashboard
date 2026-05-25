@@ -63,8 +63,8 @@ const Card = ({ children, title, icon: Icon, className = "" }: any) => (
     className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-300 ${className}`}
   >
     <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
-      <div className="p-1.5 bg-[#6750A4]/10 rounded-lg">
-        <Icon className="h-4 w-4 text-[#6750A4]" />
+      <div className="p-1.5 bg-[#674FA3]/10 rounded-lg">
+        <Icon className="h-4 w-4 text-[#674FA3]" />
       </div>
       <h4 className="text-sm font-bold text-gray-800">{title}</h4>
     </div>
@@ -143,7 +143,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
             {canManage && (
               <button 
                 onClick={() => setShowAssignForm(true)}
-                className="text-xs font-semibold text-[#6750A4] hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-[#674FA3] hover:underline flex items-center gap-1"
               >
                 {delivery ? "Change" : "Assign Now"} <ChevronRight className="h-3 w-3" />
               </button>
@@ -166,7 +166,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
               <button 
                 onClick={handleAssign}
                 disabled={assigning || !selectedUserId}
-                className="flex-1 bg-[#6750A4] text-white text-xs py-2 rounded-lg font-bold disabled:opacity-50"
+                className="flex-1 bg-[#674FA3] text-white text-xs py-2 rounded-lg font-bold disabled:opacity-50"
               >
                 {assigning ? <Loader2 className="h-3 w-3 animate-spin m-auto" /> : "Confirm"}
               </button>
@@ -304,7 +304,7 @@ export function VendorOrderDetailModal({ order, receipt, onClose, onUpdate, read
               <div className="col-span-12 lg:col-span-4 space-y-6">
                 
                 {/* Financial Summary */}
-                <motion.div variants={itemVariants} className="bg-[#6750A4] rounded-[24px] p-6 text-white shadow-xl shadow-purple-200 relative overflow-hidden">
+                <motion.div variants={itemVariants} className="bg-[#674FA3] rounded-[24px] p-6 text-white shadow-xl shadow-purple-200 relative overflow-hidden">
                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
                   <h4 className="text-xs font-bold uppercase tracking-widest opacity-80 mb-4">Total Payable</h4>
                   <div className="flex items-baseline gap-1 mb-6">

@@ -27,7 +27,6 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
-
   updateDeliveryPerson,
   prepareVendorOrder,
   confirmCODPayment,
@@ -87,7 +86,10 @@ const getStatusBadge = (status: string) => {
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
 
   if (s === "paid" || s === "out_for_delivery")
-    return base + "bg-violet-50 text-violet-700 border-violet-200 flex flex-row w-24 items-center justify-center";
+    return (
+      base +
+      "bg-violet-50 text-violet-700 border-violet-200 flex flex-row w-24 items-center justify-center"
+    );
 
   if (s === "pending")
     return base + "bg-amber-50 text-amber-700 border-amber-200";
@@ -107,15 +109,15 @@ const Card = ({ children, title, icon: Icon, status, className = "" }: any) => (
   >
     <div className="flex flex-row justify-between items-start">
       <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-        <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-          <Icon className="h-4 w-4 text-[#6750A4]" />
+        <div className="p-1.5 bg-gradient-to-br from-[#674FA3]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-[#674FA3]" />
         </div>
 
-        <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+        <h4 className="text-sm font-bold bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent">
           {title}
         </h4>
         {/* Decorative gradient line under header */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#674FA3] via-[#8B6BB5] to-transparent rounded-full"></div>
       </div>
       {status && (
         <div className="flex flex-row justify-start">
@@ -159,8 +161,9 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-        }`}
+      className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
+        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      }`}
     >
       {displayStatus}
     </span>
@@ -177,7 +180,7 @@ const CopyButton = ({ text }: { text?: string | null }) => {
   return (
     <button
       onClick={handleCopy}
-      className="text-gray-400 hover:text-[#6750A4] transition-colors"
+      className="text-gray-400 hover:text-[#674FA3] transition-colors"
     >
       {copied ? (
         <Check className="h-3.5 w-3.5" />
@@ -246,12 +249,9 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     if (!selectedUserId) return;
     setAssigning(true);
     try {
-      console.log("delivery", delivery)
+      console.log("delivery", delivery);
       if (delivery) {
-        await updateDeliveryPerson(
-          delivery.id.toString(),
-          selectedUserId,
-        );
+        await updateDeliveryPerson(delivery.id.toString(), selectedUserId);
       } else {
         await assignDelivery({
           vendor_order: order.id,
@@ -319,7 +319,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                        delivery.delivery_person_name,
+                          delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -355,10 +355,10 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     No delivery person assigned yet
                   </p>
                   {deliveryStatus ||
-                    ((canManage) && (
+                    (canManage && (
                       <button
                         onClick={() => setShowAssignForm(true)}
-                        className="w-full py-2 bg-[#6750A4] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
+                        className="w-full py-2 bg-[#674FA3] text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
                       >
                         Assign Delivery person
                       </button>
@@ -380,7 +380,9 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 onChange={(e) => setSelectedUserId(Number(e.target.value))}
                 className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500 px-2"
               >
-                <option value="" className="px-2">Choose from the list...</option>
+                <option value="" className="px-2">
+                  Choose from the list...
+                </option>
                 {staffList.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.phone || "No Phone"})
@@ -391,7 +393,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 <button
                   onClick={handleAssign}
                   disabled={assigning || !selectedUserId}
-                  className="flex-1 bg-[#6750A4] text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+                  className="flex-1 bg-[#674FA3] text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
                 >
                   {assigning ? (
                     <Loader2 className="h-3 w-3 animate-spin mx-auto" />
@@ -504,12 +506,14 @@ const ReceiptReviewCard = ({
       showToast(
         "error",
         err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",
+          err.message ||
+          "Failed to confirm COD payment",
       );
-      console.error(err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",)
+      console.error(
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to confirm COD payment",
+      );
     } finally {
       setCodConfirming(false);
     }
@@ -527,7 +531,6 @@ const ReceiptReviewCard = ({
         className="ring-1 ring-indigo-100"
       >
         <div className="flex flex-col items-center ">
-
           <div className="flex items-center gap-2 bg-white px-4 ">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
               <ShieldCheck className="h-8 w-8 text-indigo-600" />
@@ -567,7 +570,6 @@ const ReceiptReviewCard = ({
           <div className="flex flex-col items-center text-center">
             {isPaid ? (
               <div className="flex flex-row items-center gap-4">
-
                 <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2 shadow-inner">
                   <ShieldCheck className="h-6 w-6 text-emerald-600" />
                 </div>
@@ -589,10 +591,11 @@ const ReceiptReviewCard = ({
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                      : "bg-gray-300 cursor-not-allowed shadow-none"
-                      }`}
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                      canCollect
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                        : "bg-gray-300 cursor-not-allowed shadow-none"
+                    }`}
                   >
                     <CheckCircle className="h-4 w-4" />
                     Confirm Payment Collected
@@ -631,7 +634,7 @@ const ReceiptReviewCard = ({
             Payment Receipt
           </h4>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#674FA3] via-[#8B6BB5] to-transparent rounded-full"></div>
         <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl">
           <AlertCircle className="h-6 w-6 text-gray-300 mx-auto mb-2" />
 
@@ -691,25 +694,25 @@ const ReceiptReviewCard = ({
       <div className="flex items-center gap-2 mb-2">
         <div className="flex w-full flex-row justify-between items-start">
           <div className="flex items-center gap-2 mb-4 pb-3 w-full relative">
-            <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-              <Banknote className="h-4 w-4 text-[#6750A4]" />
+            <div className="p-1.5 bg-gradient-to-br from-[#674FA3]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+              <Banknote className="h-4 w-4 text-[#674FA3]" />
             </div>
 
-            <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            <h4 className="text-sm font-bold bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent">
               Payment Receipt
             </h4>
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#674FA3] via-[#8B6BB5] to-transparent rounded-full"></div>
             {/* <div className="flex flex-row justify-between items-start">
       <div className="flex items-center gap-2 mb-4 pb-3 w-full relative"> */}
-            {/* <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
-          <Icon className="h-4 w-4 text-[#6750A4]" />
+            {/* <div className="p-1.5 bg-gradient-to-br from-[#674FA3]/20 to-[#8B6BB5]/20 rounded-lg shadow-inner">
+          <Icon className="h-4 w-4 text-[#674FA3]" />
         </div> */}
 
-            {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+            {/* <h4 className="text-sm font-bold bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent">
           {title}
         </h4> */}
             {/* Decorative gradient line under header */}
-            {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#8B6BB5] to-transparent rounded-full"></div>
+            {/* <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#674FA3] via-[#8B6BB5] to-transparent rounded-full"></div>
               </div> */}
           </div>
           <div>
@@ -748,7 +751,7 @@ const ReceiptReviewCard = ({
         )}
         {/* BANK */}
         <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-4 rounded-xl border border-purple-100">
-          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest mb-1">
+          <p className="text-[10px] text-[#674FA3] font-bold uppercase tracking-widest mb-1">
             Bank Details
           </p>
 
@@ -765,7 +768,7 @@ const ReceiptReviewCard = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add review notes..."
               rows={2}
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4] transition resize-none"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#674FA3] transition resize-none"
             />
 
             <div className="flex gap-2">
@@ -789,7 +792,6 @@ const ReceiptReviewCard = ({
              disabled:opacity-50 disabled:cursor-not-allowed
              flex items-center justify-center gap-2"
               >
-
                 Reject
               </button>
             </div>
@@ -868,11 +870,9 @@ const ReceiptReviewCard = ({
         loading={submitting}
         autoClose={false}
       />
-
     </div>
   );
 };
-
 
 // ---------- PREPARATION CARD ----------
 const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
@@ -892,7 +892,9 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
     } catch (err: any) {
       showToast(
         "error",
-        err.response?.data?.detail || err.message || "Failed to mark order as prepared"
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to mark order as prepared",
       );
     } finally {
       setPreparing(false);
@@ -915,7 +917,11 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         title="Order Preparation"
         icon={Package}
         status={status}
-        className={(status === "confirmed" || (isCOD && status === "pending")) ? "ring-2 ring-purple-100 border-purple-200" : ""}
+        className={
+          status === "confirmed" || (isCOD && status === "pending")
+            ? "ring-2 ring-purple-100 border-purple-200"
+            : ""
+        }
       >
         <div className="flex flex-col items-center text-center py-4">
           {/* <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-4 shadow-inner">
@@ -933,7 +939,7 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
               {!readOnly && (
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#6750A4] to-[#6750A4] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#674FA3] to-[#674FA3] text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Mark as Prepared
@@ -958,7 +964,6 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
     </>
   );
 };
-
 
 // ════════════════════════════════════════
 // MAIN MODAL COMPONENT
@@ -1002,11 +1007,11 @@ export function VendorOrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header */}
-          <div className="bg-[#6750A4]/20 backdrop-blur-md border-b border-[#6750A4]/15 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
+          <div className="bg-[#674FA3]/20 backdrop-blur-md border-b border-[#674FA3]/15 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
             {/* Top row: Icon on left, Buttons on right */}
             <div className="flex flex-row justify-between items-start gap-2">
               {/* Left side - Package Icon */}
-              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-[#6750A4] to-[#8B6BB5] rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
+              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-[#674FA3] to-[#8B6BB5] rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
                 <Package className="text-white h-4 w-4 sm:h-6 sm:w-6 drop-shadow-sm" />
               </div>
 
@@ -1022,12 +1027,12 @@ export function VendorOrderDetailModal({
                  disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 >
                   {refreshing ? (
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#6750A4] animate-spin" />
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#674FA3] animate-spin" />
                   ) : (
-                    <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#6750A4] transition-colors" />
+                    <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-[#674FA3] transition-colors" />
                   )}
 
-                  <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#6750A4]">
+                  <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-[#674FA3]">
                     {refreshing ? "Refreshing..." : "Refresh"}
                   </span>
                 </button>
@@ -1047,7 +1052,7 @@ export function VendorOrderDetailModal({
             {/* Bottom row: Order details */}
             <div className="mt-1.5 sm:mt-4">
               <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
-                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight break-words">
+                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent tracking-tight break-words">
                   Order #{order.id}
                 </h2>
                 <StatusBadge
@@ -1058,15 +1063,15 @@ export function VendorOrderDetailModal({
                 />
               </div>
               <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
-                <span className="flex items-center gap-1 sm:gap-2 bg-[#6750A4]/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
-                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />
+                <span className="flex items-center gap-1 sm:gap-2 bg-[#674FA3]/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-[#674FA3]/20 shadow-sm">
+                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#674FA3]" />
                   <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
                     {new Date(order.created_at).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}{" "}
-                    <span className="text-[#6750A4] mx-0.5">•</span>{" "}
+                    <span className="text-[#674FA3] mx-0.5">•</span>{" "}
                     {new Date(order.created_at).toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -1075,8 +1080,10 @@ export function VendorOrderDetailModal({
                   </span>
                 </span>
                 <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
-                  <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />{" "}
-                  <span className="font-medium text-[9px] sm:text-sm">{order.company?.name}</span>
+                  <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-[#674FA3]" />{" "}
+                  <span className="font-medium text-[9px] sm:text-sm">
+                    {order.company?.name}
+                  </span>
                 </span>
               </div>
             </div>
@@ -1098,12 +1105,12 @@ export function VendorOrderDetailModal({
                           className="w-14 h-14 rounded-full ring-2 ring-purple-200"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#6750A4] font-black text-xl">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-white shadow-sm flex items-center justify-center text-[#674FA3] font-black text-xl">
                           {getInitials(order.recipient_name)}
                         </div>
                       )}
                       <div className="space-y-1">
-                        <p className="font-black bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent">
+                        <p className="font-black bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent">
                           {order.recipient_name}
                         </p>
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-3 py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
@@ -1119,11 +1126,11 @@ export function VendorOrderDetailModal({
 
                   <Card title="Shipping Destination" icon={MapPin}>
                     <div className="space-y-3">
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#674FA3]">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Recipient Name:
                         </span>
-                        <span className="text-sm font-bold text-[#6750A4]">
+                        <span className="text-sm font-bold text-[#674FA3]">
                           {order.recipient_name ||
                             "No recipient name provided."}
                         </span>
@@ -1141,11 +1148,11 @@ export function VendorOrderDetailModal({
                           <CopyButton text={order.shipping_phone} />
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#6750A4]">
+                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-[#674FA3]">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Shipping Address:
                         </span>
-                        <span className="text-sm font-bold text-[#6750A4]">
+                        <span className="text-sm font-bold text-[#674FA3]">
                           {order.shipping_address_text ||
                             "No address provided."}
                         </span>
@@ -1233,7 +1240,7 @@ export function VendorOrderDetailModal({
                 {/* 3. Financial Summary Card */}
                 <motion.div
                   variants={itemVariants}
-                  className="bg-gradient-to-br from-[#6750A4] via-[#7B5CB5] to-[#9370DB] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
+                  className="bg-gradient-to-br from-[#674FA3] via-[#7B5CB5] to-[#9370DB] rounded-[32px] p-4 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
                 >
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-white/5 rounded-full blur-2xl" />
@@ -1299,13 +1306,14 @@ export function VendorOrderDetailModal({
 
                 {/* Preparation Card */}
                 {(order.status === "confirmed" ||
-                  (order.payment_method === "cod" && order.status === "pending")) && (
-                    <PreparationCard
-                      order={order}
-                      onUpdate={onUpdate}
-                      readOnly={readOnly}
-                    />
-                  )}
+                  (order.payment_method === "cod" &&
+                    order.status === "pending")) && (
+                  <PreparationCard
+                    order={order}
+                    onUpdate={onUpdate}
+                    readOnly={readOnly}
+                  />
+                )}
 
                 {/* 5. Delivery person Assignment Card */}
                 <DeliveryCard

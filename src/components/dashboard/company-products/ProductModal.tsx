@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
-import { ImageGallery } from './ImageGallery';
-import { getCompanyProductDetail } from '../../../services/api';
-import type { ProductImage } from '../../../types';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  X,
+  Loader2,
+  AlertCircle,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle,
+} from "lucide-react";
+import { ImageGallery } from "./ImageGallery";
+import { getCompanyProductDetail } from "../../../services/api";
+import type { ProductImage } from "../../../types";
 
 interface ProductFormData {
   sku: string;
@@ -16,11 +23,11 @@ interface ProductFormData {
 }
 
 const productSchema = z.object({
-  sku: z.string().min(1, 'SKU is required'),
-  title: z.string().min(1, 'Title is required'),
-  price: z.number().positive('Price must be positive'),
-  stock: z.number().int().min(0, 'Stock cannot be negative'),
-  unit: z.string().min(1, 'Unit is required'),
+  sku: z.string().min(1, "SKU is required"),
+  title: z.string().min(1, "Title is required"),
+  price: z.number().positive("Price must be positive"),
+  stock: z.number().int().min(0, "Stock cannot be negative"),
+  unit: z.string().min(1, "Unit is required"),
 });
 
 interface ProductModalProps {
@@ -39,14 +46,14 @@ interface ProductModalProps {
   onProductUpdated?: () => void;
   /** If false, disables SKU, title, unit, and image management */
   canEditBasic?: boolean;
-  /** 
-   * If false, disables price and stock fields unconditionally. 
-   * Use this for admin‑only pricing. For staff that should only 
+  /**
+   * If false, disables price and stock fields unconditionally.
+   * Use this for admin‑only pricing. For staff that should only
    * restrict on edit, use `isStaff` instead.
    */
   canEditPricing?: boolean;
-  /** 
-   * Set to `true` for staff users. When true, price & stock are disabled 
+  /**
+   * Set to `true` for staff users. When true, price & stock are disabled
    * ONLY when editing an existing product (i.e., `editingProduct` is not null).
    * In create mode, price & stock remain editable.
    */
@@ -67,11 +74,10 @@ export function ProductModal({
   isStaff = false,
   onShowToast,
 }: ProductModalProps) {
-  const [step, setStep] = useState<'details' | 'gallery'>('details');
+  const [step, setStep] = useState<"details" | "gallery">("details");
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [savedProductId, setSavedProductId] = useState<number | null>(null);
-  
 
   const {
     register,
@@ -80,10 +86,10 @@ export function ProductModal({
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pcs' },
+    defaultValues: { sku: "", title: "", price: 0, stock: 0, unit: "pcs" },
   });
 
-   // Reset form and step when editing product changes
+  // Reset form and step when editing product changes
   useEffect(() => {
     if (editingProduct) {
       reset({
@@ -94,25 +100,25 @@ export function ProductModal({
         unit: editingProduct.unit,
       });
       setSavedProductId(editingProduct.id);
-      setStep('details');
+      setStep("details");
     } else {
       // Only reset form if we're not coming back from gallery with a saved product
       // AND the modal is open (to prevent reset while modal is closed)
       if (!savedProductId && isOpen) {
-        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+        reset({ sku: "", title: "", price: 0, stock: 0, unit: "pcs" });
         setSavedProductId(null);
-        setStep('details');
+        setStep("details");
       }
     }
   }, [editingProduct, reset, savedProductId, isOpen]);
 
   // Fetch images when on gallery step
   useEffect(() => {
-    if (step === 'gallery' && savedProductId && companySlug && isOpen) {
+    if (step === "gallery" && savedProductId && companySlug && isOpen) {
       setLoadingImages(true);
       getCompanyProductDetail(companySlug, savedProductId)
         .then((res) => setImages(res.data.images || []))
-        .catch((err) => console.error('Failed to load images:', err))
+        .catch((err) => console.error("Failed to load images:", err))
         .finally(() => setLoadingImages(false));
     } else {
       setImages([]);
@@ -122,27 +128,29 @@ export function ProductModal({
   // ESC to close
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+      if (e.key === "Escape" && isOpen) onClose();
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
   // Prevent body scroll
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    if (isOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   // Reset modal state when closing and reopening for a new product
   useEffect(() => {
     if (!isOpen) {
       // When modal closes, reset all state for next time
-      setStep('details');
+      setStep("details");
       setSavedProductId(null);
       if (!editingProduct) {
-        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+        reset({ sku: "", title: "", price: 0, stock: 0, unit: "pcs" });
       }
     }
   }, [isOpen, editingProduct, reset]);
@@ -150,12 +158,12 @@ export function ProductModal({
   const handleBackToDetails = () => {
     // When going back from gallery to details for a newly created product,
     // we need to treat it as an editing product to prevent duplicate creation
-    if (step === 'gallery' && savedProductId && !editingProduct) {
+    if (step === "gallery" && savedProductId && !editingProduct) {
       // The product was created but we're going back to edit details
       // We'll keep the savedProductId and let the form handle updates
-      setStep('details');
+      setStep("details");
     } else {
-      setStep('details');
+      setStep("details");
     }
   };
 
@@ -164,7 +172,7 @@ export function ProductModal({
     if (!canEditBasic) return;
     try {
       let productId = savedProductId;
-      
+
       // If we have a savedProductId (product was created before), update it instead of creating new
       if (savedProductId && !editingProduct) {
         // This is a product that was created but we're going back to edit details
@@ -176,10 +184,10 @@ export function ProductModal({
         const saved = await onSave(data);
         productId = saved?.id || editingProduct?.id;
       }
-      
-      if (!productId) throw new Error('No product ID returned');
+
+      if (!productId) throw new Error("No product ID returned");
       setSavedProductId(productId);
-      setStep('gallery');
+      setStep("gallery");
     } catch (err) {
       console.error(err);
     }
@@ -187,15 +195,15 @@ export function ProductModal({
 
   if (!isOpen) return null;
 
-  const stepProgress = step === 'details' ? 50 : 100;
+  const stepProgress = step === "details" ? 50 : 100;
   const isReadOnlyBasic = !canEditBasic;
-  
+
   // PRICE & STOCK DISABLE LOGIC:
   // 1. If canEditPricing === false → always disabled (admin override)
   // 2. Else if isStaff === true and editingProduct exists → disabled (staff edit mode)
   // 3. Otherwise → enabled
   const isPricingDisabled = !canEditPricing || (isStaff && !!editingProduct);
-  
+
   // For UI label clarity
   const isEditMode = !!editingProduct;
 
@@ -206,25 +214,33 @@ export function ProductModal({
     >
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-3xl w-full max-w-[95%] sm:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#6750A4]/20 backdrop-blur-sm border-b border-[#6750A4]/20 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="sticky top-0 z-10 bg-[#674FA3]/20 backdrop-blur-sm border-b border-[#674FA3]/20 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base sm:text-xl font-bold bg-gradient-to-r from-[#6750A4] to-[#8B6BB5] bg-clip-text text-transparent break-words">
-                {editingProduct ? 'Product Details' : 'New Product'}
-                {isReadOnlyBasic && <span className="ml-2 text-[10px] sm:text-sm font-normal text-amber-600">(View only)</span>}
+              <h3 className="text-base sm:text-xl font-bold bg-gradient-to-r from-[#674FA3] to-[#8B6BB5] bg-clip-text text-transparent break-words">
+                {editingProduct ? "Product Details" : "New Product"}
+                {isReadOnlyBasic && (
+                  <span className="ml-2 text-[10px] sm:text-sm font-normal text-amber-600">
+                    (View only)
+                  </span>
+                )}
                 {!isReadOnlyBasic && isPricingDisabled && isEditMode && (
-                  <span className="ml-2 text-[10px] sm:text-sm font-normal text-blue-600">(Price/Stock read only)</span>
+                  <span className="ml-2 text-[10px] sm:text-sm font-normal text-blue-600">
+                    (Price/Stock read only)
+                  </span>
                 )}
               </h3>
               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                {step === 'details' 
-                  ? (isReadOnlyBasic ? 'Product information' : 'Enter product details') 
-                  : 'Manage product images'}
+                {step === "details"
+                  ? isReadOnlyBasic
+                    ? "Product information"
+                    : "Enter product details"
+                  : "Manage product images"}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-[#6750A4] hover:bg-[#6750A4]/10 transition flex-shrink-0"
+              className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-[#674FA3] hover:bg-[#674FA3]/10 transition flex-shrink-0"
               aria-label="Close"
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -236,12 +252,22 @@ export function ProductModal({
             <div className="mt-3 sm:mt-4">
               <div className="flex items-center gap-1 sm:gap-2 mb-2">
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <div className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
-                    step === 'details' ? 'bg-secondary text-white' : 'bg-secondary/10 text-secondary'
-                  }`}>
-                    {step === 'details' ? '1' : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  <div
+                    className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
+                      step === "details"
+                        ? "bg-secondary text-white"
+                        : "bg-secondary/10 text-secondary"
+                    }`}
+                  >
+                    {step === "details" ? (
+                      "1"
+                    ) : (
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    )}
                   </div>
-                  <span className={`text-[10px] sm:text-sm font-medium ${step === 'details' ? 'text-secondary' : 'text-gray-500'}`}>
+                  <span
+                    className={`text-[10px] sm:text-sm font-medium ${step === "details" ? "text-secondary" : "text-gray-500"}`}
+                  >
                     Details
                   </span>
                 </div>
@@ -252,12 +278,22 @@ export function ProductModal({
                   />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <div className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
-                    step === 'gallery' ? 'bg-secondary text-white' : 'bg-gray-100 text-gray-400'
-                  }`}>
-                    {step === 'gallery' ? '2' : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  <div
+                    className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-medium ${
+                      step === "gallery"
+                        ? "bg-secondary text-white"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {step === "gallery" ? (
+                      "2"
+                    ) : (
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    )}
                   </div>
-                  <span className={`text-[10px] sm:text-sm font-medium ${step === 'gallery' ? 'text-secondary' : 'text-gray-400'}`}>
+                  <span
+                    className={`text-[10px] sm:text-sm font-medium ${step === "gallery" ? "text-secondary" : "text-gray-400"}`}
+                  >
                     Images
                   </span>
                 </div>
@@ -269,22 +305,30 @@ export function ProductModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="transition-all duration-300 ease-out">
-            {step === 'details' ? (
-              <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-4 sm:space-y-5">
+            {step === "details" ? (
+              <form
+                id="product-details-form"
+                onSubmit={handleSubmit(onSubmitDetails)}
+                className="space-y-4 sm:space-y-5"
+              >
                 {/* SKU – disabled when editing or basic read-only */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     SKU <span className="text-red-500">*</span>
                   </label>
                   <input
-                    {...register('sku')}
-                    disabled={isSubmitting || !!editingProduct || isReadOnlyBasic}
+                    {...register("sku")}
+                    disabled={
+                      isSubmitting || !!editingProduct || isReadOnlyBasic
+                    }
                     className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                       errors.sku
-                        ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+                        ? "border-red-500 focus:ring-red-100"
+                        : "border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                     } transition-all outline-none ${
-                      (!!editingProduct || isReadOnlyBasic) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                      !!editingProduct || isReadOnlyBasic
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        : ""
                     }`}
                     placeholder="e.g., FLR-001"
                   />
@@ -302,17 +346,19 @@ export function ProductModal({
                     Title <span className="text-red-500">*</span>
                   </label>
                   <input
-                    {...register('title')}
+                    {...register("title")}
                     className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                       errors.title
-                        ? 'border-red-500 focus:ring-red-100'
-                        : 'border-gray-200 focus:border-secondary focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20'
-                    } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                        ? "border-red-500 focus:ring-red-100"
+                        : "border-gray-200 focus:border-secondary focus:border-[#674FA3] focus:ring-2 focus:ring-[#674FA3]/20"
+                    } transition-all outline-none ${isReadOnlyBasic ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
                     placeholder="Product name"
                     disabled={isSubmitting || isReadOnlyBasic}
                   />
                   {errors.title && (
-                    <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.title.message}
+                    </p>
                   )}
                 </div>
 
@@ -325,19 +371,23 @@ export function ProductModal({
                     <input
                       type="number"
                       step="0.01"
-                      {...register('price', { valueAsNumber: true })}
+                      {...register("price", { valueAsNumber: true })}
                       className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                         errors.price
-                          ? 'border-red-500 focus:ring-red-100'
-                          : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+                          ? "border-red-500 focus:ring-red-100"
+                          : "border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                       } transition-all outline-none ${
-                        isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                        isPricingDisabled
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                          : ""
                       }`}
                       placeholder="0.00"
                       disabled={isSubmitting || isPricingDisabled}
                     />
                     {errors.price && (
-                      <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.price.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -346,19 +396,23 @@ export function ProductModal({
                     </label>
                     <input
                       type="number"
-                      {...register('stock', { valueAsNumber: true })}
+                      {...register("stock", { valueAsNumber: true })}
                       className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
                         errors.stock
-                          ? 'border-red-500 focus:ring-red-100'
-                          : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+                          ? "border-red-500 focus:ring-red-100"
+                          : "border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                       } transition-all outline-none ${
-                        isPricingDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                        isPricingDisabled
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                          : ""
                       }`}
                       placeholder="0"
                       disabled={isSubmitting || isPricingDisabled}
                     />
                     {errors.stock && (
-                      <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.stock.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -369,9 +423,11 @@ export function ProductModal({
                     Unit <span className="text-red-500">*</span>
                   </label>
                   <select
-                    {...register('unit')}
+                    {...register("unit")}
                     className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border border-gray-200 bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none ${
-                      isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                      isReadOnlyBasic
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        : ""
                     }`}
                     disabled={isSubmitting || isReadOnlyBasic}
                   >
@@ -388,21 +444,26 @@ export function ProductModal({
                 {loadingImages ? (
                   <div className="flex flex-col items-center justify-center py-8 sm:py-12">
                     <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-secondary" />
-                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">Loading images...</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">
+                      Loading images...
+                    </p>
                   </div>
                 ) : (
-                   <ImageGallery
+                  <ImageGallery
                     images={images}
                     productId={savedProductId!}
                     companySlug={companySlug}
                     onImagesChange={async () => {
                       if (savedProductId && companySlug) {
                         try {
-                          const res = await getCompanyProductDetail(companySlug, savedProductId);
+                          const res = await getCompanyProductDetail(
+                            companySlug,
+                            savedProductId,
+                          );
                           setImages(res.data.images || []);
                           if (onProductUpdated) onProductUpdated();
                         } catch (err) {
-                          console.error('Failed to refresh images:', err);
+                          console.error("Failed to refresh images:", err);
                         }
                       }
                     }}
@@ -410,9 +471,9 @@ export function ProductModal({
                     onError={(message) => {
                       // Show toast notification for image errors
                       if (onShowToast) {
-                        onShowToast('error', message);
+                        onShowToast("error", message);
                       }
-                      console.error('Image error:', message);
+                      console.error("Image error:", message);
                     }}
                     onShowToast={onShowToast}
                   />
@@ -424,7 +485,7 @@ export function ProductModal({
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4">
-          {step === 'details' ? (
+          {step === "details" ? (
             isReadOnlyBasic ? (
               <div className="flex justify-end">
                 <button
@@ -448,10 +509,13 @@ export function ProductModal({
                   type="submit"
                   form="product-details-form"
                   disabled={isSubmitting}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#674FA3] text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
                 >
-                  {isSubmitting && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-                  Continue to Images <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {isSubmitting && (
+                    <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
+                  )}
+                  Continue to Images{" "}
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             )
@@ -463,12 +527,13 @@ export function ProductModal({
                 className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
                 disabled={isReadOnlyBasic}
               >
-                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Back to Details
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Back to
+                Details
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#6750A4] text-white font-medium hover:bg-[#5a448c] transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#674FA3] text-white font-medium hover:bg-[#5a448c] transition shadow-sm text-sm sm:text-base w-full sm:w-auto"
               >
                 Done
               </button>

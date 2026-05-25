@@ -1,7 +1,7 @@
 // src/components/ui/FormModal.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { X, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { X, Loader2 } from "lucide-react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 interface FormModalProps {
   isOpen: boolean;
@@ -10,25 +10,28 @@ interface FormModalProps {
   onSubmit: (e: React.FormEvent) => void;
   submitting?: boolean;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   closeOnOutsideClick?: boolean;
   showCloseButton?: boolean;
 }
 
 const maxWidthClasses = {
-  sm: 'sm:max-w-md',
-  md: 'sm:max-w-lg',
-  lg: 'sm:max-w-4xl',
-  xl: 'sm:max-w-5xl',
-  '2xl': 'sm:max-w-6xl',
-  '3xl': 'sm:max-w-7xl',
+  sm: "sm:max-w-md",
+  md: "sm:max-w-lg",
+  lg: "sm:max-w-4xl",
+  xl: "sm:max-w-5xl",
+  "2xl": "sm:max-w-6xl",
+  "3xl": "sm:max-w-7xl",
 };
 
-const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active: boolean) => {
+const useFocusTrap = (
+  containerRef: React.RefObject<HTMLElement | null>,
+  active: boolean,
+) => {
   useEffect(() => {
     if (!active || !containerRef.current) return;
     const focusableElements = containerRef.current.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     if (focusableElements.length === 0) return;
     const first = focusableElements[0] as HTMLElement;
@@ -36,7 +39,7 @@ const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active:
     first.focus();
 
     const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
+      if (e.key !== "Tab") return;
       if (e.shiftKey) {
         if (document.activeElement === first) {
           e.preventDefault();
@@ -50,8 +53,8 @@ const useFocusTrap = (containerRef: React.RefObject<HTMLElement | null>, active:
       }
     };
 
-    window.addEventListener('keydown', handleTab);
-    return () => window.removeEventListener('keydown', handleTab);
+    window.addEventListener("keydown", handleTab);
+    return () => window.removeEventListener("keydown", handleTab);
   }, [active, containerRef]);
 };
 
@@ -73,7 +76,7 @@ const modalVariants: Variants = {
     opacity: 0,
     scale: 0.95,
     y: 12,
-    transition: { duration: 0.2, ease: 'easeInOut' },
+    transition: { duration: 0.2, ease: "easeInOut" },
   },
 };
 
@@ -84,7 +87,7 @@ export const FormModal: React.FC<FormModalProps> = ({
   onSubmit,
   submitting = false,
   children,
-  maxWidth = 'md',
+  maxWidth = "md",
   closeOnOutsideClick = true,
   showCloseButton = true,
 }) => {
@@ -97,29 +100,29 @@ export const FormModal: React.FC<FormModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setShouldRender(false);
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
       return;
     }
 
     setShouldRender(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
 
-    window.addEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
 
     return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen && modalRef.current) {
       const focusable = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       if (focusable.length) {
         (focusable[0] as HTMLElement).focus();
@@ -137,7 +140,7 @@ export const FormModal: React.FC<FormModalProps> = ({
         onClose();
       }
     },
-    [closeOnOutsideClick, onClose]
+    [closeOnOutsideClick, onClose],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -182,10 +185,10 @@ export const FormModal: React.FC<FormModalProps> = ({
             `}
           >
             <div className="sticky top-0 z-20">
-              <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-white/20 bg-gradient-to-r from-[#6750A4]/10 via-white/80 to-white/60 backdrop-blur-xl">
+              <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-white/20 bg-gradient-to-r from-[#674FA3]/10 via-white/80 to-white/60 backdrop-blur-xl">
                 <h2
                   id="modal-title"
-                  className="text-base sm:text-lg lg:text-xl font-semibold text-[#6750A4] truncate"
+                  className="text-base sm:text-lg lg:text-xl font-semibold text-[#674FA3] truncate"
                 >
                   {title}
                 </h2>
@@ -193,7 +196,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-full bg-white/70 hover:bg-white text-red-500 hover:text-red-600 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40"
+                    className="p-2 rounded-full bg-white/70 hover:bg-white text-red-500 hover:text-red-600 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#674FA3]/40"
                     aria-label="Close modal"
                   >
                     <X size={18} className="sm:w-5 sm:h-5" />
@@ -216,7 +219,7 @@ export const FormModal: React.FC<FormModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98]"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#674FA3]/40 active:scale-[0.98]"
                   >
                     Cancel
                   </button>
@@ -224,12 +227,10 @@ export const FormModal: React.FC<FormModalProps> = ({
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-white font-medium transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/40 active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#6750A4] to-[#7c63c9] hover:from-[#5a448c] hover:to-[#6d56b3]"
+                    className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-white font-medium transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#674FA3]/40 active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#674FA3] to-[#7c63c9] hover:from-[#5a448c] hover:to-[#6d56b3]"
                   >
-                    {submitting && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
-                    {submitting ? 'Saving...' : 'Save'}
+                    {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {submitting ? "Saving..." : "Save"}
                   </button>
                 </div>
               </div>
