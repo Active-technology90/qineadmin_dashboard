@@ -25,9 +25,6 @@ interface VendorOrderFiltersProps {
 
   onClear: () => void;
 
-  showMobile: boolean;
-  onToggleMobile: () => void;
-
   hideCompanyFilter?: boolean;
 }
 
@@ -47,8 +44,6 @@ export function VendorOrderFilters({
   onPageSizeChange,
   onClear,
   onRefresh,
-  showMobile,
-  onToggleMobile,
   hideCompanyFilter = false,
 }: VendorOrderFiltersProps) {
   const hasFilters =
@@ -71,26 +66,10 @@ export function VendorOrderFilters({
   };
   return (
     <>
-      {/* Mobile Toggle Button - Always visible on mobile */}
-      <div className="lg:hidden mb-3">
-        <button
-          onClick={onToggleMobile}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          <Filter size={16} />
-          {showMobile ? "Hide Filters" : " Filters"}
-          {hasFilters && (
-            <span className="ml-1 w-2 h-2 rounded-full bg-indigo-500"></span>
-          )}
-        </button>
-      </div>
+      {/* Mobile Toggle Button - REMOVED (now using floating button in parent) */}
 
-      {/* Filters Container - Hidden on mobile when showMobile is false */}
-      <div
-        className={`${
-          showMobile ? "block" : "hidden lg:block"
-        } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all`}
-      >
+      {/* Filters Container - Hidden on mobile, visible on desktop */}
+      <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all">
         {/* Header – only title & utility buttons */}
         <div className="flex items-center justify-between px-3 sm:px-4 border-b border-gray-100">
           <div className="flex items-center gap-2">

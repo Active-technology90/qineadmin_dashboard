@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Package, Building2, Settings } from "lucide-react";
+import { Package, Building2, Settings, Search, X } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 
 import {
@@ -212,7 +212,7 @@ export default function CompanyOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -427,7 +427,6 @@ export default function CompanyOrders() {
         searchTerm={searchTerm}
         onSearchChange={(v) => setSearchTerm(v)}
         orderStatusFilter={orderStatusFilter}
-        pageSize={pageSize}
         onOrderStatusChange={(v) => setOrderStatusFilter(v)}
         deliveryStatusFilter={deliveryStatusFilter}
         onDeliveryStatusChange={(v) => setDeliveryStatusFilter(v)}
@@ -437,8 +436,6 @@ export default function CompanyOrders() {
         onCompanyChange={(v) => setSelectedCompanyId(v)}
         companies={isAdminLike ? companies : []}
         onClear={clearFilters}
-        showMobile={showFilters}
-        onToggleMobile={() => setShowFilters(!showFilters)}
         hideCompanyFilter={!isAdminLike}
         onPageSizeChange={(size) => {
           setPageSize(size);
@@ -637,6 +634,200 @@ export default function CompanyOrders() {
         onUpdate={handleModalUpdate}
         readOnly={readOnly}
       />
+
+      {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
+      <button
+        onClick={() => setShowMobileFilterModal(true)}
+        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-[#6750A4] shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+      >
+        <div className="relative">
+          <svg className="w-5 h-5 text-[#6750A4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          )}
+        </div>
+        <span className="text-sm font-semibold tracking-wide text-[#6750A4]">Filter</span>
+        {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-[#6750A4]/10 text-[#6750A4] rounded-full">
+            Active
+          </span>
+        )}
+      </button>
+
+      {/* Mobile Filter Modal - Bottom Sheet */}
+      {showMobileFilterModal && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setShowMobileFilterModal(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          
+          {/* Bottom Sheet Content */}
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
+              <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
+              <button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Search
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by order ID, customer name, or company..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Order Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Order Status
+                </label>
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                >
+                  <option value="">All Order Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="contacted">Confirmed</option>
+                  <option value="processing">Prepared</option>
+                  <option value="fulfilled">Delivered</option>
+                  <option value="shipped">In Transit</option>
+                  <option value="payment_rejected">Payment Rejected</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Delivery Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Delivery Status
+                </label>
+                <select
+                  value={deliveryStatusFilter}
+                  onChange={(e) => setDeliveryStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                >
+                  <option value="">All Delivery Status</option>
+                  <option value="pending">Assigned</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="picked_up">Picked Up</option>
+                  <option value="out_for_delivery">In Transit</option>
+                  <option value="delivered">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+
+              {/* Payment Method Filter */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Payment Method
+                </label>
+                <select
+                  value={paymentMethodFilter}
+                  onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                >
+                  <option value="">All Payment Method</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="chapa">Chapa</option>
+                  <option value="cod">COD</option>
+                </select>
+              </div>
+
+              {/* Company Filter (if admin) */}
+              {!isAdminLike && (
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Company
+                  </label>
+                  <select
+                    value={selectedCompanyId}
+                    onChange={(e) => setSelectedCompanyId(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                  >
+                    <option value="">All Companies</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Page Size */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1.5">
+                  Items per page
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
+                >
+                  <option value={5}>5 / page</option>
+                  <option value={10}>10 / page</option>
+                  <option value={15}>15 / page</option>
+                  <option value={30}>30 / page</option>
+                  <option value={60}>60 / page</option>
+                </select>
+              </div>
+
+              {/* Action Buttons - Equal width, side by side */}
+              <div className="flex items-center gap-3 pt-2">
+                {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setOrderStatusFilter("");
+                      setDeliveryStatusFilter("");
+                      setPaymentMethodFilter("");
+                      setSelectedCompanyId("");
+                      setCurrentPage(1);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMobileFilterModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

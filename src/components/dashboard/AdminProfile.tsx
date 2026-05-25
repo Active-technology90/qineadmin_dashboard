@@ -355,50 +355,91 @@ export default function AdminProfile() {
           </div>
         </div>
         <div className="pt-12 sm:pt-14 md:pt-16 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-1 min-w-max sm:min-w-0">
-              <button
-                onClick={() => setActiveForm("profile")}
-                className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
-                  activeForm === "profile"
-                    ? "text-[#6750A4]"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Edit Profile
-                {activeForm === "profile" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveForm("password")}
-                className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
-                  activeForm === "password"
-                    ? "text-[#6750A4]"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Change Password
-                {activeForm === "password" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
-                )}
-              </button>
-              {!isSuperAdmin && (
+          {/* Tabs - Desktop: original style, Mobile: pill/segmented style */}
+          <div className="border-b border-gray-200">
+            {/* Desktop Tabs - hidden on mobile, visible on desktop */}
+            <div className="hidden sm:block">
+              <div className="flex gap-1">
                 <button
-                  onClick={() => setActiveForm("membership")}
+                  onClick={() => setActiveForm("profile")}
                   className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
-                    activeForm === "membership"
+                    activeForm === "profile"
                       ? "text-[#6750A4]"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  Memberships
-                  {activeForm === "membership" && (
+                  Edit Profile
+                  {activeForm === "profile" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
                   )}
                 </button>
-              )}
+                <button
+                  onClick={() => setActiveForm("password")}
+                  className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
+                    activeForm === "password"
+                      ? "text-[#6750A4]"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Change Password
+                  {activeForm === "password" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+                  )}
+                </button>
+                {!isSuperAdmin && (
+                  <button
+                    onClick={() => setActiveForm("membership")}
+                    className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
+                      activeForm === "membership"
+                        ? "text-[#6750A4]"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    Memberships
+                    {activeForm === "membership" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Tabs - Pill/Segmented style (visible only on mobile) */}
+            <div className="sm:hidden">
+              <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                <button
+                  onClick={() => setActiveForm("profile")}
+                  className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                    activeForm === "profile"
+                      ? "bg-white text-[#6750A4] shadow-sm"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => setActiveForm("password")}
+                  className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                    activeForm === "password"
+                      ? "bg-white text-[#6750A4] shadow-sm"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  Password
+                </button>
+                {!isSuperAdmin && (
+                  <button
+                    onClick={() => setActiveForm("membership")}
+                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                      activeForm === "membership"
+                        ? "bg-white text-[#6750A4] shadow-sm"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                  >
+                    Memberships
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -655,12 +696,12 @@ export default function AdminProfile() {
           {/* Membership Section with current selection highlight */}
           {!isSuperAdmin && activeForm === "membership" && (
             <div className="mt-4 sm:mt-5 md:mt-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+              <div className="flex flex-row items-center justify-between mb-3 sm:mb-4 gap-2">
+                <h3 className="text-xs sm:text-lg font-semibold text-secondary">
                   Your Companies
                 </h3>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                  {user?.memberships?.length || 0} memberships
+                <span className="text-[9px] sm:text-xs bg-amber-500 text-white px-1.5 sm:px-3 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                  {user?.memberships?.length || 0} {user?.memberships?.length === 1 ? 'company' : 'companies'}
                 </span>
               </div>
 
@@ -703,9 +744,9 @@ export default function AdminProfile() {
                                 }`} />;
                               })()}
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <p
-                                className={`font-semibold transition-all duration-300 truncate ${
+                                className={`font-semibold transition-all duration-300 break-words ${
                                   isActive
                                     ? "text-[#6750A4] text-base sm:text-lg"
                                     : "text-gray-800 group-hover:text-[#6750A4] text-sm sm:text-base"

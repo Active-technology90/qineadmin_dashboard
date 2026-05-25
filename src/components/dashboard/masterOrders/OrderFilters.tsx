@@ -59,11 +59,7 @@ export function OrderFilters({
   };
 
   return (
-    <div
-      className={`${
-        showMobile ? "block" : "hidden md:block"
-      } w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-hidden`}
-    >
+    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-gray-100">
         <div className="flex items-center gap-2" />
@@ -78,14 +74,7 @@ export function OrderFilters({
                 <span className="hidden xs:inline">Clear</span>
               </button>
           )}
-          <button
-            onClick={onToggleMobile}
-            className="md:hidden inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium
-                       border border-gray-200 rounded-xl bg-white shadow-sm"
-          >
-            <Filter size={12} className="sm:w-[14px] sm:h-[14px]" />
-            <span className="hidden xs:inline">Filters</span>
-          </button>
+ 
         </div>
       </div>
 
