@@ -60,7 +60,7 @@ const EMPTY_ANALYTICS: AnalyticsOverviewResponse = {
 };
 
 type Period = "week" | "month" | "year";
-export type DashboardTab = "products" | "masterOrders" | "companyOrders" | "payments" | "companies" | "allOrders" | "companyUser";
+export type DashboardTab = "products" | "masterOrders" | "companyOrders" | "payments" | "companies" | "allOrders" | "companyUser" | "users";
 
 export default function Overview({
   onNavigate,

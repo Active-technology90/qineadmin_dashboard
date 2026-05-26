@@ -25,7 +25,6 @@ import {
   Search,
   X,
   ChevronDown,
-  RefreshCw,
   Repeat,
 } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -6,16 +6,10 @@ import {
   Phone,
   Building2,
   Shield,
-  Package,
-  ShoppingCart,
-  BarChart3,
-  Users,
   Award,
   Edit,
   Trash2,
   CheckCircle,
-  Eye,
-  Truck,
   Briefcase,
 } from "lucide-react";
 import type { User, Membership } from "../../../types";

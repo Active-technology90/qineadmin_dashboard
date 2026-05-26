@@ -29,7 +29,6 @@ import { useSorting } from "../../hooks/useSorting";
 import { useReadOnly } from "./AdminDashboard";
 import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
 import MobileCardSkeleton from "../ui/MobileCardSkeleton";
-import MobileActionBar from "../ui/MobileActionBar";
 import FilterSortSheet from "../ui/FilterSortSheet";
 
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
@@ -123,14 +122,6 @@ export default function SubCategoryManagement() {
   );
 
   // ========== DERIVED VALUES DEPENDENT ON SORTING ==========
-  // Active filter count for mobile badge
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (categoryFilter !== "all") count++;
-    if (inputValue.trim() !== "") count++;
-    return count;
-  }, [categoryFilter, inputValue]);
-
   const sortLabel = useMemo(() => {
     const val = `${sortField}|${sortOrder}`;
     const labels: Record<string, string> = {
@@ -145,6 +136,7 @@ export default function SubCategoryManagement() {
     };
     return labels[val] || "Sort";
   }, [sortField, sortOrder]);
+  void sortLabel;
 
   // Sync temp state with current filters when sheet opens
   useEffect(() => {

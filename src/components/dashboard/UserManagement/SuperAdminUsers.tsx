@@ -23,7 +23,6 @@ import {
   Minus,
   X,
   ChevronRight,
-  ListFilter,
   Filter,
 } from "lucide-react";
 import {

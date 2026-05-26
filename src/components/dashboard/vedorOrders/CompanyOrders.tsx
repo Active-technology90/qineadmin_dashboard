@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Package, Building2, Settings, Search, X } from "lucide-react";
+import { Package, Building2, Settings, X } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 
 import {
@@ -408,11 +408,6 @@ export default function CompanyOrders() {
     { value: "cod", label: "COD" },
   ];
 
-  // Options for Company dropdown (if admin)
-  const companyOptions: SelectOption[] = [
-    { value: "", label: "All Companies" },
-    ...companies.map((c) => ({ value: String(c.id), label: c.name })),
-  ];
     // Options for Page Size dropdown
   const pageSizeOptions: SelectOption[] = [
     { value: "5", label: "5 / page" },
