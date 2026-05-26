@@ -543,7 +543,7 @@ export default function Overview({
               />
             </div>
             <div
-              onClick={() => onNavigate?.("companyUser")}
+              onClick={() => onNavigate?.("users")}
               className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <SummaryCard
