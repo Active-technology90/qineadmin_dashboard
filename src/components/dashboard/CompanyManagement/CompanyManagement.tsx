@@ -1173,7 +1173,7 @@ export default function CompanyManagement() {
         {/* Header Section - Premium & Responsive */}
         <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
-            <h2 className="text-base pt-2 sm:text-sm md:text-xl font-bold text-secondary truncate">
+            <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
               {isSuperAdmin ? "Companies" : "Company Detail"}
             </h2>
             {!isSuperAdmin && (
@@ -1192,7 +1192,7 @@ export default function CompanyManagement() {
               className="bg-secondary text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
             >
               <Plus size={18} className=" w-3 h-3 sm:w-5 sm:h-5" />
-              <span className="hidden xs:inline">Add Company</span>
+              <span className="hidden md:inline">Add Company</span>
               <span className="inline xs:hidden text-xs">Add</span>
             </button>
           )}
@@ -1256,6 +1256,8 @@ export default function CompanyManagement() {
               categoryOptions={categoryOptions}
               subCategoryOptions={subCategoryOptions}
               onClearAll={clearAllFilters}
+              pageSize={pageSize}
+  onPageSizeChange={setPageSize}
             />
           </div>
         ) : (

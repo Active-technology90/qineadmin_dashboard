@@ -76,101 +76,168 @@ const MembershipCard: React.FC<{ membership: Membership }> = ({
 };
 
 // Permissions Badges System
-const PermissionsSection: React.FC<{ user: ExtendedUser }> = ({ user }) => {
-  const defaultPermissions = useMemo(() => {
-    const roles = user.memberships.map((m) => m.role);
-    if (roles.includes("admin")) {
-      return [
-        "Manage Products",
-        "Manage Orders",
-        "View Analytics",
-        "Manage Users",
-      ];
-    }
-    if (roles.includes("staff")) {
-      return ["Manage Products", "Manage Orders"];
-    }
-    if (roles.includes("delivery")) {
-      return ["View Orders", "Update Delivery Status"];
-    }
-    return ["View Only"];
-  }, [user.memberships]);
+// const PermissionsSection: React.FC<{ user: ExtendedUser }> = ({ user }) => {
+//   const defaultPermissions = useMemo(() => {
+//     const roles = user.memberships.map((m) => m.role);
+//     if (roles.includes("admin")) {
+//       return [
+//         "Manage Products",
+//         "Manage Orders",
+//         "View Analytics",
+//         "Manage Users",
+//       ];
+//     }
+//     if (roles.includes("staff")) {
+//       return ["Manage Products", "Manage Orders"];
+//     }
+//     if (roles.includes("delivery")) {
+//       return ["View Orders", "Update Delivery Status"];
+//     }
+//     return ["View Only"];
+//   }, [user.memberships]);
 
-  const permissions = user.permissions || defaultPermissions;
+//   const permissions = user.permissions || defaultPermissions;
 
-  const permissionIcons: Record<string, React.ReactNode> = {
-    "Manage Products": <Package className="h-3.5 w-3.5" />,
-    "Manage Orders": <ShoppingCart className="h-3.5 w-3.5" />,
-    "View Analytics": <BarChart3 className="h-3.5 w-3.5" />,
-    "Manage Users": <Users className="h-3.5 w-3.5" />,
-    "View Orders": <ShoppingCart className="h-3.5 w-3.5" />,
-    "Update Delivery Status": <Truck className="h-3.5 w-3.5" />,
-    "View Only": <Eye className="h-3.5 w-3.5" />,
-  };
+//   const permissionIcons: Record<string, React.ReactNode> = {
+//     "Manage Products": <Package className="h-3.5 w-3.5" />,
+//     "Manage Orders": <ShoppingCart className="h-3.5 w-3.5" />,
+//     "View Analytics": <BarChart3 className="h-3.5 w-3.5" />,
+//     "Manage Users": <Users className="h-3.5 w-3.5" />,
+//     "View Orders": <ShoppingCart className="h-3.5 w-3.5" />,
+//     "Update Delivery Status": <Truck className="h-3.5 w-3.5" />,
+//     "View Only": <Eye className="h-3.5 w-3.5" />,
+//   };
 
-  return (
-    <div className="bg-white rounded-xl border border-gray-100 p-3 xs:p-4 sm:p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-3 xs:mb-4">
-        <h3 className="text-xs xs:text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Permissions
-        </h3>
-        <span className="text-[10px] xs:text-xs font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
-          {permissions.length}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-1.5 xs:gap-2">
-        {permissions.map((perm) => (
-          <span
-            key={perm}
-            className="inline-flex items-center gap-1 xs:gap-1.5 px-2 xs:px-3 py-1 xs:py-1.5 rounded-full text-[10px] xs:text-xs font-medium bg-gray-50 text-gray-700 border border-gray-100 transition-colors hover:bg-gray-100"
-          >
-            {permissionIcons[perm] || <Shield className="h-3.5 w-3.5" />}
-            {perm}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="bg-white rounded-xl border border-gray-100 p-3 xs:p-4 sm:p-5 shadow-sm">
+//       <div className="flex items-center justify-between mb-3 xs:mb-4">
+//         <h3 className="text-xs xs:text-sm font-semibold text-gray-400 uppercase tracking-wider">
+//           Permissions
+//         </h3>
+//         <span className="text-[10px] xs:text-xs font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+//           {permissions.length}
+//         </span>
+//       </div>
+//       <div className="flex flex-wrap gap-1.5 xs:gap-2">
+//         {permissions.map((perm) => (
+//           <span
+//             key={perm}
+//             className="inline-flex items-center gap-1 xs:gap-1.5 px-2 xs:px-3 py-1 xs:py-1.5 rounded-full text-[10px] xs:text-xs font-medium bg-gray-50 text-gray-700 border border-gray-100 transition-colors hover:bg-gray-100"
+//           >
+//             {permissionIcons[perm] || <Shield className="h-3.5 w-3.5" />}
+//             {perm}
+//           </span>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// };
 
 // User Profile Header (Avatar, Name, Status)
 const UserProfileHeader: React.FC<{ user: ExtendedUser }> = ({ user }) => {
   const initials =
     `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() ||
     user.username[0].toUpperCase();
+
   const isActive = user.is_active ?? true;
 
   return (
-    <div className="flex flex-col xs:flex-row items-start gap-3 xs:gap-4">
-      <div className="h-14 w-14 xs:h-16 xs:w-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-lg xs:text-xl shadow-sm border border-gray-200 shrink-0 overflow-hidden">
+    <div className="flex items-center gap-4">
+      {/* Avatar */}
+      <div
+        className="
+          relative
+          h-14 w-14 sm:h-16 sm:w-16
+          shrink-0
+          overflow-hidden
+          rounded-2xl
+          border border-gray-200
+          bg-gray-100
+          shadow-sm
+        "
+      >
         {user.profile_image ? (
           <img
             src={user.profile_image}
-            alt=""
-            className="h-full w-full rounded-full object-cover"
+            alt={user.username}
+            className="h-full w-full object-cover"
           />
         ) : (
-          initials
+          <div
+            className="
+              flex h-full w-full items-center justify-center
+              text-base sm:text-lg
+              font-semibold
+              text-gray-700
+            "
+          >
+            {initials}
+          </div>
         )}
+
+        {/* Status Dot */}
+        <div
+          className={`
+            absolute bottom-0 right-0
+            h-3.5 w-3.5 rounded-full border-2 border-white
+            ${isActive ? "bg-green-500" : "bg-gray-400"}
+          `}
+        />
       </div>
+
+      {/* User Info */}
       <div className="min-w-0 flex-1">
-        <h2 className="text-lg xs:text-xl font-semibold text-gray-900 break-words">
-          {user.first_name || user.username} {user.last_name || ""}
-        </h2>
-        <p className="text-xs xs:text-sm text-gray-500 mt-0.5 break-all">
+        {/* Name + Badge */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2
+            className="
+              truncate
+              text-base sm:text-lg
+              font-semibold
+              text-gray-900
+            "
+          >
+            {user.first_name || user.username} {user.last_name || ""}
+          </h2>
+
+          <span
+            className={`
+              inline-flex items-center gap-1
+              rounded-full px-2 py-0.5
+              text-[10px] sm:text-xs
+              font-medium
+              ${
+                isActive
+                  ? "bg-green-50 text-green-700"
+                  : "bg-gray-100 text-gray-600"
+              }
+            `}
+          >
+            {isActive ? (
+              <>
+                <CheckCircle className="h-3 w-3" />
+                Active
+              </>
+            ) : (
+              <>
+                <Shield className="h-3 w-3" />
+                Inactive
+              </>
+            )}
+          </span>
+        </div>
+
+        {/* Username */}
+        <p
+          className="
+            mt-1
+            truncate
+            text-xs sm:text-sm
+            text-gray-500
+          "
+        >
           @{user.username}
         </p>
-        <div className="flex items-center gap-2 mt-2">
-          {isActive ? (
-            <span className="inline-flex items-center gap-1 xs:gap-1.5 px-2 py-0.5 rounded-full text-[10px] xs:text-xs font-medium bg-gray-100 text-gray-700">
-              <CheckCircle className="h-3 w-3 text-gray-500" /> Active
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 xs:gap-1.5 px-2 py-0.5 rounded-full text-[10px] xs:text-xs font-medium bg-gray-100 text-gray-500">
-              <Shield className="h-3 w-3" /> Inactive
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -179,27 +246,101 @@ const UserProfileHeader: React.FC<{ user: ExtendedUser }> = ({ user }) => {
 // User Information Card
 const UserInfoCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
   const infoItems = [
-    { icon: Mail, label: "Email", value: user.email },
-    { icon: Phone, label: "Phone", value: user.phone_number || "—" },
-    { icon: Shield, label: "User ID", value: `#${user.id}` },
+    {
+      icon: Mail,
+      label: "Email",
+      value: user.email,
+    },
+    {
+      icon: Phone,
+      label: "Phone",
+      value: user.phone_number || "Not provided",
+    },
+    {
+      icon: Shield,
+      label: "User ID",
+      value: `#${user.id}`,
+    },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-3 xs:p-4 sm:p-5 shadow-sm">
-      <h3 className="text-xs xs:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 xs:mb-4">
-        User Information
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
+    <div
+      className="
+        rounded-2xl
+        border border-gray-200
+        bg-white
+        p-4 sm:p-5
+        shadow-sm
+      "
+    >
+      {/* Header */}
+      <div className="mb-5">
+        <h3 className="text-sm font-semibold text-gray-900">
+          User Information
+        </h3>
+
+        <p className="mt-1 text-xs text-gray-500">
+          Personal and account details
+        </p>
+      </div>
+
+      {/* Row Layout */}
+      <div
+        className="
+          flex flex-col gap-3
+          lg:flex-row
+        "
+      >
         {infoItems.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex items-center gap-2 xs:gap-3 min-w-0">
-            <div className="h-7 w-7 xs:h-8 xs:w-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
-              <Icon className="h-3.5 w-3.5 xs:h-4 xs:w-4 text-gray-500" />
+          <div
+            key={label}
+            className="
+              flex items-center gap-3
+              flex-1
+              rounded-xl
+              border border-gray-100
+              bg-gray-50/70
+              px-4 py-3
+              transition-all duration-200
+              hover:border-gray-200
+              hover:bg-gray-50
+            "
+          >
+            {/* Icon */}
+            <div
+              className="
+                flex h-10 w-10 shrink-0 items-center justify-center
+                rounded-xl
+                border border-gray-200
+                bg-white
+              "
+            >
+              <Icon className="h-4 w-4 text-gray-600" />
             </div>
+
+            {/* Text */}
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] xs:text-xs text-gray-500 truncate">
+              <p
+                className="
+                  text-[10px] sm:text-[11px]
+                  font-medium
+                  uppercase
+                  tracking-wide
+                  text-gray-500
+                "
+              >
                 {label}
               </p>
-              <p className="text-xs xs:text-sm font-medium text-gray-900 break-words">
+
+              <p
+                className="
+                  mt-0.5
+                  truncate
+                  text-sm
+                  font-semibold
+                  text-gray-900
+                "
+              >
                 {value}
               </p>
             </div>
@@ -209,7 +350,6 @@ const UserInfoCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
     </div>
   );
 };
-
 // Statistics Cards (soft gray, no gradients)
 const UserStatsCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
   const totalCompanies = user.memberships.length;
@@ -217,23 +357,105 @@ const UserStatsCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
 
   return (
     <div className="grid grid-cols-2 gap-3 xs:gap-4">
-      <div className="bg-gray-50 rounded-xl p-3 xs:p-4 text-center border border-gray-100">
-        <Building2 className="h-4 w-4 xs:h-5 xs:w-5 text-gray-500 mx-auto mb-1 xs:mb-2" />
-        <p className="text-xl xs:text-2xl font-semibold text-gray-900">
-          {totalCompanies}
-        </p>
-        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">
-          Companies
-        </p>
+      <div
+        className="
+    flex items-center justify-between
+    rounded-2xl
+    border border-gray-200
+    bg-gray-50/80
+    px-4 py-1
+    transition-all duration-200
+    hover:bg-gray-50
+  "
+      >
+        {/* Left Content */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Icon */}
+          <div
+            className="
+        flex h-10 w-10 shrink-0 items-center justify-center
+        rounded-xl
+        border border-gray-200
+        bg-white
+      "
+          >
+            <Building2 className="h-5 w-5 text-gray-600" />
+          </div>
+
+          {/* Text */}
+          <div className="min-w-0">
+            <p
+              className="
+          text-xs
+          font-medium
+          uppercase tracking-wide
+          text-gray-500
+        "
+            >
+              Companies
+            </p>
+
+            <p
+              className="
+          text-lg sm:text-xl
+          font-semibold
+          text-gray-900
+        "
+            >
+              {totalCompanies}
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="bg-gray-50 rounded-xl p-3 xs:p-4 text-center border border-gray-100">
-        <Award className="h-4 w-4 xs:h-5 xs:w-5 text-gray-500 mx-auto mb-1 xs:mb-2" />
-        <p className="text-xl xs:text-2xl font-semibold text-gray-900">
-          {uniqueRoles}
-        </p>
-        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">
-          Roles
-        </p>
+      <div
+        className="
+    flex items-center justify-between
+    rounded-2xl
+    border border-gray-200
+    bg-gray-50/80
+    px-3 py-1
+    transition-all duration-200
+    hover:bg-gray-50
+  "
+      >
+        {/* Left Content */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Icon */}
+          <div
+            className="
+        flex h-11 w-11 shrink-0 items-center justify-center
+        rounded-xl
+        border border-gray-200
+        bg-white
+      "
+          >
+            <Award className="h-5 w-5 text-gray-600" />
+          </div>
+
+          {/* Text */}
+          <div className="min-w-0">
+            <p
+              className="
+          text-xs
+          font-medium
+          uppercase tracking-wide
+          text-gray-500
+        "
+            >
+              Roles
+            </p>
+
+            <p
+              className="
+          text-lg sm:text-xl
+          font-semibold
+          text-gray-900
+        "
+            >
+              {uniqueRoles}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -274,7 +496,7 @@ const ModalActions: React.FC<{
   onEdit: () => void;
   onDelete: () => void;
   // onClose: () => void;
-}> = ({ onEdit, onDelete,  }) => (
+}> = ({ onEdit, onDelete }) => (
   <div className="flex flex-row sm:flex-row justify-end gap-2 xs:gap-3">
     {/* <button
       onClick={onClose}
@@ -284,14 +506,14 @@ const ModalActions: React.FC<{
     </button> */}
     <button
       onClick={onDelete}
-      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg border border-red-500 bg-red-500 text-white text-xs xs:text-sm font-medium hover:bg-red-600 transition-all duration-200"
+      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-xl border border-red-500 bg-red-500 text-white text-xs xs:text-sm font-medium hover:bg-red-600 transition-all duration-200"
     >
       <Trash2 className="h-4 w-4 inline mr-2" />
       Delete User
     </button>
     <button
       onClick={onEdit}
-      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg bg-secondary text-white text-xs xs:text-sm font-medium hover:bg-[#5a448c] transition-all duration-200 shadow-sm"
+      className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-xl bg-secondary text-white text-xs xs:text-sm font-medium hover:bg-secondary-dark transition-all duration-200 shadow-sm"
     >
       <Edit className="h-4 w-4 inline mr-2" />
       Edit User
@@ -395,11 +617,11 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
 
   // Responsive modal container classes
   const modalClasses =
-    "bg-white shadow-xl w-[95dvw] max-h-[95dvh] flex flex-col overflow-hidden rounded-t-xl mx-auto " +
+    "bg-white shadow-xl w-[95dvw] max-h-[95dvh] flex flex-col overflow-hidden rounded-xl mx-auto " +
     // Fullscreen on tiny (<320px)
     "max-[319px]:h-[100dvh] max-[319px]:rounded-t-xl " +
     // XS: bottom sheet style
-"xs:h-[95dvh] xs:rounded-t-xl xs:mt-auto xs:mb-2 "+
+    "xs:h-[95dvh] xs:rounded-t-xl xs:mt-auto xs:mb-2 " +
     // SM and up: centered modal
     "sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-xl " +
     "md:max-w-2xl " +
@@ -414,7 +636,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center sm:items-center sm:justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -445,7 +667,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
               <UserInfoCard user={user} />
               <UserStatsCard user={user} />
               <MembershipsSection memberships={user.memberships} />
-              <PermissionsSection user={user} />
+              {/* <PermissionsSection user={user} /> */}
             </div>
 
             {/* Sticky Footer with safe-area */}

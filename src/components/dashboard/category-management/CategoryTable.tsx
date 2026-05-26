@@ -185,63 +185,51 @@ export default function CategoryTable({
   return (
     <div className="space-y-4 sm:space-y-0">
       {/* Mobile sticky search */}
-      {/* Mobile sticky search + SORT BUTTON (RIGHT of search) */}
-      <div className="sm:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-gray-200/80 px-4 py-3">
-        <div className="relative flex items-center gap-2">
-          {/* SEARCH */}
-          <div className="flex-1 min-w-0">
-            <SearchInput
-              value={inputValue}
-              onChange={onInputChange}
-              loading={loading}
-              placeholder="Search by name, slug, code..."
-              debounceMs={0}
-              className="w-full"
-            />
-          </div>
-
-          {/* SORT BUTTON (opens sheet) */}
-          <button
-            onClick={() => {
-              setTempSort(`${sortField}|${sortOrder}`);
-              setSheetOpen(true);
-            }}
-            aria-label="Open sort options"
-            className="
-        relative
-        shrink-0
-        h-10
-        w-10
-        rounded-full
-        bg-[#674FA3]
-        text-white
-        shadow-md
-        flex
-        items-center
-        justify-center
-        active:scale-95
-        transition-all
-        duration-200
-      "
-          >
-            <ArrowDownUp />
-
-            {/* active indicator */}
-            {/* {sortField && (
-              <span
-                className="
-          absolute -top-1 -right-1
-          bg-red-500 text-white text-[10px]
-          font-bold rounded-full
-          h-4 w-4 flex items-center justify-center
-        "
-              >
-                !
-              </span>
-            )} */}
-          </button>
-        </div>
+     {/* Mobile Sticky Table Controls */}
+<div className="sm:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-gray-200/80 px-4 py-3">
+  <TableControls
+    pageSize={pageSize}
+    onPageSizeChange={onPageSizeChange}
+  >
+    <div className="flex items-center gap-2 w-full">
+      
+      {/* Search */}
+      <div className="flex-1 min-w-0">
+        <SearchInput
+          value={inputValue}
+          onChange={onInputChange}
+          loading={loading}
+          placeholder="Search by name, slug, code..."
+          debounceMs={0}
+          className="w-full"
+        />
       </div>
+
+      {/* Sort button */}
+      <button
+        type="button"
+        onClick={() => {
+          setTempSort(`${sortField}|${sortOrder}`);
+          setSheetOpen(true);
+        }}
+        aria-label="Open sort options"
+        className="
+          relative shrink-0
+          h-7 w-7
+          rounded-full
+          bg-secondary text-white
+          shadow-md
+          flex items-center justify-center
+          active:scale-95
+          transition-all duration-200
+        "
+      >
+        <ArrowDownUp size={16} />
+      </button>
+
+    </div>
+  </TableControls>
+</div>
 
       {/* Desktop controls */}
       <div className="hidden sm:block">
@@ -345,17 +333,17 @@ export default function CategoryTable({
                   </div>
                 </div>
                 {!readOnly && (
-                  <div className="mt-4 flex gap-2 pt-3 border-t border-gray-100">
+                  <div className="mt-2 flex gap-2 pt-2">
                     <button
                       onClick={() => onEdit(cat)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors min-h-[44px]"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-1  rounded-xl text-xs font-semibold text-secondary bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors min-h-[32px]"
                     >
                       <Edit size={14} />
                       Edit
                     </button>
                     <button
                       onClick={() => onDelete(cat)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors min-h-[44px]"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 p-1 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors min-h-[32px]"
                     >
                       <Trash2 size={14} />
                       Delete

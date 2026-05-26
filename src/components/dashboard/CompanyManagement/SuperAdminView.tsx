@@ -1,6 +1,6 @@
 // src/components/admin/SuperAdminView.tsx
 import { useState, useEffect } from "react";
-import { Edit, Trash2, ImageIcon, ListFilter } from "lucide-react";
+import { Edit, Trash2, ImageIcon, Filter } from "lucide-react";
 import { DataTable, type Column } from "../../ui/DataTable";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
@@ -11,6 +11,7 @@ import type { CompanyListItem } from "../../../types";
 import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
 // import MobileActionBar from "../../ui/MobileActionBar";
 import BottomSheet from "../../ui/BottomSheet";
+import { TableControls } from "../../ui/TableControls";
 
 interface SuperAdminViewProps {
   paginatedItems: (CompanyListItem & { rowNumber?: number })[];
@@ -38,6 +39,8 @@ interface SuperAdminViewProps {
   categoryOptions: string[];
   subCategoryOptions: string[];
   onClearAll: () => void;
+    pageSize: number;
+  onPageSizeChange: (size: number) => void;
 }
 
 export default function SuperAdminView({
@@ -65,6 +68,8 @@ export default function SuperAdminView({
   categoryOptions,
   subCategoryOptions,
   onClearAll,
+  pageSize,
+  onPageSizeChange,
 }: SuperAdminViewProps) {
   // ---- Mobile filter sheet ----
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -81,14 +86,14 @@ export default function SuperAdminView({
     inputValue.trim() !== "",
   ].filter(Boolean).length;
 
-  const sortLabel = (() => {
-    const val = `${sortField}|${sortOrder}`;
-    if (val === "name|asc") return "Name A-Z";
-    if (val === "name|desc") return "Name Z-A";
-    if (val === "is_active|desc") return "Active First";
-    if (val === "is_featured|desc") return "Featured First";
-    return "Sort";
-  })();
+  // const sortLabel = (() => {
+  //   const val = `${sortField}|${sortOrder}`;
+  //   if (val === "name|asc") return "Name A-Z";
+  //   if (val === "name|desc") return "Name Z-A";
+  //   if (val === "is_active|desc") return "Active First";
+  //   if (val === "is_featured|desc") return "Featured First";
+  //   return "Sort";
+  // })();
 
   // Sync temp state when sheet opens
   useEffect(() => {
@@ -183,35 +188,42 @@ export default function SuperAdminView({
       {/* ============ MOBILE LAYOUT ============ */}
       <div className="block md:hidden">
         {/* Search */}
-        <div className="sticky top-0 z-10 pt-1 pb-2">
-          <div className="relative p-1 ">
-            <SearchInput
-              value={inputValue}
-              onChange={onInputChange}
-              debounceMs={0}
-              loading={loading}
-              showClearButton={false}
-              placeholder="Search companies..."
-              className="pr-0 rounded-full  shadow-sm border-secondary focus:ring-2 focus:ring-secondary/30"
-            />
+        <div className="sticky top-0 z-40  ">
+  <TableControls
+    pageSize={pageSize}
+    onPageSizeChange={onPageSizeChange}
+  >
+    {/* LEFT SIDE = SEARCH + FILTER */}
+    <div className="relative flex-1">
+      <SearchInput
+        value={inputValue}
+        onChange={onInputChange}
+        debounceMs={0}
+        loading={loading}
+        showClearButton={false}
+        placeholder="Search companies..."
+        className="rounded-xl shadow-sm border-secondary focus:ring-2 focus:ring-secondary/30"
+      />
 
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="absolute rounded-full right-4 p-1 top-1/2 -translate-y-1/2 z-20 h-8 w-8 bg-[#674FA3] text-white shadow-md flex items-center justify-center active:scale-95 transition-all duration-200"
-              aria-label="Open filters"
-            >
-              {/* <Filter size={18} strokeWidth={2.5} /> */}
+      {/* FILTER BUTTON INSIDE SEARCH */}
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="absolute right-4 top-1/2 -translate-y-1/2
+        h-6 w-6 rounded-full bg-secondary text-white
+        flex items-center justify-center shadow-md
+        active:scale-95 transition"
+      >
+        <Filter size={14} strokeWidth={2.5} />
 
-              <ListFilter />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4.5 w-4.5 flex items-center justify-center shadow">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
+        {activeFilterCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+            {activeFilterCount}
+          </span>
+        )}
+      </button>
+    </div>
+  </TableControls>
+</div>
         {/* Cards */}
         {loading ? (
           <MobileCardSkeleton count={5} />
@@ -292,32 +304,32 @@ export default function SuperAdminView({
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="bg-gray-50/80 rounded-xl p-1.5 border border-gray-100">
+                      <span className="text-base font-medium text-gray-500 uppercase tracking-wider">
                         Category
                       </span>
                       <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">
                         {company.category_name}
                       </p>
                     </div>
-                    <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="bg-gray-50/80 rounded-xl p-1.5 border border-gray-100">
+                      <span className="text-base font-medium text-gray-500 uppercase tracking-wider">
                         Subcategory
                       </span>
                       <p className="text-[8px] font-semibold text-gray-800 truncate mt-0.5">
                         {company.sub_category_name}
                       </p>
                     </div>
-                    <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="bg-gray-50/80 rounded-xl p-1.5 border border-gray-100">
+                      <span className="text-base font-medium text-gray-500 uppercase tracking-wider">
                         Business Type
                       </span>
                       <p className="text-[8px] font-semibold text-gray-800 uppercase truncate mt-0.5">
                         {company.business_type || "—"}
                       </p>
                     </div>
-                    <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="bg-gray-50/80 rounded-xl p-1.5 border border-gray-100">
+                      <span className="text-base font-medium text-gray-500 uppercase tracking-wider">
                         Row Number
                       </span>
                       <p className="text-[8px] font-semibold text-gray-800 truncate mt-0.5">
@@ -367,7 +379,7 @@ export default function SuperAdminView({
             </>
           }
         >
-          <div className="space-y-12 px-2">
+          <div className="space-y-4 px-2">
             {/* Sort section */}
             <div>
               <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">
@@ -383,7 +395,7 @@ export default function SuperAdminView({
                   <button
                     key={opt.value}
                     onClick={() => setTempSort(opt.value)}
-                    className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all active:scale-95 ${
+                    className={`py-2.5 px-3 rounded-xl text-xs md:text-sm, font-medium transition-all active:scale-95 ${
                       tempSort === opt.value
                         ? "bg-secondary text-white shadow-md"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"

@@ -298,8 +298,8 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
         className={`
           fixed inset-0 z-50
           transition-all duration-200
-          flex items-end sm:items-center justify-center
-          px-0 sm:px-6
+          flex items-center sm:items-center justify-center
+          px-4 sm:px-6
           ${
             animateOut
               ? "bg-black/0 backdrop-blur-0"
@@ -315,7 +315,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           onClick={(e) => e.stopPropagation()}
           className={`
             w-full bg-white
-            rounded-t-[32px] sm:rounded-[32px]
+            rounded-xl sm:rounded-[32px]
             shadow-[0_20px_60px_rgba(0,0,0,0.2)]
             flex flex-col overflow-hidden
             max-h-[95dvh]  sm:max-h-[92vh]

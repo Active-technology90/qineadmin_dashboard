@@ -53,7 +53,7 @@ const FilterSortSheet: React.FC<FilterSortSheetProps> = ({
       </>
     }
   >
-    <div className="space-y-12">
+    <div className="space-y-3">
       {/* Sort section */}
       <div>
         <label className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-2 block">

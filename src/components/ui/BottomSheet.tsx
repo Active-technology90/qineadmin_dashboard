@@ -45,7 +45,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
       />
       {/* Sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white rounded-t-2xl shadow-2xl transform transition-all duration-300 ease-out"
+        className="fixed bottom-0 left-0 right-0 z-[130] flex flex-col bg-white  rounded-t-2xl shadow-2xl transform transition-all duration-300 ease-out"
         style={{ maxHeight }}
       >
         {/* Drag handle */}
@@ -71,7 +71,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 
         {/* Footer (optional) */}
         {footer && (
-          <div className="border-t border-gray-100 bg-white p-4 flex gap-3 flex-shrink-0 safe-bottom">
+          <div className="border-t border-gray-100 bg-white p-4 mb-3 flex gap-3 flex-shrink-0 safe-bottom">
             {footer}
           </div>
         )}

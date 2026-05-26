@@ -1,25 +1,29 @@
-// src/hooks/usePagination.ts
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 export function usePagination<T>(items: T[], itemsPerPage: number = 10) {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Compute totalPages safely – always a number
   const totalPages = useMemo(() => {
-    const total = Math.ceil(items.length / itemsPerPage);
-    return Math.max(1, total); // at least 1 page
+    return Math.max(1, Math.ceil(items.length / itemsPerPage));
   }, [items, itemsPerPage]);
 
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return items.slice(start, start + itemsPerPage);
-  }, [items, currentPage, itemsPerPage]);
-
-  // Use useCallback to avoid recreating function unnecessarily
-  const goToPage = useCallback((page: number) => {
-    const target = Math.min(Math.max(1, page), totalPages);
-    setCurrentPage(target);
+  // ✅ auto-fix invalid page whenever dependencies change
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
+
+  const paginatedItems = useMemo(() => {
+    const safePage = Math.min(currentPage, totalPages);
+    const start = (safePage - 1) * itemsPerPage;
+    return items.slice(start, start + itemsPerPage);
+  }, [items, currentPage, itemsPerPage, totalPages]);
+
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(Math.min(Math.max(1, page), totalPages));
+    },
+    [totalPages],
+  );
 
   const resetPage = useCallback(() => setCurrentPage(1), []);
 

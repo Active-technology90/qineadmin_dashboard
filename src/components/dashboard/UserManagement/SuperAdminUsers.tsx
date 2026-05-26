@@ -15,7 +15,6 @@ import {
   Users,
   Building2,
   CheckCircle,
-  Filter,
   Briefcase,
   UserCheck,
   UserMinus,
@@ -24,6 +23,8 @@ import {
   Minus,
   X,
   ChevronRight,
+  ListFilter,
+  Filter,
 } from "lucide-react";
 import {
   deleteUser,
@@ -156,163 +157,92 @@ const StatCard: React.FC<StatCardProps> = ({
 // ============================================================
 interface FiltersProps {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: (term: string) => void;
   roleFilter: string;
-  setRoleFilter: (value: string) => void;
-  onRefresh: () => void;
-}
+  setRoleFilter: (role: string) => void;
 
+  // ADD THESE
+  pageSize: number;
+  setPageSize: (size: number) => void;
+}
 const UserFilters: React.FC<FiltersProps> = ({
   searchTerm,
   setSearchTerm,
   roleFilter,
   setRoleFilter,
+  pageSize,
+  setPageSize,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
-
+  const pageSizeOptions = [
+    { label: "5", value: "5" },
+    { label: "10", value: "10" },
+    { label: "15", value: "15" },
+    { label: "30", value: "30" },
+    { label: "60", value: "60" },
+  ];
   return (
     <>
-      <div
-        className="
-          w-full
-          flex flex-col
-          lg:flex-row
-          lg:items-center
-          gap-3
-          lg:gap-4
-        "
+      <div className="w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+        {/* SEARCH + FILTER INSIDE INPUT */}
+     <div className="relative flex flex-1 min-w-0 items-center gap-2 px-2">
+  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/10 to-purple-300/10 blur-xl opacity-70" />
+
+  {/* SEARCH BOX */}
+  <div className="w-3/4 md:w-full relative flex items-center rounded-2xl border border-gray-200/70 bg-white/80 backdrop-blur-xl shadow-sm hover:shadow-md focus-within:ring-4 focus-within:ring-secondary/10 focus-within:border-secondary/30 transition-all duration-300">
+    
+    <Search className="absolute left-3 sm:left-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+
+    <input
+      type="text"
+      placeholder="Search users, email, role..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full bg-transparent pl-10 sm:pl-12 pr-24 py-2 sm:py-2.5 text-sm sm:text-[15px] text-gray-700 placeholder:text-gray-400 rounded-xl border border-secondary outline-none"
+    />
+
+    {searchTerm && (
+      <button
+        onClick={() => setSearchTerm("")}
+        className="absolute right-14 flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
       >
-        {/* SEARCH */}
-        <div className="relative flex-1 min-w-0">
-          {/* Glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/10 to-purple-300/10 blur-xl opacity-70" />
+        <X className="h-4 w-4" />
+      </button>
+    )}
 
-          <div
-            className="
-              relative
-              flex items-center
-              rounded-2xl
-              border border-gray-200/70
-              bg-white/80
-              backdrop-blur-xl
-              shadow-sm
-              hover:shadow-md
-              focus-within:ring-4
-              focus-within:ring-secondary/10
-              focus-within:border-secondary/30
-              transition-all duration-300
-            "
-          >
-            <Search
-              className="
-                absolute left-3 sm:left-4
-                h-4 w-4 sm:h-5 sm:w-5
-                text-gray-400
-              "
-            />
+    {/* MOBILE FILTER */}
+    <div className="absolute right-4 flex items-center gap-2 md:hidden">
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="flex items-center justify-center h-7 w-7 rounded-full bg-secondary text-white shadow-md hover:scale-[1.02] active:scale-95 transition"
+      >
+        <Filter className="h-3 w-3" />
+      </button>
+    </div>
+  </div>
 
-            <input
-              type="text"
-              placeholder="Search users, email, role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="
-                w-full
-                bg-transparent
-                pl-10 sm:pl-12
-                pr-10
-                py-2 sm:py-2.5
-                text-sm sm:text-[15px]
-                text-gray-700
-                placeholder:text-gray-400
-                rounded-2xl
-                outline-none
-              "
-            />
+  {/* PER PAGE SELECT (FIXED) */}
+  <div className="w-1/4 flex justify-end md:hidden">
+    <div className="w-full max-w-[120px]">
+      <CustomSelect
+        value={pageSize.toString()}
+        onChange={(val) => setPageSize(parseInt(val))}
+        options={pageSizeOptions}
+        placeholder="10"
+        className="h-9 text-xs w-full"
+      />
+    </div>
+  </div>
+</div>
 
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="
-                  absolute right-3
-                  flex items-center justify-center
-                  h-7 w-7
-                  rounded-full
-                  bg-gray-100
-                  hover:bg-red-50
-                  hover:text-red-500
-                  transition-all duration-200
-                  active:scale-90
-                "
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT ACTIONS */}
-        <div
-          className="
-            flex items-center
-            gap-2 sm:gap-3
-            w-full lg:w-auto
-          "
-        >
-          {/* MOBILE FILTER BUTTON */}
-          <div className="flex md:hidden flex-1 gap-2">
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="
-                flex-1
-                flex items-center justify-center gap-2
-                px-3
-                rounded-2xl
-                bg-gradient-to-r
-                from-secondary
-                to-purple-500
-                text-white
-                text-sm font-semibold
-                shadow-lg shadow-purple-500/20
-                hover:scale-[1.01]
-                active:scale-[0.98]
-                transition-all duration-200
-              "
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-            </button>
-
-            <button
-              onClick={() => setRoleFilter("all")}
-              className="
-                px-4 py-3
-                rounded-2xl
-                border border-gray-200
-                bg-white/80
-                backdrop-blur-md
-                text-gray-700
-                text-sm font-medium
-                hover:bg-gray-50
-                active:scale-95
-                transition-all duration-200
-              "
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* DESKTOP FILTER */}
-          <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
-            <div className="w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-              <CustomSelect
-                value={roleFilter}
-                onChange={setRoleFilter}
-                options={roleOptions}
-                placeholder="Filter by role"
-              />
-            </div>
-          </div>
+        {/* DESKTOP DROPDOWN FILTER (UNCHANGED) */}
+        <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
+          <CustomSelect
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={roleOptions}
+            placeholder="Filter by role"
+          />
         </div>
       </div>
 
@@ -323,25 +253,22 @@ const UserFilters: React.FC<FiltersProps> = ({
         title="Filter Users"
       >
         <div className="space-y-4">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
               Select a role to filter users
             </p>
 
+            {/* RESET COMMENTED OUT (as requested) */}
+            {/*
             <button
               onClick={() => setRoleFilter("all")}
-              className="
-                text-xs font-semibold
-                text-secondary
-                hover:underline
-              "
+              className="text-xs font-semibold text-secondary hover:underline"
             >
               Reset All
             </button>
+            */}
           </div>
 
-          {/* Options */}
           <div className="grid grid-cols-2 gap-3">
             {roleOptions.map((opt) => (
               <button
@@ -351,45 +278,18 @@ const UserFilters: React.FC<FiltersProps> = ({
                   setSheetOpen(false);
                 }}
                 className={`
-                  group
-                  relative
-                  flex flex-col items-center justify-center
-                  gap-2
-                  min-h-[88px]
-                  rounded-2xl
-                  border
-                  px-3 py-4
-                  text-sm font-semibold
-                  transition-all duration-200
-                  active:scale-[0.97]
-
+                  flex flex-col items-center justify-center gap-2
+                  min-h-[88px] rounded-2xl border px-3 py-4
+                  text-sm font-semibold transition-all active:scale-[0.97]
                   ${
                     roleFilter === opt.value
-                      ? `
-                        bg-gradient-to-br
-                        from-secondary
-                        to-purple-500
-                        border-purple-500
-                        text-white
-                        shadow-lg shadow-purple-500/20
-                      `
-                      : `
-                        bg-gray-50
-                        border-gray-200
-                        text-gray-700
-                        hover:border-secondary/30
-                        hover:bg-purple-50
-                      `
+                      ? "bg-gradient-to-br from-secondary to-secondary border-secondary text-white shadow-lg"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
                   }
                 `}
               >
-                <div className="text-lg">
-                  {opt.icon}
-                </div>
-
-                <span className="text-center leading-tight">
-                  {opt.label}
-                </span>
+                <div>{opt.icon}</div>
+                <span className="text-center">{opt.label}</span>
               </button>
             ))}
           </div>
@@ -546,14 +446,14 @@ max-w-[calc(100vw-24px)]
         `}
       >
         {/* Header */}
-        <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
+        <div className="px-4 sm:px-5 py-2 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
             User Actions
           </p>
         </div>
 
         {/* Menu */}
-        <div className="p-2">
+        <div className=" p-1 md:p-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
 
@@ -570,8 +470,8 @@ max-w-[calc(100vw-24px)]
                   flex items-center justify-between
                   w-full
                   rounded-2xl
-                  px-3 sm:px-4
-                  py-3 sm:py-3.5
+                  px-2 sm:px-4
+                  py-1 sm:py-3.5
                   transition-all duration-200
                   active:scale-[0.98]
                   ${item.hover}
@@ -593,13 +493,13 @@ max-w-[calc(100vw-24px)]
                     `}
                   >
                     <Icon
-                      className={`h-4 w-4 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
+                      className={`h-3 w-3 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
                     />
                   </div>
 
                   <span
                     className="
-                      text-sm sm:text-[15px]
+                      text-xs sm:text-[15px]
                       font-medium
                       truncate
                     "
@@ -672,7 +572,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
           >
             <td className="py-4 px-6">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                   {user.profile_image ? (
                     <img
                       src={user.profile_image}
@@ -761,7 +661,7 @@ const UserMobileCards: React.FC<UserTableProps> = ({
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 xs:gap-3 min-w-0">
-            <div className="h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] xs:text-xs sm:text-sm shrink-0">
+            <div className="h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-secondary to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] xs:text-xs sm:text-sm shrink-0">
               {getInitials(user.first_name, user.last_name, user.username)}
             </div>
             <div className="min-w-0">
@@ -828,7 +728,7 @@ interface EmptyStateProps {
 const EmptyState: React.FC<EmptyStateProps> = ({ onReset }) => (
   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
     <div className="h-24 w-24 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
-      <Users className="h-12 w-12 text-purple-500" />
+      <Users className="h-12 w-12 text-secondary" />
     </div>
     <h3 className="text-xl font-semibold text-gray-900 mb-2">No users found</h3>
     <p className="text-gray-500 max-w-sm mb-6">
@@ -1098,23 +998,22 @@ const SuperAdminUsers: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              
               <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-secondary to-purple-400 shadow-sm" />
 
               <div className="min-w-0">
                 <h1
                   className="
-          text-[22px]
-          xs:text-2xl
-          sm:text-3xl
-          md:text-4xl
+          text-base
+          xs:text-md
+          sm:text-lg
+          md:text-xl
           font-black
           tracking-tight
           leading-tight
           bg-gradient-to-r
-          from-purple-900
+          from-secondary
           via-secondary
-          to-purple-500
+          to-secondary-dark
           bg-clip-text
           text-transparent
           break-words
@@ -1154,7 +1053,7 @@ const SuperAdminUsers: React.FC = () => {
             title="Total Admins"
             value={stats.totalAdmins}
             icon={<Shield className="h-6 w-6 text-white" />}
-            gradient="from-purple-500 to-indigo-600"
+            gradient="from-secondary to-secondary-dark"
           />
           <StatCard
             title="Staff"
@@ -1188,7 +1087,8 @@ const SuperAdminUsers: React.FC = () => {
             setSearchTerm={setSearchTerm}
             roleFilter={roleFilter}
             setRoleFilter={setRoleFilter}
-            onRefresh={handleRefresh}
+            pageSize={pageSize}
+            setPageSize={handlePageSizeChange}
           />
         </div>
 
@@ -1204,7 +1104,8 @@ const SuperAdminUsers: React.FC = () => {
                 setSearchTerm={setSearchTerm}
                 roleFilter={roleFilter}
                 setRoleFilter={setRoleFilter}
-                onRefresh={handleRefresh}
+                pageSize={pageSize}
+                setPageSize={handlePageSizeChange}
               />
             </TableControls>
           </div>

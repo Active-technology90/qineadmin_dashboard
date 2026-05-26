@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon, Edit, Trash2, ListFilter } from "lucide-react";
+import { Plus, ImageIcon, Edit, Trash2, Filter } from "lucide-react";
 import {
   getSubCategories,
   createSubCategory,
@@ -493,7 +493,7 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* ========== DESKTOP CONTROLS (hidden on mobile) ========== */}
-      <div className="hidden md:block sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
+      <div className="hidden md:block  bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
         <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:flex gap-3 w-full">
             <div className="md:col-span-2 lg:flex-1">
@@ -538,78 +538,32 @@ export default function SubCategoryManagement() {
 
       {/* ========== MOBILE SEARCH (visible below md) ========== */}
       {/* ========== MOBILE SEARCH + FILTER (visible below md) ========== */}
-      <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-2 pt-1 pb-2">
-        <div className="relative">
-          <SearchInput
-            value={inputValue}
-            onChange={handleInputChange}
-            debounceMs={0}
-            loading={loading}
-            showClearButton={false}
-            placeholder="Search subcategories..."
-            className="
-        w-full
-        rounded-full
-        shadow-sm
-        border-[#674FA3]
-        focus:ring-2
-        focus:ring-[#674FA3]/30
-        pr-0
-      "
-          />
+    {/* ========== MOBILE TABLE CONTROLS (visible below md) ========== */}
+<div className="md:hidden sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-200">
+  <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+    <div className="relative flex-1">
+      <SearchInput
+        value={inputValue}
+        onChange={handleInputChange}
+        debounceMs={0}
+        loading={loading}
+        showClearButton={false}
+        placeholder="Search subcategories..."
+        className="rounded-xl shadow-sm border-secondary focus:ring-2 focus:ring-secondary/30"
+      />
 
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="
-        absolute
-        rounded-full
-        right-4
-        p-1
-        top-1/2
-        -translate-y-1/2
-        z-20
-        h-8
-        w-8
-        bg-[#674FA3]
-        text-white
-        shadow-md
-        flex
-        items-center
-        justify-center
-        active:scale-95
-        transition-all
-        duration-200
-      "
-            aria-label="Open filters"
-          >
-            <ListFilter size={18} strokeWidth={2.5} />
-
-            {activeFilterCount > 0 && (
-              <span
-                className="
-          absolute
-          -top-1
-          -right-1
-          bg-red-500
-          text-white
-          text-[10px]
-          font-bold
-          rounded-full
-          h-4.5
-          w-4.5
-          flex
-          items-center
-          justify-center
-          shadow
-        "
-              >
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="absolute right-4 top-1/2 -translate-y-1/2
+          h-6 w-6 rounded-full bg-secondary text-white
+          flex items-center justify-center shadow-md
+          active:scale-95 transition"
+      >
+        <Filter size={14} strokeWidth={2.5} />
+      </button>
+    </div>
+  </TableControls>
+</div>
       {/* Mobile card view (below md) */}
       <div className="block md:hidden">
         {loading ? (
@@ -688,17 +642,17 @@ export default function SubCategoryManagement() {
                   </div>
                 </div>
                 {!readOnly && (
-                  <div className="flex gap-2 pt-2 border-t">
+                  <div className="flex gap-2 pt-1">
                     <button
                       onClick={() => openEdit(sub)}
-                      className="flex-1 bg-secondary/10 text-secondary text-xs font-medium px-3 py-2 rounded-lg hover:bg-secondary/20 min-h-[44px]"
+                      className="flex-1 bg-secondary/10 text-secondary text-xs font-medium p-1  rounded-xl  hover:bg-secondary/20 min-h-[32px]"
                     >
                       <Edit size={14} className="inline-block mr-1" />
                       Edit
                     </button>
                     <button
                       onClick={() => handleDeleteClick(sub)}
-                      className="flex-1 bg-red-50 text-red-600 text-xs font-medium px-3 py-2 rounded-lg hover:bg-red-100 min-h-[44px]"
+                      className="flex-1 bg-red-50 text-red-600 text-xs font-medium p-1 rounded-xl hover:bg-red-100 min-h-[32px]"
                     >
                       <Trash2 size={14} className="inline-block mr-1" />
                       Delete

@@ -116,9 +116,9 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           disabled={disabled}
           autoFocus={autoFocus}
           className={`
-            w-full pl-9 pr-9 py-1
+            w-full pl-9 pr-9 py-1 md:py-3
             border border-secondary
-            rounded-full
+            rounded-xl
             bg-white
             text-sm
             transition-all duration-200
