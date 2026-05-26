@@ -1,7 +1,7 @@
 // src/components/shared/SortSheet.tsx
-import React from 'react';
-import BottomSheet from './BottomSheet';
-import type { SelectOption } from '../ui/CustomSelect';
+import React from "react";
+import BottomSheet from "./BottomSheet";
+import type { SelectOption } from "../ui/CustomSelect";
 
 interface SortSheetProps {
   open: boolean;
@@ -58,7 +58,9 @@ const SortSheet: React.FC<SortSheetProps> = ({
               ${isActive ? 'bg-secondary text-white border-secondary shadow-md' : 'bg-white text-gray-700 border-gray-200 hover:border-secondary/40 hover:bg-gray-50'}`}
           >
             <span className="text-sm font-semibold">{opt.label}</span>
-            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-white' : 'border-gray-300'}`}>
+            <span
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? "border-white" : "border-gray-300"}`}
+            >
               {isActive && <span className="w-2 h-2 bg-white rounded-full" />}
             </span>
           </button>

@@ -43,7 +43,9 @@ interface ExtendedUser extends User {
 const roleBadgeClass = "bg-gray-100 text-gray-700 border border-gray-200";
 
 // Premium Membership Card with hover lift and soft shadow
-const MembershipCard: React.FC<{ membership: Membership }> = ({ membership }) => {
+const MembershipCard: React.FC<{ membership: Membership }> = ({
+  membership,
+}) => {
   return (
     <motion.div
       whileHover={{ y: -2, transition: { duration: 0.2 } }}
@@ -58,7 +60,9 @@ const MembershipCard: React.FC<{ membership: Membership }> = ({ membership }) =>
             <p className="font-semibold text-gray-900 truncate text-sm xs:text-base">
               {membership.company_name}
             </p>
-            <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] xs:text-xs font-medium ${roleBadgeClass}`}>
+            <span
+              className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] xs:text-xs font-medium ${roleBadgeClass}`}
+            >
               {membership.role}
             </span>
           </div>
@@ -153,7 +157,9 @@ const UserProfileHeader: React.FC<{ user: ExtendedUser }> = ({ user }) => {
         <h2 className="text-lg xs:text-xl font-semibold text-gray-900 break-words">
           {user.first_name || user.username} {user.last_name || ""}
         </h2>
-        <p className="text-xs xs:text-sm text-gray-500 mt-0.5 break-all">@{user.username}</p>
+        <p className="text-xs xs:text-sm text-gray-500 mt-0.5 break-all">
+          @{user.username}
+        </p>
         <div className="flex items-center gap-2 mt-2">
           {isActive ? (
             <span className="inline-flex items-center gap-1 xs:gap-1.5 px-2 py-0.5 rounded-full text-[10px] xs:text-xs font-medium bg-gray-100 text-gray-700">
@@ -190,8 +196,12 @@ const UserInfoCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
               <Icon className="h-3.5 w-3.5 xs:h-4 xs:w-4 text-gray-500" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] xs:text-xs text-gray-500 truncate">{label}</p>
-              <p className="text-xs xs:text-sm font-medium text-gray-900 break-words">{value}</p>
+              <p className="text-[10px] xs:text-xs text-gray-500 truncate">
+                {label}
+              </p>
+              <p className="text-xs xs:text-sm font-medium text-gray-900 break-words">
+                {value}
+              </p>
             </div>
           </div>
         ))}
@@ -209,20 +219,30 @@ const UserStatsCard: React.FC<{ user: ExtendedUser }> = ({ user }) => {
     <div className="grid grid-cols-2 gap-3 xs:gap-4">
       <div className="bg-gray-50 rounded-xl p-3 xs:p-4 text-center border border-gray-100">
         <Building2 className="h-4 w-4 xs:h-5 xs:w-5 text-gray-500 mx-auto mb-1 xs:mb-2" />
-        <p className="text-xl xs:text-2xl font-semibold text-gray-900">{totalCompanies}</p>
-        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">Companies</p>
+        <p className="text-xl xs:text-2xl font-semibold text-gray-900">
+          {totalCompanies}
+        </p>
+        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">
+          Companies
+        </p>
       </div>
       <div className="bg-gray-50 rounded-xl p-3 xs:p-4 text-center border border-gray-100">
         <Award className="h-4 w-4 xs:h-5 xs:w-5 text-gray-500 mx-auto mb-1 xs:mb-2" />
-        <p className="text-xl xs:text-2xl font-semibold text-gray-900">{uniqueRoles}</p>
-        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">Roles</p>
+        <p className="text-xl xs:text-2xl font-semibold text-gray-900">
+          {uniqueRoles}
+        </p>
+        <p className="text-[10px] xs:text-xs text-gray-500 mt-0.5 xs:mt-1">
+          Roles
+        </p>
       </div>
     </div>
   );
 };
 
 // Memberships Section with count header
-const MembershipsSection: React.FC<{ memberships: Membership[] }> = ({ memberships }) => {
+const MembershipsSection: React.FC<{ memberships: Membership[] }> = ({
+  memberships,
+}) => {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-3 xs:p-4 sm:p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3 xs:mb-4">
@@ -253,15 +273,15 @@ const MembershipsSection: React.FC<{ memberships: Membership[] }> = ({ membershi
 const ModalActions: React.FC<{
   onEdit: () => void;
   onDelete: () => void;
-  onClose: () => void;
-}> = ({ onEdit, onDelete, onClose }) => (
-  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 xs:gap-3">
-    <button
+  // onClose: () => void;
+}> = ({ onEdit, onDelete,  }) => (
+  <div className="flex flex-row sm:flex-row justify-end gap-2 xs:gap-3">
+    {/* <button
       onClick={onClose}
       className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg border border-gray-200 text-gray-600 text-xs xs:text-sm font-medium hover:bg-gray-50 transition-all duration-200"
     >
       Cancel
-    </button>
+    </button> */}
     <button
       onClick={onDelete}
       className="w-full sm:w-auto px-4 py-2 xs:py-2.5 rounded-lg border border-red-500 bg-red-500 text-white text-xs xs:text-sm font-medium hover:bg-red-600 transition-all duration-200"
@@ -375,11 +395,11 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
 
   // Responsive modal container classes
   const modalClasses =
-    "bg-white shadow-xl w-full max-h-[90vh] flex flex-col overflow-hidden mx-auto " +
+    "bg-white shadow-xl w-[95dvw] max-h-[95dvh] flex flex-col overflow-hidden rounded-t-xl mx-auto " +
     // Fullscreen on tiny (<320px)
     "max-[319px]:h-[100dvh] max-[319px]:rounded-t-xl " +
     // XS: bottom sheet style
-    "xs:h-[95dvh] xs:rounded-t-xl xs:mt-auto " +
+"xs:h-[95dvh] xs:rounded-t-xl xs:mt-auto xs:mb-2 "+
     // SM and up: centered modal
     "sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:max-w-xl " +
     "md:max-w-2xl " +
@@ -394,7 +414,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center sm:justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/40 backdrop-blur-sm p-2 sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -407,7 +427,9 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
           >
             {/* Sticky Header */}
             <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6 py-3 xs:py-4 border-b border-gray-100 bg-white sticky top-0 z-10 backdrop-blur-sm bg-white/90">
-              <h1 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900 truncate">User profile</h1>
+              <h1 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900 truncate">
+                User profile
+              </h1>
               <button
                 onClick={onClose}
                 className="p-1.5 xs:p-2 rounded-lg hover:bg-gray-50 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
@@ -427,11 +449,16 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
             </div>
 
             {/* Sticky Footer with safe-area */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4" style={{ paddingBottom: `max(env(safe-area-inset-bottom, 1rem), 1rem)` }}>
+            <div
+              className="sticky bottom-0 bg-white border-t border-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4"
+              style={{
+                paddingBottom: `max(env(safe-area-inset-bottom, 1rem), 1rem)`,
+              }}
+            >
               <ModalActions
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onClose={onClose}
+                // onClose={onClose}
               />
             </div>
           </motion.div>

@@ -1099,7 +1099,7 @@ const SuperAdminUsers: React.FC = () => {
           <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               
-              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-secondary to-secondary-light shadow-sm" />
+              <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-secondary to-purple-400 shadow-sm" />
 
               <div className="min-w-0">
                 <h1
@@ -1112,9 +1112,9 @@ const SuperAdminUsers: React.FC = () => {
           tracking-tight
           leading-tight
           bg-gradient-to-r
-          from-secondary
+          from-purple-900
           via-secondary
-          to-secondary
+          to-purple-500
           bg-clip-text
           text-transparent
           break-words

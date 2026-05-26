@@ -328,7 +328,7 @@ export default function CompanyForm({
               </button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2">
             <div className="relative">
               <input
@@ -349,7 +349,9 @@ export default function CompanyForm({
                     : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
                 }`}
               />
-              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LAT</span>
+              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">
+                LAT
+              </span>
             </div>
             <div className="relative">
               <input
@@ -370,7 +372,9 @@ export default function CompanyForm({
                     : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
                 }`}
               />
-              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">LON</span>
+              <span className="absolute right-2 top-2 text-[9px] font-extrabold text-gray-400 select-none">
+                LON
+              </span>
             </div>
           </div>
 
@@ -461,7 +465,7 @@ export default function CompanyForm({
         {/* Cover Image Upload */}
         <div className="relative w-full">
           <div className={!isEditingActive ? "opacity-70" : ""}>
-            <div className="w-full bg-gradient-to-r from-purple-100/40 to-indigo-100/40 rounded-xl p-2 border-2 border-secondary/30 shadow-sm">
+            <div className="w-full bg-gradient-to-r from-purple-100/40 to-indigo-100/40 rounded-xl p-2 border-2 border-secondary/30 shadow-sm">                     
               <DragDropImageUpload
                 label="🎬 COVER IMAGE (Wide Banner)"
                 value={formData.cover_image}

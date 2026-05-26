@@ -1167,18 +1167,18 @@ export default function CompanyManagement() {
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
   return (
-    <div className="max-w-full bg-gray-50 min-h-screen">
+    <div className="max-w-full  min-h-screen">
       <Toast toast={toast} />
-      <div className="p-3 sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
+      <div className="p-2  sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
         {/* Header Section - Premium & Responsive */}
-        <div className="flex justify-between items-center gap-3 flex-wrap">
+        <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary truncate">
+            <h2 className="text-base pt-2 sm:text-sm md:text-xl font-bold text-secondary truncate">
               {isSuperAdmin ? "Companies" : "Company Detail"}
             </h2>
             {!isSuperAdmin && (
               <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-secondary"></span>
+                <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
                 Manage your company details and settings
               </p>
             )}
@@ -1191,9 +1191,9 @@ export default function CompanyManagement() {
               }}
               className="bg-secondary text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
             >
-              <Plus size={18} className="sm:w-5 sm:h-5" />
+              <Plus size={18} className=" w-3 h-3 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Add Company</span>
-              <span className="inline xs:hidden">Add</span>
+              <span className="inline xs:hidden text-xs">Add</span>
             </button>
           )}
         </div>
@@ -1228,7 +1228,7 @@ export default function CompanyManagement() {
 
         {/* Main content views with responsive overflow handling */}
         {isSuperAdmin ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className=" ">
             <SuperAdminView
               // Original data / layout props
               paginatedItems={paginatedItemsWithRowNumber}

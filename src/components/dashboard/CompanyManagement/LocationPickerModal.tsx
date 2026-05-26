@@ -406,7 +406,7 @@ border-gray-100
               <button
                 type="button"
                 onClick={handleSave}
-                className="flex-1 py-3 bg-secondary hover:bg-[#5b4694] text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 bg-secondary hover:bg-secondary-dark text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 <Check className="h-4 w-4" />
                 Apply Location

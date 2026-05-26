@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon, Edit, Trash2 } from "lucide-react";
+import { Plus, ImageIcon, Edit, Trash2, ListFilter } from "lucide-react";
 import {
   getSubCategories,
   createSubCategory,
@@ -53,8 +53,6 @@ export default function SubCategoryManagement() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tempCategory, setTempCategory] = useState("all");
   const [tempSort, setTempSort] = useState("name|asc");
-
-
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -539,21 +537,87 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* ========== MOBILE SEARCH (visible below md) ========== */}
-      <div className="md:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-2 py-3">
-        <SearchInput
-          value={inputValue}
-          onChange={handleInputChange}
-          debounceMs={0}
-          showClearButton={false}
-          placeholder="Search categories..."
-          loading={loading}
-        />
+      {/* ========== MOBILE SEARCH + FILTER (visible below md) ========== */}
+      <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-2 pt-1 pb-2">
+        <div className="relative">
+          <SearchInput
+            value={inputValue}
+            onChange={handleInputChange}
+            debounceMs={0}
+            loading={loading}
+            showClearButton={false}
+            placeholder="Search subcategories..."
+            className="
+        w-full
+        rounded-full
+        shadow-sm
+        border-[#674FA3]
+        focus:ring-2
+        focus:ring-[#674FA3]/30
+        pr-0
+      "
+          />
+
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="
+        absolute
+        rounded-full
+        right-4
+        p-1
+        top-1/2
+        -translate-y-1/2
+        z-20
+        h-8
+        w-8
+        bg-[#674FA3]
+        text-white
+        shadow-md
+        flex
+        items-center
+        justify-center
+        active:scale-95
+        transition-all
+        duration-200
+      "
+            aria-label="Open filters"
+          >
+            <ListFilter size={18} strokeWidth={2.5} />
+
+            {activeFilterCount > 0 && (
+              <span
+                className="
+          absolute
+          -top-1
+          -right-1
+          bg-red-500
+          text-white
+          text-[10px]
+          font-bold
+          rounded-full
+          h-4.5
+          w-4.5
+          flex
+          items-center
+          justify-center
+          shadow
+        "
+              >
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile card view (below md) */}
       <div className="block md:hidden">
         {loading ? (
-          <MobileCardSkeleton count={3} metaLinePairs={2} showActions={!readOnly} />
+          <MobileCardSkeleton
+            count={3}
+            metaLinePairs={2}
+            showActions={!readOnly}
+          />
         ) : paginatedItemsWithRowNumber.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-2">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -595,8 +659,12 @@ export default function SubCategoryManagement() {
                       <p className="text-xs text-gray-500">{sub.name_am}</p>
                     )}
                   </div>
-                 <span className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] xs:text-xs font-medium rounded-full ${sub.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                     <span className={`w-1.5 h-1.5 rounded-full ${sub.is_active ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] xs:text-xs font-medium rounded-full ${sub.is_active ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${sub.is_active ? "bg-emerald-500" : "bg-red-500"}`}
+                    ></span>
                     {sub.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -667,13 +735,13 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* ========== MOBILE STICKY FILTER BAR ========== */}
-      <MobileActionBar
+      {/* <MobileActionBar
         activeFilterCount={activeFilterCount}
         sortLabel={sortLabel}
         onOpenFilters={() => setSheetOpen(true)}
         onOpenSort={() => setSheetOpen(true)}
         showFilterButton={true}
-      />
+      /> */}
 
       {/* ========== MOBILE FILTER & SORT SHEET ========== */}
       <FilterSortSheet
@@ -778,7 +846,7 @@ export default function SubCategoryManagement() {
                   onChange={(val) =>
                     setFormData({ ...formData, category: Number(val) })
                   }
-                  options={categoryOptions.filter(opt => opt.value !== "all")}
+                  options={categoryOptions.filter((opt) => opt.value !== "all")}
                   placeholder="Select a category..."
                   className="w-full"
                 />

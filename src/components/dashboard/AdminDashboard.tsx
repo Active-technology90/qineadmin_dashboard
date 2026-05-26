@@ -84,11 +84,10 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-            activeTab === "companyOrders"
+          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${activeTab === "companyOrders"
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+            }`}
         >
           <ShoppingBag className="h-5 w-5" />
           <span>All Orders</span>
@@ -98,11 +97,10 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-            activeTab === "companyOrders"
+          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "companyOrders"
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+            }`}
         >
           <ShoppingBag className="h-5 w-5" />
         </button>
@@ -134,11 +132,10 @@ function OrdersMenu({
       <div>
         <button
           onClick={onToggleOrdersMenu}
-          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-            isActive
+          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-3.5">
             <ShoppingBag className="h-5 w-5" />
@@ -156,11 +153,10 @@ function OrdersMenu({
             {showMasterOrders && (
               <button
                 onClick={() => onNavigate("masterOrders")}
-                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
-                  activeTab === "masterOrders"
+                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "masterOrders"
                     ? "bg-white/20 text-white font-semibold"
                     : "text-gray-300 hover:bg-white/5 hover:text-white"
-                }`}
+                  }`}
               >
                 <FileText className="h-4 w-4" />
                 Master Orders
@@ -168,11 +164,10 @@ function OrdersMenu({
             )}
             <button
               onClick={() => onNavigate("companyOrders")}
-              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
-                activeTab === "companyOrders"
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "companyOrders"
                   ? "bg-white/20 text-white font-semibold"
                   : "text-gray-300 hover:bg-white/5 hover:text-white"
-              }`}
+                }`}
             >
               <ListOrdered className="h-4 w-4" />
               All Orders
@@ -187,11 +182,10 @@ function OrdersMenu({
     <div className="relative" ref={ordersRef}>
       <button
         onClick={() => setCollapsedOrdersOpen(!collapsedOrdersOpen)}
-        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-          activeTab === "masterOrders" || activeTab === "companyOrders"
+        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "masterOrders" || activeTab === "companyOrders"
             ? "bg-white/40 text-white shadow-lg"
             : "text-gray-300 hover:bg-white/5 hover:text-white"
-        }`}
+          }`}
       >
         <ShoppingBag className="h-5 w-5" />
       </button>
@@ -204,11 +198,10 @@ function OrdersMenu({
                 onNavigate("masterOrders");
                 setCollapsedOrdersOpen(false);
               }}
-              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
-                activeTab === "masterOrders"
+              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "masterOrders"
                   ? "bg-indigo-50 text-indigo-700 font-medium"
                   : "text-gray-700 hover:bg-gray-50"
-              }`}
+                }`}
             >
               <FileText className="h-4 w-4 text-gray-500" />
               Master Orders
@@ -219,11 +212,10 @@ function OrdersMenu({
               onNavigate("companyOrders");
               setCollapsedOrdersOpen(false);
             }}
-            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
-              activeTab === "companyOrders"
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "companyOrders"
                 ? "bg-indigo-50 text-indigo-700 font-medium"
                 : "text-gray-700 hover:bg-gray-50"
-            }`}
+              }`}
           >
             <Building2 className="h-4 w-4 text-gray-500" />
             Company Orders
@@ -466,9 +458,8 @@ export default function AdminDashboard() {
           {showPlatformAdmin && (
             <>
               <div
-                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
-                  sidebarCollapsed ? "hidden" : ""
-                }`}
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
+                  }`}
               >
                 Platform Admin
               </div>
@@ -516,9 +507,8 @@ export default function AdminDashboard() {
           )}
 
           <div
-            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
-              sidebarCollapsed ? "hidden" : ""
-            }`}
+            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
+              }`}
           >
             Management
           </div>
@@ -615,11 +605,10 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden">
         <header
-          className={`h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
-            isScrolled
+          className={`h-14 md:h-20 flex items-center justify-between px-0 md:px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${isScrolled
               ? "bg-secondary/10 shadow-xl border-b border-secondary/20"
               : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-4 flex-1">
             <button
@@ -686,15 +675,14 @@ export default function AdminDashboard() {
                       {company.name}
                     </p>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${
-                        company.role === "admin"
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${company.role === "admin"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : company.role === "staff"
                             ? "bg-blue-50 text-blue-700 border-blue-200"
                             : company.role === "viewer"
                               ? "bg-amber-50 text-amber-700 border-amber-200"
                               : "bg-gray-50 text-gray-600 border-gray-200"
-                      }`}
+                        }`}
                     >
                       {company.role}
                     </span>
@@ -890,11 +878,10 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-        active
+      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${active
           ? "bg-white/40 text-white shadow-lg"
           : "text-gray-300 hover:bg-white/5 hover:text-white"
-      } ${collapsed ? "justify-center px-2" : ""}`}
+        } ${collapsed ? "justify-center px-2" : ""}`}
     >
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && <span>{label}</span>}

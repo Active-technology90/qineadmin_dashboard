@@ -1,5 +1,11 @@
 // src/components/ui/SearchInput.tsx
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  forwardRef,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { Search, X, Loader2 } from "lucide-react";
 
 export interface SearchInputProps {
@@ -16,6 +22,12 @@ export interface SearchInputProps {
   id?: string;
   loading?: boolean;
   onSubmit?: (value: string) => void;
+  /** Show filter button inside search input (mobile only) */
+  showMobileFilter?: boolean;
+  /** Callback when mobile filter button is clicked */
+  onMobileFilterClick?: () => void;
+  /** Number of active filters to show badge */
+  activeFilterCount?: number;
 }
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
@@ -33,8 +45,11 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       id,
       loading = false,
       onSubmit,
+      showMobileFilter = false,
+      onMobileFilterClick,
+      activeFilterCount = 0,
     },
-    ref
+    ref,
   ) => {
     const [internalValue, setInternalValue] = useState(externalValue || "");
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,7 +59,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     const setRefs = (node: HTMLInputElement) => {
       inputRef.current = node;
       if (typeof ref === "function") ref(node);
-      else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+      else if (ref)
+        (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
     };
 
     // Sync external value changes
@@ -65,7 +81,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           onChange?.(newValue);
         }
       },
-      [onChange, debounceMs, isControlled]
+      [onChange, debounceMs, isControlled],
     );
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,12 +107,16 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div className={`relative w-full ${className}`}>
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {loading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Search className="h-3 w-3" />
+          )}
         </div>
 
         <input
           ref={setRefs}
-        type="search"
+          type="search"
           name={name}
           id={id}
           value={internalValue}
@@ -106,9 +126,9 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           disabled={disabled}
           autoFocus={autoFocus}
           className={`
-            w-full pl-10 pr-10 py-2.5
-            border border-gray-300
-            rounded-xl
+            w-full pl-9 pr-9 py-2
+            border border-secondary
+            rounded-full
             bg-white
             text-sm
             transition-all duration-200
@@ -118,6 +138,65 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           `}
         />
 
+        {/* Mobile Filter Button - ONLY visible on mobile, inside search input */}
+        {showMobileFilter && onMobileFilterClick && !internalValue && (
+          <button
+            type="button"
+            onClick={onMobileFilterClick}
+            className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
+            aria-label="Filter"
+          >
+            <svg
+              className="w-3.5 h-3.5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h10M4 18h6"
+              />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="text-[10px] font-bold text-white bg-[#6750A4] px-1 py-0.5 rounded-full min-w-[16px] text-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Mobile Filter Button when there IS search text (positioned left of clear button) */}
+        {showMobileFilter && onMobileFilterClick && internalValue && (
+          <button
+            type="button"
+            onClick={onMobileFilterClick}
+            className="absolute right-10 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
+            aria-label="Filter"
+          >
+            <svg
+              className="w-4 h-4 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h12M4 18h8"
+              />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="text-xs font-bold text-white bg-[#6750A4] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Clear button - always visible when there is text */}
         {showClearButton && internalValue && !disabled && (
           <button
             type="button"
@@ -125,12 +204,12 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-secondary"
             aria-label="Clear search"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3" />
           </button>
         )}
       </div>
     );
-  }
+  },
 );
 
 SearchInput.displayName = "SearchInput";

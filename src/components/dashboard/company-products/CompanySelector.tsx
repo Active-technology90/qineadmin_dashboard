@@ -97,9 +97,8 @@ function SearchInput({
   return (
     <div className="relative">
       <Search
-        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 transition-colors ${
-          isFocused ? 'text-secondary' : 'text-gray-400'
-        }`}
+        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 transition-colors ${isFocused ? 'text-secondary' : 'text-gray-400'
+          }`}
       />
       <input
         type="text"

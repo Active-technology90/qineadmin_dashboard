@@ -174,7 +174,6 @@ export default function Payments() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-
           {isSuperAdmin && (
             <button
               onClick={() => setIsCompanySelectorOpen(true)}
@@ -290,8 +289,8 @@ export default function Payments() {
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Net (ETB)
               </th>
-               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-               payment Status
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                payment Status
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Payment Method
@@ -324,22 +323,22 @@ export default function Payments() {
                   <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     {payout.vendor_order}
                   </td>
-                      {isAllPayouts && (
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      {payout.company_logo ? (
-                        <img
-                          src={payout.company_logo}
-                          alt={payout.company_name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-gray-200 rounded-full" />
-                      )}
-                      <span>{payout.company_name}</span>
-                    </div>
-                  </td>
-                    )}
+                  {isAllPayouts && (
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        {payout.company_logo ? (
+                          <img
+                            src={payout.company_logo}
+                            alt={payout.company_name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-200 rounded-full" />
+                        )}
+                        <span>{payout.company_name}</span>
+                      </div>
+                    </td>
+                  )}
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {Number(payout.gross_amount).toLocaleString()}
                   </td>
@@ -358,7 +357,12 @@ export default function Payments() {
                     </span>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
-                    {payout?.vendor_order_details?.payment_method?.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || 'N/A'}
+                    {payout?.vendor_order_details?.payment_method
+                      ?.split("_")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1),
+                      )
+                      .join(" ") || "N/A"}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                     {new Date(payout.scheduled_at).toLocaleDateString()}

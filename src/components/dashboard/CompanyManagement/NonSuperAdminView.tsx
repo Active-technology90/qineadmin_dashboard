@@ -124,15 +124,23 @@ export default function NonSuperAdminView({
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <span className="text-sm font-medium text-amber-600">View Only Mode</span>
-                <span className="text-xs text-gray-400 italic">• Click "Edit Company" to make changes</span>
+                <span className="text-sm font-medium text-amber-600">
+                  View Only Mode
+                </span>
+                <span className="text-xs text-gray-400 italic">
+                  • Click "Edit Company" to make changes
+                </span>
               </div>
             )}
-            
-             {/* Edit Button */}
+
+            {/* Edit Button */}
             <button
               onClick={() => {
-                if (userCompanyRole === "owner" || userCompanyRole === "admin" || userCompanyRole === "super_admin") {
+                if (
+                  userCompanyRole === "owner" ||
+                  userCompanyRole === "admin" ||
+                  userCompanyRole === "super_admin"
+                ) {
                   onEdit(companies[0]);
                 }
               }}
@@ -179,7 +187,7 @@ export default function NonSuperAdminView({
 
         {/* Form Container - Header removed */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
-
+         
         {/* Loading state */}
         {companies.length === 0 && (
           <div className="text-center py-8 text-gray-500">
@@ -205,6 +213,7 @@ export default function NonSuperAdminView({
           />
                  )}
           </div>
+
         </div>
       </div>
   );

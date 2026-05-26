@@ -287,9 +287,9 @@ export default function AdminProfile() {
       {/* Profile Header Card */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
         {/* <div
-          className="relative h-32 bg-gradient-to-r from-secondary to-[#8B6BB4]"
+          className="relative h-32 bg-gradient-to-r from-[#6750A4] to-[#8B6BB4]"
           style={{
-            backgroundImage: `linear-gradient(135deg, ${BRAND_COLOR}, var(--color-secondary))`,
+            backgroundImage: `linear-gradient(135deg, ${BRAND_COLOR}, #6750A4)`,
           }}
         > */}
                 <div
@@ -364,26 +364,26 @@ export default function AdminProfile() {
                   onClick={() => setActiveForm("profile")}
                   className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
                     activeForm === "profile"
-                      ? "text-secondary"
+                      ? "text-[#6750A4]"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   Edit Profile
                   {activeForm === "profile" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary rounded-full" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
                   )}
                 </button>
                 <button
                   onClick={() => setActiveForm("password")}
                   className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
                     activeForm === "password"
-                      ? "text-secondary"
+                      ? "text-[#6750A4]"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   Change Password
                   {activeForm === "password" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary rounded-full" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
                   )}
                 </button>
                 {!isSuperAdmin && (
@@ -391,13 +391,13 @@ export default function AdminProfile() {
                     onClick={() => setActiveForm("membership")}
                     className={`px-3 sm:px-4 md:px-5 py-2 sm:py-2 md:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap ${
                       activeForm === "membership"
-                        ? "text-secondary"
+                        ? "text-[#6750A4]"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
                     Memberships
                     {activeForm === "membership" && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary rounded-full" />
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6750A4] rounded-full" />
                     )}
                   </button>
                 )}
@@ -411,7 +411,7 @@ export default function AdminProfile() {
                   onClick={() => setActiveForm("profile")}
                   className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
                     activeForm === "profile"
-                      ? "bg-white text-secondary shadow-sm"
+                      ? "bg-white text-[#6750A4] shadow-sm"
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
@@ -421,7 +421,7 @@ export default function AdminProfile() {
                   onClick={() => setActiveForm("password")}
                   className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
                     activeForm === "password"
-                      ? "bg-white text-secondary shadow-sm"
+                      ? "bg-white text-[#6750A4] shadow-sm"
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
@@ -432,7 +432,7 @@ export default function AdminProfile() {
                     onClick={() => setActiveForm("membership")}
                     className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
                       activeForm === "membership"
-                        ? "bg-white text-secondary shadow-sm"
+                        ? "bg-white text-[#6750A4] shadow-sm"
                         : "text-gray-600 hover:text-gray-800"
                     }`}
                   >
@@ -460,7 +460,7 @@ export default function AdminProfile() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
-                          className={`w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary transition ${
+                          className={`w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                             passwordErrors.confirmPassword
                               ? "border-red-500 focus:ring-red-500"
                               : "border-gray-200 focus:border-transparent"
@@ -483,7 +483,7 @@ export default function AdminProfile() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                         <input
                           {...field}
-                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition"
                           placeholder="Last Name"
                         />
                       </div>
@@ -507,7 +507,7 @@ export default function AdminProfile() {
                         <input
                           {...field}
                           type="email"
-                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition text-gray-900"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
                           placeholder="you@example.com"
                         />
                       </div>
@@ -527,7 +527,7 @@ export default function AdminProfile() {
                         <input
                           {...field}
                           onChange={(e) => field.onChange(e.target.value)}
-                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition text-gray-900"
+                          className="w-full pl-8 sm:pl-9 pr-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:border-transparent transition text-gray-900"
                           placeholder="+251 9XX XXX XXX"
                         />
                       </div>
@@ -544,7 +544,7 @@ export default function AdminProfile() {
                 <button
                   onClick={handleSubmit(onSubmitProfile)}
                   disabled={profileLoading}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-secondary text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
@@ -569,7 +569,7 @@ export default function AdminProfile() {
                       <input
                         {...field}
                         type={showCurrentPassword ? "text" : "password"}
-                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.currentPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -609,7 +609,7 @@ export default function AdminProfile() {
                       <input
                         {...field}
                         type={showNewPassword ? "text" : "password"}
-                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.newPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -653,7 +653,7 @@ export default function AdminProfile() {
                       <input
                         {...field}
                         type={showConfirmPassword ? "text" : "password"}
-                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary transition ${
+                        className={`w-full pl-8 sm:pl-9 pr-9 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6750A4] transition ${
                           passwordErrors.confirmPassword
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-200 focus:border-transparent"
@@ -684,7 +684,7 @@ export default function AdminProfile() {
               <button
                 onClick={handlePasswordSubmit(onSubmitPassword)}
                 disabled={passwordLoading}
-                className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-secondary text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 text-sm sm:text-base"
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#6750A4] text-white rounded-xl font-medium hover:bg-[#5a3d8c] transition shadow-sm disabled:opacity-50 text-sm sm:text-base"
               >
                 {passwordLoading ? "Saving..." : "Change Password"}
               </button>
@@ -715,7 +715,7 @@ export default function AdminProfile() {
                         onClick={() => handleSwitchCompany(membership)}
                         className={`relative bg-white border rounded-xl p-3 sm:p-4 cursor-pointer transition-all duration-200 group ${
                           isActive
-                            ? "border-secondary shadow-md ring-1 ring-secondary/20"
+                            ? "border-[#6750A4] shadow-md ring-1 ring-[#6750A4]/20"
                             : "border-gray-200 hover:shadow-md"
                         }`}
                       >
@@ -724,8 +724,8 @@ export default function AdminProfile() {
                             <div
                               className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden shadow-md flex-shrink-0 ${
                                 isActive
-                                  ? "bg-gradient-to-br from-secondary to-purple-700 ring-2 ring-secondary/30"
-                                  : "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-secondary/10 group-hover:to-purple-100"
+                                  ? "bg-gradient-to-br from-[#6750A4] to-purple-700 ring-2 ring-[#6750A4]/30"
+                                  : "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-[#6750A4]/10 group-hover:to-purple-100"
                               }`}
                             >
                               {(() => {
@@ -740,7 +740,7 @@ export default function AdminProfile() {
                                   );
                                 }
                                 return <Building className={`h-5 w-5 sm:h-6 sm:w-6 transition-all duration-300 ${
-                                  isActive ? "text-white" : "text-gray-500 group-hover:text-secondary"
+                                  isActive ? "text-white" : "text-gray-500 group-hover:text-[#6750A4]"
                                 }`} />;
                               })()}
                             </div>
@@ -748,8 +748,8 @@ export default function AdminProfile() {
                               <p
                                 className={`font-semibold transition-all duration-300 break-words ${
                                   isActive
-                                    ? "text-secondary text-base sm:text-lg"
-                                    : "text-gray-800 group-hover:text-secondary text-sm sm:text-base"
+                                    ? "text-[#6750A4] text-base sm:text-lg"
+                                    : "text-gray-800 group-hover:text-[#6750A4] text-sm sm:text-base"
                                 }`}
                               >
                                 {membership.company_name}
@@ -787,9 +787,9 @@ export default function AdminProfile() {
                               {membership.role}
                             </span>
                             {isActive ? (
-                              <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
+                              <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#6750A4]" />
                             ) : (
-                              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 group-hover:text-secondary transition-colors" />
+                              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 group-hover:text-[#6750A4] transition-colors" />
                             )}
                           </div>
                         </div>

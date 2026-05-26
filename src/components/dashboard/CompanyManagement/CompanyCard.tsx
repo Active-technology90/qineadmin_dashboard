@@ -103,7 +103,7 @@ export default function CompanyCard({
               </div>
             </div>
           </div>
-        )} 
+        )}
 
         {/* Business Type */}
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
@@ -122,7 +122,7 @@ export default function CompanyCard({
           </div>
         </div>
 
-         {/* Edit Button - Removed, now located at top of form */}
+        {/* Edit Button - Removed, now located at top of form */}
       </div>
     </div>
   );

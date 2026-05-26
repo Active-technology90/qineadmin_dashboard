@@ -24,7 +24,7 @@ import { useReadOnly } from "./AdminDashboard";
 import CategoryTable from "./category-management/CategoryTable";
 import CategoryFormModal from "./category-management/CategoryFormModal";
 import SortSheet from "../ui/SortSheet";
-import MobileActionBar from "../ui/MobileActionBar";
+// import MobileActionBar from "../ui/MobileActionBar";
 import type { SelectOption } from "../ui/CustomSelect";
 
 export default function CategoryManagement() {
@@ -427,16 +427,22 @@ export default function CategoryManagement() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
+        sheetOpen={sheetOpen}
+        setSheetOpen={setSheetOpen}
+        setTempSort={setTempSort}
+        tempSort={tempSort}
+        applyMobileSort={applyMobileSort}
+        resetMobileSort={resetMobileSort}
       />
 
       {/* Mobile sticky bottom bar (only sort, no filter button) */}
-      <MobileActionBar
+      {/* <MobileActionBar
         activeFilterCount={activeFilterCount}
         sortLabel={sortLabel}
         onOpenFilters={() => {}}
         onOpenSort={() => setSheetOpen(true)}
         showFilterButton={false}
-      />
+      /> */}
 
       {/* Sort sheet */}
       <SortSheet

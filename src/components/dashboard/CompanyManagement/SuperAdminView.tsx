@@ -1,10 +1,6 @@
 // src/components/admin/SuperAdminView.tsx
 import { useState, useEffect } from "react";
-import {
-  Edit,
-  Trash2,
-  ImageIcon,
-} from "lucide-react";
+import { Edit, Trash2, ImageIcon, ListFilter } from "lucide-react";
 import { DataTable, type Column } from "../../ui/DataTable";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
@@ -13,7 +9,7 @@ import type { CompanyListItem } from "../../../types";
 
 // ---- shared components ----
 import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
-import MobileActionBar from "../../ui/MobileActionBar";
+// import MobileActionBar from "../../ui/MobileActionBar";
 import BottomSheet from "../../ui/BottomSheet";
 
 interface SuperAdminViewProps {
@@ -102,13 +98,22 @@ export default function SuperAdminView({
       setTempSubCategory(subCategoryFilter);
       setTempSort(`${sortField}|${sortOrder}`);
     }
-  }, [sheetOpen, businessTypeFilter, categoryFilter, subCategoryFilter, sortField, sortOrder]);
+  }, [
+    sheetOpen,
+    businessTypeFilter,
+    categoryFilter,
+    subCategoryFilter,
+    sortField,
+    sortOrder,
+  ]);
 
   const applyFilters = () => {
     if (tempSort !== `${sortField}|${sortOrder}`) onSortChange(tempSort);
-    if (tempBusinessType !== businessTypeFilter) onBusinessTypeChange(tempBusinessType);
+    if (tempBusinessType !== businessTypeFilter)
+      onBusinessTypeChange(tempBusinessType);
     if (tempCategory !== categoryFilter) onCategoryChange(tempCategory);
-    if (tempSubCategory !== subCategoryFilter) onSubCategoryChange(tempSubCategory);
+    if (tempSubCategory !== subCategoryFilter)
+      onSubCategoryChange(tempSubCategory);
     setSheetOpen(false);
   };
 
@@ -126,7 +131,9 @@ export default function SuperAdminView({
           : "bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200"
       }`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"} mr-1.5`} />
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-red-500"} mr-1.5`}
+      />
       {isActive ? "Active" : "Inactive"}
     </span>
   );
@@ -141,7 +148,11 @@ export default function SuperAdminView({
     >
       {isFeatured ? (
         <>
-          <svg className="w-3 h-3 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="w-3 h-3 mr-1 text-blue-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
           Featured
@@ -172,16 +183,33 @@ export default function SuperAdminView({
       {/* ============ MOBILE LAYOUT ============ */}
       <div className="block md:hidden">
         {/* Search */}
-        <div className="sticky top-0 z-10 bg-white px-4 pt-4 pb-2">
-          <SearchInput
-            value={inputValue}
-            onChange={onInputChange}
-            debounceMs={0}
-            loading={loading}
-            showClearButton={false}
-            placeholder="Search companies..."
-            className="rounded-2xl shadow-sm border-gray-100 focus:ring-2 focus:ring-secondary/30"
-          />
+        <div className="sticky top-0 z-10 pt-1 pb-2">
+          <div className="relative p-1 ">
+            <SearchInput
+              value={inputValue}
+              onChange={onInputChange}
+              debounceMs={0}
+              loading={loading}
+              showClearButton={false}
+              placeholder="Search companies..."
+              className="pr-0 rounded-full  shadow-sm border-secondary focus:ring-2 focus:ring-secondary/30"
+            />
+
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="absolute rounded-full right-4 p-1 top-1/2 -translate-y-1/2 z-20 h-8 w-8 bg-[#674FA3] text-white shadow-md flex items-center justify-center active:scale-95 transition-all duration-200"
+              aria-label="Open filters"
+            >
+              {/* <Filter size={18} strokeWidth={2.5} /> */}
+
+              <ListFilter />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4.5 w-4.5 flex items-center justify-center shadow">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Cards */}
@@ -190,22 +218,34 @@ export default function SuperAdminView({
         ) : paginatedItems.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center mx-4">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
               </svg>
             </div>
             <h3 className="text-gray-500 font-medium">No companies found</h3>
-            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or add a new company</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Try adjusting your filters or add a new company
+            </p>
           </div>
         ) : (
-          <div className="space-y-4 px-2 pb-4">
+          <div className="space-y-3 px-2 pb-4">
             {paginatedItems.map((company, idx) => (
               <div
                 key={company.id ?? idx}
                 className="group bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1"
               >
-                <div className="p-5">
-                  <div className="flex items-start gap-4">
+                <div className="px-4 py-1">
+                  <div className="flex items-start gap-4 pt-1">
                     <div className="flex-shrink-0">
                       {company.logo ? (
                         <div className="relative">
@@ -222,8 +262,8 @@ export default function SuperAdminView({
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900 truncate leading-tight">
+                    <div className="flex-1 min-w-0 py-1">
+                      <h3 className="text-base font-bold text-gray-900 truncate leading-tight">
                         {company.name}
                       </h3>
                       <p className="text-xs font-mono text-gray-500 truncate mt-0.5 tracking-tight">
@@ -253,23 +293,39 @@ export default function SuperAdminView({
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Category</span>
-                      <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">{company.category_name}</p>
+                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </span>
+                      <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">
+                        {company.category_name}
+                      </p>
                     </div>
                     <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Subcategory</span>
-                      <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">{company.sub_category_name}</p>
+                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                        Subcategory
+                      </span>
+                      <p className="text-[8px] font-semibold text-gray-800 truncate mt-0.5">
+                        {company.sub_category_name}
+                      </p>
                     </div>
                     <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Business Type</span>
-                      <p className="text-sm font-semibold text-gray-800 uppercase truncate mt-0.5">{company.business_type || "—"}</p>
+                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                        Business Type
+                      </span>
+                      <p className="text-[8px] font-semibold text-gray-800 uppercase truncate mt-0.5">
+                        {company.business_type || "—"}
+                      </p>
                     </div>
                     <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
-                      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Row Number</span>
-                      <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">#{company.rowNumber ?? "—"}</p>
+                      <span className="text-[8px] font-medium text-gray-500 uppercase tracking-wider">
+                        Row Number
+                      </span>
+                      <p className="text-[8px] font-semibold text-gray-800 truncate mt-0.5">
+                        #{company.rowNumber ?? "—"}
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2 pt-1 border-t border-gray-100">
+                  <div className=" flex flex-wrap gap-4 py-2   ">
                     {renderStatusBadge(company.is_active)}
                     {renderFeaturedBadge(company.is_featured)}
                   </div>
@@ -280,13 +336,13 @@ export default function SuperAdminView({
         )}
 
         {/* ========== MOBILE STICKY BOTTOM BAR ========== */}
-        <MobileActionBar
+        {/* <MobileActionBar
           activeFilterCount={activeFilterCount}
           sortLabel={sortLabel}
           onOpenFilters={() => setSheetOpen(true)}
           onOpenSort={() => setSheetOpen(true)}
           showFilterButton={true}
-        />
+        /> */}
 
         {/* ========== FILTER & SORT BOTTOM SHEET ========== */}
         <BottomSheet
@@ -352,7 +408,9 @@ export default function SuperAdminView({
                   <span>Loading...</span>
                 </div>
               ) : businessTypeOptions.length === 0 ? (
-                <p className="text-sm text-gray-400 italic py-2">No types available</p>
+                <p className="text-sm text-gray-400 italic py-2">
+                  No types available
+                </p>
               ) : (
                 <CustomSelect
                   value={tempBusinessType}
@@ -381,7 +439,9 @@ export default function SuperAdminView({
                   <span>Loading...</span>
                 </div>
               ) : categoryOptions.length === 0 ? (
-                <p className="text-sm text-gray-400 italic py-2">No categories available</p>
+                <p className="text-sm text-gray-400 italic py-2">
+                  No categories available
+                </p>
               ) : (
                 <CustomSelect
                   value={tempCategory}
@@ -389,7 +449,10 @@ export default function SuperAdminView({
                   placeholder="All categories"
                   options={[
                     { value: "all", label: "All" },
-                    ...categoryOptions.map((cat) => ({ value: cat, label: cat })),
+                    ...categoryOptions.map((cat) => ({
+                      value: cat,
+                      label: cat,
+                    })),
                   ]}
                   className="w-full"
                 />
@@ -407,7 +470,9 @@ export default function SuperAdminView({
                   <span>Loading...</span>
                 </div>
               ) : subCategoryOptions.length === 0 ? (
-                <p className="text-sm text-gray-400 italic py-2">No subcategories available</p>
+                <p className="text-sm text-gray-400 italic py-2">
+                  No subcategories available
+                </p>
               ) : (
                 <CustomSelect
                   value={tempSubCategory}
@@ -415,7 +480,10 @@ export default function SuperAdminView({
                   placeholder="All subcategories"
                   options={[
                     { value: "all", label: "All" },
-                    ...subCategoryOptions.map((sub) => ({ value: sub, label: sub })),
+                    ...subCategoryOptions.map((sub) => ({
+                      value: sub,
+                      label: sub,
+                    })),
                   ]}
                   className="w-full"
                 />
