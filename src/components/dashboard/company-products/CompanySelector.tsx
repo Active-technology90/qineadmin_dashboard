@@ -66,7 +66,7 @@ function Header({
       {onBack && (
         <button
           onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -116,7 +116,7 @@ function SearchInput({
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />

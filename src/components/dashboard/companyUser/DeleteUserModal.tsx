@@ -43,14 +43,14 @@ export function DeleteUserModal({
         <div className="flex flex-row justify-end gap-3 p-3 sm:p-4 bg-gray-50 rounded-b-xl sm:rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
+            className="px-4 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={deleting}
-            className="px-4 py-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {deleting ? "Removing..." : "Remove User"}
           </button>

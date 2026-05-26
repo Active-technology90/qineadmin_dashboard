@@ -430,7 +430,7 @@ export function ProductModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-1.5 rounded-full bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition text-sm"
+                  className="px-4 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition text-sm"
                 >
                   Close
                 </button>
@@ -440,7 +440,7 @@ export function ProductModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+                  className="flex-1 px-4 py-1.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
                 >
                   Cancel
                 </button>
@@ -448,7 +448,7 @@ export function ProductModal({
                   type="submit"
                   form="product-details-form"
                   disabled={isSubmitting}
-                  className="px-4 py-1.5 rounded-full bg-secondary text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm"
+                  className="px-4 py-1.5 rounded-lg bg-secondary text-white font-medium hover:bg-[#5a448c] transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 text-sm"
                 >
                   {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Continue to Images <ChevronRight className="h-3.5 w-3.5" />
@@ -460,7 +460,7 @@ export function ProductModal({
               <button
                 type="button"
                 onClick={handleBackToDetails}
-                className="px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 text-sm"
+                className="px-4 py-1.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 text-sm"
                 disabled={isReadOnlyBasic}
               >
                 <ChevronLeft className="h-3.5 w-3.5" /> Back to Details
@@ -468,7 +468,7 @@ export function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-1.5 rounded-full bg-secondary text-white font-medium hover:bg-secondary-dark transition shadow-sm text-sm"
+                className="px-4 py-1.5 rounded-lg bg-secondary text-white font-medium hover:bg-secondary-dark transition shadow-sm text-sm"
               >
                 Done
               </button>

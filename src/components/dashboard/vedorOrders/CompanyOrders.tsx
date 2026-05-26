@@ -535,10 +535,10 @@ export default function CompanyOrders() {
         <ErrorState error={error} onRetry={fetchAllOrders} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
-          <table className="min-w-[800px] lg:min-w-full divide-y divide-gray-200">
+<table className="min-w-[600px] lg:min-w-full divide-y divide-gray-200">
             <thead className="sticky top-0 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm z-10 shadow-sm">
               <tr>
-                <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+<th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Order ID
@@ -558,7 +558,7 @@ export default function CompanyOrders() {
                     Amount
                   </span>
                 </th>
-                <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Payment Method
@@ -604,35 +604,35 @@ export default function CompanyOrders() {
                     key={order.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-indigo-600 truncate max-w-[80px] sm:max-w-none">
+<td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-secondary truncate max-w-[80px] sm:max-w-none">
                       #{order.id}
                     </td>
                     {isAdminLike && (
-                      <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+                      <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                         <div className="flex items-center gap-1.5 sm:gap-2">
                           <CompanyAvatar
                             logo={order.company?.logo}
                             name={order.company?.name || "Unknown"}
                           />
-                          <span className="text-[10px] sm:text-sm font-medium text-gray-700 truncate max-w-[100px] sm:max-w-none">
+<span className="text-[10px] sm:text-sm font-medium text-gray-700 truncate max-w-[80px] lg:max-w-[100px]">
                             {order.company?.name || "Unknown"}
                           </span>
                         </div>
                       </td>
                     )}
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                       {Number(order.amount).toLocaleString()}{" "}
-                      <span className="text-[9px] sm:text-xs text-gray-500">ETB</span>
+                      <span className="text-[9px] sm:text-xs text-gray-500 whitespace-nowrap">ETB</span>
                     </td>
-                     <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-[10px] sm:text-sm text-gray-700">
+                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-[10px] sm:text-sm text-gray-700">
                       {order.payment_method
                         ? order.payment_method.replace(/_/g, " ")
                         : "—"}
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                      <StatusBadge status={order.status} type="order" />
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                     <StatusBadge status={order.delivery?.status || "no assigned"} type="delivery" />
                     </td>
                     {/* <td className="px-6 py-4">
@@ -678,10 +678,10 @@ export default function CompanyOrders() {
                     </td>
                     */}
                    
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 whitespace-nowrap">
                       <OrderDate dateString={order.created_at} />
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-right">
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 whitespace-nowrap text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-secondary hover:text-secondary hover:bg-secondary/10 text-[10px] sm:text-sm font-medium transition-all duration-200 group"

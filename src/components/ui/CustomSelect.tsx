@@ -68,16 +68,16 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => setOpen((p) => !p)}
         className="
           w-full flex items-center justify-between
-          px-3 py-1 rounded-full
-          border border-gray-200
+          px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl
+          border border-secondary
           bg-gray-50
-          hover:bg-white hover:border-[#6750A4] hover:shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 focus:border-[#6750A4]
+          hover:bg-white hover:border-secondary hover:shadow-sm
+          focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary
           transition-all duration-200
           active:scale-[0.99]
         "
       >
-        <div className="flex items-center gap-2 text-sm text-gray-700 truncate">
+        <div className="flex items-center gap-2 text-sm text-secondary truncate">
           {selected?.icon}
           <span key={value} className="truncate">
             {(() => {
@@ -89,7 +89,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         </div>
 
         <ChevronDown
-          className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+          className={`h-3 w-3 text-secondary transition-transform duration-200 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -101,7 +101,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           className="
             absolute z-50 mt-1 w-full
             bg-white
-            border border-gray-200
+            border border-secondary
             rounded-xl
             shadow-xl
             overflow-hidden
@@ -130,12 +130,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     w-full flex items-center gap-2
                     px-3 py-1.5 text-sm
                     transition-all duration-150
-                    hover:bg-[#6750A4]/10 hover:pl-4
+                    hover:bg-secondary/10 hover:pl-4
                     text-left
                     ${
                       value === opt.value
-                        ? "bg-[#6750A4]/10 text-[#6750A4] font-semibold"
-                        : "text-gray-700"
+                        ? "bg-secondary/10 text-secondary font-semibold"
+                        : "text-secondary"
                     }
                   `}
                 >

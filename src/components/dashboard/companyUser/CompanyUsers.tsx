@@ -26,6 +26,7 @@ import {
   X,
   ChevronDown,
   RefreshCw,
+  Repeat,
 } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
@@ -385,7 +386,7 @@ export default function CompanyUsers() {
             <h1 className="text-xs sm:text-2xl font-extrabold text-secondary leading-tight break-words">
               {isSuperAdmin ? companyName : "All Users"}
             </h1>
-            <p className="text-[9px] sm:text-xs text-gray-500">
+            <p className="text-[9px] sm:text-xs text-secondary/60">
               Manage roles and organization access
             </p>
           </div>
@@ -396,19 +397,19 @@ export default function CompanyUsers() {
           <button
             onClick={clearCompany}
             className="
-              py-0.5 lg:py-1.5 px-3.5
-              rounded-full
-              border-2 border-[#6750A4]
+              py-0.5 lg:py-1.5 px-2 lg:px-3.5
+             rounded-lg
+             border-2 border-secondary
               bg-transparent
-              text-xs font-medium text-[#6750A4]
+              text-xs font-medium text-secondary
               hover:bg-secondary/5
               transition-all
               flex items-center justify-center gap-1.5
               whitespace-nowrap
             "
           >
-            <RefreshCw className="h-2.5 lg:h-3.5 w-2.5 lg:w-3.5 text-[#6750A4]" />
-            Switch
+           <Repeat className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-secondary" />
+            <span className="hidden lg:inline">Switch</span>
           </button>
         )}
       </div>
@@ -458,10 +459,10 @@ export default function CompanyUsers() {
               onClick={() => setShowCreateModal(true)}
               className="
                 py-1 px-3
-                rounded-full
-                border-2 border-[#6750A4]
+                rounded-lg
+                border-2 border-secondary
                 bg-white
-                text-xs font-medium text-[#6750A4]
+                text-xs font-medium text-secondary
                 hover:bg-secondary/5
                 transition-all
                 flex items-center justify-center gap-1
@@ -469,15 +470,15 @@ export default function CompanyUsers() {
                 min-w-[115px]
               "
             >
-              <UserPlus className="h-3 w-3 text-[#6750A4]" />
+              <UserPlus className="h-3 w-3 text-secondary" />
               Create User
             </button>
             <button
               onClick={() => setShowAddModal(true)}
               className="
                 py-1 px-3
-                rounded-full
-                bg-[#6750A4]
+                rounded-lg
+                bg-secondary
                 text-white
                 text-xs font-medium
                 hover:bg-[#4c3789]
@@ -630,7 +631,7 @@ export default function CompanyUsers() {
                         bg-secondary
                         text-white
                         text-xs font-medium
-                        hover:bg-[#4c3789]
+                        hover:bg-secondary/80
                         transition-all
                         flex items-center gap-1.5
                         shadow-sm

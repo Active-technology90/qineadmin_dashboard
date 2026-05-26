@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Building2, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Building2, Plus, RefreshCw, Search, X, Repeat } from "lucide-react";
 // import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
@@ -258,35 +258,27 @@ export default function CompanyProducts() {
             {isSuperAdmin && (
               <button
                 onClick={clearCompany}
-                className="py-0.5 lg:py-1.5 px-3.5 rounded-full border-2 border-secondary bg-transparent text-xs font-medium text-secondary hover:bg-secondary/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                className="py-0.5 lg:py-1.5 px-2 lg:px-3.5 rounded-lg border-2 border-secondary bg-transparent text-xs font-medium text-secondary hover:bg-secondary/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+               
               >
-                <RefreshCw className="h-2.5 lg:h-3.5 w-2.5 lg:w-3.5 text-secondary" /> Switch
+                <Repeat className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-secondary" />
+                <span className="hidden lg:inline">Switch</span>
               </button>
             )}
           </div>
         </div>
-        {/* BUTTONS SECTION - Desktop only (hidden on mobile) */}
-        <div className="hidden lg:flex flex-row justify-end items-center gap-3 mt-3 sm:mt-4 mb-3">
-          {/* Desktop Switch button */}
-          {isSuperAdmin && (
-            <button
-              onClick={clearCompany}
-              className="py-1.5 px-3.5 rounded-full border-2 border-secondary bg-transparent text-xs font-medium text-secondary hover:bg-secondary/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
-            >
-              <RefreshCw className="h-3 lg:h-3.5 w-3 lg:w-3.5 text-secondary" /> Switch
-            </button>
-          )}
-          
-          {/* Desktop Add Product button */}
-          {canEditBasic && (
-            <button
-              onClick={handleAdd}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
-            >
-              <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
-            </button>
-          )}
-        </div>
+{/* BUTTONS SECTION - Desktop only (hidden on mobile) */}
+<div className="hidden lg:flex flex-row justify-end items-center gap-3 mt-3 sm:mt-4 mb-3">
+  {/* Desktop Add Product button */}
+  {canEditBasic && (
+    <button
+      onClick={handleAdd}
+      className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
+    >
+      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
+    </button>
+  )}
+</div>
       </div>
 
             {/* Mobile Action Buttons - Below Search (visible only on mobile) */}
@@ -296,7 +288,7 @@ export default function CompanyProducts() {
           {canEditBasic && (
             <button
               onClick={handleAdd}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all shadow-sm"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all shadow-sm"
             >
               <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
             </button>

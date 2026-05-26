@@ -80,7 +80,7 @@ export function CompanyUsersTable({
                 </span>
               </th>
               {isAdmin && (
-                <th className="px-6 py-4 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+<th className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Actions
@@ -112,7 +112,7 @@ export function CompanyUsersTable({
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-secondary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {user.profile_image ? (
                           <img
                             src={user.profile_image}
@@ -120,7 +120,7 @@ export function CompanyUsersTable({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-indigo-600 font-semibold text-[10px] sm:text-sm">
+                          <span className="text-secondary font-semibold text-[10px] sm:text-sm">
                             {user.first_name?.[0] ||
                               user.email[0].toUpperCase()}
                           </span>
@@ -139,11 +139,11 @@ export function CompanyUsersTable({
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+<td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
                     {isAdmin && (
                       <button
                         onClick={() => onEdit(user)}
-                        className="text-indigo-600 hover:text-indigo-800 mr-2 sm:mr-3 transition p-1 rounded-md hover:bg-indigo-50"
+                        className="text-secondary hover:text-indigo-800 mr-2 sm:mr-3 transition p-1 rounded-md hover:bg-indigo-50"
                         title="Edit role"
                       >
                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

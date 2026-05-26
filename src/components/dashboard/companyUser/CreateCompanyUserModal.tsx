@@ -203,7 +203,7 @@ export function CreateCompanyUserModal({
         <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-secondary/5 to-indigo-50 backdrop-blur-sm bg-opacity-95">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-secondary">Create User</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-secondary/60 mt-1">
               Create and onboard a company user instantly
             </p>
           </div>
@@ -211,7 +211,7 @@ export function CreateCompanyUserModal({
             onClick={onClose}
             className="p-1.5 sm:p-2 rounded-full hover:bg-white/80 transition flex-shrink-0"
           >
-            <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5 text-secondary/60" />
           </button>
         </div>
 
@@ -478,17 +478,17 @@ export function CreateCompanyUserModal({
         </div>
 
         {/* FOOTER */}
-        <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 rounded-b-2xl sm:rounded-b-3xl">
+        <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-row justify-end gap-2 sm:gap-3 rounded-b-2xl sm:rounded-b-3xl">
           <button
             onClick={onClose}
-            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl border border-gray-200 hover:bg-white transition font-medium text-sm sm:text-base w-full sm:w-auto"
+            className="flex-1 px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-gray-200 hover:bg-white transition font-medium text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 sm:px-5 py-2 sm:py-3 rounded-2xl bg-secondary hover:bg-[#5b4694] text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto"
+            className="flex-1 px-4 sm:px-5 py-2 sm:py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-white transition shadow-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {loading ? (
               <>
