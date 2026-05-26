@@ -100,7 +100,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
     return (
       <div className={`relative w-full ${className}`}>
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
         </div>
 
@@ -116,7 +116,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           disabled={disabled}
           autoFocus={autoFocus}
           className={`
-            w-full pl-9 pr-9 py-1 md:py-3
+            w-full pl-4 pr-7 py-1 md:py-3
             border border-secondary
             rounded-xl
             bg-white

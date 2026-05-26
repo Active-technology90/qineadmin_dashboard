@@ -191,19 +191,19 @@ export default function CategoryTable({
     pageSize={pageSize}
     onPageSizeChange={onPageSizeChange}
   >
-    <div className="flex items-center gap-2 w-full">
+    {/* <div className="flex items-center gap-2 w-full"> */}
       
       {/* Search */}
-      <div className="flex-1 min-w-0">
+      <div className="relative flex-1 ">
         <SearchInput
           value={inputValue}
           onChange={onInputChange}
           loading={loading}
           placeholder="Search by name, slug, code..."
           debounceMs={0}
-          className="w-full"
-        />
-      </div>
+          className="rounded-xl shadow-sm border-secondary focus:ring-2 focus:ring-secondary/30"
+      />
+      
 
       {/* Sort button */}
       <button
@@ -213,21 +213,15 @@ export default function CategoryTable({
           setSheetOpen(true);
         }}
         aria-label="Open sort options"
-        className="
-          relative shrink-0
-          h-7 w-7
-          rounded-full
-          bg-secondary text-white
-          shadow-md
-          flex items-center justify-center
-          active:scale-95
-          transition-all duration-200
-        "
+        className="absolute right-2 top-1/2 -translate-y-1/2
+          h-6 w-6 rounded-full bg-secondary text-white
+          flex items-center justify-center shadow-md
+          active:scale-95 transition"
       >
-        <ArrowDownUp size={16} />
+        <ArrowDownUp size={12} />
       </button>
-
-    </div>
+</div>
+  
   </TableControls>
 </div>
 
