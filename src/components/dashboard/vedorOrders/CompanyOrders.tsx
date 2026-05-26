@@ -15,6 +15,8 @@ import { Toast } from "../../ui/Toast";
 import { VendorOrderDetailModal } from "./VendorOrderDetailModal";
 import { VendorOrderFilters } from "./VendorOrderFilters";
 import { useReadOnly } from "../AdminDashboard";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { SearchInput } from "../../ui/SearchInput";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -215,6 +217,16 @@ export default function CompanyOrders() {
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+    // Active filter count for mobile filter badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchTerm) count++;
+    if (orderStatusFilter) count++;
+    if (deliveryStatusFilter) count++;
+    if (paymentMethodFilter) count++;
+    if (selectedCompanyId) count++;
+    return count;
+  }, [searchTerm, orderStatusFilter, deliveryStatusFilter, paymentMethodFilter, selectedCompanyId]);
 
   const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
     const token = localStorage.getItem("access");
@@ -365,6 +377,50 @@ export default function CompanyOrders() {
     setSelectedCompanyId("");
     setCurrentPage(1);
   };
+    // Options for Order Status dropdown (matches existing options)
+  const orderStatusOptions: SelectOption[] = [
+    { value: "", label: "All Order Status" },
+    { value: "pending", label: "Pending" },
+    { value: "contacted", label: "Confirmed" },
+    { value: "processing", label: "Prepared" },
+    { value: "fulfilled", label: "Delivered" },
+    { value: "shipped", label: "In Transit" },
+    { value: "payment_rejected", label: "Payment Rejected" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
+
+  // Options for Delivery Status dropdown
+  const deliveryStatusOptions: SelectOption[] = [
+    { value: "", label: "All Delivery Status" },
+    { value: "pending", label: "Assigned" },
+    { value: "accepted", label: "Accepted" },
+    { value: "picked_up", label: "Picked Up" },
+    { value: "out_for_delivery", label: "In Transit" },
+    { value: "delivered", label: "Completed" },
+    { value: "failed", label: "Failed" },
+  ];
+
+  // Options for Payment Method dropdown
+  const paymentMethodOptions: SelectOption[] = [
+    { value: "", label: "All Payment Method" },
+    { value: "bank_transfer", label: "Bank Transfer" },
+    { value: "chapa", label: "Chapa" },
+    { value: "cod", label: "COD" },
+  ];
+
+  // Options for Company dropdown (if admin)
+  const companyOptions: SelectOption[] = [
+    { value: "", label: "All Companies" },
+    ...companies.map((c) => ({ value: String(c.id), label: c.name })),
+  ];
+    // Options for Page Size dropdown
+  const pageSizeOptions: SelectOption[] = [
+    { value: "5", label: "5 / page" },
+    { value: "10", label: "10 / page" },
+    { value: "15", label: "15 / page" },
+    { value: "30", label: "30 / page" },
+    { value: "60", label: "60 / page" },
+  ];
 
   const goToPage = (page: number) =>
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
@@ -409,7 +465,7 @@ export default function CompanyOrders() {
             </>
           ) : (
             <div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
+              <h2 className="text-base sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
                 All Orders
               </h2>
               <p className="text-[10px] sm:text-sm font-medium text-secondary">
@@ -421,6 +477,35 @@ export default function CompanyOrders() {
           )}
         </div>
       </div>
+      {/* Search Bar with Mobile Filter Button Inside - HIDDEN ON DESKTOP, VISIBLE ON MOBILE */}
+      <div className="mb-4 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by order ID, customer name, or company..."
+              loading={loading}
+              showMobileFilter={true}
+              onMobileFilterClick={() => setShowMobileFilterModal(true)}
+              activeFilterCount={activeFilterCount}
+            />
+          </div>
+          <div className="w-24 flex-shrink-0">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => {
+                setPageSize(Number(val));
+                setCurrentPage(1);
+              }}
+              options={pageSizeOptions}
+              placeholder="5"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
 
       {/* Filters */}
       <VendorOrderFilters
@@ -636,27 +721,6 @@ export default function CompanyOrders() {
         readOnly={readOnly}
       />
 
-      {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
-      <button
-        onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-secondary shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
-      >
-        <div className="relative">
-          <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-          )}
-        </div>
-        <span className="text-sm font-semibold tracking-wide text-secondary">Filter</span>
-        {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-secondary/10 text-secondary rounded-full">
-            Active
-          </span>
-        )}
-      </button>
-
       {/* Mobile Filter Modal - Bottom Sheet */}
       {showMobileFilterModal && (
         <div
@@ -684,42 +748,20 @@ export default function CompanyOrders() {
 
             {/* Content */}
             <div className="p-4 space-y-4">
-              {/* Search */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Search
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by order ID, customer name, or company..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                  />
-                </div>
-              </div>
+
 
               {/* Order Status Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Order Status
                 </label>
-                <select
+                <CustomSelect
                   value={orderStatusFilter}
-                  onChange={(e) => setOrderStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value="">All Order Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="contacted">Confirmed</option>
-                  <option value="processing">Prepared</option>
-                  <option value="fulfilled">Delivered</option>
-                  <option value="shipped">In Transit</option>
-                  <option value="payment_rejected">Payment Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+
+                  onChange={setOrderStatusFilter}
+                  options={orderStatusOptions}
+                  placeholder="All Order Status"
+                />
               </div>
 
               {/* Delivery Status Filter */}
@@ -727,19 +769,12 @@ export default function CompanyOrders() {
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Delivery Status
                 </label>
-                <select
+                <CustomSelect
                   value={deliveryStatusFilter}
-                  onChange={(e) => setDeliveryStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value="">All Delivery Status</option>
-                  <option value="pending">Assigned</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="picked_up">Picked Up</option>
-                  <option value="out_for_delivery">In Transit</option>
-                  <option value="delivered">Completed</option>
-                  <option value="failed">Failed</option>
-                </select>
+                  onChange={setDeliveryStatusFilter}
+                  options={deliveryStatusOptions}
+                  placeholder="All Delivery Status"
+                />
               </div>
 
               {/* Payment Method Filter */}
@@ -747,16 +782,13 @@ export default function CompanyOrders() {
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Payment Method
                 </label>
-                <select
+                <CustomSelect
                   value={paymentMethodFilter}
-                  onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value="">All Payment Method</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="chapa">Chapa</option>
-                  <option value="cod">COD</option>
-                </select>
+
+                  onChange={setPaymentMethodFilter}
+                  options={paymentMethodOptions}
+                  placeholder="All Payment Method"
+                />
               </div>
 
               {/* Company Filter (if admin) */}
@@ -779,27 +811,6 @@ export default function CompanyOrders() {
                   </select>
                 </div>
               )}
-
-              {/* Page Size */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Items per page
-                </label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value={5}>5 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={15}>15 / page</option>
-                  <option value={30}>30 / page</option>
-                  <option value={60}>60 / page</option>
-                </select>
-              </div>
 
               {/* Action Buttons - Equal width, side by side */}
               <div className="flex items-center gap-3 pt-2">

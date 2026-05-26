@@ -1,12 +1,6 @@
 // src/components/ui/SearchInput.tsx
-import React, {
-  forwardRef,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import React, { forwardRef, useState, useEffect, useRef, useCallback } from "react";
+import { Search, X, Loader2, ListFilter } from "lucide-react";
 
 export interface SearchInputProps {
   value?: string;
@@ -107,11 +101,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div className={`relative w-full ${className}`}>
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-          {loading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Search className="h-3 w-3" />
-          )}
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
         </div>
 
         <input
@@ -126,7 +116,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           disabled={disabled}
           autoFocus={autoFocus}
           className={`
-            w-full pl-9 pr-9 py-2
+            w-full pl-9 pr-9 py-1
             border border-secondary
             rounded-full
             bg-white
@@ -146,19 +136,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
             aria-label="Filter"
           >
-            <svg
-              className="w-3.5 h-3.5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h10M4 18h6"
-              />
-            </svg>
+            <ListFilter className="w-3.5 h-3.5 text-gray-600" />
             {activeFilterCount > 0 && (
               <span className="text-[10px] font-bold text-white bg-[#6750A4] px-1 py-0.5 rounded-full min-w-[16px] text-center">
                 {activeFilterCount}
@@ -175,19 +153,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             className="absolute right-10 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
             aria-label="Filter"
           >
-            <svg
-              className="w-4 h-4 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h12M4 18h8"
-              />
-            </svg>
+            <ListFilter className="w-4 h-4 text-gray-600" />
             {activeFilterCount > 0 && (
               <span className="text-xs font-bold text-white bg-[#6750A4] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
                 {activeFilterCount}
@@ -201,7 +167,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-secondary"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-0.5 focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
             aria-label="Clear search"
           >
             <X className="h-3 w-3" />

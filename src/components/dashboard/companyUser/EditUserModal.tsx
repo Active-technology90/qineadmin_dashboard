@@ -246,21 +246,21 @@ export function EditUserModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-3 sm:py-5 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 rounded-b-xl sm:rounded-b-2xl">
+        <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-row gap-3 rounded-b-xl sm:rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium w-full sm:w-auto"
+            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={updating}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
             {updating ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Updating...
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Updating...
               </>
             ) : (
               'Save changes'

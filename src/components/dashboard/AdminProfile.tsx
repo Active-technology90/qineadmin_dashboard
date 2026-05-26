@@ -261,7 +261,7 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 lg:py-10">
+    <div className="w-full min-h-screen bg-gray-50 px-0 md:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 md:py-8 lg:py-10">
       <div className="max-w-7xl mx-auto">
         {/* Toast Notification */}
       {toast && (

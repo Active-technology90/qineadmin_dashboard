@@ -280,32 +280,28 @@ export function AddUserModal({
             </div>
           )}
 
-          {/* Role selection – now includes Delivery */}
+           {/* Role selection – now includes Delivery */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
               Assign role <span className="text-red-500">*</span>
             </label>
-            <select
-              value={selectedRole}
-              onChange={(e) => onRoleChange(e.target.value as any)}
-              className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.75rem sm:right-1rem center",
-                backgroundSize: "1rem sm:1.25rem",
-              }}
-            >
-              <option value="admin">
-                Admin – Full access to company management
-              </option>
-              <option value="staff">Staff – Manage products and orders</option>
-              <option value="delivery">
-                Delivery – Manage deliveries
-              </option>{" "}
-              {/* ✅ Uncommented and added */}
-              <option value="viewer">Viewer – Read‑only access</option>
-            </select>
+            <div className="relative">
+              <select
+                value={selectedRole}
+                onChange={(e) => onRoleChange(e.target.value as any)}
+                className="w-full border border-gray-200 rounded-full px-4 py-1.5 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer pr-10"
+              >
+                <option value="admin">
+                  Admin – Full access to company management
+                </option>
+                <option value="staff">Staff – Manage products and orders</option>
+                <option value="delivery">
+                  Delivery – Manage deliveries
+                </option>
+                <option value="viewer">Viewer – Read‑only access</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+            </div>
             <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5">
               Roles can be changed later without affecting user data.
             </p>
@@ -313,19 +309,19 @@ export function AddUserModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
+        <div className="flex flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
           <button
             onClick={onClose}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium w-full sm:w-auto"
+            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={onAdd}
             disabled={!selectedUser || adding}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
-            {adding && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
+            {adding && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {adding ? "Adding..." : "Add user"}
           </button>
         </div>

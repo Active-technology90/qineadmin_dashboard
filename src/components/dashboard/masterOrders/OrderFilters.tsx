@@ -78,8 +78,8 @@ export function OrderFilters({
 
       {/* Body */}
       <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
-        {/* Search + Refresh */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+        {/* Search + Refresh - HIDDEN ON MOBILE (visible only on desktop) */}
+        <div className="hidden lg:flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
             <input

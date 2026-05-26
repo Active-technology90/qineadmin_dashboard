@@ -25,6 +25,7 @@ import {
   Search,
   X,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 import { ErrorView } from "../../ui/ErrorView";
@@ -36,6 +37,8 @@ import { CompanySelector } from "../company-products/CompanySelector";
 import { useReadOnly } from "../AdminDashboard";
 import { CreateCompanyUserModal } from "./CreateCompanyUserModal";
 import { TableControls } from "../../ui/TableControls";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { SearchInput } from "../../ui/SearchInput";
 
 // ----------------------------------------------------------------------
 // Compact skeletons
@@ -119,6 +122,23 @@ export default function CompanyUsers() {
   const [tableSearch, setTableSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+    // Active filter count for mobile filter badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (tableSearch) count++;
+    if (roleFilter !== "all") count++;
+    return count;
+  }, [tableSearch, roleFilter]);
+
+  // Options for Page Size dropdown
+  const pageSizeOptions: SelectOption[] = [
+    { value: "5", label: "5 / page" },
+    { value: "10", label: "10 / page" },
+    { value: "15", label: "15 / page" },
+    { value: "30", label: "30 / page" },
+    { value: "60", label: "60 / page" },
+  ];
+
 
   // Filtered users (search + role)
   const filteredUsers = (users || []).filter((u: any) => {
@@ -146,6 +166,16 @@ export default function CompanyUsers() {
     });
     return counts;
   }, [users]);
+
+  // Options for Role dropdown
+  const roleOptions: SelectOption[] = [
+    { value: "all", label: "All Roles" },
+    { value: "admin", label: `Admin (${roleCounts.admin || 0})` },
+    { value: "staff", label: `Staff (${roleCounts.staff || 0})` },
+    { value: "viewer", label: `Viewer (${roleCounts.viewer || 0})` },
+    { value: "delivery", label: `Delivery (${roleCounts.delivery || 0})` },
+  ];
+  
 
   const { addUser } = useAddCompanyUser();
 
@@ -352,7 +382,7 @@ export default function CompanyUsers() {
 
           )}
           <div className="min-w-0">
-            <h1 className="text-sm sm:text-2xl font-extrabold text-secondary leading-tight break-words">
+            <h1 className="text-xs sm:text-2xl font-extrabold text-secondary leading-tight break-words">
               {isSuperAdmin ? companyName : "All Users"}
             </h1>
             <p className="text-[9px] sm:text-xs text-gray-500">
@@ -366,17 +396,18 @@ export default function CompanyUsers() {
           <button
             onClick={clearCompany}
             className="
-        h-8 sm:h-9 px-2 sm:px-3
-        rounded-lg
-        border border-secondary/30
-        bg-secondary
-        text-[10px] sm:text-xs font-medium text-white
-        hover:bg-secondary/90
-        transition-all
-        flex-shrink-0
-        shadow-sm
-      "
+              py-0.5 lg:py-1.5 px-3.5
+              rounded-full
+              border-2 border-[#6750A4]
+              bg-transparent
+              text-xs font-medium text-[#6750A4]
+              hover:bg-secondary/5
+              transition-all
+              flex items-center justify-center gap-1.5
+              whitespace-nowrap
+            "
           >
+            <RefreshCw className="h-2.5 lg:h-3.5 w-2.5 lg:w-3.5 text-[#6750A4]" />
             Switch
           </button>
         )}
@@ -418,9 +449,82 @@ export default function CompanyUsers() {
           />
         </div>
       )}
+      
+      {/* Mobile Action Buttons - Outside Table (visible only on mobile) */}
+      <div className="flex lg:hidden items-center justify-between gap-2 mb-4">
+        {canManageUsers && (
+          <>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="
+                py-1 px-3
+                rounded-full
+                border-2 border-[#6750A4]
+                bg-white
+                text-xs font-medium text-[#6750A4]
+                hover:bg-secondary/5
+                transition-all
+                flex items-center justify-center gap-1
+                whitespace-nowrap
+                min-w-[115px]
+              "
+            >
+              <UserPlus className="h-3 w-3 text-[#6750A4]" />
+              Create User
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="
+                py-1 px-3
+                rounded-full
+                bg-[#6750A4]
+                text-white
+                text-xs font-medium
+                hover:bg-[#4c3789]
+                transition-all
+                flex items-center justify-center gap-1
+                shadow-sm
+                whitespace-nowrap
+                min-w-[115px]
+              "
+            >
+              <UserPlus className="h-3 w-3" />
+              Add Member
+            </button>
+          </>
+        )}
+      </div>
+                  {/* Search Bar with Filter Button - MOBILE ONLY */}
+      <div className="mb-4 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex-[2]">
+            <SearchInput
+              value={tableSearch}
+              onChange={setTableSearch}
+              placeholder="Search users..."
+              loading={loading}
+              showMobileFilter={true}
+              onMobileFilterClick={() => setShowMobileFilterModal(true)}
+              activeFilterCount={activeFilterCount}
+            />
+          </div>
+          <div className="w-24 flex-shrink-0">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => {
+                setPageSize(Number(val));
+                setCurrentPage(1);
+              }}
+              options={pageSizeOptions}
+              placeholder="5"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* ===== 4. MAIN TABLE CARD ===== */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    
         {/* TableControls wraps search + page size selector */}
         {/* TableControls - Hidden on mobile, visible on desktop */}
         <div className="hidden lg:block">
@@ -559,46 +663,6 @@ export default function CompanyUsers() {
           </TableControls>
         </div>
 
-        {/* MOBILE: Buttons with space-between layout (Create User left, Add Member right) */}
-        <div className="flex lg:hidden items-center justify-between gap-2 mb-3">
-          {canManageUsers && (
-            <>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="
-                  h-9 px-3.5
-                  rounded-xl
-                  border-2 border-secondary
-                  bg-white
-                  text-xs font-medium text-secondary
-                  hover:bg-secondary/5
-                  transition-all
-                  flex items-center gap-1.5
-                "
-              >
-                <UserPlus className="h-3.5 w-3.5 text-secondary" />
-                Create User
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="
-                  h-9 px-3.5
-                  rounded-xl
-                  border-2 border-secondary
-                  bg-white
-                  text-xs font-medium text-secondary
-                  hover:bg-secondary/5
-                  transition-all
-                  flex items-center gap-1.5
-                "
-              >
-                <UserPlus className="h-3.5 w-3.5 text-secondary" />
-                Add Member
-              </button>
-            </>
-          )}
-        </div>
-
         {loading ? (
           <TableSkeleton rows={pageSize} />
         ) : paginatedUsers.length === 0 ? (
@@ -651,27 +715,6 @@ export default function CompanyUsers() {
         )}
       </div>
 
-      {/* Mobile Filter Button - Bottom Left (only visible on mobile) */}
-      <button
-        onClick={() => setShowMobileFilterModal(true)}
-        className="fixed bottom-5 left-5 z-40 lg:hidden flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border-2 border-secondary shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
-      >
-        <div className="relative">
-          <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          {(tableSearch || roleFilter !== "all") && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-          )}
-        </div>
-        <span className="text-sm font-semibold tracking-wide text-secondary">Filter</span>
-        {(tableSearch || roleFilter !== "all") && (
-          <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-secondary/10 text-secondary rounded-full">
-            Active
-          </span>
-        )}
-      </button>
-
       {/* Mobile Filter Modal - Bottom Sheet */}
       {showMobileFilterModal && (
         <div
@@ -698,60 +741,18 @@ export default function CompanyUsers() {
             </div>
             {/* Content */}
             <div className="p-4 space-y-4">
-              {/* Search */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Search
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={tableSearch}
-                    onChange={(e) => setTableSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                  />
-                </div>
-              </div>
 
               {/* Role Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Role
                 </label>
-                <select
+                <CustomSelect
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value as any)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value="all">All Roles</option>
-                  <option value="admin">Admin ({roleCounts.admin || 0})</option>
-                  <option value="staff">Staff ({roleCounts.staff || 0})</option>
-                  <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
-                  <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
-                </select>
-              </div>
-
-              {/* Page Size */}
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-1.5">
-                  Items per page
-                </label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
-                >
-                  <option value={5}>5 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={15}>15 / page</option>
-                  <option value={30}>30 / page</option>
-                  <option value={60}>60 / page</option>
-                </select>
+                  onChange={(val) => setRoleFilter(val as any)}
+                  options={roleOptions}
+                  placeholder="All Roles"
+                />
               </div>
 
               {/* Action Buttons - Equal width, side by side */}
