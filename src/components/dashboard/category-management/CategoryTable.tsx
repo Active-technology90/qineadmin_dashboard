@@ -186,7 +186,7 @@ export default function CategoryTable({
     <div className="space-y-4 sm:space-y-0">
       {/* Mobile sticky search */}
      {/* Mobile Sticky Table Controls */}
-<div className="sm:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-gray-200/80 px-4 py-3">
+<div className="sm:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-gray-200/80 py-3">
   <TableControls
     pageSize={pageSize}
     onPageSizeChange={onPageSizeChange}
