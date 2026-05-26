@@ -381,7 +381,7 @@ export default function CategoryManagement() {
               gap-1.5 sm:gap-2
               rounded-full
               bg-secondary
-              hover:bg-[#5a458c]
+              hover:bg-secondary  
               active:scale-[0.98]
               transition-all duration-200
               shadow-sm hover:shadow-md
@@ -390,9 +390,9 @@ export default function CategoryManagement() {
               text-[11px] xs:text-xs sm:text-sm
 
               px-2.5 xs:px-3 sm:px-4 md:px-5
-              py-2 sm:py-2.5
+              py-1 sm:py-2.5
 
-              min-h-[28px] xs:min-h-[42px] sm:min-h-[40px]
+              min-h-[24px] xs:min-h-[42px] sm:min-h-[40px]
               max-w-[145px] xs:max-w-none
 
               whitespace-nowrap

@@ -212,7 +212,7 @@ export const FormModal: React.FC<FormModalProps> = ({
               </div>
 
               <div className="sticky bottom-0 border-t border-gray-100 bg-white/90 backdrop-blur-xl px-3 sm:px-5 lg:px-6 py-3 sm:py-4">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+                <div className="flex flex-row sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                   <button
                     type="button"
                     onClick={onClose}
