@@ -3,6 +3,7 @@ import SignIn from "./pages/SignIn";
 import AdminDashboard from "./components/dashboard/AdminDashboard";
 import { CurrentCompanyProvider } from "./context/CurrentCompanyContext";
 import { useAuth } from "./context/authContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 export default function App() {
   const { user } = useAuth();
@@ -13,7 +14,9 @@ export default function App() {
         path="/dashboard"
         element={
           <CurrentCompanyProvider userMemberships={user?.memberships || null}>
-            <AdminDashboard />
+            <ThemeProvider>
+              <AdminDashboard />
+            </ThemeProvider>
           </CurrentCompanyProvider>
         }
       />

@@ -68,7 +68,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => setOpen((p) => !p)}
         className="
           w-full flex items-center justify-between
-          px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl
+          px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl
           border border-secondary
 
           bg-gray-50

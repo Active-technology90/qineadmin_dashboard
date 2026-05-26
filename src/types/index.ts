@@ -90,6 +90,9 @@ export interface Company {
   latitude?: string;
   longitude?: string;
   delivery_fee_per_km?: string;
+  theme_primary?: string;
+  theme_dark?: string;
+  theme_light?: string;
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
@@ -111,6 +114,9 @@ export interface CompanyListItem {
   latitude?: string;
   longitude?: string;
   delivery_fee_per_km?: string;
+  theme_primary?: string;
+  theme_dark?: string;
+  theme_light?: string;
   is_active: boolean;
   is_featured: boolean;
   description?: string;
