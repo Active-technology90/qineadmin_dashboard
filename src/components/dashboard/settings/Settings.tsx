@@ -1,5 +1,10 @@
 import { useTheme, AVAILABLE_THEMES } from "../../../context/ThemeContext";
-import { Palette, Check, Layout, Sparkles } from "lucide-react";
+import { 
+  // Palette, 
+  Check, 
+  Layout, 
+  // Sparkles 
+} from "lucide-react";
 
 export default function Settings() {
   const { currentTheme, setThemeById } = useTheme();
@@ -80,7 +85,7 @@ export default function Settings() {
       </div>
 
       {/* Live Preview Section */}
-      {/* <div className="bg-gray-50/70 border border-gray-100 rounded-3xl p-6 lg:p-8 space-y-6">
+      <div className="bg-gray-50/70 border border-gray-100 rounded-3xl p-6 lg:p-8 space-y-6">
         <div>
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Layout className="h-5 w-5 text-secondary" />
@@ -139,7 +144,7 @@ export default function Settings() {
             </div>
           </div>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }
