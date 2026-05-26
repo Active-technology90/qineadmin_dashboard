@@ -131,12 +131,14 @@ export function AddUserModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 bg-white">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-secondary/5 to-white">
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-secondary">
               Add team member
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-secondary/60
+
+ mt-0.5">
               Search by email or phone number
             </p>
           </div>
@@ -204,14 +206,18 @@ export function AddUserModal({
                 className="absolute z-20 mt-1.5 w-full bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 sm:max-h-64 overflow-y-auto"
               >
                 {searching ? (
-                  <div className="p-3 sm:p-4 text-center text-gray-500">
+                  <div className="p-3 sm:p-4 text-center text-secondary/60
+
+">
                     <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mx-auto" />
                     <p className="mt-1 text-sm">Searching...</p>
                   </div>
                 ) : searchResults.length === 0 && searchTerm.trim() !== "" ? (
                   <div className="p-4 sm:p-6 text-center">
                     <UserIcon className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-gray-300 mb-2" />
-                    <p className="text-xs sm:text-sm text-gray-500">No users found</p>
+                    <p className="text-xs sm:text-sm text-secondary/60
+
+">No users found</p>
                     <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
                       Try a different email or phone
                     </p>
@@ -229,10 +235,12 @@ export function AddUserModal({
                     >
                       <UserAvatar user={user} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-secondary truncate">
                           {user.username}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <p className="text-xs text-secondary/60
+
+ truncate">{user.email}</p>
                         {user.phone_number && (
                           <p className="text-xs text-gray-400 truncate">
                             {user.phone_number}
@@ -256,11 +264,13 @@ export function AddUserModal({
             <div className="bg-gradient-to-r from-indigo-50/50 to-white rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 border border-indigo-100 shadow-sm">
               <UserAvatar user={selectedUser} size="lg" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
+                <p className="font-medium text-secondary truncate">
                   {selectedUser.first_name || "—"}{" "}
                   {selectedUser.last_name || ""}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500 truncate">{selectedUser.email}</p>
+                <p className="text-xs sm:text-sm text-secondary/60
+
+ truncate">{selectedUser.email}</p>
                 {selectedUser.phone_number && (
                   <p className="text-xs text-gray-400 truncate">
                     {selectedUser.phone_number}
@@ -312,14 +322,14 @@ export function AddUserModal({
         <div className="flex flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
+            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-lg text-secondary hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={onAdd}
             disabled={!selectedUser || adding}
-            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
             {adding && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {adding ? "Adding..." : "Add user"}

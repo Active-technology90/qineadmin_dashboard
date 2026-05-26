@@ -290,7 +290,7 @@ export default function Payments() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary/50 focus:border-secondary"
             >
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
@@ -319,54 +319,54 @@ export default function Payments() {
 
       {/* Payouts Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
-        <table className="min-w-[800px] lg:min-w-full divide-y divide-gray-200">
+        <table className="min-w-[600px] lg:min-w-full divide-y divide-gray-200">
           <thead className="sticky top-0 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm z-10 shadow-sm">
             <tr>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Order ID
                 </span>
               </th>
               {isAllPayouts && (
-                <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Company
                   </span>
                 </th>
               )}
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Gross (ETB)
                 </span>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Platform Fee
                 </span>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Net (ETB)
                 </span>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Payment Status
                 </span>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Payment Method
                 </span>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,7 +375,7 @@ export default function Payments() {
                   <span>Payout Date</span>
                 </div>
               </th>
-              <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+              <th className="px-1.5 sm:px-2 lg:px-3 py-2 sm:py-2 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Actions
@@ -387,7 +387,7 @@ export default function Payments() {
             {loading ? (
               <tr>
                 <td colSpan={9} className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto" />
+                  <Loader2 className="h-8 w-8 animate-spin text-secondary mx-auto" />
                   <p className="mt-2 text-gray-500">Loading payouts...</p>
                 </td>
                </tr>
@@ -400,7 +400,7 @@ export default function Payments() {
             ) : (
               paginatedPayouts.map((payout) => (
                 <tr key={payout.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-indigo-600 truncate max-w-[80px] sm:max-w-none">
+                  <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold text-secondary truncate max-w-[80px] sm:max-w-none">
                     #{payout.vendor_order}
                   </td>
                   {isAllPayouts && (
@@ -450,7 +450,7 @@ export default function Payments() {
                     <button
                       type="button"
                       onClick={() => handleDownloadReceipt(payout.id)}
-                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-secondary hover:text-secondary/80 hover:bg-secondary/10 text-xs sm:text-sm font-medium transition-all duration-200"
                       title="Download receipt"
                     >
                       <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -501,17 +501,18 @@ export default function Payments() {
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Status
                 </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-[#6750A4] focus:shadow-sm transition-all"
-                >
-                  <option value="">All statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="completed">Completed</option>
-                  <option value="failed">Failed</option>
-                </select>
+                <CustomSelect
+  value={statusFilter}
+  onChange={(val) => setStatusFilter(val)}
+  options={[
+    { value: "", label: "All statuses" },
+    { value: "pending", label: "Pending" },
+    { value: "processing", label: "Processing" },
+    { value: "completed", label: "Completed" },
+    { value: "failed", label: "Failed" },
+  ]}
+  placeholder="All statuses"
+/>
               </div>
 
               {/* Action Buttons */}

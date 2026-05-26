@@ -229,8 +229,8 @@ export function ProductTable({
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                       {onEdit && (
-                        <button onClick={() => onEdit(product)} className="p-1 rounded-md hover:bg-indigo-50 transition-colors">
-                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600" />
+                        <button onClick={() => onEdit(product)} className="p-1 rounded-md hover:bg-secondary/10 transition-colors">
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
                         </button>
                       )}
 

@@ -76,7 +76,7 @@ const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) 
   <tr>
     <td colSpan={10} className="text-center py-10">
       <div className="text-red-600 mb-4">{error}</div>
-      <button onClick={onRetry} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+      <button onClick={onRetry} className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition">
         Retry
       </button>
     </td>
@@ -371,7 +371,7 @@ export default function Orders() {
             ) : (
               paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-4 py-3 text-sm font-semibold text-indigo-600 truncate">#{order.id}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-secondary truncate">#{order.id}</td>
                   <td className="px-4 py-3 text-sm text-gray-700 truncate">
                     {order.recipient_name || <span className="text-gray-400 italic">Pickup</span>}
                   </td>
@@ -396,7 +396,7 @@ export default function Orders() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-secondary hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
                     >
                       <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="inline">View</span>

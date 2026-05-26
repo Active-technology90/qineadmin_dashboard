@@ -249,14 +249,14 @@ export function EditUserModal({
         <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-row gap-3 rounded-b-xl sm:rounded-b-2xl">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
+            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={updating}
-            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
             {updating ? (
               <>
