@@ -1,6 +1,6 @@
 // src/components/ui/SearchInput.tsx
 import React, { forwardRef, useState, useEffect, useRef, useCallback } from "react";
-import { Search, X, Loader2, ListFilter } from "lucide-react";
+import { Search, X, Loader2, Filter } from "lucide-react";
 
 export interface SearchInputProps {
   value?: string;
@@ -132,12 +132,12 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onMobileFilterClick}
-            className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
+            className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
             aria-label="Filter"
           >
-            <ListFilter className="w-3.5 h-3.5 text-gray-600" />
+            <Filter className="w-4 h-4 text-secondary" />
             {activeFilterCount > 0 && (
-              <span className="text-[10px] font-bold text-white bg-[#6750A4] px-1 py-0.5 rounded-full min-w-[16px] text-center">
+              <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-secondary px-1 py-0.5 rounded-full min-w-[16px] text-center">
                 {activeFilterCount}
               </span>
             )}
@@ -149,12 +149,12 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onMobileFilterClick}
-            className="absolute right-10 top-1/2 -translate-y-1/2 lg:hidden flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
+            className="absolute right-10 top-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
             aria-label="Filter"
           >
-            <ListFilter className="w-4 h-4 text-gray-600" />
+            <Filter className="w-4 h-4 text-secondary" />
             {activeFilterCount > 0 && (
-              <span className="text-xs font-bold text-white bg-[#6750A4] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+              <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-secondary px-1 py-0.5 rounded-full min-w-[16px] text-center">
                 {activeFilterCount}
               </span>
             )}
