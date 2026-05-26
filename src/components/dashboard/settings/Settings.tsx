@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Layout, RotateCcw, Save, SwatchBook } from "lucide-react";
+import { 
+  Check, 
+  // Layout, 
+  RotateCcw, Save, SwatchBook } from "lucide-react";
 import {
   AVAILABLE_THEMES,
   DEFAULT_THEME,
@@ -225,7 +228,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-gray-50/70 border border-gray-100 rounded-2xl p-5 sm:p-6 lg:p-8 space-y-6">
+      {/* <div className="bg-gray-50/70 border border-gray-100 rounded-2xl p-5 sm:p-6 lg:p-8 space-y-6">
         <div>
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Layout className="h-5 w-5 text-secondary" />
@@ -283,7 +286,7 @@ export default function Settings() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

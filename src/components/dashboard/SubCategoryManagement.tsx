@@ -541,7 +541,7 @@ export default function SubCategoryManagement() {
     {/* ========== MOBILE TABLE CONTROLS (visible below md) ========== */}
 <div className="md:hidden sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-200">
   <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
-    <div className="relative flex-1">
+    <div className="relative flex-1 ">
       <SearchInput
         value={inputValue}
         onChange={handleInputChange}

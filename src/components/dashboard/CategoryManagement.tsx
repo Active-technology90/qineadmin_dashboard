@@ -118,21 +118,21 @@ export default function CategoryManagement() {
   };
 
   // Current sort label for mobile button
-  const sortLabel = useMemo(() => {
-    const val = `${sortField}|${sortOrder}`;
-    const labels: Record<string, string> = {
-      "name|asc": "Name A-Z",
-      "name|desc": "Name Z-A",
-      "order|asc": "Priority ↑",
-      "order|desc": "Priority ↓",
-      "company_count|desc": "Most Companies",
-      "company_count|asc": "Fewest Companies",
-    };
-    return labels[val] || "Sort";
-  }, [sortField, sortOrder]);
+  // const sortLabel = useMemo(() => {
+  //   const val = `${sortField}|${sortOrder}`;
+  //   const labels: Record<string, string> = {
+  //     "name|asc": "Name A-Z",
+  //     "name|desc": "Name Z-A",
+  //     "order|asc": "Priority ↑",
+  //     "order|desc": "Priority ↓",
+  //     "company_count|desc": "Most Companies",
+  //     "company_count|asc": "Fewest Companies",
+  //   };
+  //   return labels[val] || "Sort";
+  // }, [sortField, sortOrder]);
 
   // Active filter count (only search active – can be extended)
-  const activeFilterCount = inputValue.trim() !== "" ? 1 : 0;
+  // const activeFilterCount = inputValue.trim() !== "" ? 1 : 0;
 
   const {
     paginatedItems,
