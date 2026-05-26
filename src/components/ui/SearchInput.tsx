@@ -135,12 +135,12 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onMobileFilterClick}
-            className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all duration-200"
+            className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center w-6 h-6 rounded-md hover:bg-gray-100 active:scale-95 transition-all duration-200"
             aria-label="Filter"
           >
-            <Filter className="w-4 h-4 text-secondary" />
+            <Filter className="w-3.5 h-3.5 text-secondary/70" />
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 text-[10px] font-bold text-white bg-secondary px-1 py-0.5 rounded-full min-w-[16px] text-center">
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold text-white bg-secondary px-1 py-0.5 rounded-full min-w-[14px] text-center">
                 {activeFilterCount}
               </span>
             )}
