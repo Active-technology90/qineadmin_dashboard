@@ -322,14 +322,14 @@ export function AddUserModal({
         <div className="flex flex-row gap-3 p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-lg text-secondary hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
+            className="flex-1 px-4 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg text-secondary hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={onAdd}
             disabled={!selectedUser || adding}
-            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-1.5 sm:py-2.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
             {adding && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {adding ? "Adding..." : "Add user"}

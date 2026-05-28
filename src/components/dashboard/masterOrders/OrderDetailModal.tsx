@@ -525,7 +525,7 @@ const FinancialCard = memo(({ order }: { order: MasterOrder }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-secondary via-[#5a448c] to-[#4a3a78] p-4 sm:p-6 shadow-lg w-full"
+    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-secondary via-secondary to-secondary/80 p-4 sm:p-6 shadow-lg w-full"
   >
     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
     <div className="relative z-10">
@@ -774,59 +774,55 @@ export function OrderDetailModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Glass Header */}
-          <div className="bg-secondary/20 backdrop-blur-md border-b border-secondary/10 px-3 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 sticky top-0 z-20 shadow-sm">
-            {/* Top row: Icon on left, Buttons on right */}
-            <div className="flex flex-row justify-between items-start gap-2">
-              {/* Left side - Package Icon */}
-              <div className="h-8 w-8 sm:h-12 sm:w-12 bg-gradient-to-br from-secondary to-secondary-light rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200 ring-1 ring-white/20 flex-shrink-0">
-                <Package className="text-white h-4 w-4 sm:h-6 sm:w-6 drop-shadow-sm" />
+          <div className="bg-secondary/20 backdrop-blur-md border-b border-secondary/10 px-3 sm:px-6 md:px-8 py-2 sm:py-3 md:py-3 sticky top-0 z-20 shadow-sm">
+            {/* Top row: Order ID + Status on left, Buttons on right */}
+            <div className="flex flex-row justify-between items-center gap-2">
+              {/* Left side - Order ID and Status */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h2 className="text-base sm:text-xl font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent tracking-tight">
+                  Order #{order.id}
+                </h2>
+                <span className={getStatusBadge(order.status)}>{order.status}</span>
               </div>
 
               {/* Right side - Buttons */}
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 {onRefresh && (
                   <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="group flex items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-gray-200 bg-white
+                    className="group flex items-center gap-0.5 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-gray-200 bg-white
                    hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100
                    active:scale-95 transition-all duration-200
                    disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                   >
                     {refreshing ? (
-                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-secondary animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-secondary animate-spin" />
                     ) : (
-                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary transition-colors" />
+                      <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 group-hover:text-secondary transition-colors" />
                     )}
-                    <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-secondary">
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-secondary">
                       {refreshing ? "Refreshing..." : "Refresh"}
                     </span>
                   </button>
                 )}
                 <button
                   onClick={onClose}
-                  className="group p-1.5 sm:p-3 rounded-lg sm:rounded-xl bg-white border border-gray-200 shadow-sm
+                  className="group p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white border border-gray-200 shadow-sm
                  hover:bg-rose-50 hover:border-rose-200
                  active:scale-95 transition-all duration-200"
                 >
-                  <X className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 group-hover:text-rose-500 transition-colors" />
                 </button>
               </div>
             </div>
 
-            {/* Bottom row: Order details */}
-            <div className="mt-1.5 sm:mt-4">
-              <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
-                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent tracking-tight break-words">
-                  Order #{order.id}
-                </h2>
-                <span className={getStatusBadge(order.status)}>{order.status}</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[9px] sm:text-xs font-bold">
-                <span className="flex items-center gap-1 sm:gap-2 bg-secondary/10 px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full border border-secondary/20 shadow-sm">
-                  <Calendar className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-secondary" />
-                  <span className="font-mono text-[8px] sm:text-[12px] font-semibold text-gray-700 tracking-tight">
-                    {new Date(order.created_at).toLocaleDateString("en-US", {
+            {/* Bottom row: Date and Companies count */}
+            <div className="mt-2 sm:mt-2 flex flex-wrap items-center gap-2 sm:gap-4 text-[9px] sm:text-xs font-bold">
+              <span className="flex items-center gap-1 sm:gap-2 bg-secondary/10 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-secondary/20 shadow-sm">
+                <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-secondary" />
+                <span className="font-mono text-[8px] sm:text-[11px] font-semibold text-gray-700 tracking-tight">
+  {new Date(order.created_at).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -840,12 +836,11 @@ export function OrderDetailModal({
                   </span>
                 </span>
                 <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
-                  <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-gray-400" />
-                  <span className="font-medium text-[9px] sm:text-sm">
-                    {order.vendor_orders?.length || 0} {order.vendor_orders?.length === 1 ? "company" : "companies"}
-                  </span>
+                <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
+                <span className="font-medium text-[9px] sm:text-xs">
+                  {order.vendor_orders?.length || 0} {order.vendor_orders?.length === 1 ? "company" : "companies"}
                 </span>
-              </div>
+              </span>
             </div>
           </div>
 

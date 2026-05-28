@@ -181,32 +181,37 @@ export default function Payments() {
       <Toast toast={toast} />
 
       {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-3 mb-4">
-        <div>
-          <p className="text-xs sm:text-base font-bold text-secondary">
+      <div className="flex flex-row items-start justify-between gap-2 mb-4 sm:mb-6">
+        <div className="flex-1">
+          <h2 className="text-xs sm:text-2xl font-bold sm:font-extrabold text-secondary sm:tracking-tight">
             {isAllPayouts
-              ? "Showing payouts across all companies"
+              ? "All Payouts"
               : `Payouts for ${companyName}`}
+          </h2>
+          <p className="text-[10px] sm:text-sm text-secondary mt-0.5">
+            {isAllPayouts
+              ? "View all company payouts"
+              : "Track and manage company payouts"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isSuperAdmin && (
             <button
               onClick={() => setIsCompanySelectorOpen(true)}
-              className="px-2 sm:px-3 py-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-r from-secondary/10 to-secondary/5 text-secondary text-xs sm:text-sm font-medium hover:bg-secondary/20 transition-all duration-200 border border-secondary/20"
             >
-              <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> 
-              <span className="hidden xs:inline">Select Company</span>
+              <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span className="hidden xs:inline">Switch Company</span>
               <span className="inline xs:hidden">Select</span>
             </button>
           )}
           {isSuperAdmin && companySlug && (
             <button
               onClick={() => clearCompany()}
-              className="p-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+              className="p-1 sm:p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all duration-200"
               aria-label="Clear company"
             >
-              <X className="h-3 w-3 sm:h-4 sm:w-4" />
+              <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </button>
           )}
         </div>

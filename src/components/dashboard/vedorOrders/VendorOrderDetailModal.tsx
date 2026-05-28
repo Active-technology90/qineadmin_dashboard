@@ -358,7 +358,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     ((canManage) && (
                       <button
                         onClick={() => setShowAssignForm(true)}
-                        className="w-full py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
+                        className="w-full py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary/80 shadow-md transition-all"
                       >
                         Assign Delivery person
                       </button>

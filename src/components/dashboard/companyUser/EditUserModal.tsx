@@ -229,13 +229,7 @@ export function EditUserModal({
               <select
                 value={formData.role}
                 onChange={(e) => handleInputChange('role', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-10 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white appearance-none cursor-pointer"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem sm:right-1rem center',
-                  backgroundSize: '1rem sm:1.25rem',
-                }}
+                className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-10 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white cursor-pointer"
               >
                 <option value="admin">Admin – Full access to company management</option>
                 <option value="staff">Staff – Manage products and orders</option>
@@ -249,14 +243,14 @@ export function EditUserModal({
         <div className="sticky bottom-0 z-20 mt-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/95 backdrop-blur-sm flex flex-row gap-3 rounded-b-xl sm:rounded-b-2xl">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
+            className="flex-1 px-4 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium text-center justify-center"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={updating}
-            className="flex-1 px-4 py-1.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-1.5 sm:py-2.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm font-medium flex items-center justify-center gap-2"
           >
             {updating ? (
               <>

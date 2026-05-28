@@ -396,7 +396,7 @@ export default function Orders() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-secondary hover:text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-medium transition-all duration-200"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg text-secondary hover:text-secondary hover:bg-secondary/10 text-xs sm:text-sm font-medium transition-all duration-200"
                     >
                       <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="inline">View</span>
