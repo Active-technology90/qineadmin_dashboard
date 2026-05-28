@@ -39,6 +39,7 @@ import NonSuperAdminView from "./NonSuperAdminView";
 import CompanyFilters from "./CompanyFilters";
 import type { CompanyFormData } from "./CompanyForm";
 import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
+import { CustomSelect } from "../../ui/CustomSelect";
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -827,7 +828,7 @@ export default function CompanyManagement() {
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Category <span className="text-red-500">*</span>
               </label>
-              <select
+              {/* <select
                 value={formData.category}
                 onChange={(e) => {
                   const catId = Number(e.target.value);
@@ -845,7 +846,27 @@ export default function CompanyManagement() {
                     {cat.name}
                   </option>
                 ))}
-              </select>
+              </select> */}
+              <CustomSelect
+                value={String(formData.category || "")}
+                onChange={(value) => {
+                  const catId = Number(value);
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: catId,
+                    sub_category: 0,
+                  }));
+                }}
+                placeholder="Select Category"
+                options={[
+                  { label: "Select Category", value: "0" },
+                  ...categories.map((cat) => ({
+                    label: cat.name,
+                    value: String(cat.id),
+                  })),
+                ]}
+              />
               {formErrors.category && (
                 <p className="text-red-500 text-xs mt-1">
                   {formErrors.category}
@@ -856,7 +877,7 @@ export default function CompanyManagement() {
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Subcategory <span className="text-red-500">*</span>
               </label>
-              <select
+              {/* <select
                 value={formData.sub_category}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -878,7 +899,29 @@ export default function CompanyManagement() {
                       {sub.name}
                     </option>
                   ))}
-              </select>
+              </select> */}
+              <CustomSelect
+                value={String(formData.sub_category || "")}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    sub_category: Number(value),
+                  }))
+                }
+                placeholder="Select Subcategory"
+                options={[
+                  { label: "Select Subcategory", value: "0" },
+                  ...subcategories
+                    .filter((sub) => sub.category === formData.category)
+                    .map((sub) => ({
+                      label: sub.name,
+                      value: String(sub.id),
+                    })),
+                ]}
+                className={
+                  !formData.category ? "pointer-events-none opacity-60" : ""
+                }
+              />
               {formErrors.sub_category && (
                 <p className="text-red-500 text-xs mt-1">
                   {formErrors.sub_category}
@@ -889,7 +932,7 @@ export default function CompanyManagement() {
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Business Type <span className="text-red-500">*</span>
               </label>
-              <select
+              {/* <select
                 value={formData.business_type}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -903,7 +946,22 @@ export default function CompanyManagement() {
                 <option value="brand">Company</option>
                 <option value="store">Store</option>
                 <option value="service">Service</option>
-              </select>
+              </select> */}
+              <CustomSelect
+                value={formData.business_type}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    business_type: value,
+                  }))
+                }
+                placeholder="Select Business Type"
+                options={[
+                  { label: "Company", value: "brand" },
+                  { label: "Store", value: "store" },
+                  { label: "Service", value: "service" },
+                ]}
+              />
               {formErrors.business_type && (
                 <p className="text-red-500 text-xs mt-1">
                   {formErrors.business_type}
@@ -1257,7 +1315,7 @@ export default function CompanyManagement() {
               subCategoryOptions={subCategoryOptions}
               onClearAll={clearAllFilters}
               pageSize={pageSize}
-  onPageSizeChange={setPageSize}
+              onPageSizeChange={setPageSize}
             />
           </div>
         ) : (

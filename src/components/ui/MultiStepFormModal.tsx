@@ -407,7 +407,7 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
               className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 sm:px-6 md:px-7 py-3"
               style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
             >
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+              <div className="flex flex-row sm:flex-row justify-end gap-2">
                 {!isFirst ? (
                   <button
                     type="button"

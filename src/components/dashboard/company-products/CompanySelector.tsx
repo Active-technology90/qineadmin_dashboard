@@ -352,14 +352,14 @@ export function CompanySelector({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl shadow-2xl border border-gray-100/80 max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
+      className="bg-white rounded-3xl border border-gray-100/80 max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
       style={{ maxHeight: 'calc(100vh - 120px)' }}
     >
       {/* Header – fixed at top */}
       <Header
         title={title}
         subtitle={subtitle}
-        onBack={onBack}
+        // onBack={onBack}
       />
 
       {/* Scrollable content area (search + grid) */}

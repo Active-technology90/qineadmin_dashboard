@@ -227,11 +227,11 @@ const [editingRole, setEditingRole] = useState<string | null>(null);
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             className="
-              fixed inset-0 z-50
+              fixed inset-0 z-50 
               bg-black/55 backdrop-blur-md
               flex items-center sm:items-center sm:justify-center
               px-2 sm:px-4
-              overflow-hidden
+              overflow-hidden 
             "
             onClick={onClose}
           >

@@ -541,6 +541,7 @@ const FormModal: React.FC<{
   <AnimatePresence>
     {isOpen && (
       <>
+        {/* Overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -548,29 +549,97 @@ const FormModal: React.FC<{
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
           onClick={onClose}
         />
+
+        {/* Modal */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl z-50"
+          className="
+            fixed left-1/2 top-1/2 z-50
+            w-[95%] sm:w-[92%] md:w-full
+            max-w-3xl
+            max-h-[92vh]
+            overflow-y-auto
+            -translate-x-1/2 -translate-y-1/2
+            rounded-2xl bg-white shadow-2xl
+            mx-4 sm:mx-4
+          "
         >
           <form onSubmit={onSubmit}>
-            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+            {/* Header */}
+            <div
+              className="
+                sticky top-0 z-10
+                flex items-center justify-between
+                border-b border-gray-100
+                bg-white/95 backdrop-blur-sm
+                px-4 py-3
+                sm:px-6 sm:py-4
+              "
+            >
+              <h2
+                className="
+                  text-base font-bold text-gray-900
+                  sm:text-lg
+                  md:text-xl
+                  lg:text-2xl
+                "
+              >
+                {title}
+              </h2>
+
               <button
                 type="button"
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
+                className="
+                  rounded-lg p-1.5
+                  text-gray-400 transition
+                  hover:bg-gray-100 hover:text-gray-600
+                "
               >
-                <X className="w-5 h-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-6">{children}</div>
-            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
-              <Button variant="outline" type="button" onClick={onClose}>
+
+            {/* Body */}
+            <div
+              className="
+                space-y-4
+                p-4
+                sm:space-y-5 sm:p-5
+                md:space-y-6 md:p-6
+                text-sm sm:text-base
+              "
+            >
+              {children}
+            </div>
+
+            {/* Footer */}
+            <div
+              className="
+                sticky bottom-0
+                flex justify-end gap-2 sm:gap-3
+                border-t border-gray-100
+                bg-white
+                px-4 py-3
+                sm:px-6 sm:py-4
+              "
+            >
+              <Button
+                variant="outline"
+                type="button"
+                onClick={onClose}
+                className="text-xs sm:text-sm md:text-base"
+              >
                 Cancel
               </Button>
-              <Button type="submit" isLoading={isSubmitting}>
+
+              <Button
+                type="submit"
+                isLoading={isSubmitting}
+                className="text-xs sm:text-sm md:text-base"
+              >
                 Save
               </Button>
             </div>
@@ -580,7 +649,6 @@ const FormModal: React.FC<{
     )}
   </AnimatePresence>
 );
-
 // ----------------------------------------------------------------------
 // Search & Filter Bar
 // ----------------------------------------------------------------------

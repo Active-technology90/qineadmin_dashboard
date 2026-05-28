@@ -575,12 +575,12 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
   mx-auto
 
   h-[95dvh]
-  rounded-3xl
+  rounded-xl
 
   sm:w-full
   sm:max-w-lg
   sm:max-h-[92dvh]
-  sm:rounded-3xl
+  sm:rounded-xl
 
   md:max-w-2xl
   lg:max-w-4xl
@@ -594,7 +594,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center sm:items-center sm:justify-center bg-black/80 p-0 sm:p-4"
+            className="fixed inset-0 z-50 flex items-center sm:items-center sm:justify-center bg-black/80 p-0 m-6 sm:p-4"
             onClick={onClose}
           >
             <motion.div
@@ -606,7 +606,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-secondary-light py-3 xs:py-4 rounded-t-3xl max-[319px]:rounded-none xs:rounded-t-3xl">
+              <div className="sticky top-0 z-10 bg-secondary-light py-3 xs:py-4  max-[319px]:rounded-none xs:rounded-t-xl">
                 <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6">
                   <div>
                     <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-white">

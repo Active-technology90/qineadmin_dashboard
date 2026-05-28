@@ -452,7 +452,7 @@ export default function SubCategoryManagement() {
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
       <Toast toast={toast} />
       {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0 w-full overflow-hidden">
+      <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 mb-3 sm:mb-4 min-w-0 w-full overflow-hidden">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
           <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
           <div className="min-w-0 flex items-center gap-1.5 xs:gap-2 sm:gap-3 overflow-hidden">
@@ -485,7 +485,7 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* ========== DESKTOP CONTROLS (hidden on mobile) ========== */}
-      <div className="hidden md:block  bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
+      <div className="hidden md:block  z-50 bg-white/90 backdrop-blur-sm  border-gray-200/80 px-4 pt-3 ">
         <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:flex gap-3 w-full">
             <div className="md:col-span-2 lg:flex-1">
@@ -512,7 +512,7 @@ export default function SubCategoryManagement() {
                 }}
                 options={sortOptions}
                 placeholder="Sort by..."
-                className="w-full"
+                className="w-full z-50"
               />
             </div>
             <div className="w-full lg:w-48">
@@ -528,8 +528,7 @@ export default function SubCategoryManagement() {
         </TableControls>
       </div>
 
-      {/* ========== MOBILE SEARCH (visible below md) ========== */}
-      {/* ========== MOBILE SEARCH + FILTER (visible below md) ========== */}
+  
     {/* ========== MOBILE TABLE CONTROLS (visible below md) ========== */}
 <div className="md:hidden sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-200">
   <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
@@ -579,7 +578,7 @@ export default function SubCategoryManagement() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4 px-2 pb-24">
+          <div className="space-y-4 px-2 pb-8">
             {paginatedItemsWithRowNumber.map((sub) => (
               <div
                 key={sub.id}
@@ -658,7 +657,7 @@ export default function SubCategoryManagement() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto -mx-2 sm:-mx-4 px-2 sm:px-4">
+     <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
         <MemoizedDataTable<SubCategory>
           data={paginatedItemsWithRowNumber}
           columns={columns}
@@ -669,7 +668,8 @@ export default function SubCategoryManagement() {
           sortField={sortField}
           sortOrder={sortOrder}
           onSort={handleSort}
-        />
+          />
+         
       </div>
 
       <div className="mt-6">
