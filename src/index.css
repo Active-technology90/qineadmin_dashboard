@@ -3,6 +3,7 @@
 :root {
   --color-secondary: #6750A4;
   --color-secondary-dark: #3B1E70;
+  --color-secondary-light: #8B6BB5;
 }
 
 @theme {

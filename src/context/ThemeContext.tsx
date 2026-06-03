@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getCompanyDetail } from "../services/api";
 import { useCurrentCompany } from "./CurrentCompanyContext";
+import { useAuth } from "../hooks/useAuth";
 import type { Company } from "../types";
 
 export interface ThemeColor {
@@ -79,7 +80,9 @@ const applyThemeToDocument = (theme: CompanyTheme) => {
 
 interface ThemeContextType {
   currentTheme: ThemeColor;
+  isSuperAdmin: boolean;
   applyCompanyTheme: (theme: CompanyTheme, remember?: boolean) => void;
+  rememberCompanyTheme: (companySlug: string, theme: CompanyTheme) => void;
   setThemeById: (id: string) => void;
   refreshCompanyTheme: () => Promise<void>;
 }
@@ -87,19 +90,23 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const isSuperAdmin = !user?.memberships?.length;
   const { company } = useCurrentCompany();
   const [currentTheme, setCurrentTheme] = useState<ThemeColor>(DEFAULT_THEME);
 
   const applyAndRememberTheme = (theme: ThemeColor) => {
     setCurrentTheme(theme);
-    applyThemeToDocument(theme);
+    if (!isSuperAdmin) {
+      applyThemeToDocument(theme);
+    }
     if (company?.slug) {
       cacheTheme(company.slug, theme);
     }
   };
 
   const refreshCompanyTheme = async () => {
-    if (!company?.slug) {
+    if (isSuperAdmin || !company?.slug) {
       applyAndRememberTheme(DEFAULT_THEME);
       return;
     }
@@ -111,7 +118,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     let cancelled = false;
 
-    if (!company?.slug) {
+    // SuperAdmin: always use default theme, never fetch company theme
+    if (isSuperAdmin || !company?.slug) {
       setCurrentTheme(DEFAULT_THEME);
       applyThemeToDocument(DEFAULT_THEME);
       return;
@@ -144,15 +152,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       cancelled = true;
     };
-  }, [company?.slug]);
+  }, [company?.slug, isSuperAdmin]);
 
   const applyCompanyTheme = (theme: CompanyTheme, remember = true) => {
     const normalizedTheme = normalizeTheme(theme);
     setCurrentTheme(normalizedTheme);
-    applyThemeToDocument(normalizedTheme);
+    if (!isSuperAdmin) {
+      applyThemeToDocument(normalizedTheme);
+    }
     if (remember && company?.slug) {
       cacheTheme(company.slug, normalizedTheme);
     }
+  };
+
+  const rememberCompanyTheme = (companySlug: string, theme: CompanyTheme) => {
+    cacheTheme(companySlug, normalizeTheme(theme));
   };
 
   const setThemeById = (id: string) => {
@@ -162,7 +176,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <ThemeContext.Provider
-      value={{ currentTheme, applyCompanyTheme, setThemeById, refreshCompanyTheme }}
+      value={{
+        currentTheme,
+        isSuperAdmin,
+        applyCompanyTheme,
+        rememberCompanyTheme,
+        setThemeById,
+        refreshCompanyTheme,
+      }}
     >
       {children}
     </ThemeContext.Provider>
