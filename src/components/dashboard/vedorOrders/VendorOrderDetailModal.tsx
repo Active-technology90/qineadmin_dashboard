@@ -27,7 +27,6 @@ import {
   getCompanyStaffByRole,
   reviewReceipt,
   assignDelivery,
-
   updateDeliveryPerson,
   prepareVendorOrder,
   confirmCODPayment,
@@ -87,7 +86,10 @@ const getStatusBadge = (status: string) => {
     return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
 
   if (s === "paid" || s === "out_for_delivery")
-    return base + "bg-violet-50 text-violet-700 border-violet-200 flex flex-row w-24 items-center justify-center";
+    return (
+      base +
+      "bg-violet-50 text-violet-700 border-violet-200 flex flex-row w-24 items-center justify-center"
+    );
 
   if (s === "pending")
     return base + "bg-amber-50 text-amber-700 border-amber-200";
@@ -159,8 +161,9 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-        }`}
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
+        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      }`}
     >
       {displayStatus}
     </span>
@@ -198,7 +201,9 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
   );
   const { showToast } = useToast();
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
-
+  const [ratingMap, setRatingMap] = useState<
+    Map<string, { average_rating: string; total_reviews: number }>
+  >(new Map());
   const delivery = order.delivery;
   const canManage = !readOnly && order.status?.toLowerCase() === "processing";
 
@@ -211,47 +216,61 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     console.log("Delivery person name:", delivery.delivery_person_name);
     console.log("All delivery keys:", Object.keys(delivery));
   }
+  const renderRating = (avg?: string, reviews?: number) => {
+    if (!avg || avg === "0.00" || !reviews || reviews === 0)
+      return "No reviews";
+    const rating = parseFloat(avg).toFixed(1);
+    return `⭐ ${rating} (${reviews})`;
+  };
+useEffect(() => {
+  if (!order.company?.slug) return;   // still need a company slug
+  const fetchStaff = async () => {
+    try {
+      const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
+      const mapped = (res.data.results || res.data).map((s: any) => ({
+        id: s.user.id,
+        name: `${s.user.username || s.user.first_name || ""}`.trim(),
+        phone: s.user.phone_number,
+        username: s.user.username,
+        average_rating: s.user.average_rating,
+        total_reviews: s.user.total_reviews,
+      }));
+      setStaffList(mapped);
 
-  useEffect(() => {
-    if (!order.company?.slug || !showAssignForm) return;
-    const fetchStaff = async () => {
-      try {
-        const res = await getCompanyStaffByRole(
-          order.company.slug!,
-          "delivery",
-        );
-        const mapped = (res.data.results || res.data).map((s: any) => ({
-          id: s.user.id,
-          name: `${s.user.username || s.user.first_name || ""}`.trim(),
-          phone: s.user.phone_number,
-          username: s.user.username,
-        }));
-        setStaffList(mapped);
+      // Build rating map
+      const ratingMap = new Map();
+      mapped.forEach((staff: any) => {
+        if (staff.phone) {
+          ratingMap.set(staff.phone, {
+            average_rating: staff.average_rating,
+            total_reviews: staff.total_reviews,
+          });
+        }
+      });
+      setRatingMap(ratingMap); // ✅ store in state
 
-        // Create a map of phone number -> username for lookups
-        const map = new Map();
-        mapped.forEach((staff: any) => {
-          if (staff.phone && staff.username) {
-            map.set(staff.phone, staff.username);
-          }
-        });
-        setUsernameMap(map);
-      } finally {
-      }
-    };
-    fetchStaff();
-  }, [showAssignForm, order.company?.slug]);
+      // Build username map
+      const map = new Map();
+      mapped.forEach((staff: any) => {
+        if (staff.phone && staff.username) {
+          map.set(staff.phone, staff.username);
+        }
+      });
+      setUsernameMap(map);
+    } finally {
+      // nothing to cleanup
+    }
+  };
+  fetchStaff();
+}, [showAssignForm, order.company?.slug]);
 
   const handleAssign = async () => {
     if (!selectedUserId) return;
     setAssigning(true);
     try {
-      console.log("delivery", delivery)
+      console.log("delivery", delivery);
       if (delivery) {
-        await updateDeliveryPerson(
-          delivery.id.toString(),
-          selectedUserId,
-        );
+        await updateDeliveryPerson(delivery.id.toString(), selectedUserId);
       } else {
         await assignDelivery({
           vendor_order: order.id,
@@ -319,7 +338,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                        delivery.delivery_person_name,
+                          delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -335,6 +354,18 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                       </span>
                       <CopyButton text={delivery.delivery_person_phone} />
                     </div>
+                    {ratingMap.has(delivery.delivery_person_phone) && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-600">
+                        <span>
+                          {renderRating(
+                            ratingMap.get(delivery.delivery_person_phone)!
+                              .average_rating,
+                            ratingMap.get(delivery.delivery_person_phone)!
+                              .total_reviews,
+                          )}
+                        </span>
+                      </div>
+                    )}
                     {/* <div className="mt-1">
                     <span className={getStatusBadge(delivery.status)}>{delivery.status?.replace(/_/g, " ")}</span>
                   </div> */}
@@ -355,7 +386,7 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                     No delivery person assigned yet
                   </p>
                   {deliveryStatus ||
-                    ((canManage) && (
+                    (canManage && (
                       <button
                         onClick={() => setShowAssignForm(true)}
                         className="w-full py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
@@ -380,10 +411,13 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 onChange={(e) => setSelectedUserId(Number(e.target.value))}
                 className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500 px-2"
               >
-                <option value="" className="px-2">Choose from the list...</option>
+                <option value="" className="px-2">
+                  Choose from the list...
+                </option>
                 {staffList.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} ({s.phone || "No Phone"})
+                    {s.name} ({s.phone || "No Phone"}) —{" "}
+                    {renderRating(s.average_rating, s.total_reviews)}
                   </option>
                 ))}
               </select>
@@ -504,12 +538,14 @@ const ReceiptReviewCard = ({
       showToast(
         "error",
         err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",
+          err.message ||
+          "Failed to confirm COD payment",
       );
-      console.error(err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",)
+      console.error(
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to confirm COD payment",
+      );
     } finally {
       setCodConfirming(false);
     }
@@ -527,7 +563,6 @@ const ReceiptReviewCard = ({
         className="ring-1 ring-indigo-100"
       >
         <div className="flex flex-col items-center ">
-
           <div className="flex items-center gap-2 bg-white px-4 ">
             <div className="w-9 md:w-12 h-9 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-2 shadow-inner">
               <ShieldCheck className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
@@ -567,7 +602,6 @@ const ReceiptReviewCard = ({
           <div className="flex flex-col items-center text-center">
             {isPaid ? (
               <div className="flex flex-row items-center gap-4">
-
                 <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2 shadow-inner">
                   <ShieldCheck className="h-6 w-6 text-emerald-600" />
                 </div>
@@ -589,10 +623,11 @@ const ReceiptReviewCard = ({
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                      : "bg-gray-300 cursor-not-allowed shadow-none"
-                      }`}
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                      canCollect
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                        : "bg-gray-300 cursor-not-allowed shadow-none"
+                    }`}
                   >
                     <CheckCircle className="h-4 w-4" />
                     Confirm Payment Collected
@@ -789,7 +824,6 @@ const ReceiptReviewCard = ({
              disabled:opacity-50 disabled:cursor-not-allowed
              flex items-center justify-center gap-2"
               >
-
                 Reject
               </button>
             </div>
@@ -868,11 +902,9 @@ const ReceiptReviewCard = ({
         loading={submitting}
         autoClose={false}
       />
-
     </div>
   );
 };
-
 
 // ---------- PREPARATION CARD ----------
 const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
@@ -892,7 +924,9 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
     } catch (err: any) {
       showToast(
         "error",
-        err.response?.data?.detail || err.message || "Failed to mark order as prepared"
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to mark order as prepared",
       );
     } finally {
       setPreparing(false);
@@ -915,7 +949,11 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         title="Order Preparation"
         icon={Package}
         status={status}
-        className={(status === "confirmed" || (isCOD && status === "pending")) ? "ring-2 ring-purple-100 border-purple-200" : ""}
+        className={
+          status === "confirmed" || (isCOD && status === "pending")
+            ? "ring-2 ring-purple-100 border-purple-200"
+            : ""
+        }
       >
         <div className="flex flex-col items-center text-center py-4">
           {/* <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-4 shadow-inner">
@@ -958,7 +996,6 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
     </>
   );
 };
-
 
 // ════════════════════════════════════════
 // MAIN MODAL COMPONENT
@@ -1041,7 +1078,9 @@ export function VendorOrderDetailModal({
                   </span>
                   <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
                     <Building2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-secondary" />{" "}
-                    <span className="font-medium text-[9px] sm:text-sm">{order.company?.name}</span>
+                    <span className="font-medium text-[9px] sm:text-sm">
+                      {order.company?.name}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -1078,8 +1117,6 @@ export function VendorOrderDetailModal({
                 </button>
               </div>
             </div>
-
-
           </div>
 
           {/* Scrollable Content Grid */}
@@ -1172,10 +1209,18 @@ export function VendorOrderDetailModal({
                     <table className="w-full">
                       <thead>
                         <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
-                          <th className="px-4 md:px-6 py-2 md:py-4 text-left">Description</th>
-                          <th className="px-4 md:px-6 py-2 md:py-4 text-center">Qty</th>
-                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">Unit Price</th>
-                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">Total</th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-left">
+                            Description
+                          </th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-center">
+                            Qty
+                          </th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">
+                            Unit Price
+                          </th>
+                          <th className="px-4 md:px-6 py-2 md:py-4 text-right">
+                            Total
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -1299,13 +1344,14 @@ export function VendorOrderDetailModal({
 
                 {/* Preparation Card */}
                 {(order.status === "confirmed" ||
-                  (order.payment_method === "cod" && order.status === "pending")) && (
-                    <PreparationCard
-                      order={order}
-                      onUpdate={onUpdate}
-                      readOnly={readOnly}
-                    />
-                  )}
+                  (order.payment_method === "cod" &&
+                    order.status === "pending")) && (
+                  <PreparationCard
+                    order={order}
+                    onUpdate={onUpdate}
+                    readOnly={readOnly}
+                  />
+                )}
 
                 {/* 5. Delivery person Assignment Card */}
                 <DeliveryCard
