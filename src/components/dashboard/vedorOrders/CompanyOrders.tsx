@@ -133,14 +133,49 @@ const CompanyAvatar = ({
   </div>
 );
 
-const SkeletonRow = () => (
+const SkeletonRow = ({ isAdminLike }: { isAdminLike: boolean }) => (
   <tr className="animate-pulse">
-    {[...Array(6)].map((_, i) => (
-      <td key={i} className="px-6 py-4">
-        <div className="h-4 bg-gray-200 rounded w-20" />
+    {/* Order ID */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="h-4 bg-gray-200 rounded w-16" />
+    </td>
+    {/* Company column (only for admin) */}
+    {isAdminLike && (
+      <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-8 h-8 rounded-full bg-gray-200" />
+          <div className="h-4 bg-gray-200 rounded w-24" />
+        </div>
       </td>
-    ))}
-  </tr>
+    )}
+    {/* Amount */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="h-4 bg-gray-200 rounded w-20" />
+    </td>
+    {/* Payment Method */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+    </td>
+    {/* Order Status */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="h-6 bg-gray-200 rounded-full w-20" />
+    </td>
+    {/* Delivery Status */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="h-6 bg-gray-200 rounded-full w-24" />
+    </td>
+    {/* Date & Time */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+      <div className="space-y-1">
+        <div className="h-3 bg-gray-200 rounded w-20" />
+        <div className="h-2 bg-gray-200 rounded w-16" />
+      </div>
+    </td>
+    {/* Actions */}
+    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 whitespace-nowrap text-right">
+      <div className="h-7 w-16 bg-gray-200 rounded-lg ml-auto" />
+    </td>
+   </tr>
 );
 
 const EmptyState = () => (
@@ -591,7 +626,7 @@ export default function CompanyOrders() {
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} isAdminLike={isAdminLike} />)
               ) : paginatedOrders.length === 0 ? (
                 <EmptyState />
               ) : (

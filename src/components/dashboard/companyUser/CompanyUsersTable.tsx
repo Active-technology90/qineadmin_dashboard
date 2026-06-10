@@ -97,12 +97,33 @@ export function CompanyUsersTable({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
-              <tr>
-                <td colSpan={4} className="text-center py-8 sm:py-12">
-                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-indigo-500" />
-                  <p className="mt-2 text-xs sm:text-sm text-gray-500">Loading users...</p>
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index} className="animate-pulse">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gray-200" />
+                      <div className="h-4 bg-gray-200 rounded w-24" />
+                    </div>
+                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="h-4 bg-gray-200 rounded w-32" />
+                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="h-5 w-14 bg-gray-200 rounded-full" />
+                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="h-4 bg-gray-200 rounded w-20" />
+                   </td>
+                  {isAdmin && (
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="h-7 w-7 bg-gray-200 rounded" />
+                        <div className="h-7 w-7 bg-gray-200 rounded" />
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-8 sm:py-12 text-gray-500">

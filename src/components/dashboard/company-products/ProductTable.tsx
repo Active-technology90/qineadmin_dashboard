@@ -104,14 +104,41 @@ function ProductImage({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-function SkeletonRow({ cols }: { cols: number }) {
+function SkeletonRow({ hasActions }: { hasActions: boolean }) {
   return (
     <tr className="animate-pulse">
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-2 py-2">
-          <div className="h-4 bg-gray-200 rounded w-full" />
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-7 w-7 sm:h-10 sm:w-10 bg-gray-200 rounded-lg" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-4 bg-gray-200 rounded w-16" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-4 bg-gray-200 rounded w-24" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-4 bg-gray-200 rounded w-16" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-4 bg-gray-200 rounded w-20" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-6 bg-gray-200 rounded-full w-12" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-4 bg-gray-200 rounded w-12" />
+      </td>
+      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
+        <div className="h-5 bg-gray-200 rounded-full w-10" />
+      </td>
+      {hasActions && (
+        <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 text-right">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gray-200 rounded-md" />
+            <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gray-200 rounded-md" />
+          </div>
         </td>
-      ))}
+      )}
     </tr>
   );
 }
@@ -193,7 +220,7 @@ export function ProductTable({
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} cols={8} />
+                <SkeletonRow key={i} hasActions={!!(onEdit || onDelete)} />
               ))}
             </tbody>
           </table>

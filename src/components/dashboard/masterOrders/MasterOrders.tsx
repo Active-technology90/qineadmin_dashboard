@@ -54,11 +54,41 @@ const OrderDate = ({ dateString }: { dateString?: string }) => {
 
 const SkeletonRow = () => (
   <tr className="animate-pulse">
-    {[...Array(10)].map((_, i) => (
-      <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded w-20" />
-      </td>
-    ))}
+    {/* Order ID */}
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-16" />
+    </td>
+    {/* Customer */}
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+    </td>
+    {/* Total */}
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-16" />
+    </td>
+    {/* Fulfillment */}
+    <td className="px-2 sm:px-4 py-2 sm:py-3">
+      <div className="h-4 bg-gray-200 rounded w-20" />
+    </td>
+    {/* Payment Status */}
+    <td className="px-4 py-3">
+      <div className="h-6 bg-gray-200 rounded-full w-24" />
+    </td>
+    {/* Companies */}
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-12" />
+    </td>
+    {/* Date & Time */}
+    <td className="px-4 py-3">
+      <div className="space-y-1">
+        <div className="h-3 bg-gray-200 rounded w-20" />
+        <div className="h-2 bg-gray-200 rounded w-16" />
+      </div>
+    </td>
+    {/* Actions */}
+    <td className="px-4 py-3 text-right">
+      <div className="h-7 w-16 bg-gray-200 rounded-lg ml-auto" />
+    </td>
   </tr>
 );
 

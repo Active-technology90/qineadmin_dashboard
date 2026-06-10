@@ -663,32 +663,6 @@ export default function CompanyUsers() {
           </TableControls>
         </div>
 
-        {loading ? (
-          <TableSkeleton rows={pageSize} />
-        ) : paginatedUsers.length === 0 ? (
-          <div className="py-8 sm:py-10 text-center">
-            <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-50 text-gray-400 mb-2">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <h3 className="text-xs sm:text-sm font-medium text-gray-900">
-              No members found
-            </h3>
-            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
-              {tableSearch || roleFilter !== "all"
-                ? "Try adjusting your search or filters."
-                : "Get started by adding your first team member."}
-            </p>
-            {canManageUsers && !tableSearch && roleFilter === "all" && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="mt-2 inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-secondary text-white text-[10px] sm:text-xs font-medium hover:bg-[#4c3789] transition"
-              >
-                <UserPlus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                Add member
-              </button>
-            )}
-          </div>
-        ) : (
           <>
             <CompanyUsersTable
               users={paginatedUsers}
@@ -698,7 +672,7 @@ export default function CompanyUsers() {
               onEdit={(user) => setEditingUser({ ...user, user_id: user.id })}
               onDelete={setDeletingUser}
             />
-            {/* Enhanced Pagination with pageSize control, keyboard nav, URL sync */}
+          {!loading && totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -711,8 +685,8 @@ export default function CompanyUsers() {
               pageSizeOptions={[10, 25, 50, 100]}
               enableUrlSync={true}
             />
-          </>
-        )}
+          )}
+        </>
       </div>
 
       {/* Mobile Filter Modal - Bottom Sheet */}

@@ -29,6 +29,44 @@ interface Payout {
   vendor_order_details: VendorOrder;
 }
 
+// Skeleton row for loading state
+const SkeletonRow = ({ isAllPayouts }: { isAllPayouts: boolean }) => (
+  <tr className="animate-pulse">
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-16" />
+    </td>
+    {isAllPayouts && (
+      <td className="px-3 py-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full" />
+          <div className="h-4 bg-gray-200 rounded w-24" />
+        </div>
+      </td>
+    )}
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-20" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-16" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-20" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-6 bg-gray-200 rounded-full w-20" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+    </td>
+    <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 text-right">
+      <div className="h-8 bg-gray-200 rounded-lg w-16 ml-auto" />
+    </td>
+  </tr>
+);
+
 export default function Payments() {
   const { user } = useAuth();
   const { company, switchCompany, clearCompany } = useCurrentCompany();
@@ -385,12 +423,9 @@ export default function Payments() {
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {loading ? (
-              <tr>
-                <td colSpan={9} className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-secondary mx-auto" />
-                  <p className="mt-2 text-gray-500">Loading payouts...</p>
-                </td>
-               </tr>
+              Array.from({ length: pageSize }).map((_, index) => (
+                <SkeletonRow key={index} isAllPayouts={isAllPayouts} />
+              ))
             ) : paginatedPayouts.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-12 text-gray-500">
