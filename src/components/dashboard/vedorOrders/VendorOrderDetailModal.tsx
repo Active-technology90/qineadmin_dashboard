@@ -1139,23 +1139,36 @@ export function VendorOrderDetailModal({
                           {getInitials(order.recipient_name)}
                         </div>
                       )}
-                      <div className="space-y-1">
-                        <p className="text-sm md:text-base font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
-                          {order.recipient_name}
-                        </p>
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 md:px-3 py-0.5 md:px-3 md:py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
-                          <PhoneCall className="h-2.5 md:h-3.5 w-2.5 md:w-3.5 text-green-600" />
-                          <span className="text-xs font-mono font-bold text-green-700 tracking-tight">
-                            {order.shipping_phone}
-                          </span>
-                          <CopyButton text={order.shipping_phone} />
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm md:text-base font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
+                            {order.recipient_name}
+                          </p>
+                          {!order.shipping_address_text && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              Self Pickup
+                            </span>
+                          )}
                         </div>
+                        {order.shipping_phone && (
+                          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 md:px-3 py-0.5 md:px-3 md:py-1.5 rounded-lg w-fit border border-blue-200 shadow-sm">
+                            <PhoneCall className="h-2.5 md:h-3.5 w-2.5 md:w-3.5 text-green-600" />
+                            <span className="text-xs font-mono font-bold text-green-700 tracking-tight">
+                              {order.shipping_phone}
+                            </span>
+                            <CopyButton text={order.shipping_phone} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Card>
 
-                  <Card title="Shipping Destination" icon={MapPin}>
-                    <div className="space-y-3">
+                  {order.shipping_address_text && (
+                    <Card title="Shipping Destination" icon={MapPin}>
+                      <div className="space-y-3">
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
                         <span className="text-xs font-bold text-gray-500 min-w-[110px]">
                           Recipient Name:
@@ -1189,6 +1202,7 @@ export function VendorOrderDetailModal({
                       </div>
                     </div>
                   </Card>
+                  )}
                 </div>
 
                 {/* 2. Main Order Table */}
@@ -1354,11 +1368,13 @@ export function VendorOrderDetailModal({
                 )}
 
                 {/* 5. Delivery person Assignment Card */}
-                <DeliveryCard
-                  order={order}
-                  onUpdate={onUpdate}
-                  readOnly={readOnly}
-                />
+                {order.shipping_address_text && (
+                  <DeliveryCard
+                    order={order}
+                    onUpdate={onUpdate}
+                    readOnly={readOnly}
+                  />
+                )}
 
                 {/* 6. Simple Timeline Sidebar */}
                 {/* <Card title="Activity Log" icon={Clock}>

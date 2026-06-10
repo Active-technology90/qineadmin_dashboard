@@ -67,6 +67,7 @@ const StatusBadge = ({
     contacted: "bg-teal-50 text-teal-700 border border-teal-200",
     fulfilled: "bg-green-100 text-green-800 border border-green-200",
     payment_rejected: "bg-red-50 text-red-700 border border-red-200",
+    self_pickup: "bg-blue-50 text-blue-700 border border-blue-200",
   };
 
   const color = colors[normalizedStatus] || "bg-gray-100 text-gray-600";
@@ -628,7 +629,17 @@ export default function CompanyOrders() {
                      <StatusBadge status={order.status} type="order" />
                     </td>
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
-                    <StatusBadge status={order.delivery?.status || "no assigned"} type="delivery" />
+<td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
+  <StatusBadge 
+    status={
+      // Pickup orders have no shipping address
+      !order.shipping_address_text
+        ? "self_pickup" 
+        : (order.delivery?.status || "no assigned")
+    } 
+    type="delivery" 
+  />
+</td>
                     </td>
                     {/* <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">

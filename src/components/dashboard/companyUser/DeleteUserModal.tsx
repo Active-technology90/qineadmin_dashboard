@@ -26,12 +26,12 @@ export function DeleteUserModal({
             <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-        <div className="p-4 sm:p-5 pb-2 sm:pb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+        <div className="p-4 sm:p-5 pb-0 sm:pb-2">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
               <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm sm:text-base text-gray-700">
                 Are you sure you want to remove{" "}
                 <span className="font-semibold">{user.first_name} {user.last_name}</span> from this company?
@@ -40,7 +40,7 @@ export function DeleteUserModal({
             </div>
           </div>
         </div>
-        <div className="flex flex-row justify-end gap-3 p-3 sm:p-4 bg-gray-50 rounded-b-xl sm:rounded-b-2xl">
+        <div className="flex flex-row justify-end gap-3 p-3 sm:p-4 bg-gray-50 rounded-b-xl sm:rounded-b-2xl mt-0">
           <button
             onClick={onClose}
             className="px-4 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"

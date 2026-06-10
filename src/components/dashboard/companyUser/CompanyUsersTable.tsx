@@ -1,4 +1,4 @@
-import { Edit, Trash2, Loader2, User as UserIcon } from "lucide-react";
+import { Edit, Trash2, Loader2, User as UserIcon, Star } from "lucide-react";
 
 interface CompanyUsersTableProps {
   users: any[];
@@ -79,6 +79,12 @@ export function CompanyUsersTable({
                   Role
                 </span>
               </th>
+              <th className="px-6 py-4 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Rating
+                </span>
+              </th>
               {isAdmin && (
 <th className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
@@ -138,6 +144,35 @@ export function CompanyUsersTable({
                     <span className="capitalize px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
                       {user.role}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.role === "delivery" ? (
+                      <div className="flex items-center gap-1">
+                        {user.average_rating && Number(user.average_rating) > 0 ? (
+                          <>
+                            <div className="flex items-center gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${
+                                    star <= Math.round(Number(user.average_rating))
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-[10px] sm:text-xs text-gray-600 ml-1">
+                              {Number(user.average_rating).toFixed(1)} ({user.total_reviews || 0})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[10px] sm:text-xs text-gray-400">No ratings</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs text-gray-400">—</span>
+                    )}
                   </td>
 <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
                     {isAdmin && (

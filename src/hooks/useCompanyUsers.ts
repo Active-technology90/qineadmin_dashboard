@@ -19,13 +19,15 @@ export function useCompanyUsers(companySlug: string | null) {
       // Flatten nested 'user' object
       const flattened = items.map((item: any) => ({
         id: item.id,
-user_id: item.user?.id,
+        user_id: item.user?.id,
         username: item.user?.username,
         first_name: item.user?.first_name ?? '',
         last_name: item.user?.last_name ?? '',
         email: item.user?.email,
         role: item.role,
         is_active: item.is_active,
+        average_rating: item.user?.average_rating ?? null,
+        total_reviews: item.user?.total_reviews ?? 0,
       }));
       setUsers(flattened);
       setError(null);

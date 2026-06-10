@@ -23,7 +23,7 @@ export function DeleteConfirmModal({ isOpen, title, onConfirm, onCancel }: Delet
               <p className="text-sm text-gray-600 mt-0.5">
                 Are you sure you want to delete <span className="font-semibold text-gray-800">"{title}"</span>?
               </p>
-              <p className="text-xs text-red-500 mt-1">This action cannot be undone.</p>
+              <p className="text-xs text-gray-500 mt-1">This action cannot be undone.</p>
             </div>
           </div>
         </div>
