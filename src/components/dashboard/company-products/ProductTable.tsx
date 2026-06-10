@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, Edit, Trash2 } from "lucide-react";
+import { Package, Edit, Trash2, Star } from "lucide-react";
 
 interface Product {
   id: number;
@@ -11,6 +11,8 @@ interface Product {
   image?: string; // adjust based on your API field name
   image_url?: string; // alternative field
   is_featured?: boolean;
+  average_rating?: string | number;
+  total_reviews?: number;
 }
 
 interface ProductTableProps {
@@ -31,6 +33,55 @@ function StockBadge({ stock }: { stock: number }) {
     >
       {stock}
     </span>
+  );
+}
+function RatingDisplay({
+  rating,
+  reviews,
+}: {
+  rating: number;
+  reviews: number;
+}) {
+  const safeRating = Number(rating || 0);
+  if (!reviews) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-[10px] sm:text-xs text-gray-500">
+        No reviews
+      </span>
+    );
+  }
+  return (
+    <>
+      {/* Mobile */}
+      <div className="sm:hidden flex items-center gap-1">
+        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+        <span className="text-xs font-medium text-gray-700">
+          {safeRating.toFixed(1)}
+        </span>
+      </div>
+
+      {/* Tablet + Desktop */}
+      <div className="hidden sm:flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-3.5 w-3.5 ${
+              star <= Math.round(safeRating)
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+
+        <span className="text-xs text-gray-600 ml-1">
+          {safeRating.toFixed(1)}
+        </span>
+
+        {reviews > 0 && (
+          <span className="text-xs text-gray-400">({reviews})</span>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -78,60 +129,68 @@ export function ProductTable({
         <div className="text-sm text-gray-500 mb-2">Loading products...</div>
         <div className="overflow-x-auto rounded-lg border border-gray-200 -mx-3 sm:mx-0 px-3 sm:px-0">
           <table className="min-w-full table-fixed divide-y divide-gray-200">
-          <thead className="sticky top-0 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm z-10">
-            <tr>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Image
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  SKU
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Title
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Price (ETB)
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Stock
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Unit
-                </span>
-              </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+            <thead className="sticky top-0 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm z-10">
+              <tr>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Image
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    SKU
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Title
+                  </span>
+                </th>
+
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Price (ETB)
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Rating
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Stock
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Unit
+                  </span>
+                </th>
+                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Featured
                 </span>
               </th>
-              {onEdit || onDelete ? (
-                <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                    Actions
-                  </span>
-                </th>
-              ) : null}
-            </tr>
-          </thead>
+                {onEdit || onDelete ? (
+                  <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Actions
+                    </span>
+                  </th>
+                ) : null}
+              </tr>
+            </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
                 <SkeletonRow key={i} cols={8} />
@@ -188,6 +247,13 @@ export function ProductTable({
               <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Rating
+                </span>
+              </th>
+
+              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   Stock
                 </span>
               </th>
@@ -234,10 +300,16 @@ export function ProductTable({
                     {product.price.toLocaleString()}
                   </td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
+                    <RatingDisplay
+                      rating={Number(product.average_rating || 0)}
+                      reviews={product.total_reviews || 0}
+                    />
+                  </td>
+                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
                     <StockBadge stock={product.stock} />
                   </td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
-                    {product.unit === 'pc' ? 'pcs' : product.unit}
+                    {product.unit === "pc" ? "pcs" : product.unit}
                   </td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${product.is_featured ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
@@ -247,7 +319,10 @@ export function ProductTable({
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                       {onEdit && (
-                        <button onClick={() => onEdit(product)} className="p-1 rounded-md hover:bg-secondary/10 transition-colors">
+                        <button
+                          onClick={() => onEdit(product)}
+                          className="p-1 rounded-md hover:bg-secondary/10 transition-colors"
+                        >
                           <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
                         </button>
                       )}
@@ -262,7 +337,7 @@ export function ProductTable({
                       )}
                     </div>
                   </td>
-                 </tr>
+                </tr>
               );
             })}
           </tbody>

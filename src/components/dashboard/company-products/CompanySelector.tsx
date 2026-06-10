@@ -352,7 +352,7 @@ export function CompanySelector({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl shadow-2xl border border-gray-100/80 max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
+      className="bg-white rounded-3xl  max-w-7xl mx-auto flex flex-col overflow-hidden backdrop-blur-sm"
       style={{ maxHeight: 'calc(100vh - 120px)' }}
     >
       {/* Header – fixed at top */}
@@ -479,7 +479,7 @@ export function CompanySelector({
 
       {/* Footer – fixed at bottom */}
       {!isLoading && !searchingProducts && (
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/80 backdrop-blur-sm text-center flex-shrink-0">
+        <div className="px-6 py-2 border-t border-gray-100 bg-gray-50/80 backdrop-blur-sm text-center flex-shrink-0">
           <p className="text-xs sm:text-sm text-gray-500">
             {searchTerm ? (
               <>
