@@ -19,6 +19,7 @@ interface NonSuperAdminViewProps {
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
+  headCompanyName?: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onCloseForm: () => void;
 }
@@ -37,6 +38,7 @@ export default function NonSuperAdminView({
   isEditingActive,
   submitting,
   editingSlug,
+  headCompanyName,
   onSubmit,
   onCloseForm,
 }: NonSuperAdminViewProps) {
@@ -208,6 +210,7 @@ export default function NonSuperAdminView({
             isEditingActive={isEditingActive}
             submitting={submitting}
             editingSlug={editingSlug}
+            headCompanyName={headCompanyName}
             onSubmit={onSubmit}
             onClose={onCloseForm}
           />

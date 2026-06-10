@@ -69,6 +69,7 @@ export function useCompanyProducts({
             stock: item.stock,
             unit: item.unit || 'pc',
             image: item.primary_image,
+            is_featured: item.is_featured,
           }))
         );
 

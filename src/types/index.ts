@@ -64,6 +64,28 @@ export interface SubCategory {
   company_count?: number;
 }
 
+// ── Head Companies (umbrella grouping) ──
+export interface HeadCompany {
+  id: number;
+  name: string;
+  name_am?: string;
+  slug: string;
+  logo?: string | null;
+  cover_image?: string | null;
+  is_active: boolean;
+  branch_count?: number;
+  created_at?: string;
+}
+
+// Nested parent-company info attached to a branch (head_company_detail)
+export interface HeadCompanyMini {
+  id: number;
+  name: string;
+  name_am?: string;
+  slug: string;
+  logo?: string | null;
+}
+
 // ── Companies ──
 export interface Company {
   id: number;
@@ -72,6 +94,8 @@ export interface Company {
   slug: string;
   logo?: string | null;
   cover_image?: string | null;
+  head_company?: number | null;
+  head_company_detail?: HeadCompanyMini | null;
   category: number;
   category_name: string;
   sub_category: number;
@@ -105,6 +129,8 @@ export interface CompanyListItem {
   slug: string;
   logo?: string | null;
   cover_image?: string | null;
+  head_company?: number | null;
+  head_company_detail?: HeadCompanyMini | null;
   category: number;
   category_name: string;
   sub_category: number;

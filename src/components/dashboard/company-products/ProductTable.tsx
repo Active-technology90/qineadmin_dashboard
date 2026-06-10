@@ -10,6 +10,7 @@ interface Product {
   unit: string;
   image?: string; // adjust based on your API field name
   image_url?: string; // alternative field
+  is_featured?: boolean;
 }
 
 interface ProductTableProps {
@@ -115,6 +116,12 @@ export function ProductTable({
                   Unit
                 </span>
               </th>
+              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Featured
+                </span>
+              </th>
               {onEdit || onDelete ? (
                 <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
@@ -127,7 +134,7 @@ export function ProductTable({
           </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} cols={7} />
+                <SkeletonRow key={i} cols={8} />
               ))}
             </tbody>
           </table>
@@ -190,6 +197,12 @@ export function ProductTable({
                   Unit
                 </span>
               </th>
+              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Featured
+                </span>
+              </th>
               {onEdit || onDelete ? (
                 <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
@@ -225,6 +238,11 @@ export function ProductTable({
                   </td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
                     {product.unit === 'pc' ? 'pcs' : product.unit}
+                  </td>
+                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${product.is_featured ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                      {product.is_featured ? 'Yes' : 'No'}
+                    </span>
                   </td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2">

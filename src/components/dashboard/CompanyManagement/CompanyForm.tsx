@@ -9,6 +9,7 @@ export interface CompanyFormData {
   name: string;
   name_am: string;
   slug: string;
+  head_company: number | null;
   category: number;
   sub_category: number;
   business_type: string;
@@ -34,6 +35,8 @@ interface CompanyFormProps {
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
+  /** Name of the parent head company (read-only display for company admins). */
+  headCompanyName?: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
@@ -47,6 +50,7 @@ export default function CompanyForm({
   logoPreview,
   coverPreview,
   isEditingActive,
+  headCompanyName,
   // submitting,
   // editingSlug,
   onSubmit,
@@ -127,6 +131,23 @@ export default function CompanyForm({
           {formErrors.slug && (
             <p className="text-red-500 text-[10px] mt-0.5">{formErrors.slug}</p>
           )}
+        </div>
+
+        {/* Head Company (read-only — only a superadmin can assign branches) */}
+        <div>
+          <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+            Head Company
+          </label>
+          <input
+            type="text"
+            value={headCompanyName || "— Standalone (no head company) —"}
+            disabled
+            title="Branch assignment is managed by a superadmin"
+            className="w-full border rounded-md p-1.5 text-xs bg-gray-50 border-gray-200 text-gray-600"
+          />
+          <p className="text-[8px] text-gray-400 mt-0.5">
+            Managed by a superadmin.
+          </p>
         </div>
 
         {/* Category */}

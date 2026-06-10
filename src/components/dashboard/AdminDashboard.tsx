@@ -31,6 +31,7 @@ import Payments from "./Payments";
 import CompanyProducts from "./company-products/CompanyProducts";
 import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
+import HeadCompanyManagement from "./HeadCompanyManagement/HeadCompanyManagement";
 
 import MasterOrders from "./masterOrders/MasterOrders";
 import AdminProfile from "./AdminProfile";
@@ -43,6 +44,7 @@ type Tab =
   | "overview"
   | "categories"
   | "subcategories"
+  | "headcompanies"
   | "companies"
   | "products"
   | "users"
@@ -369,6 +371,8 @@ export default function AdminDashboard() {
           return <SuperAdminUsers />;
         case "add advertisment":
           return <AdManagement />;
+        case "headcompanies":
+          return <HeadCompanyManagement key={componentKey} />;
         case "companies":
           return <CompanyManagement key={componentKey} />;
         case "settings":
@@ -480,6 +484,15 @@ export default function AdminDashboard() {
             </>
           )}
 
+          {isSuperAdmin && (
+            <SidebarItem
+              icon={<Building2 className="h-5 w-5" />}
+              label="Head Companies"
+              active={activeTab === "headcompanies"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("headcompanies")}
+            />
+          )}
           <SidebarItem
             icon={<Building2 className="h-5 w-5" />}
             label={!user?.memberships?.length ? "Companies" : "Company Detail"}

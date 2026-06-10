@@ -15,12 +15,14 @@ import {
   getCategories,
   getSubCategories,
   getCompanyDetail,
+  getHeadCompanies,
 } from "../../../services/api";
 import type {
   CompanyListItem,
   Category,
   SubCategory,
   Company,
+  HeadCompany,
 } from "../../../types";
 import { MultiStepFormModal } from "../../ui/MultiStepFormModal";
 import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
@@ -112,6 +114,7 @@ export default function CompanyManagement() {
   const [companies, setCompanies] = useState<CompanyListItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
+  const [headCompanies, setHeadCompanies] = useState<HeadCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,6 +146,7 @@ export default function CompanyManagement() {
     name: "",
     name_am: "",
     slug: "",
+    head_company: null,
     category: 0,
     sub_category: 0,
     business_type: "",
@@ -367,6 +371,8 @@ export default function CompanyManagement() {
           slug: company.slug,
           logo: company.logo,
           cover_image: company.cover_image,
+          head_company: company.head_company ?? null,
+          head_company_detail: company.head_company_detail ?? null,
           category: company.category,
           category_name: company.category_name,
           sub_category: company.sub_category,
@@ -387,6 +393,7 @@ export default function CompanyManagement() {
           name: companyListItem.name,
           name_am: companyListItem.name_am || "",
           slug: companyListItem.slug,
+          head_company: companyListItem.head_company ?? null,
           category: companyListItem.category,
           sub_category: companyListItem.sub_category,
           business_type: companyListItem.business_type,
@@ -421,6 +428,7 @@ export default function CompanyManagement() {
             name: first.name,
             name_am: first.name_am || "",
             slug: first.slug,
+            head_company: first.head_company ?? null,
             category: first.category,
             sub_category: first.sub_category,
             business_type: first.business_type,
@@ -446,12 +454,18 @@ export default function CompanyManagement() {
       } else {
         setCompanies([]);
       }
-      const [categoriesRes, subcategoriesRes] = await Promise.all([
-        getCategories(),
-        getSubCategories(),
-      ]);
+      const [categoriesRes, subcategoriesRes, headCompaniesRes] =
+        await Promise.all([
+          getCategories(),
+          getSubCategories(),
+          getHeadCompanies(),
+        ]);
       setCategories(categoriesRes.data);
       setSubcategories(subcategoriesRes.data);
+      const headData = headCompaniesRes.data;
+      setHeadCompanies(
+        Array.isArray(headData) ? headData : headData.results ?? [],
+      );
     } catch (err: any) {
       setError(err.message || "Failed to load data");
     } finally {
@@ -520,6 +534,11 @@ export default function CompanyManagement() {
         if (
           cleanString(formData.business_type) !==
           cleanString(originalFormData.business_type)
+        )
+          return true;
+        if (
+          Number(formData.head_company ?? 0) !==
+          Number(originalFormData.head_company ?? 0)
         )
           return true;
         if (
@@ -599,6 +618,13 @@ export default function CompanyManagement() {
       formPayload.append("category", String(formData.category));
 
       formPayload.append("sub_category", String(formData.sub_category));
+
+      // head_company: send the id, or "" to clear it (backend treats "" as null).
+      // Ignored by the backend for non-superusers (read-only there).
+      formPayload.append(
+        "head_company",
+        formData.head_company ? String(formData.head_company) : "",
+      );
 
       formPayload.append("business_type", formData.business_type);
 
@@ -705,6 +731,7 @@ export default function CompanyManagement() {
       name: "",
       name_am: "",
       slug: "",
+      head_company: null,
       category: 0,
       sub_category: 0,
       business_type: "",
@@ -735,6 +762,7 @@ export default function CompanyManagement() {
         name: company.name,
         name_am: company.name_am || "",
         slug: company.slug,
+        head_company: company.head_company ?? null,
         category: company.category,
         sub_category: company.sub_category,
         business_type: company.business_type,
@@ -909,6 +937,38 @@ export default function CompanyManagement() {
                   {formErrors.business_type}
                 </p>
               )}
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                Head Company
+              </label>
+              <select
+                value={formData.head_company ?? 0}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setFormData((prev) => ({
+                    ...prev,
+                    head_company: val === 0 ? null : val,
+                  }));
+                }}
+                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.head_company ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value={0}>— None (standalone) —</option>
+                {headCompanies.map((head) => (
+                  <option key={head.id} value={head.id}>
+                    {head.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.head_company && (
+                <p className="text-red-500 text-xs mt-1">
+                  {formErrors.head_company}
+                </p>
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                Group this company under a parent head company. A head can span
+                any categories — each branch keeps its own category.
+              </p>
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
@@ -1159,6 +1219,7 @@ export default function CompanyManagement() {
       formErrors,
       categories,
       subcategories,
+      headCompanies,
       logoPreview,
       coverPreview,
     ],
@@ -1276,6 +1337,11 @@ export default function CompanyManagement() {
               isEditingActive={isEditingActive}
               submitting={submitting}
               editingSlug={editingSlug}
+              headCompanyName={
+                headCompanies.find((h) => h.id === formData.head_company)?.name ??
+                companies[0]?.head_company_detail?.name ??
+                null
+              }
               onSubmit={handleSubmit}
               onCloseForm={closeInlineEdit}
             />

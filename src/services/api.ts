@@ -4,6 +4,7 @@ import type {
   SubCategory,
   Company,
   CompanyListItem,
+  HeadCompany,
   CompanyProduct,
   CompanyProductListItem,
   GlobalProduct,
@@ -23,8 +24,8 @@ import type {
   UserRole,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
-// const API_URL = "http://localhost:8000/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
+const API_URL = "http://192.168.1.3:8000/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -323,6 +324,33 @@ export const updateCompanyMinimumOrderTotal = async (
 
 export const deleteCompany = async (slug: string) =>
   api.delete(`/companies/${slug}/`);
+
+// ========== HEAD COMPANIES (umbrella grouping) ==========
+export const getHeadCompanies = async () =>
+  api.get<HeadCompany[] | PaginatedResponse<HeadCompany>>("/headcompanies/");
+
+export const getHeadCompanyDetail = async (slug: string) =>
+  api.get<HeadCompany>(`/headcompanies/${slug}/`);
+
+export const createHeadCompany = async (data: FormData | Record<string, any>) => {
+  const isFormData = data instanceof FormData;
+  return api.post<HeadCompany>("/headcompanies/", data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
+  });
+};
+
+export const updateHeadCompany = async (
+  slug: string,
+  data: FormData | Partial<HeadCompany>
+) => {
+  const isFormData = data instanceof FormData;
+  return api.patch<HeadCompany>(`/headcompanies/${slug}/`, data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
+  });
+};
+
+export const deleteHeadCompany = async (slug: string) =>
+  api.delete(`/headcompanies/${slug}/`);
 
 export const getCompanyStaff = async (companySlug: string) =>
   api.get(`/companies/${companySlug}/staff/`);

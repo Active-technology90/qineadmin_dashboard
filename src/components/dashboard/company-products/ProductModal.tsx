@@ -13,6 +13,7 @@ interface ProductFormData {
   price: number;
   stock: number;
   unit: string;
+  is_featured?: boolean;
 }
 
 const productSchema = z.object({
@@ -21,6 +22,7 @@ const productSchema = z.object({
   price: z.number().positive('Price must be positive'),
   stock: z.number().int().min(0, 'Stock cannot be negative'),
   unit: z.string().min(1, 'Unit is required'),
+  is_featured: z.boolean().optional(),
 });
 
 interface ProductModalProps {
@@ -32,6 +34,7 @@ interface ProductModalProps {
     price: number;
     stock: number;
     unit: string;
+    is_featured?: boolean;
   } | null;
   companySlug: string;
   onClose: () => void;
@@ -80,7 +83,7 @@ export function ProductModal({
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pcs' },
+    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pcs', is_featured: false },
   });
 
    // Reset form and step when editing product changes
@@ -92,6 +95,7 @@ export function ProductModal({
         price: editingProduct.price,
         stock: editingProduct.stock,
         unit: editingProduct.unit,
+        is_featured: editingProduct.is_featured || false,
       });
       setSavedProductId(editingProduct.id);
       setStep('details');
@@ -99,7 +103,7 @@ export function ProductModal({
       // Only reset form if we're not coming back from gallery with a saved product
       // AND the modal is open (to prevent reset while modal is closed)
       if (!savedProductId && isOpen) {
-        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs', is_featured: false });
         setSavedProductId(null);
         setStep('details');
       }
@@ -142,7 +146,7 @@ export function ProductModal({
       setStep('details');
       setSavedProductId(null);
       if (!editingProduct) {
-        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs' });
+        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs', is_featured: false });
       }
     }
   }, [isOpen, editingProduct, reset]);
@@ -381,6 +385,20 @@ export function ProductModal({
                     <option value="l">Liter (l)</option>
                     <option value="m">Meter (m)</option>
                   </select>
+                </div>
+
+                {/* Featured */}
+                <div className="flex items-center pt-2">
+                  <input
+                    type="checkbox"
+                    id="is_featured"
+                    {...register('is_featured')}
+                    disabled={isSubmitting || isReadOnlyBasic}
+                    className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2 disabled:opacity-50"
+                  />
+                  <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-gray-900 disabled:opacity-50">
+                    Featured Product
+                  </label>
                 </div>
               </form>
             ) : (
