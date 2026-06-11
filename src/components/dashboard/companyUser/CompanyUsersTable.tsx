@@ -1,4 +1,4 @@
-import { Edit, Trash2, Loader2, User as UserIcon, Star } from "lucide-react";
+import { Edit, Trash2, User as UserIcon, Star } from "lucide-react";
 
 interface CompanyUsersTableProps {
   users: any[];

@@ -57,21 +57,21 @@ const StatsSkeleton: React.FC = () => (
   </div>
 );
 
-const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
-  <div className="divide-y divide-gray-100">
-    {[...Array(rows)].map((_, i) => (
-      <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
-        <div className="h-8 w-8 rounded-full bg-gray-200" />
-        <div className="flex-1 space-y-1">
-          <div className="h-3 w-28 bg-gray-200 rounded" />
-          <div className="h-2 w-40 bg-gray-100 rounded" />
-        </div>
-        <div className="h-5 w-14 bg-gray-200 rounded-full" />
-        <div className="h-7 w-7 bg-gray-200 rounded" />
-      </div>
-    ))}
-  </div>
-);
+// const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
+//   <div className="divide-y divide-gray-100">
+//     {[...Array(rows)].map((_, i) => (
+//       <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
+//         <div className="h-8 w-8 rounded-full bg-gray-200" />
+//         <div className="flex-1 space-y-1">
+//           <div className="h-3 w-28 bg-gray-200 rounded" />
+//           <div className="h-2 w-40 bg-gray-100 rounded" />
+//         </div>
+//         <div className="h-5 w-14 bg-gray-200 rounded-full" />
+//         <div className="h-7 w-7 bg-gray-200 rounded" />
+//       </div>
+//     ))}
+//   </div>
+// );
 
 // ----------------------------------------------------------------------
 // Main Component
