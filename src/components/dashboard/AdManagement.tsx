@@ -119,7 +119,8 @@ const Toast = ({
 // ----------------------------------------------------------------------
 // API Integration
 // ----------------------------------------------------------------------
-import { getAds, createAd, updateAd, deleteAd } from "../../services/api";
+import { getAds, createAd, updateAd, deleteAd, getMySubscription } from "../../services/api";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
 // ----------------------------------------------------------------------
 // Constants
@@ -719,6 +720,8 @@ const LoadingSkeleton: React.FC = () => (
 export default function AdManagement() {
   const isReadOnly = useReadOnly(); // respects viewer mode from dashboard
   const { toast, showToast, hideToast } = useToast();
+  const { company } = useCurrentCompany();
+  const [activeSub, setActiveSub] = useState<any>(null);
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -747,7 +750,12 @@ export default function AdManagement() {
 
   useEffect(() => {
     fetchAds();
-  }, []);
+    if (company && company.slug) {
+      getMySubscription(company.slug).then(res => setActiveSub(res.data)).catch(console.error);
+    } else {
+      setActiveSub({ plan: { can_ad_home_page: true, can_ad_companies_list: true, can_ad_company_detail: true }});
+    }
+  }, [company?.slug]);
 
   const fetchAds = async () => {
     try {
@@ -1081,14 +1089,61 @@ export default function AdManagement() {
               </label>
             </div>
           </div>
-          {/* <Input
-              label="Target Link (optional)"
-              type="url"
-              value={targetLink}
-              onChange={(e) => setTargetLink(e.target.value)}
-              placeholder="https://example.com/offer"
-            />
-            <MultiSelectPages value={targetPages} onChange={setTargetPages} /> */}
+          <Input
+            label="Target Link (optional)"
+            type="url"
+            value={targetLink}
+            onChange={(e) => setTargetLink(e.target.value)}
+            placeholder="https://example.com/offer"
+          />
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">Ad Placements</label>
+            <div className="space-y-2">
+              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_home_page ? "opacity-50" : ""}`}>
+                <input 
+                  type="checkbox" 
+                  checked={targetPages.includes("home")}
+                  onChange={(e) => {
+                    if (e.target.checked) setTargetPages([...targetPages, "home"]);
+                    else setTargetPages(targetPages.filter(p => p !== "home"));
+                  }}
+                  disabled={!activeSub?.plan?.can_ad_home_page}
+                  className="w-4 h-4 text-secondary rounded border-gray-300" 
+                />
+                <span className="text-sm">Home Page</span>
+                {!activeSub?.plan?.can_ad_home_page && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">Requires Pro+</span>}
+              </label>
+              
+              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_companies_list ? "opacity-50" : ""}`}>
+                <input 
+                  type="checkbox" 
+                  checked={targetPages.includes("companies_list")}
+                  onChange={(e) => {
+                    if (e.target.checked) setTargetPages([...targetPages, "companies_list"]);
+                    else setTargetPages(targetPages.filter(p => p !== "companies_list"));
+                  }}
+                  disabled={!activeSub?.plan?.can_ad_companies_list}
+                  className="w-4 h-4 text-secondary rounded border-gray-300" 
+                />
+                <span className="text-sm">Companies List Page</span>
+                {!activeSub?.plan?.can_ad_companies_list && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">Requires Basic+</span>}
+              </label>
+
+              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""}`}>
+                <input 
+                  type="checkbox" 
+                  checked={targetPages.includes("company-detail")}
+                  onChange={(e) => {
+                    if (e.target.checked) setTargetPages([...targetPages, "company-detail"]);
+                    else setTargetPages(targetPages.filter(p => p !== "company-detail"));
+                  }}
+                  disabled={!activeSub?.plan?.can_ad_company_detail}
+                  className="w-4 h-4 text-secondary rounded border-gray-300" 
+                />
+                <span className="text-sm">Company Detail Page</span>
+              </label>
+            </div>
+          </div>
           <ImageUploader
             onFileChange={setImageFile}
             previewUrl={imageFile ? URL.createObjectURL(imageFile) : null}

@@ -24,8 +24,8 @@ import type {
   UserRole,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
-// const API_URL = "http://192.168.1.3:8000/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
+const API_URL = "http://localhost:8000/api/v1"; // local end-to-end testing
 
 const api = axios.create({
   baseURL: API_URL,
@@ -676,5 +676,39 @@ export const prepareVendorOrder = async (companySlug: string, orderId: number) =
 
 export const confirmCODPayment = async (companySlug: string, orderId: number) =>
   api.post(`/orders/company/${companySlug}/${orderId}/confirm-cod/`);
+
+// ========== NOTIFICATIONS (FCM) ==========
+export const registerDevice = (
+  fcm_token: string,
+  platform: "android" | "ios" | "web",
+  app: "admin" | "customer" | "delivery"
+) => api.post("/notifications/devices/", { fcm_token, platform, app });
+
+export const unregisterDevice = (fcm_token: string) =>
+  api.delete("/notifications/devices/", { data: { fcm_token } });
+
+export const getNotifications = () => api.get("/notifications/");
+
+export const getUnreadCount = () =>
+  api.get<{ unread: number }>("/notifications/unread-count/");
+
+export const markNotificationsRead = (ids?: number[]) =>
+  api.post("/notifications/mark-read/", ids ? { ids } : {});
+
+// DEV-ONLY: queue a test push to the current user and drain it immediately.
+export const sendTestNotification = (app: "admin" | "customer" | "delivery" = "admin") =>
+  api.post("/notifications/test-send/", { app });
+
+// ========== SUBSCRIPTIONS ==========
+export const getSubscriptionPlans = () => api.get("/subscriptions/plans/");
+export const getMySubscription = (companySlug?: string) => 
+  api.get("/subscriptions/my-subscription/", { params: companySlug ? { company: companySlug } : {} });
+
+export const getAdminSubscriptionPlans = () => api.get("/subscriptions/admin/plans/");
+export const createAdminSubscriptionPlan = (data: any) => api.post("/subscriptions/admin/plans/", data);
+export const updateAdminSubscriptionPlan = (id: number, data: any) => api.patch(`/subscriptions/admin/plans/${id}/`, data);
+export const deleteAdminSubscriptionPlan = (id: number) => api.delete(`/subscriptions/admin/plans/${id}/`);
+
+export const getAdminCompanySubscriptions = () => api.get("/subscriptions/admin/company-subscriptions/");
 
 export default api;

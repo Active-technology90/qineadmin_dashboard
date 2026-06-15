@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
 import { ImageGallery } from './ImageGallery';
-import { getCompanyProductDetail } from '../../../services/api';
+import { getCompanyProductDetail, getMySubscription } from '../../../services/api';
 import type { ProductImage } from '../../../types';
 
 interface ProductFormData {
@@ -74,6 +74,17 @@ export function ProductModal({
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [savedProductId, setSavedProductId] = useState<number | null>(null);
+  const [activeSub, setActiveSub] = useState<any>(null);
+
+  useEffect(() => {
+    if (isOpen && companySlug) {
+      getMySubscription(companySlug).then(res => setActiveSub(res.data)).catch(console.error);
+    }
+  }, [isOpen, companySlug]);
+
+  const maxFeatured = activeSub?.allowed_max_featured_products || 0;
+  const currentFeatured = activeSub?.current_featured_products || 0;
+  const canFeatureMore = currentFeatured < maxFeatured;
   
 
   const {
@@ -388,17 +399,27 @@ export function ProductModal({
                 </div>
 
                 {/* Featured */}
-                <div className="flex items-center pt-2">
-                  <input
-                    type="checkbox"
-                    id="is_featured"
-                    {...register('is_featured')}
-                    disabled={isSubmitting || isReadOnlyBasic}
-                    className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2 disabled:opacity-50"
-                  />
-                  <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-gray-900 disabled:opacity-50">
-                    Featured Product
-                  </label>
+                <div className="flex flex-col pt-2">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_featured"
+                      {...register('is_featured')}
+                      disabled={isSubmitting || isReadOnlyBasic || (!canFeatureMore && !editingProduct?.is_featured)}
+                      className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2 disabled:opacity-50"
+                    />
+                    <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-gray-900 disabled:opacity-50 flex items-center gap-2">
+                      Featured Product
+                      {!canFeatureMore && !editingProduct?.is_featured && (
+                        <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Limit Reached ({currentFeatured}/{maxFeatured})</span>
+                      )}
+                    </label>
+                  </div>
+                  {activeSub && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Featured products: {currentFeatured} / {maxFeatured} used
+                    </p>
+                  )}
                 </div>
               </form>
             ) : (

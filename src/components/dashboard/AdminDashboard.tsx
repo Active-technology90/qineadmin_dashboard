@@ -19,6 +19,7 @@ import {
   User,
   ListOrdered,
   Proportions,
+  Bell,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -39,6 +40,10 @@ import CompanyManagement from "./CompanyManagement/CompanyManagement";
 import SuperAdminUsers from "./UserManagement/SuperAdminUsers";
 import AdManagement from "./AdManagement";
 import SettingsPage from "./settings/Settings";
+import NotificationsPage from "./notifications/NotificationsPage";
+import NotificationBell from "./notifications/NotificationBell";
+import BillingPage from "./subscriptions/BillingPage";
+import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
 
 type Tab =
   | "overview"
@@ -54,7 +59,10 @@ type Tab =
   | "profile"
   | "add advertisment"
   | "superUsers"
-  | "settings";
+  | "notifications"
+  | "settings"
+  | "billing"
+  | "adminSubscriptions";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -377,6 +385,12 @@ export default function AdminDashboard() {
           return <CompanyManagement key={componentKey} />;
         case "settings":
           return <SettingsPage key={componentKey} />;
+        case "adminSubscriptions":
+          return <SuperadminSubscriptions key={componentKey} />;
+        case "billing":
+          return <BillingPage key={componentKey} />;
+        case "notifications":
+          return <NotificationsPage key={componentKey} />;
 
         default:
           return (
@@ -563,12 +577,30 @@ export default function AdminDashboard() {
           {/* )} */}
 
           <SidebarItem
+            icon={<Bell className="h-5 w-5" />}
+            label="Notifications"
+            active={activeTab === "notifications"}
+            collapsed={sidebarCollapsed}
+            onClick={() => navigate("notifications")}
+          />
+
+          <SidebarItem
             icon={<User className="h-5 w-5" />}
             label="Profile"
             active={activeTab === "profile"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("profile")}
           />
+
+          {isSuperAdmin && (
+            <SidebarItem
+              icon={<CreditCard className="h-5 w-5" />}
+              label="Subscription Plans"
+              active={activeTab === "adminSubscriptions"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("adminSubscriptions")}
+            />
+          )}
 
           <SidebarItem
             icon={<SettingsIcon className="h-5 w-5" />}
@@ -577,6 +609,16 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("settings")}
           />
+
+          {!isSuperAdmin && (
+            <SidebarItem
+              icon={<CreditCard className="h-5 w-5" />}
+              label="Billing"
+              active={activeTab === "billing"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("billing")}
+            />
+          )}
 
           {/* <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -713,6 +755,8 @@ export default function AdminDashboard() {
 
           {/* Right side buttons */}
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <NotificationBell onViewAll={() => navigate("notifications")} />
             {/* Refresh Button */}
             <RefreshButton onRefresh={handleRefresh} isLoading={isRefreshing} />
             {/* Profile Dropdown */}

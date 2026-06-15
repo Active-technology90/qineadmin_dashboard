@@ -4,6 +4,7 @@ import AdminDashboard from "./components/dashboard/AdminDashboard";
 import { CurrentCompanyProvider } from "./context/CurrentCompanyContext";
 import { useAuth } from "./context/authContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 
 export default function App() {
   const { user } = useAuth();
@@ -15,7 +16,9 @@ export default function App() {
         element={
           <CurrentCompanyProvider userMemberships={user?.memberships || null}>
             <ThemeProvider>
-              <AdminDashboard />
+              <NotificationsProvider>
+                <AdminDashboard />
+              </NotificationsProvider>
             </ThemeProvider>
           </CurrentCompanyProvider>
         }
