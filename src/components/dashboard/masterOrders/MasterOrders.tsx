@@ -315,7 +315,7 @@ export default function Orders() {
       </div>
 
       {/* Filters row - visible on desktop, hidden on mobile (filter button opens modal) */}
-      <div className="hidden lg:block mb-6">
+      <div className="relative z-20 hidden lg:block mb-6">
         <OrderFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}

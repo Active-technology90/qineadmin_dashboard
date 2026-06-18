@@ -26,25 +26,27 @@ export default function NotificationBell({ onViewAll }: { onViewAll: () => void 
           setOpen((o) => !o);
           if (!open) refetch();
         }}
-        className="relative p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-indigo-600 transition-colors cursor-pointer"
-        title="Notifications"
-      >
-        <Bell className="h-5 w-5" />
-        {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow ring-2 ring-white">
+  className="relative p-2.5 rounded-xl bg-gradient-to-br from-secondary to-secondary-light text-white shadow-lg shadow-secondary/20 hover:shadow-secondary/40 hover:scale-105 transition-all duration-300 cursor-pointer"
+  title="Notifications"
+>
+  <Bell className="h-5 w-5 drop-shadow-md" />
+  {unread > 0 && (
+    <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1.5 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-[10px] font-bold text-white shadow-lg shadow-orange-400/50 ring-2 ring-white animate-pulse">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-[360px] max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50/60 to-transparent">
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-indigo-600" />
-              <p className="font-bold text-gray-900">Notifications</p>
-              {unread > 0 && (
-                <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+<div className="absolute right-0 mt-3 w-[380px] max-w-[92vw] bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-secondary/15 border border-white/30 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+<div className="flex items-center justify-between px-5 py-4 border-b border-secondary/20 bg-gradient-to-r from-secondary/10 to-secondary-light/5">
+  <div className="flex items-center gap-2.5">
+    <div className="p-1.5 rounded-lg bg-gradient-to-br from-secondary to-secondary-light text-white shadow-md shadow-secondary/20">
+      <Bell className="h-3.5 w-3.5" />
+    </div>
+    <p className="font-extrabold text-gray-800">Notifications</p>
+    {unread > 0 && (
+      <span className="text-[10px] font-bold text-white bg-secondary px-2.5 py-0.5 rounded-full shadow-sm shadow-secondary/30">
                   {unread} new
                 </span>
               )}
@@ -52,20 +54,24 @@ export default function NotificationBell({ onViewAll }: { onViewAll: () => void 
             {unread > 0 && (
               <button
                 onClick={() => markAllRead()}
-                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                Mark all
-              </button>
-            )}
-          </div>
+
+      className="flex items-center gap-1.5 text-xs font-bold text-secondary hover:text-secondary-dark transition-colors bg-white/60 px-3 py-1 rounded-full shadow-sm hover:shadow"
+    >
+      <CheckCheck className="h-3.5 w-3.5" />
+      Mark all
+    </button>
+  )}
+</div>
 
           <div className="max-h-[380px] overflow-y-auto">
             {recent.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-gray-400">
-                <Bell className="h-7 w-7 mx-auto mb-2 text-gray-300" />
-                You're all caught up.
-              </div>
+<div className="px-5 py-12 text-center">
+  <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-secondary/10 flex items-center justify-center shadow-inner">
+    <Bell className="h-7 w-7 text-secondary/30" />
+  </div>
+  <p className="text-sm font-semibold text-gray-500">You're all caught up.</p>
+  <p className="text-xs text-gray-400 mt-1">No new notifications</p>
+</div>
             ) : (
               recent.map((n) => {
                 const { Icon, color, bg } = getEventMeta(n.event);
@@ -73,24 +79,25 @@ export default function NotificationBell({ onViewAll }: { onViewAll: () => void 
                   <button
                     key={n.id}
                     onClick={() => markRead([n.id])}
-                    className={`w-full text-left flex gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer ${
-                      !n.is_read ? "bg-indigo-50/40" : ""
-                    }`}
-                  >
-                    <div className={`flex-shrink-0 h-9 w-9 rounded-full ${bg} flex items-center justify-center`}>
-                      <Icon className={`h-4 w-4 ${color}`} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{n.title}</p>
-                        {!n.is_read && <span className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />}
-                      </div>
-                      <p className="text-xs text-gray-500 line-clamp-2">{n.body}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{formatRelativeTime(n.created_at)}</p>
-                    </div>
-                  </button>
-                );
-              })
+
+      className={`w-full text-left flex gap-4 px-5 py-3.5 border-b border-gray-100/50 hover:bg-secondary/5 transition-all duration-200 cursor-pointer ${
+        !n.is_read ? "bg-secondary/5 border-l-4 border-l-secondary" : ""
+      }`}
+    >
+      <div className={`flex-shrink-0 h-10 w-10 rounded-xl ${bg} flex items-center justify-center shadow-sm ring-1 ring-white/50`}>
+        <Icon className={`h-4.5 w-4.5 ${color}`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold text-gray-800 truncate">{n.title}</p>
+          {!n.is_read && <span className="h-2.5 w-2.5 rounded-full bg-secondary shadow-sm shadow-secondary/30 flex-shrink-0" />}
+        </div>
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{n.body}</p>
+        <p className="text-[10px] text-gray-400 mt-1 font-medium">{formatRelativeTime(n.created_at)}</p>
+      </div>
+    </button>
+  );
+})
             )}
           </div>
 
@@ -99,10 +106,12 @@ export default function NotificationBell({ onViewAll }: { onViewAll: () => void 
               setOpen(false);
               onViewAll();
             }}
-            className="w-full py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition border-t border-gray-100"
-          >
-            View all notifications
-          </button>
+  className="w-full py-4 text-sm font-bold text-secondary bg-gradient-to-r from-secondary/5 to-secondary-light/5 hover:from-secondary/10 hover:to-secondary-light/10 transition-all duration-200 border-t border-secondary/20"
+>
+  <span className="bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
+    View all notifications →
+  </span>
+</button>
         </div>
       )}
     </div>

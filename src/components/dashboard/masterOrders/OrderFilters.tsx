@@ -1,4 +1,7 @@
 import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
+import { TableControls } from "../../ui/TableControls";
+import { SearchInput } from "../../ui/SearchInput";
+import { CustomSelect } from "../../ui/CustomSelect";
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -57,55 +60,77 @@ export function OrderFilters({
   };
 
   return (
-    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2" />
-        <div className="flex items-center gap-2">
-          {hasFilters && (
-              <button
-                onClick={onClear}
-                className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs sm:text-sm font-medium
-                         border border-red-200 text-red-600 hover:bg-red-50 transition"
-              >
-                <X size={12} className="sm:w-[14px] sm:h-[14px]" />
-                <span className="hidden xs:inline">Clear</span>
-              </button>
-          )}
- 
-        </div>
-      </div>
+<div className="hidden md:block">
+  <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">
 
-      {/* Body */}
-      <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
-        {/* Search + Refresh - HIDDEN ON MOBILE (visible only on desktop) */}
-        <div className="hidden lg:flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by order ID, customer name, phone, or address..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
-                         outline-none transition text-xs sm:text-sm"
-            />
-          </div>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
-                         hover:bg-white hover:border-secondary transition-all duration-200 group flex-shrink-0"
-              title="Refresh orders"
-            >
-              <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary group-hover:rotate-180 transition-all duration-300" />
-            </button>
-          )}
-        </div>
+        <TableControls pageSize={pageSize} onPageSizeChange={onPageSizeChange}>
+          <div className="flex flex-wrap items-end gap-3 w-full">
+            {/* Search */}
+            <div className="flex-1 min-w-[200px]">
+              <SearchInput
+                value={searchTerm}
+                onChange={onSearchChange}
+                placeholder="Search by order ID, customer name, phone, or address..."
+                loading={false}
+                showClearButton={!!searchTerm}
+              />
+            </div>
 
-        {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Payment Status */}
+            <div className="w-full sm:w-48">
+              <CustomSelect
+                value={paymentStatusFilter}
+                onChange={onPaymentStatusChange}
+                options={[
+                  { value: "", label: "All Payment Statuses" },
+                  { value: "Paid", label: "Paid" },
+                  { value: "Verifying Receipt", label: "Verifying Receipt" },
+                  { value: "Pay on Delivery", label: "Pay on Delivery" },
+                  { value: "Checkout Initiated", label: "Checkout Initiated" },
+                  { value: "Awaiting Bank Transfer", label: "Awaiting Bank Transfer" },
+                ]}
+                placeholder="Payment status"
+                className="w-full"
+              />
+            </div>
+
+            {/* Fulfillment Type */}
+            <div className="w-full sm:w-44">
+              <CustomSelect
+                value={fulfillmentTypeFilter}
+                onChange={onFulfillmentTypeChange}
+                options={[
+                  { value: "", label: "All Fulfillment Types" },
+                  { value: "delivery", label: "Delivery" },
+                  { value: "pickup", label: "Pickup" },
+                ]}
+                placeholder="Fulfillment type"
+                className="w-full"
+              />
+            </div>
+
+            {/* Refresh & Clear Buttons */}
+            <div className="flex items-center gap-2 ml-auto">
+              {onRefresh && (
+                <button
+                  onClick={onRefresh}
+                  className="p-2 rounded-full text-gray-400 hover:text-secondary hover:bg-secondary/10 transition-all duration-200"
+                  title="Refresh orders"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              )}
+              {hasFilters && (
+                <button
+                  onClick={onClear}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition text-sm font-medium"
+                >
+                  <X size={14} />
+                  Clear all
+                </button>
+              )}
+            </div>
+          </div>        {/* closes flex container */}
           {/* Order Status */}
           {/* <div className="relative">
             <select
@@ -125,6 +150,7 @@ export function OrderFilters({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div> */}
 
+
           {/* Delivery Status */}
           {/* <div className="relative">
             <select
@@ -143,64 +169,8 @@ export function OrderFilters({
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div> */}
-
-          {/* Payment Status */}
-          <div className="relative">
-            <select
-              value={paymentStatusFilter}
-              onChange={(e) => onPaymentStatusChange(e.target.value)}
-              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
-                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
-            >
-              <option value="">All Payment Statuses</option>
-              {Object.entries(paymentStatusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
-          </div>
-
-          {/* Fulfillment Type */}
-          <div className="relative">
-            <select
-              value={fulfillmentTypeFilter}
-              onChange={(e) => onFulfillmentTypeChange(e.target.value)}
-              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
-                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
-            >
-              <option value="">All Fulfillment Types</option>
-              {Object.entries(fulfillmentLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
-          </div>
-
-          {/* Page Size */}
-          <div className="relative">
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="w-full appearance-none px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-gray-200 bg-gray-50
-                         focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
-                         text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
-            >
-              <option value={5}>5 / page</option>
-              <option value={10}>10 / page</option>
-              <option value={15}>15 / page</option>
-              <option value={30}>30 / page</option>
-              <option value={60}>60 / page</option>
-            </select>
-            <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-      </div>
+        </TableControls>
     </div>
+  </div>
   );
 }

@@ -539,6 +539,7 @@ export default function CompanyOrders() {
       {/* Filters */}
 
       {/* Filters */}
+      <div className="relative z-20">
       <VendorOrderFilters
         searchTerm={searchTerm}
         onSearchChange={(v) => setSearchTerm(v)}
@@ -560,6 +561,8 @@ export default function CompanyOrders() {
         }}
         // onRefresh={fetchAllOrders}
       />
+
+      </div>
 
       {/* Orders Table */}
       {error ? (

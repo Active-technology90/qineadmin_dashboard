@@ -31,6 +31,7 @@ import {
   prepareVendorOrder,
   confirmCODPayment,
 } from "../../../services/api";
+import api from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 
@@ -1009,16 +1010,38 @@ export function VendorOrderDetailModal({
   readOnly = false,
 }: any) {
   if (!order) return null;
-  const [refreshing, setRefreshing] = useState(false);
+const { showToast } = useToast();  
+const [refreshing, setRefreshing] = useState(false);
+const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+const [cancelling, setCancelling] = useState(false);
 
-  const handleRefresh = async () => {
-    try {
-      setRefreshing(true);
-      await onUpdate();
-    } finally {
-      setRefreshing(false);
-    }
-  };
+const handleRefresh = async () => {
+  try {
+    setRefreshing(true);
+    await onUpdate();
+  } finally {
+    setRefreshing(false);
+  }
+};
+const canCancel = !readOnly && order && 
+  !["cancelled", "fulfilled", "delivered"].includes(order.status?.toLowerCase());
+ 
+const handleCancel = async () => {
+  if (!order || !order.company?.slug) return;
+  setCancelling(true);
+  try {
+    await api.patch(`/orders/company/${order.company.slug}/${order.id}/`, {
+      status: "cancelled",
+    });
+    showToast("success", "Order cancelled successfully");
+    setShowCancelConfirm(false);
+    onUpdate();
+  } catch (err: any) {
+    showToast("error", err.response?.data?.detail || "Failed to cancel order");
+  } finally {
+    setCancelling(false);
+  }
+};
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
@@ -1085,37 +1108,36 @@ export function VendorOrderDetailModal({
                 </div>
               </div>
               {/* Right side - Buttons */}
-              <div className="flex items-center gap-1 sm:gap-2">
-                {/* REFRESH */}
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="group flex items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-gray-200 bg-white
-                 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100
-                 active:scale-95 transition-all duration-200
-                 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-                >
-                  {refreshing ? (
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-secondary animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary transition-colors" />
-                  )}
-
-                  {/* <span className="text-[8px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-secondary">
-                    {refreshing ? "Refreshing..." : "Refresh"}
-                  </span> */}
-                </button>
-
-                {/* CLOSE */}
-                <button
-                  onClick={onClose}
-                  className="group p-1.5 sm:p-3 rounded-lg sm:rounded-xl bg-white border border-gray-200 shadow-sm
-                 hover:bg-rose-50 hover:border-rose-200
-                 active:scale-95 transition-all duration-200"
-                >
-                  <X className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
-                </button>
-              </div>
+<div className="flex items-center gap-1 sm:gap-2">
+  {/*  CANCEL BUTTON */}
+  {canCancel && (
+    <button
+      onClick={() => setShowCancelConfirm(true)}
+      className="px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition shadow-sm"
+    >
+      Cancel Order
+    </button>
+  )}
+  {/* REFRESH  */}
+  <button
+    onClick={handleRefresh}
+    disabled={refreshing}
+    className="group flex items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border border-gray-200 bg-white hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+  >
+    {refreshing ? (
+      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 text-secondary animate-spin" />
+    ) : (
+      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-secondary transition-colors" />
+    )}
+  </button>
+  {/* CLOSE  */}
+  <button
+    onClick={onClose}
+    className="group p-1.5 sm:p-3 rounded-lg sm:rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-rose-50 hover:border-rose-200 active:scale-95 transition-all duration-200"
+  >
+    <X className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400 group-hover:text-rose-500 transition-colors" />
+  </button>
+</div>
             </div>
           </div>
 
@@ -1410,6 +1432,17 @@ export function VendorOrderDetailModal({
           </div> */}
         </motion.div>
       </div>
-    </AnimatePresence>
+    <ConfirmationModal
+      isOpen={showCancelConfirm}
+      onClose={() => setShowCancelConfirm(false)}
+      onConfirm={handleCancel}
+      title="Cancel Order"
+      description="Are you sure you want to cancel this order? This action cannot be undone."
+      confirmText={cancelling ? "Cancelling..." : "Yes, Cancel Order"}
+      confirmVariant="danger"
+      loading={cancelling}
+      autoClose={false}
+    />
+  </AnimatePresence>
   );
 }
