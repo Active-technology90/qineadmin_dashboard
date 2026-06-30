@@ -21,6 +21,7 @@ import {
   Proportions,
   Bell,
   Settings as SettingsIcon,
+    Banknote,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -29,6 +30,7 @@ import Overview, { type DashboardTab } from "./overview/Overview";
 import CompanyUsers from "./companyUser/CompanyUsers";
 import CompanyOrders from "./vedorOrders/CompanyOrders";
 import Payments from "./Payments";
+import BankManagement from "./bank/BankManagement";
 import CompanyProducts from "./company-products/CompanyProducts";
 import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
@@ -56,6 +58,7 @@ type Tab =
   | "masterOrders"
   | "companyOrders"
   | "payments"
+  | "bankAccounts"
   | "profile"
   | "add advertisment"
   | "superUsers"
@@ -369,6 +372,8 @@ export default function AdminDashboard() {
           return <CompanyOrders key={componentKey} />;
         case "payments":
           return <Payments key={componentKey} />;
+        case "bankAccounts":
+          return <BankManagement key={componentKey} />;
         case "profile":
           return <AdminProfile key={componentKey} />;
         case "categories":
@@ -532,6 +537,14 @@ export default function AdminDashboard() {
               onClick={() => navigate("add advertisment")}
             />
           )}
+                    {/* Bank Accounts - Below Ads Management */}
+          <SidebarItem
+            icon={<Banknote className="h-5 w-5" />}
+            label="Bank Accounts"
+            active={activeTab === "bankAccounts"}
+            collapsed={sidebarCollapsed}
+            onClick={() => navigate("bankAccounts")}
+          />
 
           <div
             className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""

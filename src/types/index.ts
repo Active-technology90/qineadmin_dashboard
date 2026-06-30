@@ -468,3 +468,31 @@ export interface Service {
   is_active: boolean;
   is_featured: boolean;
 }
+
+// ── Bank Management ──
+
+export interface BankInfo {
+  id: number;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  logo?: string | null;
+  branch_name?: string;
+  swift_code?: string;
+  currency?: string;
+  account_type?: "operating" | "savings" | "escrow";
+  is_active?: boolean;
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BankAccount extends BankInfo {
+  company_id?: number;
+  company_name?: string;
+  company_slug?: string;
+  is_verified?: boolean;
+  verified_at?: string | null;
+  created_by?: string;
+  created_by_name?: string;
+}
