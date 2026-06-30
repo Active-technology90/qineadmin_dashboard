@@ -102,65 +102,67 @@ export default function SuperadminSubscriptions() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-10 max-w-7xl mx-auto space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Subscription Management</h1>
-        <p className="text-gray-500 mt-2">Manage pricing tiers and view active company subscriptions.</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary">Subscription Management</h1>
+        <p className="text-xs sm:text-sm text-secondary/70 mt-0.5 sm:mt-1 md:mt-2">Manage pricing tiers and view active company subscriptions.</p>
       </div>
 
       {/* Subscription Plans Table */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-secondary" /> Subscription Plans
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" /> 
+            <span>Subscription Plans</span>
           </h2>
           <button
             onClick={handleCreateClick}
-            className="bg-secondary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-secondary-dark transition-all"
+            className="bg-secondary text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-secondary-dark transition-all"
           >
-            <Plus className="w-4 h-4" /> New Plan
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 
+            New Plan
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium">Plan Name</th>
-                <th className="p-4 font-medium">Price (ETB)</th>
-                <th className="p-4 font-medium">Featured Limit</th>
-                <th className="p-4 font-medium text-center">Detail Ad</th>
-                <th className="p-4 font-medium text-center">List Ad</th>
-                <th className="p-4 font-medium text-center">Home Ad</th>
-                <th className="p-4 font-medium text-center">Status</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+              <tr className="bg-gray-50 text-gray-500 text-[10px] xs:text-xs uppercase tracking-wider">
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Plan Name</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Price</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium hidden xs:table-cell">Featured Limit</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden sm:table-cell">Detail Ad</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden lg:table-cell">List Ad</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden xl:table-cell">Home Ad</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden sm:table-cell">Status</th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
               {plans.map((plan) => (
                 <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 font-bold text-gray-900">{plan.name}</td>
-                  <td className="p-4 font-medium">{plan.price}</td>
-                  <td className="p-4">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">{plan.name}</td>
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">{plan.price}</td>
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
                     {plan.can_ad_company_detail ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden lg:table-cell">
                     {plan.can_ad_companies_list ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden xl:table-cell">
                     {plan.can_ad_home_page ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
                     <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${plan.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                       {plan.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-right">
                     <button
                       onClick={() => handleEditClick(plan)}
-                      className="p-1.5 text-gray-400 hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+                      className="p-1 xs:p-1.5 text-gray-400 hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                     </button>
                   </td>
                 </tr>
@@ -172,21 +174,22 @@ export default function SuperadminSubscriptions() {
 
       {/* Active Company Subscriptions Table */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-indigo-500" /> Active Company Subscriptions
+        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+            <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" /> 
+            <span>Active Company Subscriptions</span>
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium">Company</th>
-                <th className="p-4 font-medium">Plan</th>
-                <th className="p-4 font-medium">Start Date</th>
-                <th className="p-4 font-medium">End Date</th>
-                <th className="p-4 font-medium">Featured Override</th>
-                <th className="p-4 font-medium">Status</th>
+              <tr className="bg-gray-50 text-gray-500 text-[10px] xs:text-xs uppercase tracking-wider">
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Company</th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Plan</th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Start Date</th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">End Date</th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Featured Override</th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -197,15 +200,15 @@ export default function SuperadminSubscriptions() {
               )}
               {companySubscriptions.map((sub) => (
                 <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 font-bold text-gray-900">{sub.company_name}</td>
-                  <td className="p-4 font-medium">
-                    <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md text-xs">{sub.plan.name}</span>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">{sub.company_name}</td>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">
+                    <span className="bg-indigo-100 text-indigo-700 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-md text-[9px] xs:text-xs font-semibold">{sub.plan.name}</span>
                   </td>
-                  <td className="p-4 text-gray-500">{new Date(sub.start_date).toLocaleDateString()}</td>
-                  <td className="p-4 text-gray-500">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}</td>
-                  <td className="p-4">{sub.custom_max_featured_products !== null ? sub.custom_max_featured_products : '-'}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${sub.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{new Date(sub.start_date).toLocaleDateString()}</td>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}</td>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-xs sm:text-sm">{sub.custom_max_featured_products !== null ? sub.custom_max_featured_products : '-'}</td>
+                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
+                    <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${sub.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                       {sub.is_active ? 'Active' : 'Expired'}
                     </span>
                   </td>
@@ -225,7 +228,7 @@ export default function SuperadminSubscriptions() {
             className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-secondary">
                 {editingPlan ? 'Edit Subscription Plan' : 'New Subscription Plan'}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
@@ -236,7 +239,7 @@ export default function SuperadminSubscriptions() {
             <div className="p-6 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
+                  <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Plan Name</label>
                   <input
                     type="text"
                     required
@@ -248,7 +251,7 @@ export default function SuperadminSubscriptions() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price (ETB)</label>
+                  <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Price (ETB)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -260,7 +263,7 @@ export default function SuperadminSubscriptions() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Featured Products</label>
+                  <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Max Featured Products</label>
                   <input
                     type="number"
                     required
@@ -273,7 +276,7 @@ export default function SuperadminSubscriptions() {
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 border-b pb-1">Ad Placements Allowed</label>
+                  <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-2 border-b pb-1">Ad Placements Allowed</label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -281,7 +284,7 @@ export default function SuperadminSubscriptions() {
                       onChange={(e) => setFormData({ ...formData, can_ad_company_detail: e.target.checked })}
                       className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary"
                     />
-                    <span className="text-sm">Company Detail Page</span>
+                    <span className="text-xs sm:text-sm text-secondary/70">Company Detail Page</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -311,7 +314,7 @@ export default function SuperadminSubscriptions() {
                       onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                       className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary"
                     />
-                    <span className="text-sm font-bold">Plan is Active</span>
+                    <span className="text-xs sm:text-sm font-bold text-secondary">Plan is Active</span>
                   </label>
                 </div>
               </form>

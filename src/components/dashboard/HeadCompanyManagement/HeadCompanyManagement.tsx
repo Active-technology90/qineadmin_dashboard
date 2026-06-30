@@ -174,119 +174,142 @@ export default function HeadCompanyManagement() {
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
       <Toast toast={toast} />
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary truncate">
+      {/* Header - Responsive */}
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="hidden xs:block h-6 sm:h-8 md:h-10 w-0.5 sm:w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-secondary truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
             Head Companies
           </h2>
+          <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[10px] sm:text-xs font-medium">
+            {filtered.length}
+          </span>
         </div>
         <button
           onClick={openCreate}
-          className="shrink-0 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-secondary hover:bg-[#5b4694] active:scale-[0.98] transition-all shadow-sm hover:shadow-md text-white font-semibold text-xs sm:text-sm px-3 sm:px-5 py-2"
+          className="shrink-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 rounded-full bg-secondary hover:bg-[#5b4694] active:scale-[0.98] transition-all shadow-sm hover:shadow-md text-white font-semibold text-[10px] xs:text-xs sm:text-sm px-2 xs:px-3 sm:px-4 md:px-5 py-1.5 xs:py-2 sm:py-2"
         >
-          <Plus size={16} />
-          <span className="truncate">Create Head Company</span>
+          <Plus size={14} className="xs:h-[15px] xs:w-[15px] sm:h-4 sm:w-4" />
+          <span className="truncate hidden xs:inline">Create Head Company</span>
+          <span className="truncate xs:hidden">New</span>
         </button>
       </div>
 
-      {/* Search */}
-      <div className="mb-4">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => handleInputChange(e.target.value)}
-          placeholder="Search head companies..."
-          className="w-full sm:max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
-        />
+      {/* Search - Responsive */}
+      <div className="mb-3 sm:mb-4">
+        <div className="relative w-full sm:max-w-xs md:max-w-sm">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            placeholder="Search head companies..."
+            className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-gray-50/80 focus:bg-white transition"
+          />
+          {inputValue && (
+            <button
+              onClick={() => {
+                setInputValue("");
+                setSearchTerm("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Table */}
+      {/* Table - Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wider">
-                <th className="px-4 py-3 font-semibold">No.</th>
-                <th className="px-4 py-3 font-semibold">Logo</th>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Slug</th>
-                <th className="px-4 py-3 font-semibold">Branches</th>
-                <th className="px-4 py-3 font-semibold">Active</th>
-                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+              <tr className="bg-gray-50 text-left text-gray-500 text-[10px] xs:text-xs uppercase tracking-wider">
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold">No.</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold">Logo</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold">Name</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold hidden sm:table-cell">Slug</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold">Branches</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold hidden xs:table-cell">Active</th>
+                <th className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
-                    <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-secondary mx-auto mb-3" />
-                    Loading...
+                  <td colSpan={7} className="px-2 xs:px-3 sm:px-4 py-8 xs:py-10 text-center text-gray-400">
+                    <div className="animate-spin rounded-full h-6 w-6 sm:h-7 sm:w-7 border-b-2 border-secondary mx-auto mb-2 sm:mb-3" />
+                    <span className="text-xs sm:text-sm">Loading...</span>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                  <td colSpan={7} className="px-2 xs:px-3 sm:px-4 py-8 xs:py-10 text-center text-gray-400 text-xs sm:text-sm">
                     No head companies found
                   </td>
                 </tr>
               ) : (
                 filtered.map((head, idx) => (
                   <tr key={head.id} className="hover:bg-gray-50/60">
-                    <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">
+                      {idx + 1}
+                    </td>
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
                       {head.logo ? (
                         <img
                           src={head.logo}
                           alt={head.name}
-                          className="h-9 w-9 rounded-full object-cover"
+                          className="h-8 w-8 xs:h-9 xs:w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center">
-                          <ImageIcon size={16} className="text-gray-400" />
+                        <div className="h-8 w-8 xs:h-9 xs:w-9 rounded-full bg-gray-100 flex items-center justify-center">
+                          <ImageIcon size={14} className="xs:h-4 xs:w-4 text-gray-400" />
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {head.name}
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-gray-900">
+                      <span className="text-xs xs:text-sm">{head.name}</span>
                       {head.name_am ? (
-                        <span className="block text-xs text-gray-400">
+                        <span className="block text-[10px] xs:text-xs text-gray-400 truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">
                           {head.name_am}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 font-mono text-gray-500">
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-mono text-gray-500 text-[10px] xs:text-xs sm:text-sm hidden sm:table-cell">
                       {head.slug}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 text-gray-600">
-                        <Building2 size={14} className="text-secondary" />
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
+                      <span className="inline-flex items-center gap-0.5 xs:gap-1 text-gray-600 text-[10px] xs:text-xs sm:text-sm">
+                        <Building2 size={12} className="xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-secondary" />
                         {head.branch_count ?? 0}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${head.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[9px] xs:text-xs rounded-full ${
+                          head.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        }`}
                       >
                         {head.is_active ? "Yes" : "No"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
+                      <div className="flex items-center justify-end gap-1 xs:gap-1.5 sm:gap-2">
                         <button
                           onClick={() => openEdit(head)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-secondary/10 hover:text-secondary transition"
+                          className="p-1 xs:p-1.5 rounded-lg text-gray-500 hover:bg-secondary/10 hover:text-secondary transition"
                           title="Edit"
                         >
-                          <Pencil size={16} />
+                          <Pencil size={14} className="xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(head)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition"
+                          className="p-1 xs:p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition"
                           title="Delete"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </td>
