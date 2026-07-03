@@ -255,6 +255,16 @@ export default function AdminDashboard() {
   const [isScrolled, setIsScrolled] = useState(false);
   //  const mainContentRef = useRef<HTMLDivElement>(null);
   const scrollableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    // Our backend embeds "sub_tx_ref" in the return URL — this is our own tx_ref
+    const txRef = queryParams.get("sub_tx_ref");
+    // If a Chapa payment redirect occurred, automatically switch to the billing tab
+    if (txRef) {
+      setActiveTab("billing");
+    }
+  }, []);
   // ── Core identity flags ────────────────────────────────
   const isSuperAdmin = !user?.memberships?.length;
   const isViewer = !isSuperAdmin && company?.role === "viewer";

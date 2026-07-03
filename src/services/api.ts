@@ -24,8 +24,8 @@ import type {
   UserRole,
 } from "../types";
 
-// const API_URL = "https://backend-qine.activetechet.com/api/v1";
-const API_URL = "http://localhost:8000/api/v1"; // local end-to-end testing
+const API_URL = "https://backend-qine.activetechet.com/api/v1";
+// const API_URL = "http://localhost:8000/api/v1"; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -33,7 +33,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Flag to prevent multiple simultaneous token refresh calls
+// Flag to prevent multiple simultaneous token refresh calls 
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -701,8 +701,18 @@ export const sendTestNotification = (app: "admin" | "customer" | "delivery" = "a
 
 // ========== SUBSCRIPTIONS ==========
 export const getSubscriptionPlans = () => api.get("/subscriptions/plans/");
-export const getMySubscription = (companySlug?: string) => 
+export const getMySubscription = (companySlug?: string) =>
   api.get("/subscriptions/my-subscription/", { params: companySlug ? { company: companySlug } : {} });
+
+export const initializeSubscriptionPayment = (companySlug: string, planId: number) =>
+  api.post("/subscriptions/initialize/", {
+    company_slug: companySlug,
+    plan_id: planId,
+    return_url: window.location.href // Redirect back to the exact current billing page
+  });
+
+export const verifySubscriptionPayment = (txRef: string) =>
+  api.get("/subscriptions/webhook/chapa/", { params: { tx_ref: txRef } });
 
 export const getAdminSubscriptionPlans = () => api.get("/subscriptions/admin/plans/");
 export const createAdminSubscriptionPlan = (data: any) => api.post("/subscriptions/admin/plans/", data);

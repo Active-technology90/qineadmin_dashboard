@@ -55,6 +55,15 @@ const getInitials = (name?: string) =>
     .join("")
     .toUpperCase() || "?";
 
+const formatAddress = (address?: string | null) => {
+  if (!address) return "";
+  return address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+};
+
 const getDisplayStatus = (
   status: string,
   customLabels?: Record<string, string>,
@@ -94,7 +103,7 @@ const getStatusBadge = (status: string) => {
   if (s === "pending")
     return base + "bg-amber-50 text-amber-700 border-amber-200";
 
-  if (s === "rejected" || s === "cancelled")
+  if (s === "rejected" || s === "cancelled" || s === "failed")
     return base + "bg-rose-50 text-rose-700 border-rose-200";
 
   return base + "bg-gray-50 text-gray-600 border-gray-200";
@@ -155,15 +164,15 @@ const StatusBadge = ({
     approved: "bg-green-100 text-green-700 border-green-200",
 
     rejected: "bg-rose-100 text-rose-700 border-rose-200",
+    cancelled: "bg-rose-100 text-rose-700 border-rose-200",
   };
 
   const displayStatus = getDisplayStatus(status, customLabels);
 
   return (
     <span
-      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
-        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-      }`}
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+        }`}
     >
       {displayStatus}
     </span>
@@ -222,47 +231,47 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     const rating = parseFloat(avg).toFixed(1);
     return `⭐ ${rating} (${reviews})`;
   };
-useEffect(() => {
-  if (!order.company?.slug) return;   // still need a company slug
-  const fetchStaff = async () => {
-    try {
-      const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
-      const mapped = (res.data.results || res.data).map((s: any) => ({
-        id: s.user.id,
-        name: `${s.user.username || s.user.first_name || ""}`.trim(),
-        phone: s.user.phone_number,
-        username: s.user.username,
-        average_rating: s.user.average_rating,
-        total_reviews: s.user.total_reviews,
-      }));
-      setStaffList(mapped);
+  useEffect(() => {
+    if (!order.company?.slug) return;   // still need a company slug
+    const fetchStaff = async () => {
+      try {
+        const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
+        const mapped = (res.data.results || res.data).map((s: any) => ({
+          id: s.user.id,
+          name: `${s.user.username || s.user.first_name || ""}`.trim(),
+          phone: s.user.phone_number,
+          username: s.user.username,
+          average_rating: s.user.average_rating,
+          total_reviews: s.user.total_reviews,
+        }));
+        setStaffList(mapped);
 
-      // Build rating map
-      const ratingMap = new Map();
-      mapped.forEach((staff: any) => {
-        if (staff.phone) {
-          ratingMap.set(staff.phone, {
-            average_rating: staff.average_rating,
-            total_reviews: staff.total_reviews,
-          });
-        }
-      });
-      setRatingMap(ratingMap); // ✅ store in state
+        // Build rating map
+        const ratingMap = new Map();
+        mapped.forEach((staff: any) => {
+          if (staff.phone) {
+            ratingMap.set(staff.phone, {
+              average_rating: staff.average_rating,
+              total_reviews: staff.total_reviews,
+            });
+          }
+        });
+        setRatingMap(ratingMap); // ✅ store in state
 
-      // Build username map
-      const map = new Map();
-      mapped.forEach((staff: any) => {
-        if (staff.phone && staff.username) {
-          map.set(staff.phone, staff.username);
-        }
-      });
-      setUsernameMap(map);
-    } finally {
-      // nothing to cleanup
-    }
-  };
-  fetchStaff();
-}, [showAssignForm, order.company?.slug]);
+        // Build username map
+        const map = new Map();
+        mapped.forEach((staff: any) => {
+          if (staff.phone && staff.username) {
+            map.set(staff.phone, staff.username);
+          }
+        });
+        setUsernameMap(map);
+      } finally {
+        // nothing to cleanup
+      }
+    };
+    fetchStaff();
+  }, [showAssignForm, order.company?.slug]);
 
   const handleAssign = async () => {
     if (!selectedUserId) return;
@@ -338,7 +347,7 @@ useEffect(() => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                          delivery.delivery_person_name,
+                        delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -494,6 +503,8 @@ const ReceiptReviewCard = ({
   orderId,
   companySlug,
   orderStatus,
+  receiptHistory,
+  fulfillmentType,
 }: {
   receipt?: any | null;
   paymentMethod?: string;
@@ -503,12 +514,14 @@ const ReceiptReviewCard = ({
   orderId?: string;
   companySlug?: string;
   orderStatus?: string;
+  receiptHistory?: any[];
+  fulfillmentType?: string;
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // image modal (KEEP SECOND UI)
-  const [showImage, setShowImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
@@ -521,6 +534,16 @@ const ReceiptReviewCard = ({
   const [codConfirming, setCodConfirming] = useState(false);
 
   const { showToast } = useToast();
+
+  const displayHistory = receiptHistory
+    ? receiptHistory.filter((h: any) => {
+      // Skip the current active receipt only if it is pending review
+      if (h.id === receipt?.id && receipt?.status === "pending") {
+        return false;
+      }
+      return true;
+    })
+    : [];
 
   // =========================================================
   // COD CONFIRMATION
@@ -538,13 +561,13 @@ const ReceiptReviewCard = ({
       showToast(
         "error",
         err.response?.data?.detail ||
-          err.message ||
-          "Failed to confirm COD payment",
+        err.message ||
+        "Failed to confirm COD payment",
       );
       console.error(
         err.response?.data?.detail ||
-          err.message ||
-          "Failed to confirm COD payment",
+        err.message ||
+        "Failed to confirm COD payment",
       );
     } finally {
       setCodConfirming(false);
@@ -589,7 +612,10 @@ const ReceiptReviewCard = ({
   if (paymentMethod === "cod") {
     const isPaid = status?.toLowerCase() === "paid";
     const currentOrderStatus = orderStatus?.toLowerCase();
-    const canCollect = currentOrderStatus === "fulfilled";
+    const isPickup = fulfillmentType?.toLowerCase() === "pickup";
+    const canCollect =
+      currentOrderStatus === "fulfilled" ||
+      (isPickup && currentOrderStatus === "processing");
 
     return (
       <>
@@ -616,18 +642,21 @@ const ReceiptReviewCard = ({
               <>
                 <p className="text-xs text-gray-500 mb-4 max-w-xs leading-relaxed">
                   {canCollect
-                    ? "Confirm physical collection of cash once the driver delivers the items and returns with the cash."
-                    : "Payment collection is disabled until the order is Delivered."}
+                    ? isPickup
+                      ? "Confirm physical collection of cash once the customer picks up the items."
+                      : "Confirm physical collection of cash once the driver delivers the items and returns with the cash."
+                    : isPickup
+                      ? "Payment collection is disabled until the order is Prepared."
+                      : "Payment collection is disabled until the order is Delivered."}
                 </p>
                 {!readOnly && (
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
-                      canCollect
-                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                        : "bg-gray-300 cursor-not-allowed shadow-none"
-                    }`}
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                      : "bg-gray-300 cursor-not-allowed shadow-none"
+                      }`}
                   >
                     <CheckCircle className="h-4 w-4" />
                     Confirm Payment Collected
@@ -766,7 +795,7 @@ const ReceiptReviewCard = ({
             {/* <p className="text-xs text-gray-500 mb-2">Receipt Image</p> */}
 
             <div
-              onClick={() => setShowImage(true)}
+              onClick={() => setPreviewImage(receipt.receipt_image)}
               className="relative w-full h-28 sm:h-28 rounded-xl overflow-hidden border cursor-zoom-in group"
             >
               <img
@@ -856,28 +885,73 @@ const ReceiptReviewCard = ({
               </p>
             </div>
           </div>
-        )} */}
+        {/* RECEIPT HISTORY */}
+        {displayHistory.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">
+              Receipt History ({displayHistory.length})
+            </p>
+            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+              {displayHistory.map((h: any) => {
+                return (
+                  <div key={h.id} className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold text-gray-700">
+                          {h.bank_name || "Unknown Bank"}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${h.status === "approved" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                          h.status === "rejected" ? "bg-rose-50 text-rose-700 border-rose-100" :
+                            "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}>
+                          {h.status}
+                        </span>
+                      </div>
+                      {/* <p className="text-[10px] text-gray-500 font-mono mt-0.5">
+                        Amount: {Number(h.amount).toLocaleString()} ETB
+                      </p> */}
+                      {h.admin_notes && (
+                        <p className="text-[9px] text-rose-600 bg-rose-50/50 px-2 py-0.5 rounded border border-rose-100 mt-1 italic">
+                          Reason: "{h.admin_notes}"
+                        </p>
+                      )}
+                    </div>
+                    {h.receipt_image && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewImage(h.receipt_image)}
+                        className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 hover:opacity-80 transition cursor-zoom-in"
+                      >
+                        <img src={h.receipt_image} alt="Prior Receipt" className="w-full h-full object-cover" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* KEEP SECOND IMAGE VIEWER */}
-      {showImage && receipt.receipt_image && (
+      {previewImage && (
         <div
           className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 border border-blac"
-          onClick={() => setShowImage(false)}
+          onClick={() => setPreviewImage(null)}
         >
           <div
             className="relative max-w-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => setShowImage(false)}
+              onClick={() => setPreviewImage(null)}
               className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 shadow"
             >
               <X className="h-5 w-5 text-gray-700" />
             </button>
 
             <img
-              src={receipt.receipt_image}
+              src={previewImage}
               alt="Receipt Full"
               className="w-full max-h-[90vh] object-contain rounded-xl"
             />
@@ -925,8 +999,8 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
       showToast(
         "error",
         err.response?.data?.detail ||
-          err.message ||
-          "Failed to mark order as prepared",
+        err.message ||
+        "Failed to mark order as prepared",
       );
     } finally {
       setPreparing(false);
@@ -1169,39 +1243,39 @@ export function VendorOrderDetailModal({
                   {order.shipping_address_text && (
                     <Card title="Shipping Destination" icon={MapPin}>
                       <div className="space-y-3">
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
-                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">
-                          Recipient Name:
-                        </span>
-                        <span className="text-sm font-bold text-secondary">
-                          {order.recipient_name ||
-                            "No recipient name provided."}
-                        </span>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/30 border-l-4 border-green-500">
-                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">
-                          Recipient Phone:
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <PhoneCall className="h-3.5 w-3.5 text-green-600" />
-                          <span className="text-sm font-mono font-bold text-green-700 tracking-tight">
-                            {order.shipping_phone ||
-                              "No Phone Number provided."}
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
+                          <span className="text-xs font-bold text-gray-500 min-w-[110px]">
+                            Recipient Name:
                           </span>
-                          <CopyButton text={order.shipping_phone} />
+                          <span className="text-sm font-bold text-secondary">
+                            {order.recipient_name ||
+                              "No recipient name provided."}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/30 border-l-4 border-green-500">
+                          <span className="text-xs font-bold text-gray-500 min-w-[110px]">
+                            Recipient Phone:
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <PhoneCall className="h-3.5 w-3.5 text-green-600" />
+                            <span className="text-sm font-mono font-bold text-green-700 tracking-tight">
+                              {order.shipping_phone ||
+                                "No Phone Number provided."}
+                            </span>
+                            <CopyButton text={order.shipping_phone} />
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
+                          <span className="text-xs font-bold text-gray-500 min-w-[110px]">
+                            Shipping Address:
+                          </span>
+                          <span className="text-sm font-bold text-secondary">
+                            {formatAddress(order.shipping_address_text) ||
+                              "No address provided."}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
-                        <span className="text-xs font-bold text-gray-500 min-w-[110px]">
-                          Shipping Address:
-                        </span>
-                        <span className="text-sm font-bold text-secondary">
-                          {order.shipping_address_text ||
-                            "No address provided."}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
+                    </Card>
                   )}
                 </div>
 
@@ -1354,18 +1428,20 @@ export function VendorOrderDetailModal({
                   orderId={order.id}
                   companySlug={order.company?.slug}
                   orderStatus={order.status}
+                  receiptHistory={order.receipt_history}
+                  fulfillmentType={order.fulfillment_type || (order.shipping_address_text ? "delivery" : "pickup")}
                 />
 
                 {/* Preparation Card */}
                 {(order.status === "confirmed" ||
                   (order.payment_method === "cod" &&
                     order.status === "pending")) && (
-                  <PreparationCard
-                    order={order}
-                    onUpdate={onUpdate}
-                    readOnly={readOnly}
-                  />
-                )}
+                    <PreparationCard
+                      order={order}
+                      onUpdate={onUpdate}
+                      readOnly={readOnly}
+                    />
+                  )}
 
                 {/* 5. Delivery person Assignment Card */}
                 {order.shipping_address_text && (

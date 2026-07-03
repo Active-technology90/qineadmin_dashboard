@@ -63,6 +63,7 @@ const StatusBadge = ({
     out_for_delivery: "bg-violet-50 text-violet-700 border border-violet-200",
     accepted: "bg-cyan-50 text-cyan-700 border border-cyan-200",
     cancelled: "bg-red-50 text-red-700 border border-red-200",
+    failed: "bg-red-50 text-red-700 border border-red-200",
     rejected: "bg-rose-50 text-rose-700 border border-rose-200",
     contacted: "bg-teal-50 text-teal-700 border border-teal-200",
     fulfilled: "bg-green-100 text-green-800 border border-green-200",

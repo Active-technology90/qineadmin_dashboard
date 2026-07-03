@@ -42,6 +42,15 @@ const getInitials = (name: string) =>
     .join("")
     .toUpperCase() || "?";
 
+const formatAddress = (address?: string | null) => {
+  if (!address) return "";
+  return address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+};
+
 // =============================================================================
 // 1. ORDER STATUS BADGE (for MasterOrder.status)
 // =============================================================================
@@ -652,7 +661,7 @@ const ShippingCard = memo(({ order }: { order: MasterOrder }) => (
       </div>
       <div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2 p-2 rounded-lg bg-purple-50/30 border-l-4 border-secondary">
         <span className="text-[10px] sm:text-xs font-bold text-gray-500 sm:min-w-[80px]">Address:</span>
-        <span className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">{order.shipping_address_text || "N/A"}</span>
+        <span className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">{formatAddress(order.shipping_address_text) || "N/A"}</span>
       </div>
     </div>
   </Card>

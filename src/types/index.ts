@@ -325,6 +325,7 @@ export interface VendorOrder {
   shipping_phone?: string;
   shipping_address_text?: string;
   delivery?: Delivery;
+  master_order_id?: number;
 }
 
 export interface MasterOrder {

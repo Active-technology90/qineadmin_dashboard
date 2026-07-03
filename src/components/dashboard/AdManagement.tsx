@@ -1132,10 +1132,10 @@ export default function AdManagement() {
               <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""}`}>
                 <input 
                   type="checkbox" 
-                  checked={targetPages.includes("company-detail")}
+                  checked={targetPages.includes("company_detail")}
                   onChange={(e) => {
-                    if (e.target.checked) setTargetPages([...targetPages, "company-detail"]);
-                    else setTargetPages(targetPages.filter(p => p !== "company-detail"));
+                    if (e.target.checked) setTargetPages([...targetPages, "company_detail"]);
+                    else setTargetPages(targetPages.filter(p => p !== "company_detail"));
                   }}
                   disabled={!activeSub?.plan?.can_ad_company_detail}
                   className="w-4 h-4 text-secondary rounded border-gray-300" 
