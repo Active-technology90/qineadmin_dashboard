@@ -136,6 +136,7 @@ export interface CompanyListItem {
   sub_category: number;
   sub_category_name: string;
   business_type: string;
+    address?: string; 
   minimum_order_total?: string;
   latitude?: string;
   longitude?: string;

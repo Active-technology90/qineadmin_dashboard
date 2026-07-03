@@ -5,6 +5,7 @@ import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
+import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useAuth } from "../../../hooks/useAuth";
 import type { BankInfo } from "../../../types";
@@ -53,6 +54,7 @@ export default function BankManagement() {
   const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [editingBank, setEditingBank] = useState<BankInfo | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BankInfo | null>(null);
 
   const isSuperAdmin = !user?.memberships?.length;
   const companyName = company?.name || "Your Company";
@@ -208,11 +210,12 @@ export default function BankManagement() {
     setShowModal(true);
   };
 
-  const handleDelete = async (bankId: number) => {
-    if (!window.confirm("Are you sure you want to delete this bank account?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      setBanks(prev => prev.filter(b => b.id !== bankId));
+      setBanks(prev => prev.filter(b => b.id !== deleteTarget.id));
       showToast("success", "Bank account deleted successfully");
+      setDeleteTarget(null);
     } catch (error) {
       showToast("error", "Failed to delete bank account");
     }
@@ -379,7 +382,7 @@ export default function BankManagement() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(bank.id)}
+                        onClick={() => setDeleteTarget(bank)}
                         className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
                         title="Delete"
                       >
@@ -430,6 +433,14 @@ export default function BankManagement() {
           }}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title={`Bank Account "${deleteTarget?.bank_name || ""}"`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

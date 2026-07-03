@@ -13,6 +13,7 @@ export interface CompanyFormData {
   category: number;
   sub_category: number;
   business_type: string;
+    address: string;
   description: string;
   minimum_order_total: string;
   latitude: string;
@@ -331,6 +332,35 @@ export default function CompanyForm({
             0 means no minimum for this company.
           </p>
         </div>
+        {/* Address */}
+        <div>
+          <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+            Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Street, city, area..."
+            value={formData.address}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                address: e.target.value,
+              }))
+            }
+            disabled={!isEditingActive}
+            className={`w-full border rounded-md p-1.5 text-xs ${
+              !isEditingActive
+                ? "bg-gray-50 border-gray-200"
+                : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
+            } ${formErrors.address ? "border-red-500" : ""}`}
+          />
+          {formErrors.address && (
+            <p className="text-red-500 text-[10px] mt-0.5">{formErrors.address}</p>
+          )}
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            Physical address of the company.
+          </p>
+        </div>
 
         {/* Coordinates (Latitude & Longitude) */}
         <div>
@@ -525,6 +555,12 @@ export default function CompanyForm({
               ...prev,
               latitude: selectedLat,
               longitude: selectedLon,
+            }));
+          }}
+          onSelectAddress={(address) => {
+            setFormData((prev) => ({
+              ...prev,
+              address: address,
             }));
           }}
           initialLat={formData.latitude}
