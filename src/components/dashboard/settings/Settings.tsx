@@ -244,10 +244,10 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-10 max-w-5xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {notice && (
         <div
-          className={`rounded-xl border px-4 py-3 text-sm font-medium ${
+          className={`rounded-xl border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium ${
             notice.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
               : "border-red-200 bg-red-50 text-red-800"
@@ -257,45 +257,45 @@ export default function Settings() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 lg:p-8 space-y-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <SwatchBook className="h-5 w-5 text-secondary" />
-              Company Dashboard Theme
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+              <SwatchBook className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
+              <span className="truncate">Company Dashboard Theme</span>
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-secondary/70 mt-0.5 sm:mt-1 break-words">
               {targetCompanyName || "Select a company"} theme applies to every user under that company.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={resetToDefault}
               disabled={!canEditTheme || loadingTargetTheme}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none min-w-[70px]"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Reset
             </button>
             <button
               type="button"
               onClick={saveTheme}
               disabled={isSaveDisabled}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-white text-sm font-semibold hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-secondary text-white text-xs sm:text-sm font-semibold hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none min-w-[70px]"
               title={saveDisabledReason || "Save theme"}
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {saving ? "Saving..." : "Save Theme"}
             </button>
           </div>
         </div>
 
         {isSuperAdmin && (
-          <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-11 w-11 rounded-xl bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+          <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3 sm:p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
                 {targetCompany?.logo ? (
                   <img
                     src={targetCompany.logo}
@@ -303,14 +303,14 @@ export default function Settings() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <Building2 className="h-5 w-5 text-secondary" />
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wide text-secondary/60">
                   Editing Company
                 </p>
-                <p className="font-bold text-gray-900 truncate">
+                <p className="font-bold text-secondary truncate text-xs sm:text-sm">
                   {targetCompany?.name || "No company selected"}
                 </p>
               </div>
@@ -318,50 +318,50 @@ export default function Settings() {
             <button
               type="button"
               onClick={() => setShowCompanySelector(true)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-secondary/20 text-secondary text-sm font-semibold hover:bg-secondary/5"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-secondary/20 text-secondary text-xs sm:text-sm font-semibold hover:bg-secondary/5"
             >
-              <Building2 className="h-4 w-4" />
+              <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Choose Company
             </button>
           </div>
         )}
 
         {!canEditTheme && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-amber-800">
             Only company owners and admins can update the shared dashboard theme.
           </div>
         )}
 
         {loadingTargetTheme && (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">
             Loading selected company theme...
           </div>
         )}
 
         {saveDisabledReason && !saving && !loadingTargetTheme && (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">
             {saveDisabledReason}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {colorFields.map((field) => {
             const value = draftTheme[field.key];
             const invalid = !HEX_COLOR_PATTERN.test(value);
 
             return (
-              <div key={field.key} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4 space-y-3">
+              <div key={field.key} className="rounded-xl border border-gray-100 bg-gray-50/70 p-3 sm:p-4 space-y-2 sm:space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <label className="text-sm font-bold text-gray-800">{field.label}</label>
-                    <p className="text-xs text-gray-500 mt-0.5">{field.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <label className="text-xs sm:text-sm font-bold text-secondary">{field.label}</label>
+                    <p className="text-[10px] sm:text-xs text-secondary/60 mt-0.5">{field.description}</p>
                   </div>
                   <input
                     type="color"
                     value={HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_THEME[field.key]}
                     disabled={!canEditTheme || loadingTargetTheme}
                     onChange={(event) => updateDraftColor(field.key, event.target.value)}
-                    className="h-10 w-10 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer disabled:cursor-not-allowed"
+                    className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg border border-gray-200 bg-white p-0.5 sm:p-1 cursor-pointer disabled:cursor-not-allowed shrink-0"
                   />
                 </div>
 
@@ -369,17 +369,17 @@ export default function Settings() {
                   value={value}
                   disabled={!canEditTheme || loadingTargetTheme}
                   onChange={(event) => updateDraftColor(field.key, event.target.value)}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-secondary disabled:bg-white disabled:text-gray-400 ${
+                  className={`w-full rounded-lg border px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-secondary disabled:bg-white disabled:text-gray-400 ${
                     invalid ? "border-red-300 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-800"
                   }`}
                 />
-                {invalid && <p className="text-xs font-medium text-red-600">Use #RRGGBB format.</p>}
+                {invalid && <p className="text-[10px] sm:text-xs font-medium text-red-600">Use #RRGGBB format.</p>}
               </div>
             );
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
           {AVAILABLE_THEMES.map((theme) => {
             const isSelected =
               theme.primary === draftTheme.primary &&
@@ -392,23 +392,23 @@ export default function Settings() {
                 type="button"
                 onClick={() => applyPreset(theme)}
                 disabled={!canEditTheme || loadingTargetTheme}
-                className={`relative flex items-center gap-3 rounded-xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`relative flex items-center gap-2 sm:gap-3 rounded-xl border p-2 sm:p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
                   isSelected
                     ? "border-secondary bg-secondary/5 shadow-sm"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 <span
-                  className="h-10 w-10 rounded-lg shadow-inner"
+                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg shadow-inner shrink-0"
                   style={{ background: `linear-gradient(135deg, ${theme.dark}, ${theme.primary})` }}
                 />
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate text-sm font-bold ${isSelected ? "text-secondary" : "text-gray-700"}`}>
+                  <span className={`block truncate text-xs sm:text-sm font-bold ${isSelected ? "text-secondary" : "text-gray-700"}`}>
                     {theme.name}
                   </span>
-                  <span className="block text-xs text-gray-400">{theme.primary}</span>
+                  <span className="block text-[10px] sm:text-xs text-gray-400">{theme.primary}</span>
                 </span>
-                {isSelected && <Check className="h-4 w-4 text-secondary" />}
+                {isSelected && <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary shrink-0" />}
               </button>
             );
           })}

@@ -1,4 +1,5 @@
 import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -57,7 +58,7 @@ export function OrderFilters({
   };
 
   return (
-    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-hidden">
+    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-visible relative z-30">
       {/* Header */}
       <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-gray-100">
         <div className="flex items-center gap-2" />
@@ -105,7 +106,7 @@ export function OrderFilters({
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative z-40">
           {/* Order Status */}
           {/* <div className="relative">
             <select
@@ -144,8 +145,24 @@ export function OrderFilters({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div> */}
 
-          {/* Payment Status */}
-          <div className="relative">
+          {/* Payment Status - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block relative z-50">
+            <CustomSelect
+              value={paymentStatusFilter}
+              onChange={onPaymentStatusChange}
+              options={[
+                { value: "", label: "All Payment Statuses" },
+                { value: "Paid", label: "Paid" },
+                { value: "Verifying Receipt", label: "Verifying Receipt" },
+                { value: "Pay on Delivery", label: "Pay on Delivery" },
+                { value: "Checkout Initiated", label: "Checkout Initiated" },
+                { value: "Awaiting Bank Transfer", label: "Awaiting Bank Transfer" },
+              ]}
+              placeholder="All Payment Statuses"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={paymentStatusFilter}
               onChange={(e) => onPaymentStatusChange(e.target.value)}
@@ -163,8 +180,21 @@ export function OrderFilters({
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Fulfillment Type */}
-          <div className="relative">
+          {/* Fulfillment Type - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block relative z-50">
+            <CustomSelect
+              value={fulfillmentTypeFilter}
+              onChange={onFulfillmentTypeChange}
+              options={[
+                { value: "", label: "All Fulfillment Types" },
+                { value: "delivery", label: "Delivery" },
+                { value: "pickup", label: "Pickup" },
+              ]}
+              placeholder="All Fulfillment Types"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={fulfillmentTypeFilter}
               onChange={(e) => onFulfillmentTypeChange(e.target.value)}
@@ -182,8 +212,23 @@ export function OrderFilters({
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Page Size */}
-          <div className="relative">
+          {/* Page Size - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block relative z-50">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => onPageSizeChange(Number(val))}
+              options={[
+                { value: "5", label: "5 / page" },
+                { value: "10", label: "10 / page" },
+                { value: "15", label: "15 / page" },
+                { value: "30", label: "30 / page" },
+                { value: "60", label: "60 / page" },
+              ]}
+              placeholder="5 / page"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}

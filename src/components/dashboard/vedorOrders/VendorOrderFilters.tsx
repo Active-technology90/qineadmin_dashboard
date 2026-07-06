@@ -1,5 +1,6 @@
 import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 
 interface VendorOrderFiltersProps {
   searchTerm: string;
@@ -125,8 +126,26 @@ export function VendorOrderFilters({
 
         {/* Filters + Page Size – all in one grid row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2 sm:gap-3">
-          {/* Order Status */}
-          <div className="relative">
+          {/* Order Status - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block">
+            <CustomSelect
+              value={orderStatusFilter}
+              onChange={onOrderStatusChange}
+              options={[
+                { value: "", label: "All Order Status" },
+                { value: "pending", label: "Pending" },
+                { value: "contacted", label: ORDER_STATUS_LABELS.contacted },
+                { value: "processing", label: ORDER_STATUS_LABELS.processing },
+                { value: "fulfilled", label: ORDER_STATUS_LABELS.fulfilled },
+                { value: "shipped", label: ORDER_STATUS_LABELS.shipped },
+                { value: "payment_rejected", label: "Payment Rejected" },
+                { value: "cancelled", label: "Cancelled" },
+              ]}
+              placeholder="All Order Status"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={orderStatusFilter}
               onChange={(e) => onOrderStatusChange(e.target.value)}
@@ -135,23 +154,36 @@ export function VendorOrderFilters({
                          text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Order Status</option>
-
               <option value="pending">Pending</option>
               <option value="contacted">{ORDER_STATUS_LABELS.contacted}</option>
-              <option value="processing">
-                {ORDER_STATUS_LABELS.processing}
-              </option>
+              <option value="processing">{ORDER_STATUS_LABELS.processing}</option>
               <option value="fulfilled">{ORDER_STATUS_LABELS.fulfilled}</option>
               <option value="shipped">{ORDER_STATUS_LABELS.shipped}</option>
-
               <option value="payment_rejected">Payment Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Delivery Status */}
-          <div className="relative">
+          {/* Delivery Status - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block">
+            <CustomSelect
+              value={deliveryStatusFilter}
+              onChange={onDeliveryStatusChange}
+              options={[
+                { value: "", label: "All Delivery Status" },
+                { value: "pending", label: ORDER_STATUS_LABELS.pending },
+                { value: "accepted", label: "Accepted" },
+                { value: "picked_up", label: "Picked Up" },
+                { value: "out_for_delivery", label: ORDER_STATUS_LABELS.out_for_delivery },
+                { value: "delivered", label: ORDER_STATUS_LABELS.delivered },
+                { value: "failed", label: "Failed" },
+              ]}
+              placeholder="All Delivery Status"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={deliveryStatusFilter}
               onChange={(e) => onDeliveryStatusChange(e.target.value)}
@@ -160,23 +192,32 @@ export function VendorOrderFilters({
                          text-xs sm:text-sm pr-6 sm:pr-8 outline-none transition"
             >
               <option value="">All Delivery Status</option>
-
               <option value="pending">{ORDER_STATUS_LABELS.pending}</option>
               <option value="accepted">Accepted</option>
               <option value="picked_up">Picked Up</option>
-
-              <option value="out_for_delivery">
-                {ORDER_STATUS_LABELS.out_for_delivery}
-              </option>
-
+              <option value="out_for_delivery">{ORDER_STATUS_LABELS.out_for_delivery}</option>
               <option value="delivered">{ORDER_STATUS_LABELS.delivered}</option>
               <option value="failed">Failed</option>
             </select>
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Payment Method */}
-          <div className="relative">
+          {/* Payment Method - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block">
+            <CustomSelect
+              value={paymentMethodFilter}
+              onChange={onPaymentMethodChange}
+              options={[
+                { value: "", label: "All Payment Method" },
+                { value: "bank_transfer", label: "Bank Transfer" },
+                { value: "chapa", label: "Chapa" },
+                { value: "cod", label: "COD" },
+              ]}
+              placeholder="All Payment Method"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={paymentMethodFilter}
               onChange={(e) => onPaymentMethodChange(e.target.value)}
@@ -192,9 +233,25 @@ export function VendorOrderFilters({
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Company (conditional) */}
+          {/* Company (conditional) - Desktop uses CustomSelect, Mobile uses native select */}
           {!hideCompanyFilter && (
-            <div className="relative">
+            <>
+              <div className="hidden md:block">
+                <CustomSelect
+                  value={selectedCompanyId}
+                  onChange={onCompanyChange}
+                  options={[
+                    { value: "", label: "All Companies" },
+                    ...companies.map((c) => ({
+                      value: String(c.id),
+                      label: c.name,
+                    })),
+                  ]}
+                  placeholder="All Companies"
+                  className="w-full"
+                />
+              </div>
+              <div className="md:hidden relative">
               <select
                 value={selectedCompanyId}
                 onChange={(e) => onCompanyChange(e.target.value)}
@@ -211,10 +268,27 @@ export function VendorOrderFilters({
               </select>
             <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 pointer-events-none" />
             </div>
+
+            </>
           )}
 
-          {/* Page Size – now in the same row! */}
-          <div className="relative">
+          {/* Page Size - Desktop uses CustomSelect, Mobile uses native select */}
+          <div className="hidden md:block">
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(val) => onPageSizeChange?.(Number(val))}
+              options={[
+                { value: "5", label: "5 / page" },
+                { value: "10", label: "10 / page" },
+                { value: "15", label: "15 / page" },
+                { value: "30", label: "30 / page" },
+                { value: "60", label: "60 / page" },
+              ]}
+              placeholder="5 / page"
+              className="w-full"
+            />
+          </div>
+          <div className="md:hidden relative">
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
