@@ -7,6 +7,7 @@ interface LocationPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (lat: string, lon: string) => void;
+  onSelectAddress?: (address: string) => void; 
   initialLat?: string;
   initialLon?: string;
 }
@@ -15,6 +16,7 @@ export default function LocationPickerModal({
   isOpen,
   onClose,
   onSelect,
+  onSelectAddress, 
   initialLat,
   initialLon,
 }: LocationPickerModalProps) {
@@ -25,7 +27,24 @@ export default function LocationPickerModal({
   const [detecting, setDetecting] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  const mapRef = useRef<any>(null);
+// Reverse geocode to get address from coordinates
+const reverseGeocode = async (lat: number, lon: number): Promise<string | null> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
+    );
+    const data = await response.json();
+    if (data && data.display_name) {
+      return data.display_name;
+    }
+    return null;
+  } catch (error) {
+    console.error('Reverse geocode failed:', error);
+    return null;
+  }
+};
+
+const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const mapContainerId = "leaflet-location-picker-map";
 
@@ -111,19 +130,32 @@ export default function LocationPickerModal({
     }).addTo(map);
     markerRef.current = marker;
 
-    // Handle marker drag
-    marker.on("dragend", () => {
-      const pos = marker.getLatLng();
-      setLat(pos.lat.toFixed(6));
-      setLon(pos.lng.toFixed(6));
-    });
+// Handle marker drag
+marker.on("dragend", async () => {
+  const pos = marker.getLatLng();
+  const latFixed = pos.lat.toFixed(6);
+  const lngFixed = pos.lng.toFixed(6);
+  setLat(latFixed);
+  setLon(lngFixed);
+  // Reverse geocode for address
+  if (onSelectAddress) {
+    const address = await reverseGeocode(pos.lat, pos.lng);
+    if (address) onSelectAddress(address);
+  }
+});
 
-    // Handle map click to place marker
-    map.on("click", (e: any) => {
-      marker.setLatLng(e.latlng);
-      setLat(e.latlng.lat.toFixed(6));
-      setLon(e.latlng.lng.toFixed(6));
-    });
+// Handle map click to place marker
+map.on("click", async (e: any) => {
+  marker.setLatLng(e.latlng);
+  const latFixed = e.latlng.lat.toFixed(6);
+  const lngFixed = e.latlng.lng.toFixed(6);
+  setLat(latFixed);
+  setLon(lngFixed);
+  if (onSelectAddress) {
+    const address = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+    if (address) onSelectAddress(address);
+  }
+});
 
     // Invalidate map size when container size changes (e.g., sidebar opens/resizes)
     const resizeObserver = new ResizeObserver(() => {
@@ -173,9 +205,13 @@ export default function LocationPickerModal({
           markerRef.current.setLatLng([searchLat, searchLon]);
         }
 
-        // Update state
-        setLat(searchLat.toFixed(6));
-        setLon(searchLon.toFixed(6));
+// Update state
+setLat(searchLat.toFixed(6));
+setLon(searchLon.toFixed(6));
+// Update address from search result
+if (onSelectAddress && firstResult.display_name) {
+  onSelectAddress(firstResult.display_name);
+}
       } else {
         alert("Location not found. Please try a different search term.");
       }
@@ -195,7 +231,7 @@ export default function LocationPickerModal({
 
     setDetecting(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const curLat = position.coords.latitude;
         const curLon = position.coords.longitude;
 
@@ -209,6 +245,11 @@ export default function LocationPickerModal({
 
         setLat(curLat.toFixed(6));
         setLon(curLon.toFixed(6));
+        // Reverse geocode for address
+        if (onSelectAddress) {
+          const address = await reverseGeocode(curLat, curLon);
+          if (address) onSelectAddress(address);
+        }
         setDetecting(false);
       },
       (error) => {

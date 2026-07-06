@@ -19,6 +19,7 @@ export const TableControls = memo(function TableControls({
   { label: "15 / page", value: "15" },
   { label: "30 / page", value: "30" },
   { label: "60 / page", value: "60" },
+    { label: "80 / page", value: "80" },
 ];
   return (
     <div className="flex flex-row sm:flex-row gap-3 mb-4 items-start bg-gray-50 p-2 rounded-xl border border-gray-200">

@@ -282,9 +282,10 @@ export default function CompanyOrders() {
 
     try {
       const fetchPage = async (page: number) => {
+        // Try with a larger page size, but backend may override
         const params = {
           page,
-          page_size: 200,
+          page_size: 500,
           ordering: "-created_at" as const,
         };
 
@@ -302,9 +303,10 @@ export default function CompanyOrders() {
 
       let allData = [...firstResponse.data.results];
       const total = firstResponse.data.count;
-
+      
       if (total > allData.length) {
-        const remainingPages = Math.ceil((total - allData.length) / 200);
+        const actualPageSize = allData.length || 20;
+        const remainingPages = Math.ceil((total - allData.length) / actualPageSize);
         const promises = [];
         for (let i = 0; i < remainingPages; i++) {
           promises.push(fetchPage(i + 2));
@@ -313,9 +315,11 @@ export default function CompanyOrders() {
         results.forEach((res) => {
           allData = allData.concat(res.data.results);
         });
+        console.log(' Total orders after fetching all:', allData.length);
       }
 
       if (!controller.signal.aborted) {
+        console.log(' Setting allOrders with:', allData.length, 'orders');
         setAllOrders(allData);
       }
       return allData;
@@ -665,17 +669,15 @@ export default function CompanyOrders() {
                      <StatusBadge status={order.status} type="order" />
                     </td>
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
-<td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
-  <StatusBadge 
-    status={
-      // Pickup orders have no shipping address
-      !order.shipping_address_text
-        ? "self_pickup" 
-        : (order.delivery?.status || "no assigned")
-    } 
-    type="delivery" 
-  />
-</td>
+                      <StatusBadge 
+                        status={
+                          // Pickup orders have no shipping address
+                          !order.shipping_address_text
+                            ? "self_pickup" 
+                            : (order.delivery?.status || "no assigned")
+                        } 
+                        type="delivery" 
+                      />
                     </td>
                     {/* <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">

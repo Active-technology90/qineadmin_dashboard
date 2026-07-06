@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus } from "lucide-react";
+import { Plus, MapPin } from "lucide-react";
 import api from "../../../services/api";
 import {
   createCompany,
@@ -41,6 +41,7 @@ import NonSuperAdminView from "./NonSuperAdminView";
 import CompanyFilters from "./CompanyFilters";
 import type { CompanyFormData } from "./CompanyForm";
 import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
+import LocationPickerModal from "./LocationPickerModal";
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -142,6 +143,7 @@ export default function CompanyManagement() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>({
     name: "",
     name_am: "",
@@ -150,6 +152,7 @@ export default function CompanyManagement() {
     category: 0,
     sub_category: 0,
     business_type: "",
+    address: "", 
     description: "",
     minimum_order_total: "0.00",
     latitude: "",
@@ -314,6 +317,12 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => comp.business_type?.toUpperCase() || "-",
       },
+          {
+      key: "address",
+      header: "Address",
+      sortable: true,
+      render: (comp) => comp.address || "-",
+    },
       {
         key: "is_active",
         header: "Is Active",
@@ -396,7 +405,8 @@ export default function CompanyManagement() {
           head_company: companyListItem.head_company ?? null,
           category: companyListItem.category,
           sub_category: companyListItem.sub_category,
-          business_type: companyListItem.business_type,
+          business_type: companyListItem.business_type, 
+         address: companyListItem.address || "",  
           description: companyListItem.description || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
           latitude: companyListItem.latitude || "",
@@ -432,6 +442,7 @@ export default function CompanyManagement() {
             category: first.category,
             sub_category: first.sub_category,
             business_type: first.business_type,
+            address: first.address || "",
             description: first.description || "",
             minimum_order_total: first.minimum_order_total || "0.00",
             latitude: first.latitude || "",
@@ -535,6 +546,8 @@ export default function CompanyManagement() {
           cleanString(formData.business_type) !==
           cleanString(originalFormData.business_type)
         )
+         return true;
+if (cleanString(formData.address) !== cleanString(originalFormData.address))  
           return true;
         if (
           Number(formData.head_company ?? 0) !==
@@ -627,6 +640,9 @@ export default function CompanyManagement() {
       );
 
       formPayload.append("business_type", formData.business_type);
+      if (formData.address) {                    
+  formPayload.append("address", formData.address);
+}
 
       if (formData.description) {
         formPayload.append("description", formData.description);
@@ -735,6 +751,7 @@ export default function CompanyManagement() {
       category: 0,
       sub_category: 0,
       business_type: "",
+        address: "",    
       description: "",
       minimum_order_total: "0.00",
       latitude: "",
@@ -758,7 +775,7 @@ export default function CompanyManagement() {
         return;
       }
       setEditingSlug(company.slug);
-      const newFormData = {
+      const newFormData = {   
         name: company.name,
         name_am: company.name_am || "",
         slug: company.slug,
@@ -937,6 +954,85 @@ export default function CompanyManagement() {
                   {formErrors.business_type}
                 </p>
               )}
+            </div>
+            {/* Address Field */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                Address
+              </label>
+              <input
+                type="text"
+                placeholder="Street, city, area..."
+                value={formData.address}
+                onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+              />
+              <p className="text-xs text-gray-400 mt-1">Optional – physical address of the company.</p>
+            </div>
+
+            {/* 📍 GPS Coordinates & Map Picker - MOVED HERE (below Address) */}
+            <div className="md:col-span-2">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                  Company Location (GPS)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowMapPicker(true)}
+                  className="text-xs text-secondary hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
+                >
+                  <MapPin className="h-3 w-3" />
+                  Pick on Map
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Latitude"
+                    value={formData.latitude}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        latitude: e.target.value,
+                      }))
+                    }
+                    className="w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base pr-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary border-gray-300"
+                  />
+                  <span className="absolute right-3 top-3 text-[10px] font-extrabold text-gray-400 select-none">
+                    LAT
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="Longitude"
+                    value={formData.longitude}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        longitude: e.target.value,
+                      }))
+                    }
+                    className="w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base pr-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary border-gray-300"
+                  />
+                  <span className="absolute right-3 top-3 text-[10px] font-extrabold text-gray-400 select-none">
+                    LON
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowMapPicker(true)}
+                className="mt-2 w-full py-2.5 border border-dashed border-secondary/40 hover:border-secondary hover:bg-purple-50/30 text-secondary rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Choose Location on Map Picker
+              </button>
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
@@ -1364,6 +1460,29 @@ export default function CompanyManagement() {
           onCancel={() => setDeleteTarget(null)}
         />
       </div>
+
+      {/* Location Picker Modal */}
+      {showMapPicker && (
+        <LocationPickerModal
+          isOpen={showMapPicker}
+          onClose={() => setShowMapPicker(false)}
+          onSelect={(selectedLat, selectedLon) => {
+            setFormData((prev) => ({
+              ...prev,
+              latitude: selectedLat,
+              longitude: selectedLon,
+            }));
+          }}
+          onSelectAddress={(address) => {
+            setFormData((prev) => ({
+              ...prev,
+              address: address,
+            }));
+          }}
+          initialLat={formData.latitude}
+          initialLon={formData.longitude}
+        />
+      )}
     </div>
   );
 }
