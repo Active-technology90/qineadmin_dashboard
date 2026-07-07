@@ -985,14 +985,14 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
                 <label className="block text-xs sm:text-sm font-medium text-gray-700">
                   Company Location (GPS)
                 </label>
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setShowMapPicker(true)}
                   className="text-xs text-secondary hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
                 >
                   <MapPin className="h-3 w-3" />
                   Pick on Map
-                </button>
+                </button> */}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
