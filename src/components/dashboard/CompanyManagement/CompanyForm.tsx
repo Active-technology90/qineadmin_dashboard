@@ -368,7 +368,7 @@ export default function CompanyForm({
             <label className="block text-[14px] font-medium text-gray-600">
               Company Location (GPS) *
             </label>
-            {isEditingActive && (
+            {/* {isEditingActive && (
               <button
                 type="button"
                 onClick={() => setShowMapPicker(true)}
@@ -377,7 +377,7 @@ export default function CompanyForm({
                 <MapPin className="h-3 w-3" />
                 Pick on Map
               </button>
-            )}
+            )} */}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -565,6 +565,7 @@ export default function CompanyForm({
           }}
           initialLat={formData.latitude}
           initialLon={formData.longitude}
+          initialAddress={formData.address}  
         />
       )}
     </form>

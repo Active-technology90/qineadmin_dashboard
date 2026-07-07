@@ -323,6 +323,14 @@ export default function CompanyManagement() {
       sortable: true,
       render: (comp) => comp.address || "-",
     },
+         
+      // {
+      //   key: "head_company",
+      //   header: "Head Company",
+      //   sortable: true,
+      //   render: (comp) => comp.head_company_detail?.name || "-",
+      // },
+      
       {
         key: "is_active",
         header: "Is Active",
@@ -783,6 +791,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         category: company.category,
         sub_category: company.sub_category,
         business_type: company.business_type,
+          address: company.address || "",  
         description: company.description || "",
         minimum_order_total: company.minimum_order_total || "0.00",
         latitude: company.latitude || "",
@@ -976,14 +985,14 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
                 <label className="block text-xs sm:text-sm font-medium text-gray-700">
                   Company Location (GPS)
                 </label>
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setShowMapPicker(true)}
                   className="text-xs text-secondary hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
                 >
                   <MapPin className="h-3 w-3" />
                   Pick on Map
-                </button>
+                </button> */}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1481,6 +1490,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
           }}
           initialLat={formData.latitude}
           initialLon={formData.longitude}
+          initialAddress={formData.address} 
         />
       )}
     </div>
