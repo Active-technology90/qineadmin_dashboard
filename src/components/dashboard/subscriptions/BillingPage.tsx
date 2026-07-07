@@ -3,6 +3,52 @@ import { motion } from "framer-motion";
 import { CreditCard, CheckCircle2, Zap, Package, XCircle, Clock, AlertTriangle, ArrowUp, ArrowDown, Shield } from "lucide-react";
 import { getSubscriptionPlans, getMySubscription, initializeSubscriptionPayment, verifySubscriptionPayment } from "../../../services/api";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
+// ========== LOADING SKELETON ==========
+const SkeletonCard = () => (
+  <div className="bg-white rounded-3xl p-8 border-2 border-gray-100 shadow-sm animate-pulse">
+    <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
+    <div className="h-4 bg-gray-200 rounded w-48 mb-6" />
+    <div className="h-10 bg-gray-200 rounded w-24 mb-6" />
+    <div className="space-y-4 mb-8">
+      <div className="flex items-start gap-3">
+        <div className="h-5 w-5 bg-gray-200 rounded-full shrink-0 mt-0.5" />
+        <div className="h-4 bg-gray-200 rounded w-48" />
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="h-5 w-5 bg-gray-200 rounded-full shrink-0 mt-0.5" />
+        <div className="h-4 bg-gray-200 rounded w-40" />
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="h-5 w-5 bg-gray-200 rounded-full shrink-0 mt-0.5" />
+        <div className="h-4 bg-gray-200 rounded w-44" />
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="h-5 w-5 bg-gray-200 rounded-full shrink-0 mt-0.5" />
+        <div className="h-4 bg-gray-200 rounded w-36" />
+      </div>
+    </div>
+    <div className="h-12 bg-gray-200 rounded-xl w-full" />
+  </div>
+);
+
+const SkeletonCurrentPlan = () => (
+  <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 animate-pulse">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex-1">
+        <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
+        <div className="h-10 bg-gray-200 rounded w-48 mb-2" />
+        <div className="h-4 bg-gray-200 rounded w-32" />
+      </div>
+      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 min-w-[250px]">
+        <div className="flex justify-between items-center mb-2">
+          <div className="h-4 bg-gray-200 rounded w-32" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+        <div className="w-full h-2 bg-gray-200 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
 
 interface SubscriptionPlan {
   id: number;
@@ -170,13 +216,13 @@ export default function BillingPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="p-8 flex justify-center items-center h-full">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
+  //     </div>
+  //   );
+  // }
 
   const currentPlanPrice = parseFloat(activeSub?.plan?.price || "0");
   const isFree = currentPlanPrice === 0;
@@ -185,12 +231,29 @@ export default function BillingPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
-        <p className="text-gray-500 mt-2">Manage your company's active plan and limits.</p>
+      <div className="flex items-center gap-3">
+        {isLoading ? (
+          <div className="h-8 sm:h-10 w-1 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+        ) : (
+          <div className="h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/20 flex-shrink-0" />
+        )}
+        {isLoading ? (
+          <div className="flex-1 animate-pulse">
+            <div className="h-8 sm:h-10 bg-gray-200 rounded w-48 sm:w-64 mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-64 sm:w-96" />
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-secondary">Billing & Subscription</h1>
+            <p className="text-secondary/60 text-sm mt-0.5">Manage your company's active plan and limits.</p>
+          </div>
+        )}
       </div>
 
       {/* Current Subscription Section */}
+      {isLoading ? (
+        <SkeletonCurrentPlan />
+      ) : (
       <div className={`bg-white rounded-3xl p-8 shadow-sm border relative overflow-hidden ${
         isExpired ? "border-red-200" : "border-gray-100"
       }`}>
@@ -275,13 +338,27 @@ export default function BillingPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Pricing Plans Section */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <Zap className="w-6 h-6 text-amber-500" /> {isExpired ? "Reactivate Your Plan" : "Available Plans"}
-        </h2>
+        {isLoading ? (
+          <div className="flex items-center gap-2 mb-6 animate-pulse">
+            <div className="h-6 w-6 bg-gray-200 rounded" />
+            <div className="h-8 bg-gray-200 rounded w-40" />
+          </div>
+        ) : (
+          <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-2">
+            <Zap className="w-6 h-6 text-amber-500" /> {isExpired ? "Reactivate Your Plan" : "Available Plans"}
+          </h2>
+        )}
 
+        {isLoading ? (
+          <div className="grid md:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : (
+          <>
         {!isAuthorized && (
           <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2 max-w-3xl">
             <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" />
@@ -289,8 +366,8 @@ export default function BillingPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {plans.map((plan) => {
+            <div className="grid md:grid-cols-3 gap-8">
+              {plans.map((plan) => {
             const action = getPlanAction(plan);
             const btnCfg = getButtonConfig(action);
             const cardPrice = parseFloat(plan.price);
@@ -411,7 +488,9 @@ export default function BillingPage() {
               </motion.div>
             );
           })}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -3,11 +3,143 @@ import CompanyCard from "./CompanyCard";
 import CompanyForm, { type CompanyFormData } from "./CompanyForm";
 import type { CompanyListItem } from "../../../types";
 import type { Category, SubCategory } from "../../../types";
+// ========== LOADING SKELETON ==========
+const SkeletonCard = () => (
+  <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden w-full min-w-0 sm:min-w-[360px] max-w-full sm:max-w-md animate-pulse">
+    {/* Cover Image Skeleton */}
+    <div className="relative h-40 w-full overflow-hidden bg-gradient-to-r from-gray-200 to-gray-300" />
+    
+    {/* Content Container */}
+    <div className="relative z-10 flex flex-col bg-white rounded-t-3xl -mt-8 px-5 pb-3 pt-0">
+      {/* Logo and Name Skeleton */}
+      <div className="flex items-center gap-4 -mt-12 mb-4 px-4">
+        <div className="flex-shrink-0">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-200 border-4 border-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="h-6 bg-gray-200 rounded w-32 mb-1" />
+          <div className="h-4 bg-gray-200 rounded w-24" />
+        </div>
+      </div>
+
+      {/* Status Badge Skeleton */}
+      <div className="flex justify-end mb-3">
+        <div className="h-5 w-16 bg-gray-200 rounded-full" />
+      </div>
+
+      {/* Category Skeleton */}
+      <div className="bg-gray-100 rounded-lg p-3 mb-2">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-gray-200 rounded-md">
+            <div className="h-3.5 w-3.5" />
+          </div>
+          <div className="flex-1">
+            <div className="h-3 bg-gray-200 rounded w-16 mb-1" />
+            <div className="h-4 bg-gray-200 rounded w-24" />
+          </div>
+        </div>
+      </div>
+
+      {/* Subcategory Skeleton */}
+      <div className="bg-gray-100 rounded-lg p-3 mb-2 border border-gray-200">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-gray-200 rounded-md">
+            <div className="h-3.5 w-3.5" />
+          </div>
+          <div className="flex-1">
+            <div className="h-3 bg-gray-200 rounded w-20 mb-1" />
+            <div className="h-4 bg-gray-200 rounded w-20" />
+          </div>
+        </div>
+      </div>
+
+      {/* Business Type Skeleton */}
+      <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-gray-200 rounded-md">
+            <div className="h-3.5 w-3.5" />
+          </div>
+          <div className="flex-1">
+            <div className="h-3 bg-gray-200 rounded w-20 mb-1" />
+            <div className="h-4 bg-gray-200 rounded w-16" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonForm = () => (
+  <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden animate-pulse">
+    <div className="flex flex-col lg:flex-row">
+      {/* Left Column */}
+      <div className="flex-1 p-3 space-y-3">
+        <div className="h-8 bg-gray-200 rounded w-32" />
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="h-32 bg-gray-200 rounded w-full" />
+      </div>
+
+      {/* Right Column */}
+      <div className="flex-1 p-3 space-y-3">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-20 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="h-10 bg-gray-200 rounded w-full" />
+          <div className="h-10 bg-gray-200 rounded w-full" />
+        </div>
+        <div className="h-10 bg-gray-200 rounded w-full" />
+        <div className="flex gap-2">
+          <div className="h-5 w-5 bg-gray-200 rounded" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-5 w-5 bg-gray-200 rounded" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+        <div className="h-40 bg-gray-200 rounded w-full" />
+      </div>
+    </div>
+  </div>
+);
 
 interface NonSuperAdminViewProps {
   companies: CompanyListItem[];
   userCompanyRole: string | null;
   onEdit: (company: CompanyListItem) => void;
+    loading?: boolean; 
   // All form props
   formData: CompanyFormData;
   setFormData: React.Dispatch<React.SetStateAction<CompanyFormData>>;
@@ -28,6 +160,7 @@ export default function NonSuperAdminView({
   companies,
   userCompanyRole,
   onEdit,
+   loading = false,
   formData,
   setFormData,
   formErrors,
@@ -46,20 +179,38 @@ export default function NonSuperAdminView({
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch">
       {/* Left: Company Cards */}
       <div className="flex flex-col">
-        {companies.map((company) => (
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <div className="mt-4" />
+          </>
+        ) : (
+          companies.map((company) => (
           <CompanyCard
             key={company.id}
             company={company}
             onEdit={onEdit}
             userRole={userCompanyRole}
           />
-        ))}
+          ))
+        )}
       </div>
 
       {/* Right: Inline form */}
       <div className="lg:w-4/5 w-full flex flex-col gap-4 lg:sticky lg:top-6">
         {/* Action Buttons - Edit, Update, Cancel on same line */}
-        {companies.length > 0 && (
+        {loading ? (
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 animate-pulse">
+            {/* View Only Badge Skeleton */}
+            <div className="p-4 flex items-center gap-3 flex-wrap">
+              <div className="h-5 w-5 bg-gray-200 rounded" />
+              <div className="h-4 bg-gray-200 rounded w-32" />
+              <div className="h-3 bg-gray-200 rounded w-40" />
+            </div>
+            {/* Edit Button Skeleton */}
+            <div className="h-11 w-36 bg-gray-200 rounded-xl" />
+          </div>
+        ) : companies.length > 0 && (
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             {/* Update & Cancel Buttons - only show when editing is active */}
             {isEditingActive ? (
@@ -110,7 +261,7 @@ export default function NonSuperAdminView({
               </div>
             ) : (
               /* View Only Badge - clean text-only with lock icon */
-              <div className=" p-4 flex items-center gap-3 flex-wrap">
+              <div className="p-4 flex items-center gap-3 flex-wrap">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -191,14 +342,14 @@ export default function NonSuperAdminView({
         <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
          
         {/* Loading state */}
-        {companies.length === 0 && (
+        {loading ? (
+          <SkeletonForm />
+        ) : companies.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mx-auto mb-3"></div>
             <p className="text-sm">Loading company data...</p>
           </div>
-        )}
-
-        {companies.length > 0 && (
+        ) : companies.length > 0 && (
           <CompanyForm
             formData={formData}
             setFormData={setFormData}
