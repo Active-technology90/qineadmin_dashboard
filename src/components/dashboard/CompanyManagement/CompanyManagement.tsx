@@ -323,6 +323,14 @@ export default function CompanyManagement() {
       sortable: true,
       render: (comp) => comp.address || "-",
     },
+         
+      // {
+      //   key: "head_company",
+      //   header: "Head Company",
+      //   sortable: true,
+      //   render: (comp) => comp.head_company_detail?.name || "-",
+      // },
+      
       {
         key: "is_active",
         header: "Is Active",
@@ -783,6 +791,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         category: company.category,
         sub_category: company.sub_category,
         business_type: company.business_type,
+          address: company.address || "",  
         description: company.description || "",
         minimum_order_total: company.minimum_order_total || "0.00",
         latitude: company.latitude || "",
@@ -1481,6 +1490,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
           }}
           initialLat={formData.latitude}
           initialLon={formData.longitude}
+          initialAddress={formData.address} 
         />
       )}
     </div>

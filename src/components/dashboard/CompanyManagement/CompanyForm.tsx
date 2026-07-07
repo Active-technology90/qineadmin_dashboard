@@ -565,6 +565,7 @@ export default function CompanyForm({
           }}
           initialLat={formData.latitude}
           initialLon={formData.longitude}
+          initialAddress={formData.address}  
         />
       )}
     </form>

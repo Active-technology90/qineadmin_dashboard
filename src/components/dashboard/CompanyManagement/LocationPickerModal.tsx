@@ -10,6 +10,7 @@ interface LocationPickerModalProps {
   onSelectAddress?: (address: string) => void; 
   initialLat?: string;
   initialLon?: string;
+    initialAddress?: string;  
 }
 
 export default function LocationPickerModal({
@@ -19,13 +20,36 @@ export default function LocationPickerModal({
   onSelectAddress, 
   initialLat,
   initialLon,
+  initialAddress,  
 }: LocationPickerModalProps) {
+  // Debug: log incoming props
+  console.log("LocationPickerModal props:", { initialLat, initialLon, initialAddress });
+  
   const [lat, setLat] = useState<string>(initialLat || "9.03");
   const [lon, setLon] = useState<string>(initialLon || "38.74");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>(initialAddress || "");  // - sets the search box to the stored address
   const [searching, setSearching] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  // ==================  Update state when props change ==================
+  useEffect(() => {
+    if (isOpen) {
+      if (initialLat && initialLat !== lat) {
+        console.log("Updating lat from prop:", initialLat);
+        setLat(initialLat);
+      }
+      if (initialLon && initialLon !== lon) {
+        console.log("Updating lon from prop:", initialLon);
+        setLon(initialLon);
+      }
+      if (initialAddress && initialAddress !== searchQuery) {
+        console.log("Updating searchQuery from prop:", initialAddress);
+        setSearchQuery(initialAddress);
+      }
+    }
+  }, [isOpen, initialLat, initialLon, initialAddress]);
+  // ================================================================
 
 // Reverse geocode to get address from coordinates
 const reverseGeocode = async (lat: number, lon: number): Promise<string | null> => {
@@ -101,6 +125,7 @@ const mapRef = useRef<any>(null);
     const map = L.map(mapContainerId, {
       zoomControl: false,
     }).setView([startLat, startLon], 13);
+
     mapRef.current = map;
 
     // Add Zoom Control at bottom right
@@ -177,6 +202,26 @@ map.on("click", async (e: any) => {
       }
     };
   }, [isOpen, leafletLoaded]);
+
+  // Update map view when lat/lon change (for when stored address is loaded)
+  useEffect(() => {
+    if (!isOpen || !leafletLoaded || !mapRef.current) return;
+
+    const L = (window as any).L;
+    if (!L) return;
+
+    const newLat = parseFloat(lat) || 9.03;
+    const newLon = parseFloat(lon) || 38.74;
+
+    // Update map view
+    mapRef.current.setView([newLat, newLon], 15);
+
+    // Update marker position
+    if (markerRef.current) {
+      markerRef.current.setLatLng([newLat, newLon]);
+    }
+  }, [lat, lon, isOpen, leafletLoaded]);
+  // ======================================================
 
   // Handle address search using free Nominatim API
   const handleSearch = async (e: React.FormEvent) => {
