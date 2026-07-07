@@ -188,7 +188,7 @@ export default function SuperadminSubscriptions() {
                 <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Plan</th>
                 <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Start Date</th>
                 <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">End Date</th>
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Featured Override</th>
+                {/* <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Featured Override</th> */}
                 <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -198,22 +198,25 @@ export default function SuperadminSubscriptions() {
                   <td colSpan={6} className="p-8 text-center text-gray-500">No active subscriptions found.</td>
                 </tr>
               )}
-              {companySubscriptions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">{sub.company_name}</td>
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">
-                    <span className="bg-indigo-100 text-indigo-700 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-md text-[9px] xs:text-xs font-semibold">{sub.plan.name}</span>
-                  </td>
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{new Date(sub.start_date).toLocaleDateString()}</td>
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}</td>
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-xs sm:text-sm">{sub.custom_max_featured_products !== null ? sub.custom_max_featured_products : '-'}</td>
-                  <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
-                    <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${sub.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                      {sub.is_active ? 'Active' : 'Expired'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {companySubscriptions.map((sub) => {
+                const isSubscriptionActive = sub.is_active && !sub.is_expired;
+                return (
+                  <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">{sub.company_name}</td>
+                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">
+                      <span className="bg-indigo-100 text-indigo-700 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-md text-[9px] xs:text-xs font-semibold">{sub.plan.name}</span>
+                    </td>
+                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{new Date(sub.start_date).toLocaleDateString()}</td>
+                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}</td>
+                    {/* <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-xs sm:text-sm">{sub.custom_max_featured_products !== null ? sub.custom_max_featured_products : '-'}</td> */}
+                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
+                      <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${isSubscriptionActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {isSubscriptionActive ? 'Active' : 'Expired'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
