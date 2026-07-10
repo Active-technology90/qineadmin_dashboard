@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Plus, Edit, CheckCircle2, XCircle, CreditCard, Building2 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Plus, Edit, CheckCircle2, XCircle, CreditCard, Building2, Filter, Clock, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   getAdminSubscriptionPlans,
@@ -7,11 +7,90 @@ import {
   createAdminSubscriptionPlan,
   updateAdminSubscriptionPlan,
 } from "../../../services/api";
+import { SearchInput } from "../../ui/SearchInput";
+import { TableControls } from "../../ui/TableControls";
+import { Pagination } from "../../ui/Pagination";
+import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { usePagination } from "../../../hooks/usePagination";
+import { useSorting } from "../../../hooks/useSorting";
+
+// ========== LOADING SKELETON ==========
+const SkeletonRow = () => (
+  <tr className="animate-pulse">
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell"><div className="h-4 bg-gray-200 rounded w-12" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell"><div className="h-5 w-5 bg-gray-200 rounded-full mx-auto" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden lg:table-cell"><div className="h-5 w-5 bg-gray-200 rounded-full mx-auto" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden xl:table-cell"><div className="h-5 w-5 bg-gray-200 rounded-full mx-auto" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell"><div className="h-5 w-16 bg-gray-200 rounded-full mx-auto" /></td>
+    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-right"><div className="h-5 w-5 bg-gray-200 rounded ml-auto" /></td>
+  </tr>
+);
+
+const SkeletonSubscriptionRow = () => (
+  <tr className="animate-pulse">
+    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-5 bg-gray-200 rounded w-16" /></td>
+    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3"><div className="h-5 w-16 bg-gray-200 rounded-full" /></td>
+  </tr>
+);
+
+// ========== PLAN COLOR MAPPING ==========
+const getPlanColor = (planName: string): string => {
+  const name = planName?.toLowerCase() || "";
+  
+  // Basic plans
+  if (name.includes("basic") || name.includes("free")) {
+    return "bg-gray-100 text-gray-700 border-gray-200";
+  }
+  // Starter plans
+  if (name.includes("starter") || name.includes("beginner")) {
+    return "bg-blue-100 text-blue-700 border-blue-200";
+  }
+  // Professional plans
+  if (name.includes("professional") || name.includes("pro")) {
+    return "bg-purple-100 text-purple-700 border-purple-200";
+  }
+  // Premium plans
+  if (name.includes("premium") || name.includes("advanced")) {
+    return "bg-amber-100 text-amber-700 border-amber-200";
+  }
+  // Enterprise plans
+  if (name.includes("enterprise") || name.includes("corporate")) {
+    return "bg-rose-100 text-rose-700 border-rose-200";
+  }
+  // Default fallback
+  return "bg-indigo-100 text-indigo-700 border-indigo-200";
+};
 
 export default function SuperadminSubscriptions() {
   const [plans, setPlans] = useState<any[]>([]);
   const [companySubscriptions, setCompanySubscriptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ========== FILTER, SORT, PAGINATION STATE ==========
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [planFilter, setPlanFilter] = useState<string>("all");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ========== CHECK IF ANY FILTERS ARE ACTIVE ==========
+  const hasActiveFilters = useMemo(() => {
+    return (
+      inputValue.trim() !== "" ||
+      planFilter !== "all"
+    );
+  }, [inputValue, planFilter]);
+
+  // ========== CLEAR ALL FILTERS ==========
+  const clearAllFilters = () => {
+    setInputValue("");
+    setSearchTerm("");
+    setPlanFilter("all");
+  };
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,6 +125,56 @@ export default function SuperadminSubscriptions() {
       setIsLoading(false);
     }
   };
+   // ========== FILTER SUBSCRIPTIONS ==========
+  const filteredSubscriptions = useMemo(() => {
+    let data = [...companySubscriptions];
+
+    // Search by company name
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      data = data.filter((sub) =>
+        sub.company_name?.toLowerCase().includes(term)
+      );
+    }
+
+    // Filter by Plan
+    if (planFilter !== "all") {
+      data = data.filter((sub) => String(sub.plan?.id) === planFilter);
+    }
+
+    return data;
+  }, [companySubscriptions, searchTerm, planFilter]);
+
+  // ========== SORTING ==========
+  const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
+    filteredSubscriptions,
+    "company_name",
+    "asc",
+  );
+
+  // ========== PAGINATION ==========
+  const { paginatedItems, currentPage, totalPages, goToPage, resetPage } =
+    usePagination(sortedItems, pageSize);
+
+  // Reset page when filters change
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, pageSize, planFilter, resetPage]);
+
+  // ========== HANDLE SEARCH INPUT ==========
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchTerm(value);
+    }, 200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   const handleEditClick = (plan: any) => {
     setEditingPlan(plan);
@@ -93,54 +222,170 @@ export default function SuperadminSubscriptions() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-full">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-10 max-w-7xl mx-auto space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-10">
-      <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary">Subscription Management</h1>
-        <p className="text-xs sm:text-sm text-secondary/70 mt-0.5 sm:mt-1 md:mt-2">Manage pricing tiers and view active company subscriptions.</p>
+    <div className="px-2 sm:px-3 md:px-4 lg:px-6 pt-1 pb-2 max-w-7xl mx-auto space-y-1 sm:space-y-2 md:space-y-3">
+      <div className="flex items-center gap-3">
+        {isLoading ? (
+          <div className="h-8 sm:h-10 w-1 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+        ) : (
+          <div className="h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/20 flex-shrink-0" />
+        )}
+        {isLoading ? (
+          <div className="flex-1 animate-pulse">
+            <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-48 sm:w-64 mb-1" />
+            <div className="h-3 sm:h-4 bg-gray-200 rounded w-64 sm:w-80" />
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-base sm:text-xl md:text-2xl font-bold text-secondary">Subscription Management</h1>
+            <p className="text-[10px] sm:text-xs text-secondary/60">Manage pricing tiers and view active company subscriptions.</p>
+          </div>
+        )}
       </div>
 
       {/* Subscription Plans Table */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
-            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" /> 
-            <span>Subscription Plans</span>
-          </h2>
-          <button
-            onClick={handleCreateClick}
-            className="bg-secondary text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-secondary-dark transition-all"
-          >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 
-            New Plan
-          </button>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-3 sm:p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          {isLoading ? (
+            <div className="flex items-center gap-1.5 sm:gap-2 animate-pulse">
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gray-200 rounded" />
+              <div className="h-5 sm:h-6 bg-gray-200 rounded w-32 sm:w-40" />
+            </div>
+          ) : (
+            <h2 className="text-sm sm:text-base md:text-lg font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" /> 
+              <span>Subscription Plans</span>
+            </h2>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                // Export plans data
+                const headers = ['Plan Name', 'Price', 'Featured Limit', 'Detail Ad', 'List Ad', 'Home Ad', 'Status', 'Subscribers'];
+                const rows = plans.map(p => [
+                  p.name,
+                  p.price,
+                  p.max_featured_products === -1 ? 'Unlimited' : p.max_featured_products,
+                  p.can_ad_company_detail ? 'Yes' : 'No',
+                  p.can_ad_companies_list ? 'Yes' : 'No',
+                  p.can_ad_home_page ? 'Yes' : 'No',
+                  p.is_active ? 'Active' : 'Inactive',
+                  companySubscriptions.filter(s => s.plan?.id === p.id).length
+                ]);
+                const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `subscription_plans_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="text-secondary/80 hover:text-secondary hover:bg-secondary/15 bg-secondary/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-colors flex items-center gap-1 sm:gap-1.5 border border-secondary/20 hover:border-secondary/40 whitespace-nowrap"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="hidden xs:inline">Export</span>
+              <span className="xs:hidden">📤</span>
+            </button>
+            <button
+              onClick={handleCreateClick}
+              className="bg-secondary text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-secondary-dark transition-all"
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 
+              New Plan
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-[10px] xs:text-xs uppercase tracking-wider">
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Plan Name</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Price</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium hidden xs:table-cell">Featured Limit</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden sm:table-cell">Detail Ad</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden lg:table-cell">List Ad</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden xl:table-cell">Home Ad</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-center hidden sm:table-cell">Status</th>
-                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium text-right">Actions</th>
+              <tr className="bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm shadow-sm">
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Plan Name
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Price
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden xs:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Featured Limit
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Detail Ad
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    List Ad
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Home Ad
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Status
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-right text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Actions
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {plans.map((plan) => (
-                <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">{plan.name}</td>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : plans.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                        <CreditCard className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 font-medium">No subscription plans created yet</p>
+                      <p className="text-sm text-gray-400 mt-1">Click "New Plan" to create your first pricing tier</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                plans.map((plan) => (
+                  <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">
+                    <div className="flex items-center gap-2">
+                      {plan.name}
+                      {/* <span className="text-[10px] bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-300 shadow-sm">
+                        {companySubscriptions.filter(s => s.plan?.id === plan.id).length}
+                      </span> */}
+                    </div>
+                  </td>
                   <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">{plan.price}</td>
                   <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
                   <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
@@ -166,60 +411,193 @@ export default function SuperadminSubscriptions() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
+            {/* ========== TOTAL REVENUE FOOTER ========== */}
+            {/* {plans.length > 0 && (
+              <tfoot className="bg-gray-50/80 border-t-2 border-gray-200">
+                <tr>
+                  <td className="px-4 py-3 font-bold text-gray-700">Total</td>
+                  <td className="px-4 py-3 font-bold text-secondary">
+                    {plans.reduce((sum, p) => sum + parseFloat(p.price || 0), 0).toFixed(2)} ETB
+                  </td>
+                  <td colSpan={6}></td>
+                </tr>
+              </tfoot>
+            )} */}
           </table>
         </div>
       </div>
 
       {/* Active Company Subscriptions Table */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
-            <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" /> 
-            <span>Active Company Subscriptions</span>
-          </h2>
+        <div className="p-3 sm:p-4 border-b border-gray-100 bg-gray-50/50">
+          {isLoading ? (
+            <div className="flex items-center gap-1.5 sm:gap-2 animate-pulse">
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gray-200 rounded" />
+              <div className="h-5 sm:h-6 bg-gray-200 rounded w-40 sm:w-48" />
+            </div>
+          ) : (
+            <h2 className="text-sm sm:text-base md:text-lg font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" /> 
+              <span>Company Subscriptions</span>
+            </h2>
+          )}
         </div>
-        <div className="overflow-x-auto">
+
+        {/* ========== FILTERS & TABLE CONTROLS ========== */}
+        <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4">
+          <TableControls pageSize={pageSize} onPageSizeChange={setPageSize}>
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              {/* Search */}
+              <div className="flex-1 min-w-0">
+                <SearchInput
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  debounceMs={0}
+                  loading={isLoading}
+                  showClearButton={false}
+                  placeholder="Search by company name..."
+                />
+              </div>
+              {/* Plan Filter */}
+              <div className="w-full sm:w-48">
+                <CustomSelect
+                  value={planFilter}
+                  onChange={setPlanFilter}
+                  placeholder="Filter by Plan"
+                  options={[
+                    { value: "all", label: "All Plans" },
+                    ...plans.map((plan) => ({
+                      value: String(plan.id),
+                      label: plan.name,
+                      icon: (
+                        <span 
+                          className={`inline-block w-2 h-2 rounded-full ${getPlanColor(plan.name).split(' ')[0]}`}
+                          style={{ 
+                            backgroundColor: getPlanColor(plan.name).includes('gray') ? '#6B7280' :
+                              getPlanColor(plan.name).includes('blue') ? '#3B82F6' :
+                              getPlanColor(plan.name).includes('purple') ? '#8B5CF6' :
+                              getPlanColor(plan.name).includes('amber') ? '#F59E0B' :
+                              getPlanColor(plan.name).includes('rose') ? '#F43F5E' :
+                              '#6366F1'
+                          }}
+                        />
+                      )
+                    })),
+                  ]}
+                />
+              </div>
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="flex items-center justify-center gap-2 border border-red-500/70 text-red-600 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-red-50 hover:border-red-600 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 active:scale-[0.98] min-h-[42px] w-full sm:w-auto"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Clear Filters</span>
+                </button>
+              )}
+            </div>
+          </TableControls>
+        </div>
+
+        {/* ========== TABLE ========== */}
+        <div className="overflow-x-auto px-3 sm:px-4 md:px-6 pb-3 sm:pb-4">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-[10px] xs:text-xs uppercase tracking-wider">
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Company</th>
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Plan</th>
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Start Date</th>
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">End Date</th>
-                {/* <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Featured Override</th> */}
-                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">Status</th>
+              <tr className="bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm shadow-sm">
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Company
+                  </span>
+                </th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Plan
+                  </span>
+                </th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Start Date
+                  </span>
+                </th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    End Date
+                  </span>
+                </th>
+                <th className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Status
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {companySubscriptions.length === 0 && (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonSubscriptionRow key={i} />)
+              ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">No active subscriptions found.</td>
+                  <td colSpan={5} className="p-8 text-center text-gray-500">
+                    No subscriptions found matching your filters.
+                  </td>
                 </tr>
+              ) : (
+                paginatedItems.map((sub) => {
+                  const isSubscriptionActive = sub.is_active && !sub.is_expired;
+                  return (
+                    <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">
+                        {sub.company_name}
+                      </td>
+                      <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">
+                        <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-md text-[9px] xs:text-xs font-semibold border ${getPlanColor(sub.plan?.name)}`}>
+                          {sub.plan?.name || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">
+                        {new Date(sub.start_date).toLocaleDateString()}
+                      </td>
+                      <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">
+                        {sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}
+                      </td>
+                      <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
+                        <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${
+                          isSubscriptionActive 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {isSubscriptionActive ? 'Active' : 'Expired'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
-              {companySubscriptions.map((sub) => {
-                const isSubscriptionActive = sub.is_active && !sub.is_expired;
-                return (
-                  <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900 text-xs sm:text-sm truncate max-w-[60px] xs:max-w-[80px] sm:max-w-none">{sub.company_name}</td>
-                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">
-                      <span className="bg-indigo-100 text-indigo-700 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-md text-[9px] xs:text-xs font-semibold">{sub.plan.name}</span>
-                    </td>
-                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{new Date(sub.start_date).toLocaleDateString()}</td>
-                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-gray-500 text-[10px] xs:text-xs sm:text-sm">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}</td>
-                    {/* <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-xs sm:text-sm">{sub.custom_max_featured_products !== null ? sub.custom_max_featured_products : '-'}</td> */}
-                    <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
-                      <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${isSubscriptionActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {isSubscriptionActive ? 'Active' : 'Expired'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
             </tbody>
           </table>
         </div>
+
+        {/* ========== PAGINATION ========== */}
+        {!isLoading && totalPages > 1 && (
+          <div className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* Plan Modal */}

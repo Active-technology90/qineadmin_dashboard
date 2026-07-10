@@ -1373,6 +1373,16 @@ export default function CompanyManagement() {
         {/* Header Section - Premium & Responsive */}
         <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
+            {loading && !isSuperAdmin ? (
+              <div className="animate-pulse">
+                <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-48 sm:w-56 mb-2" />
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-gray-200" />
+                  <div className="h-4 bg-gray-200 rounded w-64 sm:w-80" />
+                </div>
+              </div>
+            ) : (
+              <>
             <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
               {isSuperAdmin ? "Companies" : "Company Detail"}
             </h2>
@@ -1381,6 +1391,8 @@ export default function CompanyManagement() {
                 <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
                 Manage your company details and settings
               </p>
+                )}
+              </>
             )}
           </div>
           {canAddCompany && (
@@ -1466,6 +1478,7 @@ export default function CompanyManagement() {
               companies={companies}
               userCompanyRole={currentCompanyRole}
               onEdit={openEdit}
+              loading={loading}
               formData={formData}
               setFormData={setFormData}
               formErrors={formErrors}
