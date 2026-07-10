@@ -534,6 +534,43 @@ export const getAdminPayouts = async (params?: {
 
 export const getBankInfo = async () => api.get("/payments/bank-info/");
 
+// ── Company Bank Accounts (company admin/staff) ──
+export const getCompanyBankAccounts = async (companySlug: string) =>
+  api.get(`/payments/company/${companySlug}/bank-accounts/`);
+
+export const createCompanyBankAccount = async (
+  companySlug: string,
+  data: Record<string, unknown>
+) => api.post(`/payments/company/${companySlug}/bank-accounts/`, data);
+
+export const updateCompanyBankAccount = async (
+  companySlug: string,
+  id: number,
+  data: Record<string, unknown>
+) => api.patch(`/payments/company/${companySlug}/bank-accounts/${id}/`, data);
+
+export const deleteCompanyBankAccount = async (
+  companySlug: string,
+  id: number
+) => api.delete(`/payments/company/${companySlug}/bank-accounts/${id}/`);
+
+// ── Admin Bank Accounts (superuser only) ──
+export const getAdminBankAccounts = async (params?: {
+  company?: string;
+}) => api.get("/payments/admin/bank-accounts/", { params });
+
+export const createAdminBankAccount = async (
+  data: Record<string, unknown>
+) => api.post("/payments/admin/bank-accounts/", data);
+
+export const updateAdminBankAccount = async (
+  id: number,
+  data: Record<string, unknown>
+) => api.patch(`/payments/admin/bank-accounts/${id}/`, data);
+
+export const deleteAdminBankAccount = async (id: number) =>
+  api.delete(`/payments/admin/bank-accounts/${id}/`);
+
 export const uploadPaymentReceipt = async (
   orderId: number,
   file: File | Blob,

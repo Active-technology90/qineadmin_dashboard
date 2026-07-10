@@ -108,6 +108,7 @@ export interface Company {
   address?: string;
   is_active: boolean;
   is_featured: boolean;
+  supports_table_service: boolean;
   created_at?: string;
   chapa_sub_account_id?: string;
   minimum_order_total?: string;
@@ -136,7 +137,7 @@ export interface CompanyListItem {
   sub_category: number;
   sub_category_name: string;
   business_type: string;
-    address?: string; 
+  address?: string;
   minimum_order_total?: string;
   latitude?: string;
   longitude?: string;
@@ -146,6 +147,7 @@ export interface CompanyListItem {
   theme_light?: string;
   is_active: boolean;
   is_featured: boolean;
+  supports_table_service: boolean;
   description?: string;
 }
 
@@ -327,6 +329,7 @@ export interface VendorOrder {
   shipping_address_text?: string;
   delivery?: Delivery;
   master_order_id?: number;
+  fulfillment_type?: string
 }
 
 export interface MasterOrder {
@@ -479,11 +482,15 @@ export interface BankInfo {
   account_number: string;
   account_name: string;
   logo?: string | null;
+  company?: number | null;
+  company_name?: string;
+  company_slug?: string;
+  order?: number;
+  is_active?: boolean;
   branch_name?: string;
   swift_code?: string;
   currency?: string;
   account_type?: "operating" | "savings" | "escrow";
-  is_active?: boolean;
   is_default?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -491,8 +498,6 @@ export interface BankInfo {
 
 export interface BankAccount extends BankInfo {
   company_id?: number;
-  company_name?: string;
-  company_slug?: string;
   is_verified?: boolean;
   verified_at?: string | null;
   created_by?: string;

@@ -152,7 +152,7 @@ export default function CompanyManagement() {
     category: 0,
     sub_category: 0,
     business_type: "",
-    address: "", 
+    address: "",
     description: "",
     minimum_order_total: "0.00",
     latitude: "",
@@ -160,6 +160,7 @@ export default function CompanyManagement() {
     delivery_fee_per_km: "0.00",
     is_active: true,
     is_featured: false,
+    supports_table_service: false,
     logo: null,
     cover_image: null,
   });
@@ -317,20 +318,20 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => comp.business_type?.toUpperCase() || "-",
       },
-          {
-      key: "address",
-      header: "Address",
-      sortable: true,
-      render: (comp) => comp.address || "-",
-    },
-         
+      {
+        key: "address",
+        header: "Address",
+        sortable: true,
+        render: (comp) => comp.address || "-",
+      },
+
       // {
       //   key: "head_company",
       //   header: "Head Company",
       //   sortable: true,
       //   render: (comp) => comp.head_company_detail?.name || "-",
       // },
-      
+
       {
         key: "is_active",
         header: "Is Active",
@@ -401,6 +402,7 @@ export default function CompanyManagement() {
           delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
           is_active: company.is_active,
           is_featured: company.is_featured,
+          supports_table_service: company.supports_table_service,
           description: company.description || "",
         };
         setCompanies([companyListItem]);
@@ -413,8 +415,8 @@ export default function CompanyManagement() {
           head_company: companyListItem.head_company ?? null,
           category: companyListItem.category,
           sub_category: companyListItem.sub_category,
-          business_type: companyListItem.business_type, 
-         address: companyListItem.address || "",  
+          business_type: companyListItem.business_type,
+          address: companyListItem.address || "",
           description: companyListItem.description || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
           latitude: companyListItem.latitude || "",
@@ -422,6 +424,7 @@ export default function CompanyManagement() {
           delivery_fee_per_km: companyListItem.delivery_fee_per_km || "0.00",
           is_active: companyListItem.is_active,
           is_featured: companyListItem.is_featured,
+          supports_table_service: companyListItem.supports_table_service,
           logo: null,
           cover_image: null,
         });
@@ -458,6 +461,7 @@ export default function CompanyManagement() {
             delivery_fee_per_km: first.delivery_fee_per_km || "0.00",
             is_active: first.is_active,
             is_featured: first.is_featured,
+            supports_table_service: first.supports_table_service,
             logo: null,
             cover_image: null,
           };
@@ -554,8 +558,8 @@ export default function CompanyManagement() {
           cleanString(formData.business_type) !==
           cleanString(originalFormData.business_type)
         )
-         return true;
-if (cleanString(formData.address) !== cleanString(originalFormData.address))  
+          return true;
+        if (cleanString(formData.address) !== cleanString(originalFormData.address))
           return true;
         if (
           Number(formData.head_company ?? 0) !==
@@ -594,6 +598,11 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         if (
           Boolean(formData.is_featured) !==
           Boolean(originalFormData.is_featured)
+        )
+          return true;
+        if (
+          Boolean(formData.supports_table_service) !==
+          Boolean(originalFormData.supports_table_service)
         )
           return true;
 
@@ -648,9 +657,9 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
       );
 
       formPayload.append("business_type", formData.business_type);
-      if (formData.address) {                    
-  formPayload.append("address", formData.address);
-}
+      if (formData.address) {
+        formPayload.append("address", formData.address);
+      }
 
       if (formData.description) {
         formPayload.append("description", formData.description);
@@ -675,6 +684,8 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
       formPayload.append("is_active", String(formData.is_active));
 
       formPayload.append("is_featured", String(formData.is_featured));
+
+      formPayload.append("supports_table_service", String(formData.supports_table_service))
 
       // Handle logo: only send if user uploaded a new file OR intentionally removed it
       // Do NOT send anything if the logo hasn't changed (formData.logo is null and original had image but user didn't click remove)
@@ -759,7 +770,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
       category: 0,
       sub_category: 0,
       business_type: "",
-        address: "",    
+      address: "",
       description: "",
       minimum_order_total: "0.00",
       latitude: "",
@@ -767,6 +778,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
       delivery_fee_per_km: "0.00",
       is_active: true,
       is_featured: false,
+      supports_table_service: false,
       logo: null,
       cover_image: null,
     });
@@ -783,7 +795,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         return;
       }
       setEditingSlug(company.slug);
-      const newFormData = {   
+      const newFormData = {
         name: company.name,
         name_am: company.name_am || "",
         slug: company.slug,
@@ -791,7 +803,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         category: company.category,
         sub_category: company.sub_category,
         business_type: company.business_type,
-          address: company.address || "",  
+        address: company.address || "",
         description: company.description || "",
         minimum_order_total: company.minimum_order_total || "0.00",
         latitude: company.latitude || "",
@@ -799,6 +811,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
         delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
         is_active: company.is_active,
         is_featured: company.is_featured,
+        supports_table_service: company.supports_table_service,
         logo: null,
         cover_image: null,
       };
@@ -1072,7 +1085,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
               )}
               <p className="text-xs text-gray-400 mt-1">
                 Group this company under a parent head company. A head can span
-                any categories — each branch keeps its own category.
+                any categories - each branch keeps its own category.
               </p>
             </div>
             <div>
@@ -1312,6 +1325,27 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
                       </p>
                     </div>
                   </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={formData.supports_table_service}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          supports_table_service: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 text-secondary rounded border-gray-300 focus:ring-secondary focus:ring-2 cursor-pointer"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-secondary transition-colors">
+                        OnSpot Service
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Enable table service for this company
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1423,7 +1457,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
               subCategoryOptions={subCategoryOptions}
               onClearAll={clearAllFilters}
               pageSize={pageSize}
-  onPageSizeChange={setPageSize}
+              onPageSizeChange={setPageSize}
             />
           </div>
         ) : (
@@ -1490,7 +1524,7 @@ if (cleanString(formData.address) !== cleanString(originalFormData.address))
           }}
           initialLat={formData.latitude}
           initialLon={formData.longitude}
-          initialAddress={formData.address} 
+          initialAddress={formData.address}
         />
       )}
     </div>

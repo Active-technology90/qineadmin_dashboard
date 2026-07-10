@@ -21,6 +21,7 @@ export interface CompanyFormData {
   delivery_fee_per_km: string;
   is_active: boolean;
   is_featured: boolean;
+  supports_table_service: boolean;
   logo: File | null;
   cover_image: File | null;
 }

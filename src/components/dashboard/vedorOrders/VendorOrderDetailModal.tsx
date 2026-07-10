@@ -613,9 +613,11 @@ const ReceiptReviewCard = ({
     const isPaid = status?.toLowerCase() === "paid";
     const currentOrderStatus = orderStatus?.toLowerCase();
     const isPickup = fulfillmentType?.toLowerCase() === "pickup";
+    const isOnspot = fulfillmentType?.toLowerCase() === "onspot";
+    const isInStoreOrder = isPickup || isOnspot;
     const canCollect =
       currentOrderStatus === "fulfilled" ||
-      (isPickup && currentOrderStatus === "processing");
+      (isInStoreOrder && currentOrderStatus === "processing");
 
     return (
       <>
@@ -642,10 +644,12 @@ const ReceiptReviewCard = ({
               <>
                 <p className="text-xs text-gray-500 mb-4 max-w-xs leading-relaxed">
                   {canCollect
-                    ? isPickup
-                      ? "Confirm physical collection of cash once the customer picks up the items."
-                      : "Confirm physical collection of cash once the driver delivers the items and returns with the cash."
-                    : isPickup
+                    ? isOnspot
+                      ? "Confirm physical collection of cash for this on-spot table order."
+                      : isPickup
+                        ? "Confirm physical collection of cash once the customer picks up the items."
+                        : "Confirm physical collection of cash once the driver delivers the items and returns with the cash."
+                    : isInStoreOrder
                       ? "Payment collection is disabled until the order is Prepared."
                       : "Payment collection is disabled until the order is Delivered."}
                 </p>
@@ -1218,12 +1222,20 @@ export function VendorOrderDetailModal({
                           <p className="text-sm md:text-base font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
                             {order.recipient_name}
                           </p>
-                          {!order.shipping_address_text && (
+                          {order.fulfillment_type === "pickup" && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
                               Self Pickup
+                            </span>
+                          )}
+                          {order.fulfillment_type === "onspot" && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-orange-50 text-orange-700 border border-orange-200 shadow-sm">
+                              {/* <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                              </svg> */}
+                              On Spot at Table - {order.table_number ? `${order.table_number}` : ""}
                             </span>
                           )}
                         </div>
@@ -1444,7 +1456,7 @@ export function VendorOrderDetailModal({
                   )}
 
                 {/* 5. Delivery person Assignment Card */}
-                {order.shipping_address_text && (
+                {order.fulfillment_type === "delivery" && order.shipping_address_text && (
                   <DeliveryCard
                     order={order}
                     onUpdate={onUpdate}

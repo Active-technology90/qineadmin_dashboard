@@ -1,5 +1,5 @@
 import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
-import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { CustomSelect, } from "../../ui/CustomSelect";
 
 interface OrderFiltersProps {
   searchTerm: string;

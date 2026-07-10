@@ -1,6 +1,6 @@
 import { Search, X, ChevronDown, RefreshCw } from "lucide-react";
 import type { CompanyListItem } from "../../../types";
-import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { CustomSelect } from "../../ui/CustomSelect";
 
 interface VendorOrderFiltersProps {
   searchTerm: string;

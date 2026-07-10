@@ -1,6 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Building2, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
-import { getBankInfo } from "../../../services/api";
+import { Plus, Building2, Pencil, Trash2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import {
+  getCompanyBankAccounts,
+  createCompanyBankAccount,
+  updateCompanyBankAccount,
+  deleteCompanyBankAccount,
+  getAdminBankAccounts,
+  createAdminBankAccount,
+  updateAdminBankAccount,
+  deleteAdminBankAccount,
+} from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
@@ -24,19 +33,19 @@ const SkeletonRow = () => (
 );
 
 // Status Badge Component
-const StatusBadge = ({ isVerified }: { isVerified: boolean }) => {
-  if (isVerified) {
+const StatusBadge = ({ isActive }: { isActive: boolean }) => {
+  if (isActive) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
         <CheckCircle className="h-3 w-3" />
-        Verified
+        Active
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
       <XCircle className="h-3 w-3" />
-      Pending
+      Inactive
     </span>
   );
 };
@@ -55,118 +64,43 @@ export default function BankManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingBank, setEditingBank] = useState<BankInfo | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BankInfo | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isSuperAdmin = !user?.memberships?.length;
   const companyName = company?.name || "Your Company";
 
+  console.log('setpage', setPageSize)
+  console.log('deleting', deleting)
+  // Determine if the current user can write (create/edit/delete)
+  const canWrite = isSuperAdmin || company?.role === "owner" || company?.role === "admin";
+
   const fetchBanks = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Use company slug for company-specific banks
-      const companySlug = isSuperAdmin ? undefined : company?.slug;
-      
-      // For now, use getBankInfo() which returns static data
-      // TODO: Replace with company-specific API when backend is ready
-      const response = await getBankInfo();
-      const results = response.data?.results || response.data || [];
-      
-      // If no banks from API, use company-specific mock data
-      if (results.length === 0) {
-        // Company-specific mock banks
-        let mockBanks = [];
-        
-        if (isSuperAdmin) {
-          // Super Admin sees ALL banks
-          mockBanks = [
-            {
-              id: 1,
-              bank_name: "Commercial Bank of Ethiopia",
-              account_number: "100013456789",
-              account_name: "ABC Trading PLC",
-              branch_name: "Bole Branch",
-              is_verified: true,
-              currency: "ETB",
-              company_name: "ABC Trading PLC",
-              company_slug: "abc-trading"
-            },
-            {
-              id: 2,
-              bank_name: "Dashin Bank",
-              account_number: "200024567890",
-              account_name: "XYZ Manufacturing",
-              branch_name: "Head Office",
-              is_verified: false,
-              currency: "ETB",
-              company_name: "XYZ Manufacturing",
-              company_slug: "xyz-manufacturing"
-            },
-            {
-              id: 3,
-              bank_name: "Bank of Abyssinia",
-              account_number: "300035678901",
-              account_name: "ABC Trading PLC",
-              branch_name: "Piassa Branch",
-              is_verified: true,
-              currency: "ETB",
-              company_name: "ABC Trading PLC",
-              company_slug: "abc-trading"
-            }
-          ];
-        } else {
-          // Company Admin sees ONLY their company's banks
-          const companyName = company?.name || "Your Company";
-          const companySlug2 = company?.slug || "your-company";
-          
-          mockBanks = [
-            {
-              id: 1,
-              bank_name: "Commercial Bank of Ethiopia",
-              account_number: "100013456789",
-              account_name: companyName,
-              branch_name: "Bole Branch",
-              is_verified: true,
-              currency: "ETB",
-              company_name: companyName,
-              company_slug: companySlug2
-            },
-            {
-              id: 2,
-              bank_name: "Dashin Bank",
-              account_number: "200024567890",
-              account_name: companyName,
-              branch_name: "Head Office",
-              is_verified: false,
-              currency: "ETB",
-              company_name: companyName,
-              company_slug: companySlug2
-            }
-          ];
-        }
-        
-        setBanks(mockBanks);
+
+      let response;
+      if (isSuperAdmin) {
+        // Superadmin: fetch ALL bank accounts via admin endpoint
+        response = await getAdminBankAccounts();
+      } else if (company?.slug) {
+        // Company staff/admin: fetch their company's bank accounts
+        response = await getCompanyBankAccounts(company.slug);
       } else {
-        // Enrich with company info and filter by current company
-        let enriched = results.map((bank: any) => ({
-          ...bank,
-          is_verified: bank.is_verified ?? false,
-          currency: bank.currency || "ETB",
-          company_name: bank.company_name || "Unknown Company",
-          company_slug: bank.company_slug || "unknown"
-        }));
-        
-        // If not Super Admin, filter by current company
-        if (!isSuperAdmin && company?.slug) {
-          enriched = enriched.filter(
-            (bank: any) => bank.company_slug === company.slug
-          );
-        }
-        
-        setBanks(enriched);
+        setBanks([]);
+        return;
       }
+
+      const results = response.data?.results || response.data || [];
+      setBanks(
+        results.map((bank: any) => ({
+          ...bank,
+          is_active: bank.is_active ?? true,
+          company_name: bank.company_name || "Unknown Company",
+          company_slug: bank.company_slug || "unknown",
+        }))
+      );
     } catch (error) {
       console.error("Failed to load banks:", error);
-      // Show empty state on error instead of mock data
       setBanks([]);
       showToast("error", "Failed to load bank accounts");
     } finally {
@@ -185,7 +119,8 @@ export default function BankManagement() {
       (b) =>
         b.bank_name.toLowerCase().includes(term) ||
         b.account_number.includes(term) ||
-        b.account_name.toLowerCase().includes(term)
+        b.account_name.toLowerCase().includes(term) ||
+        (b.company_name && b.company_name.toLowerCase().includes(term))
     );
   }, [banks, searchTerm]);
 
@@ -210,27 +145,55 @@ export default function BankManagement() {
     setShowModal(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
+  const handleSave = async (data: Partial<BankInfo>) => {
     try {
-      setBanks(prev => prev.filter(b => b.id !== deleteTarget.id));
-      showToast("success", "Bank account deleted successfully");
-      setDeleteTarget(null);
-    } catch (error) {
-      showToast("error", "Failed to delete bank account");
+      if (editingBank) {
+        // ── Update ──
+        if (isSuperAdmin) {
+          await updateAdminBankAccount(editingBank.id, data);
+        } else if (company?.slug) {
+          await updateCompanyBankAccount(company.slug, editingBank.id, data);
+        }
+        showToast("success", "Bank account updated successfully");
+      } else {
+        // ── Create ──
+        if (isSuperAdmin) {
+          // For superadmin, include company_slug if provided
+          await createAdminBankAccount(data);
+        } else if (company?.slug) {
+          await createCompanyBankAccount(company.slug, data);
+        }
+        showToast("success", "Bank account created successfully");
+      }
+      setShowModal(false);
+      setEditingBank(null);
+      fetchBanks(); // Refresh from server
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.non_field_errors?.[0] ||
+        (editingBank ? "Failed to update bank account" : "Failed to create bank account");
+      showToast("error", msg);
     }
   };
 
-  const handleVerify = async (bankId: number) => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      setBanks(prev =>
-        prev.map(b =>
-          b.id === bankId ? { ...b, is_verified: true } : b
-        )
-      );
-      showToast("success", "Bank account verified successfully");
-    } catch (error) {
-      showToast("error", "Failed to verify bank account");
+      setDeleting(true);
+      if (isSuperAdmin) {
+        await deleteAdminBankAccount(deleteTarget.id);
+      } else if (company?.slug) {
+        await deleteCompanyBankAccount(company.slug, deleteTarget.id);
+      }
+      showToast("success", "Bank account deleted successfully");
+      setDeleteTarget(null);
+      fetchBanks(); // Refresh from server
+    } catch (error: any) {
+      const msg = error?.response?.data?.detail || "Failed to delete bank account";
+      showToast("error", msg);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -247,13 +210,15 @@ export default function BankManagement() {
             {isSuperAdmin ? "Manage all company bank accounts" : `Bank accounts for ${companyName}`}
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition shadow-sm hover:shadow-md active:scale-[0.98]"
-        >
-          <Plus className="h-4 w-4" />
-          Add Bank Account
-        </button>
+        {canWrite && (
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition shadow-sm hover:shadow-md active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            Add Bank Account
+          </button>
+        )}
       </div>
 
       <div className="mb-4">
@@ -307,18 +272,14 @@ export default function BankManagement() {
                   Status
                 </span>
               </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Currency
-                </span>
-              </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Actions
-                </span>
-              </th>
+              {canWrite && (
+                <th className="px-3 py-3 text-right text-xs font-semibold text-secondary uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                    Actions
+                  </span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -326,10 +287,12 @@ export default function BankManagement() {
               Array.from({ length: pageSize }).map((_, i) => <SkeletonRow key={i} />)
             ) : paginatedBanks.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-500">
+                <td colSpan={isSuperAdmin ? 7 : 6} className="text-center py-12 text-gray-500">
                   <Building2 className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p className="font-medium">No bank accounts found</p>
-                  <p className="text-sm text-gray-400 mt-1">Add your first bank account</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {canWrite ? "Add your first bank account" : "No bank accounts have been added yet"}
+                  </p>
                 </td>
               </tr>
             ) : (
@@ -360,36 +323,28 @@ export default function BankManagement() {
                   </td>
                   <td className="px-3 py-3 text-sm text-gray-700">{bank.account_name}</td>
                   <td className="px-3 py-3">
-                    <StatusBadge isVerified={bank.is_verified || false} />
+                    <StatusBadge isActive={bank.is_active ?? true} />
                   </td>
-                  <td className="px-3 py-3 text-sm text-gray-500">{bank.currency || "ETB"}</td>
-                  <td className="px-3 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleEdit(bank)}
-                        className="p-1.5 rounded-lg text-gray-500 hover:text-secondary hover:bg-secondary/10 transition"
-                        title="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      {isSuperAdmin && !bank.is_verified && (
+                  {canWrite && (
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => handleVerify(bank.id)}
-                          className="p-1.5 rounded-lg text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition"
-                          title="Verify"
+                          onClick={() => handleEdit(bank)}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-secondary hover:bg-secondary/10 transition"
+                          title="Edit"
                         >
-                          <CheckCircle className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => setDeleteTarget(bank)}
-                        className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                        <button
+                          onClick={() => setDeleteTarget(bank)}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -410,27 +365,13 @@ export default function BankManagement() {
       {showModal && (
         <BankAccountForm
           bank={editingBank}
-          onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            if (editingBank) {
-              setBanks(prev =>
-                prev.map(b =>
-                  b.id === editingBank.id ? { ...b, ...data, is_verified: false } : b
-                )
-              );
-              showToast("success", "Bank account updated");
-            } else {
-              const newBank = {
-                id: Date.now(),
-                ...data,
-                is_verified: false,
-                currency: data.currency || "ETB",
-              };
-              setBanks(prev => [...prev, newBank]);
-              showToast("success", "Bank account created");
-            }
+          isSuperAdmin={isSuperAdmin}
+          companySlug={company?.slug}
+          onClose={() => {
             setShowModal(false);
+            setEditingBank(null);
           }}
+          onSave={handleSave}
         />
       )}
 
@@ -448,36 +389,53 @@ export default function BankManagement() {
 // Bank Account Form Component
 function BankAccountForm({
   bank,
+  isSuperAdmin,
+  companySlug,
   onClose,
   onSave,
 }: {
   bank: BankInfo | null;
+  isSuperAdmin: boolean;
+  companySlug?: string;
   onClose: () => void;
   onSave: (data: Partial<BankInfo>) => void;
 }) {
-  const [formData, setFormData] = useState<Partial<BankInfo>>({
+  const [formData, setFormData] = useState<Record<string, any>>({
     bank_name: "",
     account_number: "",
     account_name: "",
-    branch_name: "",
-    currency: "ETB",
-    account_type: "operating",
+    is_active: true,
+    order: 0,
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (bank) {
-      setFormData(bank);
+      setFormData({
+        bank_name: bank.bank_name || "",
+        account_number: bank.account_number || "",
+        account_name: bank.account_name || "",
+        is_active: bank.is_active ?? true,
+        order: bank.order ?? 0,
+        company_slug: bank.company_slug || "",
+      });
     }
   }, [bank]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.bank_name || !formData.account_number || !formData.account_name) {
-      alert("Please fill in all required fields");
       return;
     }
-    onSave(formData);
+    setSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  console.log("companyslug", companySlug)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -537,49 +495,49 @@ function BankAccountForm({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Branch Name
-            </label>
-            <input
-              type="text"
-              value={formData.branch_name || ""}
-              onChange={(e) => setFormData({ ...formData, branch_name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
-              placeholder="e.g. Bole Branch"
-            />
-          </div>
+          {/* Superadmin can specify which company the bank account belongs to (only on create) */}
+          {isSuperAdmin && !bank && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company Slug
+              </label>
+              <input
+                type="text"
+                value={formData.company_slug || ""}
+                onChange={(e) => setFormData({ ...formData, company_slug: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
+                placeholder="e.g. abc-trading"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Leave empty for an unassigned bank account.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Currency
+                Display Order
               </label>
-              <select
-                value={formData.currency || "ETB"}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition bg-white"
-              >
-                <option value="ETB">ETB</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-              </select>
+              <input
+                type="number"
+                min="0"
+                value={formData.order || 0}
+                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Account Type
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer py-2.5">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active ?? true}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
+                />
+                <span className="text-sm font-medium text-gray-700">Active</span>
               </label>
-              <select
-                value={formData.account_type || "operating"}
-                onChange={(e) => setFormData({ ...formData, account_type: e.target.value as any })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition bg-white"
-              >
-                <option value="operating">Operating</option>
-                <option value="savings">Savings</option>
-                <option value="escrow">Escrow</option>
-              </select>
             </div>
           </div>
 
@@ -587,14 +545,17 @@ function BankAccountForm({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-secondary text-white font-medium hover:bg-secondary/90 transition shadow-sm"
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl bg-secondary text-white font-medium hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {bank ? "Update" : "Create"} Account
             </button>
           </div>
