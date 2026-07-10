@@ -171,8 +171,9 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-        }`}
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
+        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      }`}
     >
       {displayStatus}
     </span>
@@ -434,10 +435,13 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                 <button
                   onClick={handleAssign}
                   disabled={assigning || !selectedUserId}
-                  className="flex-1 bg-secondary text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+                  className="flex-1 bg-secondary text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {assigning ? (
-                    <Loader2 className="h-3 w-3 animate-spin mx-auto" />
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Assigning...
+                    </>
                   ) : (
                     "Confirm Assignment"
                   )}
@@ -662,8 +666,17 @@ const ReceiptReviewCard = ({
                       : "bg-gray-300 cursor-not-allowed shadow-none"
                       }`}
                   >
-                    <CheckCircle className="h-4 w-4" />
-                    Confirm Payment Collected
+                    {codConfirming ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        Confirm Payment Collected
+                      </>
+                    )}
                   </button>
                 )}
               </>
@@ -723,13 +736,14 @@ const ReceiptReviewCard = ({
     if (!canReview) return;
 
     setPendingAction(action);
-
     setShowConfirm(true);
   };
 
   const handleConfirm = async () => {
     if (!pendingAction) return;
 
+    // Immediately close the modal so the main button becomes visible
+    setShowConfirm(false);
     setSubmitting(true);
 
     try {
@@ -739,13 +753,8 @@ const ReceiptReviewCard = ({
       });
 
       showToast("success", `Receipt ${pendingAction}`);
-
       setNotes("");
-
       setPendingAction(null);
-
-      setShowConfirm(false);
-
       onUpdate();
     } catch (err: any) {
       showToast("error", err.response?.data?.detail || "Review failed");
@@ -840,9 +849,16 @@ const ReceiptReviewCard = ({
               <button
                 onClick={() => handleActionClick("approved")}
                 disabled={submitting}
-                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50"
+                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Approve
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Approving...
+                  </>
+                ) : (
+                  "Approve"
+                )}
               </button>
 
               <button
@@ -857,7 +873,14 @@ const ReceiptReviewCard = ({
              disabled:opacity-50 disabled:cursor-not-allowed
              flex items-center justify-center gap-2"
               >
-                Reject
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Reject"
+                )}
               </button>
             </div>
           </div>
@@ -977,7 +1000,7 @@ const ReceiptReviewCard = ({
         description="This action will notify the customer and update the order workflow. Are you sure?"
         confirmText={submitting ? "Processing..." : "Confirm Action"}
         confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
-        loading={submitting}
+        loading={false}               // loading is handled on the card buttons, not the modal
         autoClose={false}
       />
     </div>
@@ -993,11 +1016,11 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
   const status = order.status?.toLowerCase();
 
   const handlePrepare = async () => {
+    setShowConfirm(false);   // close modal immediately so the main button becomes visible
     setPreparing(true);
     try {
       await prepareVendorOrder(order.company.slug, order.id);
       showToast("success", "Order has been marked as Prepared!");
-      setShowConfirm(false);
       onUpdate();
     } catch (err: any) {
       showToast(
@@ -1049,10 +1072,20 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
               {!readOnly && (
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-secondary to-secondary text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  disabled={preparing}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-secondary to-secondary text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle className="h-4 w-4" />
-                  Mark as Prepared
+                  {preparing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Marking...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Mark as Prepared
+                    </>
+                  )}
                 </button>
               )}
             </>
@@ -1068,7 +1101,7 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         description="Are you sure you want to mark this order as prepared and ready for dispatch?"
         confirmText={preparing ? "Marking..." : "Yes, Prepared"}
         confirmVariant="primary"
-        loading={preparing}
+        loading={false}      // loading is shown on the main button, not inside the modal
         autoClose={false}
       />
     </>
