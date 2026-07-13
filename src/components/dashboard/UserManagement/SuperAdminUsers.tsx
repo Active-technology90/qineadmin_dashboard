@@ -537,111 +537,182 @@ interface UserTableProps {
   onEdit: (user: User) => void;
   onRemove: (user: User) => void;
   onManageMemberships: (user: User) => void;
+  editingRoleInTable: string | null;
+  setEditingRoleInTable: (value: string | null) => void;
+  setEditingCompanyInTable: (value: Membership | null) => void;
+  handleRoleChangeFromTable: (membership: Membership, newRole: UserRole, userId: number) => Promise<void>;
+  handleRemoveMembershipFromTable: (companyId: number, companyName: string, userId: number, userName: string) => Promise<void>;
 }
-const UserTable: React.FC<UserTableProps> = ({ users, ...actionProps }) => (
+const UserTable: React.FC<UserTableProps> = ({ 
+  users, 
+  editingRoleInTable,
+  setEditingRoleInTable,
+  setEditingCompanyInTable,
+  handleRoleChangeFromTable,
+  handleRemoveMembershipFromTable,
+  ...actionProps 
+}) => (
   <div className="hidden lg:block overflow-x-auto">
-    <table className="w-full">
-      <thead className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl">
-        <tr>
-          <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            User
-          </th>
-          <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Email
-          </th>
-          <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Phone
-          </th>
-          <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Companies / Roles
-          </th>
-          <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Status
-          </th>
-          <th className="text-right py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100">
-        {users.map((user) => (
-          <tr
-            key={user.id}
-            className="hover:bg-gray-50/50 transition-colors group"
-          >
-            <td className="py-4 px-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                  {user.profile_image ? (
-                    <img
-                      src={user.profile_image}
-                      alt=""
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  ) : (
-                    getInitials(user.first_name, user.last_name, user.username)
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {user.first_name || user.username}
-                    {user.last_name && ` ${user.last_name}`}
-                  </p>
-                  <p className="text-xs text-gray-500">@{user.username}</p>
-                </div>
-              </div>
-            </td>
-            <td className="py-4 px-6 text-sm text-gray-600">{user.email}</td>
-            <td className="py-4 px-6 text-sm text-gray-600">
-              {formatPhone(user.phone_number)}
-            </td>
-            <td className="py-4 px-6">
-              <div className="flex flex-wrap gap-2">
-                {user.memberships.length > 0 ? (
-                  user.memberships.map((m: Membership, idx: number) => (
-                    <div key={idx} className="group relative">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border ${roleStyles[m.role]}`}
-                      >
-                        <Building2 className="h-3 w-3" />
-                        {m.company_name}
-                      </span>
-                      <span
-                        className={`absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold ring-2 ring-white ${roleBadgeStyles[m.role]}`}
-                      >
-                        {m.role}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-xs text-gray-400 italic">
-                    No companies
-                  </span>
-                )}
-              </div>
-            </td>
-            <td className="py-4 px-6">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                {user.is_active ? (
-                  <div className="flex items-center gap-1.5">
-                    {" "}
-                    <CheckCircle className="h-3 w-3" /> Active
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <Minus className="h-3 w-3 text-red-600" />{" "}
-                    <p className="text-red-600"> Inactive</p>
-                  </div>
-                )}
-              </span>
-            </td>
-            <td className="py-4 px-6 text-right">
-              <ActionsDropdown user={user} {...actionProps} />
-            </td>
+    <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-gradient-to-r from-gray-50/80 to-gray-100/50 border-b border-gray-200/60">
+            <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              User
+            </th>
+            <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Email
+            </th>
+            <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Phone
+            </th>
+            <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Companies / Roles
+            </th>
+            <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th className="text-right py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {users.map((user, index) => (
+            <tr
+              key={user.id}
+              className={`
+                group transition-all duration-150
+                ${index !== users.length - 1 ? 'border-b border-gray-100/80' : ''}
+                hover:bg-gray-50/60
+              `}
+            >
+              <td className="py-3.5 px-5">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary-dark flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-secondary/10 flex-shrink-0">
+                    {user.profile_image ? (
+                      <img
+                        src={user.profile_image}
+                        alt=""
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      getInitials(user.first_name, user.last_name, user.username)
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm leading-tight">
+                      {user.first_name || user.username}
+                      {user.last_name && ` ${user.last_name}`}
+                    </p>
+                    <p className="text-xs text-gray-400 font-medium">@{user.username}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="py-3.5 px-5">
+                <span className="text-sm text-gray-600 font-medium">
+                  {user.email}
+                </span>
+              </td>
+              <td className="py-3.5 px-5">
+                <span className="text-sm text-gray-600 font-medium">
+                  {formatPhone(user.phone_number)}
+                </span>
+              </td>
+              <td className="py-3.5 px-5">
+                {user.memberships.length > 0 ? (
+                  <div className="max-h-[160px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-secondary/20 scrollbar-track-transparent hover:scrollbar-thumb-secondary/40">
+                    <div className="flex flex-col gap-1.5">
+                      {user.memberships.map((m: Membership, idx: number) => (
+                      <div
+                        key={idx}
+                        className="group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-gray-100/80 bg-white/50 hover:bg-secondary/5 hover:border-secondary/20 transition-all duration-200 hover:shadow-sm"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-secondary" />
+                          <span className="text-xs font-medium text-gray-700 truncate max-w-[110px]">
+                            {m.company_name}
+                          </span>
+                        </div>
+                        {/* Role Dropdown or Role Badge */}
+                        <div className="flex items-center gap-1">
+                          {editingRoleInTable === `role-${user.id}-${m.company_id}` ? (
+                            <div className="relative">
+                              <select
+                                value={m.role}
+                                onChange={(e) => {
+                                  handleRoleChangeFromTable(m, e.target.value as UserRole, user.id);
+                                }}
+                                onBlur={() => {
+                                  setEditingRoleInTable(null);
+                                  setEditingCompanyInTable(null);
+                                }}
+                                autoFocus
+                                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-secondary/30 bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                              >
+                                {['admin', 'staff', 'viewer', 'delivery'].map((role) => (
+                                  <option key={role} value={role} className="text-xs">
+                                    {role}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingRoleInTable(`role-${user.id}-${m.company_id}`);
+                                setEditingCompanyInTable(m);
+                              }}
+                              className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : m.role === 'staff' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : m.role === 'delivery' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : m.role === 'viewer' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}
+                            >
+                              {m.role}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleRemoveMembershipFromTable(m.company_id, m.company_name, user.id, user.first_name || user.username)}
+                            className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Remove company"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">No companies</span>
+                )}
+              </td>
+              <td className="py-3.5 px-5">
+                <span className={`
+                  inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+                  ${user.is_active 
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' 
+                    : 'bg-gray-100 text-gray-500 border border-gray-200/50'
+                  }
+                `}>
+                  {user.is_active ? (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Active
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                      Inactive
+                    </>
+                  )}
+                </span>
+              </td>
+              <td className="py-3.5 px-5 text-right">
+                <ActionsDropdown user={user} {...actionProps} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 );
 
@@ -802,6 +873,18 @@ const SuperAdminUsers: React.FC = () => {
   const [availableCompanies, setAvailableCompanies] = useState<
     Array<{ id: number; name: string; slug: string }>
   >([]);
+  // Table row role editing states
+  const [editingRoleInTable, setEditingRoleInTable] = useState<string | null>(null);
+  const [editingCompanyInTable, setEditingCompanyInTable] = useState<Membership | null>(null);
+  // Remove membership modal states
+  const [removeMembershipModalOpen, setRemoveMembershipModalOpen] = useState(false);
+  const [removeMembershipData, setRemoveMembershipData] = useState<{
+    companyId: number;
+    companyName: string;
+    userId: number;
+    userName: string;
+  } | null>(null);
+  const [isRemovingMembership, setIsRemovingMembership] = useState(false);
 
   const fetchAllUsers = useCallback(async (): Promise<User[]> => {
     let page = 1;
@@ -970,6 +1053,62 @@ const SuperAdminUsers: React.FC = () => {
     setManagingUser(user);
     setIsMembershipModalOpen(true);
   };
+  // ── Table row role change handler ──
+  const handleRoleChangeFromTable = async (membership: Membership, newRole: UserRole, userId: number) => {
+    try {
+      await updateUserCompanyRole(membership.company_slug, userId, newRole);
+      await refreshAllUsers();
+      showToast("success", `Role updated to ${newRole}`);
+      setEditingRoleInTable(null);
+      setEditingCompanyInTable(null);
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to update role");
+    }
+  };
+
+  // ── Table row remove membership handler ──
+  const handleRemoveMembershipFromTable = (companyId: number, companyName: string, userId: number, userName: string) => {
+    setRemoveMembershipData({ companyId, companyName, userId, userName });
+    setRemoveMembershipModalOpen(true);
+  };
+
+  // ── Confirm remove membership ──
+  const confirmRemoveMembership = async () => {
+    if (!removeMembershipData) return;
+    
+    const { companyId, companyName, userId, userName } = removeMembershipData;
+    
+    setIsRemovingMembership(true);
+    
+    try {
+      // Find the user to get their memberships
+      const userToRemove = allUsers.find(u => u.id === userId);
+      if (!userToRemove) {
+        showToast("error", "User not found");
+        setIsRemovingMembership(false);
+        return;
+      }
+      
+      // Find the membership to get the company_slug
+      const membership = userToRemove.memberships.find(m => m.company_id === companyId);
+      if (!membership) {
+        showToast("error", "Membership not found");
+        setIsRemovingMembership(false);
+        return;
+      }
+      
+      // Use the company_slug from the membership (not from availableCompanies)
+      await removeUserFromCompany(membership.company_slug, userId);
+      await refreshAllUsers();
+      showToast("success", `Removed ${userName} from ${companyName}`);
+      setRemoveMembershipModalOpen(false);
+      setRemoveMembershipData(null);
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to remove company");
+    } finally {
+      setIsRemovingMembership(false);
+    }
+  };
 
   useEffect(() => {
     if (isMembershipModalOpen) {
@@ -1120,6 +1259,11 @@ const SuperAdminUsers: React.FC = () => {
               onEdit={handleEdit}
               onRemove={handleRemove}
               onManageMemberships={handleManageMemberships}
+              editingRoleInTable={editingRoleInTable}
+              setEditingRoleInTable={setEditingRoleInTable}
+              setEditingCompanyInTable={setEditingCompanyInTable}
+              handleRoleChangeFromTable={handleRoleChangeFromTable}
+              handleRemoveMembershipFromTable={handleRemoveMembershipFromTable}
             />
             <UserMobileCards
               users={paginatedUsers}
@@ -1154,10 +1298,18 @@ const SuperAdminUsers: React.FC = () => {
         onSave={handleSaveEdit}
       />
 
+      {/* Confirm Delete Modal for Remove Membership */}
       <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
+        isOpen={removeMembershipModalOpen}
+        onClose={() => {
+          if (isRemovingMembership) return;
+          setRemoveMembershipModalOpen(false);
+          setRemoveMembershipData(null);
+        }}
+        onConfirm={confirmRemoveMembership}
+        title="Remove Membership"
+        message={`Are you sure you want to remove ${removeMembershipData?.companyName} from ${removeMembershipData?.userName}? This will revoke all access to that company.`}
+        loading={isRemovingMembership}
       />
 
       <ManageMembershipsModal
