@@ -195,6 +195,10 @@ export interface CompanyProduct {
   is_featured: boolean;
   images: ProductImage[];
   primary_image?: ProductImage | null;
+  // ── View-Only Stats ──
+  sales_count?: number;
+  average_rating?: string | null;
+  total_reviews?: number;
   created_at: string;
   updated_at: string;
 }
@@ -216,6 +220,10 @@ export interface CompanyProductListItem {
   is_active: boolean;
   is_featured: boolean;
   primary_image?: string | null;
+  // ── View-Only Stats ──
+  sales_count?: number;
+  average_rating?: string | null;
+  total_reviews?: number;
 }
 
 // ── Cart & Orders ──

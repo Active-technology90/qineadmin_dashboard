@@ -6,10 +6,11 @@ interface Product {
   sku: string;
   title: string;
   price: number;
+  currency?: string; 
   stock: number;
   unit: string;
-  image?: string; // adjust based on your API field name
-  image_url?: string; // alternative field
+  image?: string; 
+  image_url?: string; 
   is_featured?: boolean;
   average_rating?: string | number;
   total_reviews?: number;
@@ -178,10 +179,10 @@ export function ProductTable({
                   </span>
                 </th>
 
-                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1">
+                <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                  <span className="inline-flex items-center justify-end gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                    Price (ETB)
+                    Price
                   </span>
                 </th>
                 <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
@@ -265,10 +266,10 @@ export function ProductTable({
                   Title
                 </span>
               </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
+              <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center justify-end gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Price (ETB)
+                  Price
                 </span>
               </th>
               <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
@@ -323,9 +324,21 @@ export function ProductTable({
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">
                     {product.title}
                   </td>
-                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
-                    {product.price.toLocaleString()}
-                  </td>
+<td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-right">
+  <div className="flex items-center justify-end gap-1.5">
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold
+      ${(product.currency || 'ETB') === 'ETB' ? 'bg-green-100 text-green-700' :
+        (product.currency || 'ETB') === 'USD' ? 'bg-blue-100 text-blue-700' :
+        (product.currency || 'ETB') === 'EUR' ? 'bg-orange-100 text-orange-700' :
+        'bg-gray-100 text-gray-600'}`}
+    >
+      {product.currency || 'ETB'}
+    </span>
+    <span className="text-[11px] sm:text-sm font-medium text-gray-900">
+      {product.price.toLocaleString()}
+    </span>
+  </div>
+</td>
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
                     <RatingDisplay
                       rating={Number(product.average_rating || 0)}

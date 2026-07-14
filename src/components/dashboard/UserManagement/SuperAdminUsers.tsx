@@ -298,7 +298,7 @@ const UserFilters: React.FC<FiltersProps> = ({
   );
 };
 // ============================================================
-// Actions Dropdown Component
+// Actions Dropdown Component 
 // ============================================================
 
 interface ActionsDropdownProps {
@@ -317,8 +317,12 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   onManageMemberships,
 }) => {
   const [open, setOpen] = useState(false);
+  const [isAbove, setIsAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // ── Click outside / Escape to close ──
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -344,35 +348,55 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     };
   }, [open]);
 
+  // ── Check if dropdown fits below ──
+  useEffect(() => {
+    if (open && buttonRef.current && menuRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 200; // approximate menu height (adjust if needed)
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+
+      // If there's less space below than the menu height, and more space above, flip upward
+      if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+        setIsAbove(true);
+      } else {
+        setIsAbove(false);
+      }
+    }
+  }, [open]);
+
   const menuItems = [
     {
       label: "View Profile",
       icon: Eye,
-      iconColor: "text-gray-600",
-      hover: "hover:bg-gray-50",
+      iconColor: "text-indigo-500",
+      hover: "hover:bg-indigo-50",
+      iconBg: "bg-indigo-50/60",
       action: () => onView(user),
     },
     {
       label: "Edit User",
       icon: Edit,
-      iconColor: "text-blue-600",
+      iconColor: "text-blue-500",
       hover: "hover:bg-blue-50",
+      iconBg: "bg-blue-50/60",
       action: () => onEdit(user),
     },
     {
       label: "Manage Memberships",
       icon: Building2,
-      iconColor: "text-purple-600",
+      iconColor: "text-purple-500",
       hover: "hover:bg-purple-50",
+      iconBg: "bg-purple-50/60",
       action: () => onManageMemberships(user),
     },
     {
       label: "Remove User",
       icon: Trash2,
-      iconColor: "text-red-600",
-      hover: "hover:bg-red-50",
-      textColor: "text-red-600",
-      danger: true,
+      iconColor: "text-rose-500",
+      hover: "hover:bg-rose-50",
+      iconBg: "bg-rose-50/60",
+      textColor: "text-rose-600",
       action: () => onRemove(user),
     },
   ];
@@ -380,63 +404,64 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   return (
     <div
       ref={dropdownRef}
-      className="relative flex items-center justify-center"
+      className="relative flex items-center justify-center z-50 "
     >
       {/* Trigger Button */}
       <button
+        ref={buttonRef}
         onClick={() => setOpen((prev) => !prev)}
         className={`
           group
           relative
           flex items-center justify-center
-          h-9 w-9
-          sm:h-10 sm:w-10
-          rounded-2xl
-          border border-transparent
-          bg-white/70
-          hover:bg-white
-          hover:border-[#6758D4]/20
+          h-8 w-8
+          rounded-xl  z-50
+          bg-white/80
+          backdrop-blur-sm
+          border border-gray-200/70
+          hover:border-indigo-300
           hover:shadow-lg
+          hover:shadow-indigo-100/40
           active:scale-95
-          transition-all duration-200
-          backdrop-blur-md
+          transition-all duration-300
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-indigo-400
+          focus-visible:ring-offset-2
+          ${open ? "border-indigo-300 shadow-lg shadow-indigo-100/40 bg-indigo-50/40" : ""}
         `}
       >
+        {open && (
+          <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 opacity-20 -z-10 blur-sm" />
+        )}
+
         <MoreVertical
           className={`
-            h-4 w-4 sm:h-5 sm:w-5
-            text-gray-600
-            transition-transform duration-200
-            ${open ? "rotate-90" : "group-hover:scale-110"}
+            h-4 w-4
+            transition-all duration-300
+            ${open ? "text-indigo-600 rotate-90" : "text-gray-500 group-hover:text-indigo-500 group-hover:scale-110"}
           `}
         />
-
-        {open && (
-          <span className="absolute inset-0 rounded-2xl ring-2 ring-[#6758D4]/20" />
-        )}
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown – Glassmorphism with dynamic vertical placement */}
       <div
+        ref={menuRef}
         className={`
-          absolute right-0 top-[calc(100%+10px)]
-         w-[160px]
-xs:w-[160px]
-sm:w-[200px]
-md:w-72
-lg:w-72
-xl:w-72
-max-w-[calc(100vw-24px)]
+          absolute
+          ${isAbove ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"}
+          right-0
+          w-56
+           z-50
           origin-top-right
-          rounded-3xl
-          border border-white/40
-          bg-white/85
-          backdrop-blur-2xl
-          shadow-[0_20px_60px_rgba(0,0,0,0.15)]
+          rounded-2xl
+          bg-white/90
+          backdrop-blur-xl
+          shadow-[0_20px_60px_rgba(79,70,229,0.12)]
+          border border-white/30
           overflow-hidden
           z-[999]
           transition-all duration-300 ease-out
-          
           ${
             open
               ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
@@ -444,15 +469,8 @@ max-w-[calc(100vw-24px)]
           }
         `}
       >
-        {/* Header */}
-        <div className="px-4 sm:px-5 py-2 border-b border-gray-100 bg-gradient-to-r from-[#6758D4]/5 to-transparent">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            User Actions
-          </p>
-        </div>
-
-        {/* Menu */}
-        <div className=" p-1 md:p-2">
+        {/* Menu Items */}
+        <div className="py-1.5">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
 
@@ -465,55 +483,45 @@ max-w-[calc(100vw-24px)]
                 }}
                 className={`
                   group
-                  relative
-                  flex items-center justify-between
+                  flex items-center gap-3
                   w-full
-                  rounded-2xl
-                  px-2 sm:px-4
-                  py-1 sm:py-3.5
+                  px-4
+                  py-2.5
+                  text-xs
+                  font-medium
+                  text-gray-700
                   transition-all duration-200
-                  active:scale-[0.98]
+                  hover:pl-5
                   ${item.hover}
-                  ${item.textColor || "text-gray-700"}
-                  ${index !== menuItems.length - 1 ? "mb-1" : ""}
+                  ${item.textColor || ""}
+                  ${index > 0 ? "border-t border-gray-100/40" : ""}
                 `}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`
-                      flex items-center justify-center
-                      h-9 w-9
-                      rounded-xl
-                      bg-white
-                      shadow-sm
-                      border border-gray-100
-                      transition-all duration-200
-                      group-hover:scale-105
-                    `}
-                  >
-                    <Icon
-                      className={`h-3 w-3 sm:h-[18px] sm:w-[18px] ${item.iconColor}`}
-                    />
-                  </div>
-
-                  <span
-                    className="
-                      text-xs sm:text-[15px]
-                      font-medium
-                      truncate
-                    "
-                  >
-                    {item.label}
-                  </span>
+                <div
+                  className={`
+                    flex items-center justify-center
+                    h-7 w-7
+                    rounded-xl
+                    ${item.iconBg}
+                    transition-all duration-200
+                    group-hover:scale-105
+                    group-hover:shadow-sm
+                  `}
+                >
+                  <Icon className={`h-3.5 w-3.5 ${item.iconColor}`} />
                 </div>
+
+                <span className="flex-1 text-left text-[13px] font-medium">
+                  {item.label}
+                </span>
 
                 <ChevronRight
                   className="
-                    h-4 w-4
+                    h-3.5 w-3.5
                     text-gray-300
                     transition-all duration-200
                     group-hover:translate-x-1
-                    group-hover:text-gray-500
+                    group-hover:text-indigo-400
                   "
                 />
               </button>
@@ -521,8 +529,8 @@ max-w-[calc(100vw-24px)]
           })}
         </div>
 
-        {/* Bottom Glow */}
-        <div className="h-1 bg-gradient-to-r from-[#6758D4] via-purple-400 to-pink-400 opacity-70" />
+        {/* Bottom gradient bar */}
+        <div className="h-[2px] bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 opacity-60" />
       </div>
     </div>
   );
@@ -717,7 +725,7 @@ const UserTable: React.FC<UserTableProps> = ({
 );
 
 // ============================================================
-// Mobile Cards Component
+// Mobile Cards Component – with Scrollable Companies
 // ============================================================
 const UserMobileCards: React.FC<UserTableProps> = ({
   users,
@@ -747,6 +755,7 @@ const UserMobileCards: React.FC<UserTableProps> = ({
             <ActionsDropdown user={user} {...actionProps} />
           </div>
         </div>
+
         <div className="mt-3 xs:mt-4 space-y-2 flex-1">
           <div className="flex items-center gap-2 text-[11px] xs:text-xs sm:text-sm">
             <span className="text-gray-500">Phone:</span>
@@ -754,23 +763,40 @@ const UserMobileCards: React.FC<UserTableProps> = ({
               {formatPhone(user.phone_number)}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5 xs:gap-2">
+
+          {/* ─── SCROLLABLE COMPANIES SECTION ─── */}
+          <div className="mt-1">
+            <p className="text-[9px] xs:text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">
+              Companies
+            </p>
             {user.memberships.length > 0 ? (
-              user.memberships.map((m: Membership, idx: number) => (
-                <span
-                  key={idx}
-                  className={`inline-flex items-center px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-lg xs:rounded-xl text-[9px] xs:text-[10px] sm:text-xs font-medium border ${roleStyles[m.role]} max-w-full truncate`}
-                >
-                  {m.company_name}
-                </span>
-              ))
+              <div className="max-h-24 xs:max-h-28 sm:max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-secondary/20 scrollbar-track-transparent hover:scrollbar-thumb-secondary/40">
+                <div className="flex flex-col gap-1">
+                  {user.memberships.map((m: Membership, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between px-2 py-1 rounded-lg bg-gray-50/80 border border-gray-100/60"
+                    >
+                      <span className="text-[10px] xs:text-[11px] sm:text-xs font-medium text-gray-700 truncate max-w-[70%]">
+                        {m.company_name}
+                      </span>
+                      <span
+                        className={`text-[8px] xs:text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${roleStyles[m.role]}`}
+                      >
+                        {m.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <span className="text-[10px] xs:text-xs text-gray-400">
+              <span className="text-[10px] xs:text-xs text-gray-400 italic">
                 No companies assigned
               </span>
             )}
           </div>
         </div>
+
         <div className="mt-2 xs:mt-3 pt-2 xs:pt-3 border-t border-gray-100 flex justify-between items-center">
           {user.is_active ? (
             <span className="inline-flex items-center gap-1 text-[10px] xs:text-xs text-emerald-600">
@@ -1166,7 +1192,7 @@ const SuperAdminUsers: React.FC = () => {
           text-xs
           xs:text-sm
           sm:text-base
-          text-gray-500
+          text-secondary-light
           leading-relaxed
           max-w-2xl
         "

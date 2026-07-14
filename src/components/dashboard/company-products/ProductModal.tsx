@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
+import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Star, MessageSquare, ShoppingBag } from 'lucide-react';
 import { ImageGallery } from './ImageGallery';
 import { getCompanyProductDetail, getMySubscription } from '../../../services/api';
 import type { ProductImage } from '../../../types';
@@ -10,19 +10,29 @@ import type { ProductImage } from '../../../types';
 interface ProductFormData {
   sku: string;
   title: string;
+  title_am?: string;
+  description?: string;
+  description_am?: string;
+  currency?: string;
   price: number;
   stock: number;
   unit: string;
   is_featured?: boolean;
+  is_active?: boolean;
 }
 
 const productSchema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   title: z.string().min(1, 'Title is required'),
+  title_am: z.string().optional(),
+  description: z.string().optional(),
+  description_am: z.string().optional(),
+  currency: z.string().optional(),
   price: z.number().positive('Price must be positive'),
   stock: z.number().int().min(0, 'Stock cannot be negative'),
   unit: z.string().min(1, 'Unit is required'),
   is_featured: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 interface ProductModalProps {
@@ -94,32 +104,64 @@ export function ProductModal({
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { sku: '', title: '', price: 0, stock: 0, unit: 'pcs', is_featured: false },
-  });
+  defaultValues: { 
+    sku: '', 
+    title: '', 
+    title_am: '',
+    description: '',
+    description_am: '',
+    currency: 'ETB',
+    price: 0, 
+    stock: 0, 
+    unit: 'pcs', 
+    is_featured: false,
+    is_active: true,
+  },
+});
 
-   // Reset form and step when editing product changes
+   // Reset form and step 
   useEffect(() => {
     if (editingProduct) {
+    // Edit mode: populate form with product data
       reset({
         sku: editingProduct.sku,
         title: editingProduct.title,
+      title_am: editingProduct.title_am || '',
+      description: editingProduct.description || '',
+      description_am: editingProduct.description_am || '',
+      currency: editingProduct.currency || 'ETB',
         price: editingProduct.price,
         stock: editingProduct.stock,
         unit: editingProduct.unit,
         is_featured: editingProduct.is_featured || false,
+      is_active: editingProduct.is_active !== undefined ? editingProduct.is_active : true,
       });
       setSavedProductId(editingProduct.id);
       setStep('details');
     } else {
-      // Only reset form if we're not coming back from gallery with a saved product
-      // AND the modal is open (to prevent reset while modal is closed)
-      if (!savedProductId && isOpen) {
-        reset({ sku: '', title: '', price: 0, stock: 0, unit: 'pcs', is_featured: false });
-        setSavedProductId(null);
+    // Add mode: ALWAYS reset when modal is open and we are NOT in "back from gallery" state
+    if (isOpen) {
+      // Reset savedProductId FIRST before any checks
+      setSavedProductId(null);
+      
+      // If we are in details step with a savedProductId that we just cleared, reset the form
+      reset({ 
+        sku: '', 
+        title: '', 
+        title_am: '',
+        description: '',
+        description_am: '',
+        currency: 'ETB',
+        price: 0, 
+        stock: 0, 
+        unit: 'pcs', 
+        is_featured: false,
+        is_active: true,
+      });
         setStep('details');
       }
     }
-  }, [editingProduct, reset, savedProductId, isOpen]);
+}, [editingProduct, reset, isOpen]);
 
   // Fetch images when on gallery step
   useEffect(() => {
@@ -330,6 +372,90 @@ export function ProductModal({
                     <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
                   )}
                 </div>
+                {/* Title (Amharic) */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Title (Amharic)
+  </label>
+  <input
+    {...register('title_am')}
+    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
+      errors.title_am
+        ? 'border-red-500 focus:ring-red-100'
+        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+    } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+    placeholder="Product name in Amharic"
+    disabled={isSubmitting || isReadOnlyBasic}
+  />
+</div>
+
+{/* Description (English) */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Description
+  </label>
+  <textarea
+    {...register('description')}
+    rows={3}
+    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
+      errors.description
+        ? 'border-red-500 focus:ring-red-100'
+        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+    } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+    placeholder="Product description in English"
+    disabled={isSubmitting || isReadOnlyBasic}
+  />
+</div>
+
+{/* Description (Amharic) */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Description (Amharic)
+  </label>
+  <textarea
+    {...register('description_am')}
+    rows={3}
+    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border ${
+      errors.description_am
+        ? 'border-red-500 focus:ring-red-100'
+        : 'border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20'
+    } transition-all outline-none ${isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+    placeholder="Product description in Amharic"
+    disabled={isSubmitting || isReadOnlyBasic}
+  />
+</div>
+
+{/* Currency */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Currency
+  </label>
+  <select
+    {...register('currency')}
+    className={`w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg border border-gray-200 bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none ${
+      isReadOnlyBasic ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+    }`}
+    disabled={isSubmitting || isReadOnlyBasic}
+  >
+    <option value="ETB">ETB (Ethiopian Birr)</option>
+    <option value="USD">USD (US Dollar)</option>
+    <option value="EUR">EUR (Euro)</option>
+  </select>
+</div>
+
+{/* Active Status */}
+<div className="flex items-center pt-2">
+  <input
+    type="checkbox"
+    id="is_active"
+    {...register('is_active')}
+    disabled={isSubmitting || isReadOnlyBasic}
+    className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2 disabled:opacity-50"
+  />
+  <label htmlFor="is_active" className="ml-2 text-sm font-medium text-gray-700">
+    Active (visible to customers)
+  </label>
+</div>
 
                 {/* Price & Stock */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -421,6 +547,132 @@ export function ProductModal({
                     </p>
                   )}
                 </div>
+                {/* ── VIEW-ONLY STATS ── */}
+{editingProduct && (
+  <div className="mt-6 pt-6 border-t border-gray-200/80">
+    {/* Section Header – with Product Name (more visible) */}
+    <div className="flex items-start gap-2 mb-4">
+      <div className="h-6 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40 flex-shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        {/* Row 1 – Title + Product Name */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-bold text-secondary uppercase tracking-[0.15em]">
+            Product Statistics
+          </p>
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 truncate max-w-[140px] sm:max-w-[220px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary/60 flex-shrink-0" />
+            {editingProduct?.title || 'Product'}
+          </span>
+        </div>
+        {/* Accent line – clean and fixed position */}
+        <div className="h-px bg-gradient-to-r from-gray-200/60 via-gray-200/30 to-transparent mt-2" />
+      </div>
+    </div>
+
+    {/* Statistics Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* ─── SALES COUNT – COMMENTED OUT (backend missing field) ─── */}
+      {/*
+      <div className="group relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100/80 hover:shadow-lg hover:border-secondary/20 transition-all duration-300">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-secondary-light uppercase tracking-wider">Sales Count</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {editingProduct.sales_count ?? 0}
+            </p>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+            <ShoppingBag className="h-5 w-5 text-secondary" />
+          </div>
+        </div>
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      </div>
+      */}
+
+      {/* Average Rating Card – Modern Animated */}
+      <div className="group relative bg-gradient-to-br from-white to-yellow-50/20 rounded-2xl p-5 shadow-sm border border-gray-100/80 hover:shadow-lg hover:shadow-yellow-100/50 hover:border-yellow-400/40 transition-all duration-500 overflow-hidden">
+        {/* Background glow – subtle, animated on hover */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-200/10 rounded-full blur-2xl group-hover:bg-yellow-200/20 transition-all duration-700 pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-yellow-300/5 rounded-full blur-2xl group-hover:bg-yellow-300/15 transition-all duration-700 pointer-events-none" />
+
+        <div className="flex items-start justify-between relative z-10">
+          <div>
+            <p className="text-xs font-medium text-secondary-light uppercase tracking-wider flex items-center gap-1.5">
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              Average Rating
+            </p>
+            <div className="mt-1.5 flex items-center gap-0.5">
+              {editingProduct.average_rating ? (
+                <>
+                  {/* Stars with staggered entrance animation */}
+                  {[...Array(5)].map((_, i) => {
+                    const rating = Number(editingProduct.average_rating);
+                    const starValue = i + 1;
+                    let fillPercentage = 0;
+                    if (rating >= starValue) {
+                      fillPercentage = 100;
+                    } else if (rating > i) {
+                      fillPercentage = (rating - i) * 100;
+                    }
+                    return (
+                      <div
+                        key={i}
+                        className="relative inline-block h-5 w-5 flex-shrink-0 transition-all duration-300 hover:scale-110 hover:drop-shadow-[0_0_6px_rgba(250,204,21,0.6)]"
+                        style={{ animationDelay: `${i * 50}ms` }}
+                      >
+                        {/* Empty star behind */}
+                        <Star className="absolute inset-0 h-5 w-5 text-gray-300 transition-colors group-hover:text-gray-400" />
+                        {/* Filled star overlay with clip */}
+                        <div
+                          className="absolute inset-0 overflow-hidden transition-all duration-500 ease-out"
+                          style={{ width: `${fillPercentage}%` }}
+                        >
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 transition-transform duration-300 group-hover:scale-105" />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Rating Number – with gradient and animation */}
+                 <span className="text-2xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-300 bg-clip-text text-transparent ml-1.5 transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.2)] inline-block">
+                    {Number(editingProduct.average_rating).toFixed(1)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-2xl font-bold text-gray-400">N/A</span>
+              )}
+            </div>
+          </div>
+
+          {/* Animated icon */}
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400/20 to-yellow-500/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-yellow-200/40 relative">
+            <div className="absolute inset-0 rounded-xl bg-yellow-400/0 group-hover:bg-yellow-400/10 transition-all duration-300" />
+            <Star className="h-5 w-5 text-yellow-500 fill-yellow-400 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110" />
+          </div>
+        </div>
+
+        {/* Bottom accent bar – animated on hover */}
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400/0 via-yellow-400/40 to-yellow-400/0 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-left" />
+      </div>
+
+      {/* Total Reviews Card */}
+      <div className="group relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100/80 hover:shadow-lg hover:border-indigo-300/30 transition-all duration-300">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-secondary-light uppercase tracking-wider">Total Reviews</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {editingProduct.total_reviews ?? 0}
+            </p>
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-indigo-500" />
+          </div>
+        </div>
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      </div>
+    </div>
+  </div>
+)}
               </form>
             ) : (
               <div className="space-y-5">

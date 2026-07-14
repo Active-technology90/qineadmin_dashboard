@@ -66,10 +66,13 @@ export function useCompanyProducts({
             sku: item.sku || '',
             title: item.title,
             price: Number(item.price),
+            currency: item.currency,
             stock: item.stock,
             unit: item.unit || 'pc',
             image: item.primary_image,
             is_featured: item.is_featured,
+            average_rating: item.average_rating,     
+            total_reviews: item.total_reviews,       
           }))
         );
 
