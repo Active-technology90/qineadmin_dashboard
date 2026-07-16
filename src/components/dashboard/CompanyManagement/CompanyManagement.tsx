@@ -153,7 +153,9 @@ export default function CompanyManagement() {
     sub_category: 0,
     business_type: "",
     address: "",
+     address_am: "",
     description: "",
+     description_am: "",
     minimum_order_total: "0.00",
     latitude: "",
     longitude: "",
@@ -417,7 +419,9 @@ export default function CompanyManagement() {
           sub_category: companyListItem.sub_category,
           business_type: companyListItem.business_type,
           address: companyListItem.address || "",
+           address_am: (companyListItem as any).address_am || "",
           description: companyListItem.description || "",
+            description_am: (companyListItem as any).description_am || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
           latitude: companyListItem.latitude || "",
           longitude: companyListItem.longitude || "",
@@ -454,7 +458,9 @@ export default function CompanyManagement() {
             sub_category: first.sub_category,
             business_type: first.business_type,
             address: first.address || "",
+            address_am: (first as any).address_am || "",
             description: first.description || "",
+             description_am: (first as any).description_am || "",
             minimum_order_total: first.minimum_order_total || "0.00",
             latitude: first.latitude || "",
             longitude: first.longitude || "",
@@ -561,6 +567,8 @@ export default function CompanyManagement() {
           return true;
         if (cleanString(formData.address) !== cleanString(originalFormData.address))
           return true;
+        if (cleanString(formData.address_am) !== cleanString(originalFormData.address_am))
+  return true;
         if (
           Number(formData.head_company ?? 0) !==
           Number(originalFormData.head_company ?? 0)
@@ -571,6 +579,8 @@ export default function CompanyManagement() {
           cleanString(originalFormData.description)
         )
           return true;
+          if (cleanString(formData.description_am) !== cleanString(originalFormData.description_am))   
+  return true;
 
         // Floats and Decimals (Monetary & Coordinates)
         if (
@@ -660,10 +670,16 @@ export default function CompanyManagement() {
       if (formData.address) {
         formPayload.append("address", formData.address);
       }
+      if (formData.address_am) {
+  formPayload.append("address_am", formData.address_am);
+}
 
       if (formData.description) {
         formPayload.append("description", formData.description);
       }
+      if (formData.description_am) {                    
+  formPayload.append("description_am", formData.description_am);
+}
 
       formPayload.append(
         "minimum_order_total",
@@ -771,7 +787,9 @@ export default function CompanyManagement() {
       sub_category: 0,
       business_type: "",
       address: "",
+      address_am: "",
       description: "",
+      description_am: "",
       minimum_order_total: "0.00",
       latitude: "",
       longitude: "",
@@ -804,7 +822,9 @@ export default function CompanyManagement() {
         sub_category: company.sub_category,
         business_type: company.business_type,
         address: company.address || "",
+         address_am: (company as any).address_am || "",
         description: company.description || "",
+          description_am: (company as any).description_am || "", 
         minimum_order_total: company.minimum_order_total || "0.00",
         latitude: company.latitude || "",
         longitude: company.longitude || "",
@@ -991,6 +1011,20 @@ export default function CompanyManagement() {
               />
               <p className="text-xs text-gray-400 mt-1">Optional – physical address of the company.</p>
             </div>
+            {/* Address (Amharic) - ADD THIS BLOCK */}
+<div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+    Address (Amharic)
+  </label>
+  <input
+    type="text"
+    placeholder="አድራሻ በአማርኛ (ከሆነ)"
+    value={formData.address_am}
+    onChange={(e) => setFormData((prev) => ({ ...prev, address_am: e.target.value }))}
+    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+  />
+  <p className="text-xs text-gray-400 mt-1">Optional – Amharic version of the company address.</p>
+</div>
 
             {/* 📍 GPS Coordinates & Map Picker - MOVED HERE (below Address) */}
             <div className="md:col-span-2">
@@ -1107,7 +1141,11 @@ export default function CompanyManagement() {
                 <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
               )}
             </div>
-            <div className="md:col-span-2">
+{/* Description - English & Amharic side by side */}
+<div className="md:col-span-2">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+    {/* English Description */}
+    <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Description
               </label>
@@ -1124,6 +1162,24 @@ export default function CompanyManagement() {
                 rows={3}
               />
             </div>
+
+    {/* Amharic Description */}
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Description (Amharic)
+      </label>
+      <textarea
+        placeholder="የኩባንያ መግለጫ በአማርኛ (ከሆነ)"
+        value={formData.description_am}
+        onChange={(e) => setFormData((prev) => ({ ...prev, description_am: e.target.value }))}
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+        rows={3}
+      />
+      <p className="text-xs text-gray-400 mt-1">Optional – Amharic version of the company description.</p>
+    </div>
+  </div>
+</div>
+
           </div>
         ),
         validate: validateBasicInfo,

@@ -14,7 +14,9 @@ export interface CompanyFormData {
   sub_category: number;
   business_type: string;
     address: string;
+    address_am: string; 
   description: string;
+  description_am: string; 
   minimum_order_total: string;
   latitude: string;
   longitude: string;
@@ -284,26 +286,56 @@ export default function CompanyForm({
           )}
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
-            Description
-          </label>
-          <textarea
-            placeholder="Company description..."
-            value={formData.description}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, description: e.target.value }))
-            }
-            disabled={!isEditingActive}
-            rows={2}
-            className={`w-full border rounded-md p-1.5 text-xs resize-none ${
-              !isEditingActive
-                ? "bg-gray-50 border-gray-200"
-                : "bg-white border-secondary/30 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
-            }`}
-          />
-        </div>
+ {/* Description - English & Amharic side by side */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+  {/* English Description */}
+  <div>
+    <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+      Description
+    </label>
+    <textarea
+      placeholder="Company description..."
+      value={formData.description}
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, description: e.target.value }))
+      }
+      disabled={!isEditingActive}
+      rows={2}
+      className={`w-full border rounded-md p-1.5 text-xs resize-none ${
+        !isEditingActive
+          ? "bg-gray-50 border-gray-200"
+          : "bg-white border-secondary/30 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
+      }`}
+    />
+  </div>
+
+  {/* Amharic Description */}
+  <div>
+    <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+      Description (Amharic)
+    </label>
+    <textarea
+      placeholder="የኩባንያ መግለጫ በአማርኛ (ከሆነ)"
+      value={formData.description_am}
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          description_am: e.target.value,
+        }))
+      }
+      disabled={!isEditingActive}
+      rows={2}
+      className={`w-full border rounded-md p-1.5 text-xs resize-none ${
+        !isEditingActive
+          ? "bg-gray-50 border-gray-200"
+          : "bg-white border-secondary/30 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
+      }`}
+    />
+    <p className="text-[10px] text-gray-400 mt-0.5">
+      Optional – Amharic version of the company description.
+    </p>
+  </div>
+</div>
 
         {/* Minimum Order Total */}
         <div className=" ">
@@ -362,6 +394,32 @@ export default function CompanyForm({
             Physical address of the company.
           </p>
         </div>
+        {/* Address (Amharic) */}
+<div>
+  <label className="block text-[14px] font-medium text-gray-600 mb-0.5">
+    Address (Amharic)
+  </label>
+  <input
+    type="text"
+    placeholder="አድራሻ በአማርኛ (ከሆነ)"
+    value={formData.address_am}
+    onChange={(e) =>
+      setFormData((prev) => ({
+        ...prev,
+        address_am: e.target.value,
+      }))
+    }
+    disabled={!isEditingActive}
+    className={`w-full border rounded-md p-1.5 text-xs ${
+      !isEditingActive
+        ? "bg-gray-50 border-gray-200"
+        : "bg-white border-gray-300 focus:ring-1 focus:ring-secondary/20 focus:border-secondary"
+    }`}
+  />
+  <p className="text-[10px] text-gray-400 mt-0.5">
+    Optional – Amharic version of the company address.
+  </p>
+</div>
 
         {/* Coordinates (Latitude & Longitude) */}
         <div>
