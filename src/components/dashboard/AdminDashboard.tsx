@@ -44,8 +44,10 @@ import AdManagement from "./AdManagement";
 import SettingsPage from "./settings/Settings";
 import NotificationsPage from "./notifications/NotificationsPage";
 import NotificationBell from "./notifications/NotificationBell";
+import { LanguageSwitcher } from "../LanguageSwitcher";
 import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
+import { useTranslation } from 'react-i18next';
 
 type Tab =
   | "overview"
@@ -91,6 +93,7 @@ function OrdersMenu({
   ordersMenuOpen: boolean;
   onToggleOrdersMenu: () => void;
 }) {
+  const { t } = useTranslation('dashboard');
   // If user only has Company Orders (no Master Orders), show simple single button without dropdown
   if (!showMasterOrders) {
     if (!collapsed) {
@@ -103,7 +106,7 @@ function OrdersMenu({
             }`}
         >
           <ShoppingBag className="h-5 w-5" />
-          <span>All Orders</span>
+          <span>{t('sidebar.allOrders')}</span>
         </button>
       );
     } else {
@@ -152,7 +155,7 @@ function OrdersMenu({
         >
           <div className="flex items-center gap-3.5">
             <ShoppingBag className="h-5 w-5" />
-            <span>Orders</span>
+          <span>{t('sidebar.orders')}</span>
           </div>
           {ordersMenuOpen ? (
             <ChevronUp className="h-4 w-4" />
@@ -172,7 +175,7 @@ function OrdersMenu({
                   }`}
               >
                 <FileText className="h-4 w-4" />
-                Master Orders
+               {t('sidebar.masterOrders')}
               </button>
             )}
             <button
@@ -183,7 +186,7 @@ function OrdersMenu({
                 }`}
             >
               <ListOrdered className="h-4 w-4" />
-              All Orders
+             {t('sidebar.allOrders')}
             </button>
           </div>
         )}
@@ -217,7 +220,7 @@ function OrdersMenu({
                 }`}
             >
               <FileText className="h-4 w-4 text-gray-500" />
-              Master Orders
+              {t('sidebar.masterOrders')}
             </button>
           )}
           <button
@@ -231,7 +234,7 @@ function OrdersMenu({
               }`}
           >
             <Building2 className="h-4 w-4 text-gray-500" />
-            Company Orders
+           {t('sidebar.companyOrders')}
           </button>
         </div>
       )}
@@ -258,6 +261,7 @@ export default function AdminDashboard() {
   const [isScrolled, setIsScrolled] = useState(false);
   //  const mainContentRef = useRef<HTMLDivElement>(null);
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation('dashboard');
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -481,7 +485,7 @@ export default function AdminDashboard() {
         <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto scrollbar-thin custom-scrollbar">
           <SidebarItem
             icon={<LayoutDashboard className="h-5 w-5" />}
-            label="Dashboard"
+  label={t('sidebar.dashboard')}
             active={activeTab === "overview"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("overview")}
@@ -494,18 +498,19 @@ export default function AdminDashboard() {
                 className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
                   }`}
               >
-                Platform Admin
-              </div>
+  {t('sidebar.platformAdmin')}
+</div>
               <SidebarItem
                 icon={<Layout className="h-5 w-5" />}
-                label="Categories"
+                label={t('sidebar.categories')}
+
                 active={activeTab === "categories"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("categories")}
               />
               <SidebarItem
                 icon={<Proportions className="h-5 w-5" />}
-                label="SubCategories"
+                label={t('sidebar.subCategories')}
                 active={activeTab === "subcategories"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("subcategories")}
@@ -516,7 +521,7 @@ export default function AdminDashboard() {
           {isSuperAdmin && (
             <SidebarItem
               icon={<Building2 className="h-5 w-5" />}
-              label="Head Companies"
+              label={t('sidebar.headCompanies')}
               active={activeTab === "headcompanies"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("headcompanies")}
@@ -524,7 +529,7 @@ export default function AdminDashboard() {
           )}
           <SidebarItem
             icon={<Building2 className="h-5 w-5" />}
-            label={!user?.memberships?.length ? "Companies" : "Company Detail"}
+ label={!user?.memberships?.length ? t('sidebar.companies') : t('sidebar.companyDetail')}
             active={activeTab === "companies"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("companies")}
@@ -532,7 +537,7 @@ export default function AdminDashboard() {
           {isSuperAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
-              label="User Management"
+                label={t('sidebar.userManagement')}
               active={activeTab === "superUsers"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("superUsers")}
@@ -541,7 +546,7 @@ export default function AdminDashboard() {
           {showPlatformAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
-              label="Ads Management"
+             label={t('sidebar.adsManagement')}
               active={activeTab === "add advertisment"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("add advertisment")}
@@ -550,7 +555,7 @@ export default function AdminDashboard() {
                     {/* Bank Accounts - Below Ads Management */}
           <SidebarItem
             icon={<Banknote className="h-5 w-5" />}
-            label="Bank Accounts"
+            label={t('sidebar.bankAccounts')}
             active={activeTab === "bankAccounts"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("bankAccounts")}
@@ -560,7 +565,7 @@ export default function AdminDashboard() {
             className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
               }`}
           >
-            Management
+            {t('sidebar.management')}
           </div>
 
           <OrdersMenu
@@ -574,7 +579,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<CreditCard className="h-5 w-5" />}
-            label="Payments"
+             label={t('sidebar.payments')}
             active={activeTab === "payments"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("payments")}
@@ -582,7 +587,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<Package className="h-5 w-5" />}
-            label="All Products"
+            label={t('sidebar.allProducts')}
             active={activeTab === "products"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("products")}
@@ -592,7 +597,7 @@ export default function AdminDashboard() {
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
             icon={<Users className="h-5 w-5" />}
-            label="All Users"
+             label={t('sidebar.allUsers')}
             active={activeTab === "users"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("users")}
@@ -601,7 +606,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<Bell className="h-5 w-5" />}
-            label="Notifications"
+            label={t('sidebar.notifications')}
             active={activeTab === "notifications"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("notifications")}
@@ -609,7 +614,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<User className="h-5 w-5" />}
-            label="Profile"
+           label={t('sidebar.profile')}
             active={activeTab === "profile"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("profile")}
@@ -618,7 +623,7 @@ export default function AdminDashboard() {
           {isSuperAdmin && (
             <SidebarItem
               icon={<CreditCard className="h-5 w-5" />}
-              label="Subscription Plans"
+            label={t('sidebar.subscriptionPlans')}
               active={activeTab === "adminSubscriptions"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("adminSubscriptions")}
@@ -627,7 +632,7 @@ export default function AdminDashboard() {
 
           <SidebarItem
             icon={<SettingsIcon className="h-5 w-5" />}
-            label="Settings"
+            label={t('sidebar.settings')}
             active={activeTab === "settings"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("settings")}
@@ -636,7 +641,7 @@ export default function AdminDashboard() {
           {!isSuperAdmin && (
             <SidebarItem
               icon={<CreditCard className="h-5 w-5" />}
-              label="Billing"
+               label={t('sidebar.billing')}
               active={activeTab === "billing"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("billing")}
@@ -702,17 +707,17 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-full border border-indigo-200 shadow-sm">
                   <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
                   <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
-                    Role:
+                  {t('overview.role')}:
                   </span>
                   <span className="text-sm font-black bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
                     {user?.role === "super_admin"
-                      ? "Super Administrator"
-                      : user?.role || "Super Admin"}
-                  </span>
+ ? t('overview.superAdmin')
+    : user?.role || t('overview.superAdmin')}
+</span>
                   <div className="w-px h-4 bg-indigo-200 mx-1"></div>
                   <div className="flex items-center">
                     <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shadow-sm">
-                      Full Control
+                      {t('overview.fullControl')}
                     </span>
                   </div>
                 </div>
@@ -762,13 +767,19 @@ export default function AdminDashboard() {
                               : "bg-gray-50 text-gray-600 border-gray-200"
                         }`}
                     >
-                      {company.role}
-                    </span>
+  {company.role === "admin" 
+    ? t('overview.admin') 
+    : company.role === "staff" 
+      ? t('overview.staff') 
+      : company.role === "viewer" 
+        ? t('overview.viewer') 
+        : company.role}
+</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-secondary"></div>
                     <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Active Company
+                   {t('overview.activeCompany')}
                     </p>
                   </div>
                 </div>
@@ -776,14 +787,16 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {/* Right side buttons */}
-          <div className="flex items-center gap-3">
-            {/* Notification Bell */}
-            <NotificationBell onViewAll={() => navigate("notifications")} />
-            {/* Refresh Button */}
-            <RefreshButton onRefresh={handleRefresh} isLoading={isRefreshing} />
-            {/* Profile Dropdown */}
-            <div className="relative">
+{/* Right side buttons */}
+<div className="flex items-center gap-3">
+      {/* Language Switcher */}
+    {/* <LanguageSwitcher /> */}
+    {/* Notification Bell */}
+    <NotificationBell onViewAll={() => navigate("notifications")} />
+    {/* Refresh Button */}
+    <RefreshButton onRefresh={handleRefresh} isLoading={isRefreshing} />
+    {/* Profile Dropdown */}
+    <div className="relative">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className={`flex items-center gap-3 group focus:outline-none cursor-pointer hover:bg-gradient-to-r hover:from-secondary/5 hover:to-transparent rounded-xl p-4 transition-all duration-300 ${profileDropdownOpen ? "bg-gradient-to-r from-secondary/10 to-transparent" : ""}`}
@@ -791,7 +804,7 @@ export default function AdminDashboard() {
                 <div className="text-right hidden md:block">
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">
-                      Welcome,
+                    {t('overview.welcome')},
                     </span>
                     <p className="text-base font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
                       {user?.username || user?.email?.split("@")[0] || "User"}
@@ -853,7 +866,7 @@ export default function AdminDashboard() {
                         <Users className="h-4 w-4 text-indigo-600" />
                       </div>
                       <div className="text-left">
-                        <p className="font-semibold">My Profile</p>
+<p className="font-semibold">{t('overview.myProfile')}</p>
                       </div>
                     </button>
 
@@ -885,7 +898,7 @@ export default function AdminDashboard() {
                         <LogOut className="h-4 w-4 text-red-600" />
                       </div>
                       <div className="text-left">
-                        <p className="font-semibold">Sign Out</p>
+<p className="font-semibold">{t('overview.signOut')}</p>
                       </div>
                     </button>
                   </div>
@@ -911,10 +924,10 @@ export default function AdminDashboard() {
                 <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                   <LogOut className="h-5 w-5 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Sign Out</h3>
+<h3 className="text-xl font-bold text-gray-900">{t('overview.signOut')}</h3>
               </div>
               <p className="text-gray-500 mt-2 ml-13">
-                Are you sure you want to sign out of your account?
+{t('overview.signOutConfirm')}
               </p>
             </div>
 
@@ -924,14 +937,14 @@ export default function AdminDashboard() {
                 onClick={() => setShowLogoutConfirm(false)}
                 className="px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
               >
-                Cancel
+                 {t('overview.cancel')}
               </button>
               <button
                 onClick={confirmLogout}
                 className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-sm font-medium hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                Sign Out
+                {t('overview.signOut')}
               </button>
             </div>
           </div>

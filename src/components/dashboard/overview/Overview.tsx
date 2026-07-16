@@ -25,6 +25,7 @@ import { getAdminAnalyticsOverview } from "../../../services/api";
 import type { AnalyticsOverviewResponse } from "../../../types";
 // import { useReadOnly } from "./AdminDashboard";
 import { useAuth } from "../../../hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { CompanySelect } from "./dropdowncompanyselector";
 import ChartsSection from "./ChartsSection";
@@ -69,6 +70,7 @@ export default function Overview({
 }) {
   // const readOnly = useReadOnly();
   const { user } = useAuth();
+    const { t } = useTranslation('dashboard');
   const isSuperAdmin = !user?.memberships?.length;
   const [period, setPeriod] = useState<Period>("week");
   const { company, switchCompany } = useCurrentCompany();
@@ -329,7 +331,7 @@ export default function Overview({
 
   const scopeOptions = useMemo(
     () => [
-      { value: "", label: "All Companies", logo: null },
+  { value: "", label: "All Companies", logo: null },
       ...analytics.available_companies.map((c) => ({
         value: c.slug,
         label: c.name,
@@ -341,10 +343,10 @@ export default function Overview({
 
   const selectedCompanyName = useMemo(() => {
     if (isSuperAdmin) {
-      return company?.name || "All Companies";
+      return company?.name || t('overview.allCompanies');
     }
-    if (localAllCompaniesSelected) return "All Companies";
-    return company?.name || (analytics.available_companies[0]?.name || "Select Company");
+    if (localAllCompaniesSelected) return t('overview.allCompanies');
+    return company?.name || (analytics.available_companies[0]?.name || t('overview.selectCompany'));
   }, [isSuperAdmin, company?.name, localAllCompaniesSelected, analytics.available_companies]);
 
   const selectedCompanyLogo = useMemo(() => {
@@ -392,11 +394,11 @@ export default function Overview({
     (selectedSlug: string) => {
       if (selectedSlug === "") {
         if (isSuperAdmin) {
-          switchCompany({
-            slug: "",
-            name: "All Companies",
-            role: "",
-          });
+switchCompany({
+  slug: "",
+  name: t('overview.allCompanies'),
+  role: "",
+});
         } else {
           setLocalAllCompaniesSelected(true);
         }
@@ -452,7 +454,7 @@ export default function Overview({
                   <div className="flex items-center gap-1.5 xs:gap-2">
                     <div className="w-1 h-3 xs:h-4 rounded-full bg-gradient-to-b from-secondary to-[#9b87f5] shrink-0"></div>
                     <p className="text-[9px] xs:text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                      Currently Viewing
+                     {t('overview.currentlyViewing')}
                     </p>
                   </div>
                   <h2 className="text-sm xs:text-lg sm:text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent truncate">
@@ -460,7 +462,7 @@ export default function Overview({
                   </h2>
                   <div className="flex items-center gap-1 xs:gap-1.5 mt-0.5">
                     <div className="w-1 xs:w-1.5 h-1 xs:h-1.5 rounded-full bg-emerald-500 shrink-0"></div>
-                    <p className="text-[8px] xs:text-[9px] font-medium text-gray-400 truncate">Active Dashboard</p>
+                    <p className="text-[8px] xs:text-[9px] font-medium text-gray-400 truncate">{t('overview.activeDashboard')}</p>
                   </div>
                 </div>
               </div>
@@ -470,7 +472,7 @@ export default function Overview({
               <div className="flex items-center gap-2 flex-1 lg:flex-initial min-w-0">
                 <span className="items-center gap-1.5 text-[10px] xs:text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:flex shrink-0">
                   <Building2 className="h-3 w-3" />
-                  Select Company
+                  {t('overview.selectCompany')}
                 </span>
                 <div className="relative flex-1 lg:flex-initial min-w-0 max-w-full">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary hidden sm:block" />
@@ -510,7 +512,7 @@ export default function Overview({
                 className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <SummaryCard
-                  title="Total Companies"
+                  title={t('overview.totalCompanies')}
                   value={summaryData?.company_total_count?.toString() || "0"}
                   icon={Building2}
                   bgLight="bg-blue-50"
