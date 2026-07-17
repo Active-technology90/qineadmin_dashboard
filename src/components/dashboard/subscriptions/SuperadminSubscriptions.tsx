@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Plus, Edit, CheckCircle2, XCircle, CreditCard, Building2, Filter, Clock, BarChart3 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Plus, Edit, CheckCircle2, XCircle, CreditCard, Building2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   getAdminSubscriptionPlans,
@@ -10,7 +10,7 @@ import {
 import { SearchInput } from "../../ui/SearchInput";
 import { TableControls } from "../../ui/TableControls";
 import { Pagination } from "../../ui/Pagination";
-import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
+import { CustomSelect } from "../../ui/CustomSelect";
 import { usePagination } from "../../../hooks/usePagination";
 import { useSorting } from "../../../hooks/useSorting";
 
@@ -41,7 +41,7 @@ const SkeletonSubscriptionRow = () => (
 // ========== PLAN COLOR MAPPING ==========
 const getPlanColor = (planName: string): string => {
   const name = planName?.toLowerCase() || "";
-  
+
   // Basic plans
   if (name.includes("basic") || name.includes("free")) {
     return "bg-gray-100 text-gray-700 border-gray-200";
@@ -125,7 +125,7 @@ export default function SuperadminSubscriptions() {
       setIsLoading(false);
     }
   };
-   // ========== FILTER SUBSCRIPTIONS ==========
+  // ========== FILTER SUBSCRIPTIONS ==========
   const filteredSubscriptions = useMemo(() => {
     let data = [...companySubscriptions];
 
@@ -146,7 +146,7 @@ export default function SuperadminSubscriptions() {
   }, [companySubscriptions, searchTerm, planFilter]);
 
   // ========== SORTING ==========
-  const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
+  const { sortedItems } = useSorting(
     filteredSubscriptions,
     "company_name",
     "asc",
@@ -261,7 +261,7 @@ export default function SuperadminSubscriptions() {
             </div>
           ) : (
             <h2 className="text-sm sm:text-base md:text-lg font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
-              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" /> 
+              <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               <span>Subscription Plans</span>
             </h2>
           )}
@@ -301,7 +301,7 @@ export default function SuperadminSubscriptions() {
               onClick={handleCreateClick}
               className="bg-secondary text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-secondary-dark transition-all"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               New Plan
             </button>
           </div>
@@ -378,39 +378,39 @@ export default function SuperadminSubscriptions() {
               ) : (
                 plans.map((plan) => (
                   <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">
-                    <div className="flex items-center gap-2">
-                      {plan.name}
-                      {/* <span className="text-[10px] bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-300 shadow-sm">
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">
+                      <div className="flex items-center gap-2">
+                        {plan.name}
+                        {/* <span className="text-[10px] bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-300 shadow-sm">
                         {companySubscriptions.filter(s => s.plan?.id === plan.id).length}
                       </span> */}
-                    </div>
-                  </td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">{plan.price}</td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
-                    {plan.can_ad_company_detail ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
-                  </td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden lg:table-cell">
-                    {plan.can_ad_companies_list ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
-                  </td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden xl:table-cell">
-                    {plan.can_ad_home_page ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
-                  </td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
-                    <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${plan.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {plan.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-right">
-                    <button
-                      onClick={() => handleEditClick(plan)}
-                      className="p-1 xs:p-1.5 text-gray-400 hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-                    >
-                      <Edit className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-                    </button>
-                  </td>
-                </tr>
+                      </div>
+                    </td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">{plan.price}</td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
+                      {plan.can_ad_company_detail ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
+                    </td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden lg:table-cell">
+                      {plan.can_ad_companies_list ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
+                    </td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden xl:table-cell">
+                      {plan.can_ad_home_page ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
+                    </td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
+                      <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${plan.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {plan.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-right">
+                      <button
+                        onClick={() => handleEditClick(plan)}
+                        className="p-1 xs:p-1.5 text-gray-400 hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                      </button>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>
@@ -440,7 +440,7 @@ export default function SuperadminSubscriptions() {
             </div>
           ) : (
             <h2 className="text-sm sm:text-base md:text-lg font-bold text-secondary flex items-center gap-1.5 sm:gap-2">
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" /> 
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               <span>Company Subscriptions</span>
             </h2>
           )}
@@ -473,15 +473,15 @@ export default function SuperadminSubscriptions() {
                       value: String(plan.id),
                       label: plan.name,
                       icon: (
-                        <span 
+                        <span
                           className={`inline-block w-2 h-2 rounded-full ${getPlanColor(plan.name).split(' ')[0]}`}
-                          style={{ 
+                          style={{
                             backgroundColor: getPlanColor(plan.name).includes('gray') ? '#6B7280' :
                               getPlanColor(plan.name).includes('blue') ? '#3B82F6' :
-                              getPlanColor(plan.name).includes('purple') ? '#8B5CF6' :
-                              getPlanColor(plan.name).includes('amber') ? '#F59E0B' :
-                              getPlanColor(plan.name).includes('rose') ? '#F43F5E' :
-                              '#6366F1'
+                                getPlanColor(plan.name).includes('purple') ? '#8B5CF6' :
+                                  getPlanColor(plan.name).includes('amber') ? '#F59E0B' :
+                                    getPlanColor(plan.name).includes('rose') ? '#F43F5E' :
+                                      '#6366F1'
                           }}
                         />
                       )
@@ -572,11 +572,10 @@ export default function SuperadminSubscriptions() {
                         {sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'Lifetime'}
                       </td>
                       <td className="p-2 xs:p-3 sm:px-4 py-2 xs:py-2.5 sm:py-3">
-                        <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${
-                          isSubscriptionActive 
-                            ? 'bg-emerald-100 text-emerald-700' 
+                        <span className={`px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] font-bold rounded-full uppercase tracking-wider ${isSubscriptionActive
+                            ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-red-100 text-red-700'
-                        }`}>
+                          }`}>
                           {isSubscriptionActive ? 'Active' : 'Expired'}
                         </span>
                       </td>
@@ -616,7 +615,7 @@ export default function SuperadminSubscriptions() {
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -630,7 +629,7 @@ export default function SuperadminSubscriptions() {
                     placeholder="e.g. Professional"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Price (ETB)</label>
                   <input

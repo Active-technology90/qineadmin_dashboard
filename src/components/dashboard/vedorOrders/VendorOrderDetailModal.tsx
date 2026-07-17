@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -1357,49 +1357,83 @@ export function VendorOrderDetailModal({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {order.items.map((item: any) => (
-                          <tr
-                            key={item.id}
-                            className="group hover:bg-gray-50/80 transition-all"
-                          >
-                            <td className="px-4 md:px-6 py-2 md:py-4">
-                              <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 bg-gray-100 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
-                                  {item.product_image ? (
-                                    <img
-                                      src={item.product_image}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <ImageIcon className="h-5 w-5 text-gray-300" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-black text-gray-800 line-clamp-1">
-                                    {item.title}
-                                  </p>
-                                  <p className="text-[10px] font-bold text-gray-400 font-mono uppercase tracking-tighter">
-                                    SKU: {item.sku || "N/A"}
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="px-3 py-1 bg-gray-100 rounded-lg text-xs font-black text-gray-600">
-                                x{item.qty}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right text-xs font-bold text-gray-500">
-                              {Number(item.unit_price).toLocaleString()}
-                            </td>
-                            <td className="px-6 py-4 text-right font-black text-gray-900 text-sm">
-                              {Number(item.line_total).toLocaleString()}{" "}
-                              <span className="text-[9px] text-gray-400">
-                                ETB
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                        {(() => {
+                          const itemsByRound = order.items.reduce((acc: any, item: any) => {
+                            const r = item.round || 1;
+                            if (!acc[r]) acc[r] = [];
+                            acc[r].push(item);
+                            return acc;
+                          }, {});
+
+                          return Object.keys(itemsByRound)
+                            .sort((a, b) => Number(a) - Number(b))
+                            .map((roundKey) => {
+                              const roundItems = itemsByRound[roundKey];
+                              const roundNum = Number(roundKey);
+                              const roundTime = roundItems[0]?.created_at
+                                ? new Date(roundItems[0].created_at).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })
+                                : "";
+
+                              return (
+                                <React.Fragment key={roundKey}>
+                                  <tr className="bg-purple-50/20">
+                                    <td colSpan={4} className="px-4 py-2 text-left">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-[#6750A4]">
+                                        Round {roundNum} {roundTime ? `(${roundTime})` : ""}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                  {roundItems.map((item: any) => (
+                                    <tr
+                                      key={item.id}
+                                      className="group hover:bg-gray-50/80 transition-all"
+                                    >
+                                      <td className="px-4 md:px-6 py-2 md:py-4">
+                                        <div className="flex items-center gap-4">
+                                          <div className="h-10 w-10 bg-gray-100 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-50">
+                                            {item.product_image ? (
+                                              <img
+                                                src={item.product_image}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <ImageIcon className="h-5 w-5 text-gray-300" />
+                                            )}
+                                          </div>
+                                          <div>
+                                            <p className="text-sm font-black text-gray-800 line-clamp-1">
+                                              {item.title}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-gray-400 font-mono uppercase tracking-tighter">
+                                              SKU: {item.sku || "N/A"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 text-center">
+                                        <span className="px-3 py-1 bg-gray-100 rounded-lg text-xs font-black text-gray-600">
+                                          x{item.qty}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 text-right text-xs font-bold text-gray-500">
+                                        {Number(item.unit_price).toLocaleString()}
+                                      </td>
+                                      <td className="px-6 py-4 text-right font-black text-gray-900 text-sm">
+                                        {Number(item.line_total).toLocaleString()}{" "}
+                                        <span className="text-[9px] text-gray-400">
+                                          ETB
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </React.Fragment>
+                              );
+                            });
+                        })()}
                       </tbody>
                     </table>
                   </div>
