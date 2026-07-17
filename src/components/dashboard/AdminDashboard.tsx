@@ -22,6 +22,7 @@ import {
   Bell,
   Settings as SettingsIcon,
     Banknote,
+    BarChart3,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -46,6 +47,10 @@ import NotificationsPage from "./notifications/NotificationsPage";
 import NotificationBell from "./notifications/NotificationBell";
 import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
+import TrackingPage from "../../pages/TrackingPage";
+import MarketingDashboard from "../../pages/MarketingDashboard";
+import MarketerToggle from "../MarketerToggle";
+import MarketersManagementPage from "./marketers/MarketersManagement";
 
 type Tab =
   | "overview"
@@ -64,9 +69,12 @@ type Tab =
   | "superUsers"
   | "notifications"
   | "settings"
-  | "billing"
-  | "adminSubscriptions";
-
+ | "billing"
+  | "adminSubscriptions"
+  | "tracking"
+  | "marketers"      
+  | "trackingPage"  
+  | "marketing";
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
 // ─────────────────────────────────────────────────────────────
@@ -74,7 +82,143 @@ const ReadOnlyContext = createContext<boolean>(false);
 export const useReadOnly = () => useContext(ReadOnlyContext);
 
 // ════════════════════════════════════════════════════════════
-// OrdersMenu (unchanged)
+// TrackingMenu - Like OrdersMenu but for Tracking/Marketers
+// ════════════════════════════════════════════════════════════
+function TrackingMenu({
+  collapsed,
+  activeTab,
+  onNavigate,
+  trackingMenuOpen,
+  onToggleTrackingMenu,
+  showMarketers,  
+}: {
+  collapsed: boolean;
+  activeTab: Tab;
+  onNavigate: (tab: Tab) => void;
+  trackingMenuOpen: boolean;
+  onToggleTrackingMenu: () => void;
+  showMarketers: boolean; 
+}) {
+  const [collapsedTrackingOpen, setCollapsedTrackingOpen] = useState(false);
+  const trackingRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        trackingRef.current &&
+        !trackingRef.current.contains(event.target as Node)
+      ) {
+        setCollapsedTrackingOpen(false);
+      }
+    };
+    if (collapsedTrackingOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [collapsedTrackingOpen]);
+
+  if (!collapsed) {
+    const isActive = activeTab === "tracking" || activeTab === "marketers";
+    return (
+      <div>
+        <button
+          onClick={onToggleTrackingMenu}
+          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
+              ? "bg-white/40 text-white shadow-lg"
+              : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <BarChart3 className="h-5 w-5" />
+            <span>Tracking</span>
+          </div>
+          {trackingMenuOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+
+        {trackingMenuOpen && (
+          <div className="ml-4 mt-1 space-y-1">
+            <button
+              onClick={() => onNavigate("tracking")}
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "tracking"
+                  ? "bg-white/20 text-white font-semibold"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white"
+                }`}
+            >
+              <Building2 className="h-4 w-4" />
+              Companies
+            </button>
+            {showMarketers && (
+              <button
+                onClick={() => onNavigate("marketers")}
+                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "marketers"
+                    ? "bg-white/20 text-white font-semibold"
+                    : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }`}
+              >
+                <Users className="h-4 w-4" />
+                Marketers
+              </button>
+            )}
+          </div>
+        )}
+             </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={trackingRef}>
+      <button
+        onClick={() => setCollapsedTrackingOpen(!collapsedTrackingOpen)}
+        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "tracking" || activeTab === "marketers"
+            ? "bg-white/40 text-white shadow-lg"
+            : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
+      >
+        <BarChart3 className="h-5 w-5" />
+      </button>
+
+      {collapsedTrackingOpen && (
+        <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+          <button
+            onClick={() => {
+              onNavigate("tracking");
+              setCollapsedTrackingOpen(false);
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "tracking"
+                ? "bg-indigo-50 text-indigo-700 font-medium"
+                : "text-gray-700 hover:bg-gray-50"
+              }`}
+          >
+            <Building2 className="h-4 w-4 text-gray-500" />
+            Companies
+          </button>
+          {showMarketers && (  
+            <button
+  onClick={() => {
+                onNavigate("marketers");
+                setCollapsedTrackingOpen(false);
+              }}
+              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "marketers"
+                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                  : "text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+              <Users className="h-4 w-4 text-gray-500" />
+              Marketers
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// OrdersMenu 
 // ════════════════════════════════════════════════════════════
 function OrdersMenu({
   collapsed,
@@ -244,9 +388,10 @@ function OrdersMenu({
 // ════════════════════════════════════════════════════════
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
+  const [trackingMenuOpen, setTrackingMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const { company } = useCurrentCompany();
@@ -279,11 +424,11 @@ export default function AdminDashboard() {
   // Hide "Company Users" only for staff (not for viewers)
   // const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
 
-  const navigate = (tab: Tab) => {
-    setActiveTab(tab);
-    setIsSidebarOpen(false);
-    setProfileDropdownOpen(false);
-  };
+const navigate = (tab: Tab) => {
+  setActiveTab(tab);
+  setIsSidebarOpen(false);
+  setProfileDropdownOpen(false);
+};
 
   const navigateFromOverview = (tab: DashboardTab) => {
     if (tab === "allOrders") {
@@ -360,14 +505,14 @@ export default function AdminDashboard() {
     scrollableElement.addEventListener("scroll", handleScroll);
     return () => scrollableElement.removeEventListener("scroll", handleScroll);
   }, []);
-  const renderContent = () => {
-    const companyKey = company?.slug || "super";
-    // Create a unique key that changes on refresh to force re-render
-    const componentKey = `${companyKey}-${refreshKey}`;
+const renderContent = () => {
+  const companyKey = company?.slug || "super";
+  // Create a unique key that changes on refresh to force re-render
+  const componentKey = `${companyKey}-${refreshKey}`;
 
-    // Wrap each content component with ReadOnlyContext provider
-    const content = (() => {
-      switch (activeTab) {
+  // Wrap each content component with ReadOnlyContext provider
+  const content = (() => {
+    switch (activeTab) {
         case "overview":
           return (
             <Overview key={componentKey} onNavigate={navigateFromOverview} />
@@ -406,11 +551,17 @@ export default function AdminDashboard() {
           return <BillingPage key={componentKey} />;
         case "notifications":
           return <NotificationsPage key={componentKey} />;
-
-        default:
-          return (
-            <Overview key={componentKey} onNavigate={navigateFromOverview} />
-          );
+case "tracking":   
+  return <TrackingPage key={componentKey} />;
+case "marketers":   
+  return <MarketersManagementPage key={componentKey} />; 
+case "marketing":   
+  return <MarketingDashboard key={componentKey} />;
+default:
+  console.log("⚠️ Default case (Overview) for activeTab:", activeTab);
+  return (
+    <Overview key={componentKey} onNavigate={navigateFromOverview} />
+  );
       }
     })();
 
@@ -538,6 +689,7 @@ export default function AdminDashboard() {
               onClick={() => navigate("superUsers")}
             />
           )}
+
           {showPlatformAdmin && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
@@ -547,6 +699,7 @@ export default function AdminDashboard() {
               onClick={() => navigate("add advertisment")}
             />
           )}
+          
                     {/* Bank Accounts - Below Ads Management */}
           <SidebarItem
             icon={<Banknote className="h-5 w-5" />}
@@ -555,6 +708,29 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("bankAccounts")}
           />
+{/* Tracking - Company Registration Tracking (Super Admin Only) */}
+{isSuperAdmin && (
+  <TrackingMenu
+    collapsed={sidebarCollapsed}
+    activeTab={activeTab}
+    onNavigate={navigate}
+    trackingMenuOpen={trackingMenuOpen}
+    onToggleTrackingMenu={() => setTrackingMenuOpen(!trackingMenuOpen)}
+    showMarketers={isSuperAdmin} 
+  />
+)}
+{/* Tracking link is hidden for non-super admin users */}
+{/* Marketing Dashboard - Only for Marketers */}
+{(user?.role === "marketer" || localStorage.getItem("forceMarketerMode") === "true") && (
+  <SidebarItem
+    icon={<Users className="h-5 w-5" />}
+    label="My Registrations"
+    active={activeTab === "marketing"}
+    collapsed={sidebarCollapsed}
+    onClick={() => navigate("marketing")}  
+  />
+)}
+          
 
           <div
             className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
@@ -778,6 +954,7 @@ export default function AdminDashboard() {
 
           {/* Right side buttons */}
           <div className="flex items-center gap-3">
+           <MarketerToggle />
             {/* Notification Bell */}
             <NotificationBell onViewAll={() => navigate("notifications")} />
             {/* Refresh Button */}

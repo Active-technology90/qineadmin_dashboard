@@ -46,9 +46,20 @@ export default function SignIn(): React.JSX.Element {
         console.warn("Profile fetch failed");
       }
 
-      await login(access, refresh, userData);
+await login(access, refresh, userData);
 
-      navigate("/dashboard");
+// Check if user is marketer
+const isMarketer = userData?.role === "marketer";
+
+// Also check localStorage for force mode
+const forceMarketerMode = localStorage.getItem("forceMarketerMode") === "true";
+
+// If user is marketer OR force mode is enabled
+if (isMarketer || forceMarketerMode) {
+  navigate("/marketing-dashboard");
+} else {
+  navigate("/dashboard");
+}
 
     } catch (err: any) {
       console.error(err);
@@ -135,7 +146,8 @@ export default function SignIn(): React.JSX.Element {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none transition-all text-sm sm:text-base pr-12"
                   placeholder="••••••••"
-                />
+  autoComplete="current-password"
+/>
                 
                 {/* Password visibility toggle button */}
                 <button
@@ -175,6 +187,23 @@ export default function SignIn(): React.JSX.Element {
             </button>
 
           </form>
+
+          {/* Register Company Link */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have a company?{" "}
+<button
+  onClick={() => {
+    console.log("===== DEBUG: Register Company Button Clicked =====");
+    console.log("navigate() didn't render, using window.location.href");
+    window.location.href = "/register-company";
+  }}
+  className="text-[#6a5acd] font-bold hover:underline transition"
+>
+  Register Your Company
+</button>
+            </p>
+          </div>
 
           <div className="mt-6 text-[10px] sm:text-xs text-gray-400 text-center">
             Secure Login • Qine Mart v1.0.0
