@@ -232,6 +232,47 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     const rating = parseFloat(avg).toFixed(1);
     return `⭐ ${rating} (${reviews})`;
   };
+  // ── Get order cancellation/failure reason ──
+const getOrderFailureReason = () => {
+  // Check delivery first
+  if (delivery?.failure_reason) return delivery.failure_reason;
+  if (delivery?.cancellation_reason) return delivery.cancellation_reason;
+  if (delivery?.cancelled_reason) return delivery.cancelled_reason;
+  if (delivery?.reason) return delivery.reason;
+  if (delivery?.status_reason) return delivery.status_reason;
+  
+  // Check vendor_order_detail
+  if (order?.vendor_order_detail?.failure_reason) return order.vendor_order_detail.failure_reason;
+  if (order?.vendor_order_detail?.cancellation_reason) return order.vendor_order_detail.cancellation_reason;
+  if (order?.vendor_order_detail?.cancelled_reason) return order.vendor_order_detail.cancelled_reason;
+  if (order?.vendor_order_detail?.reason) return order.vendor_order_detail.reason;
+  
+  // Check order directly
+  if (order?.failure_reason) return order.failure_reason;
+  if (order?.cancellation_reason) return order.cancellation_reason;
+  if (order?.cancelled_reason) return order.cancelled_reason;
+  if (order?.reason) return order.reason;
+  
+  // Check status reason
+  if (order?.status_reason) return order.status_reason;
+  if (order?.cancel_reason) return order.cancel_reason;
+  
+  // Check notes (delivery_notes is where the reason is stored!)
+  if (order?.delivery_notes) return order.delivery_notes;
+  if (order?.notes) return order.notes;
+  if (order?.admin_notes) return order.admin_notes;
+  if (order?.cancellation_note) return order.cancellation_note;
+  
+  return null;
+};
+
+  const failureReason = getOrderFailureReason();
+  const isOrderFailed = order.status?.toLowerCase() === 'cancelled' || 
+                         order.status?.toLowerCase() === 'failed' ||
+                         order.status?.toLowerCase() === 'rejected' ||
+                         delivery?.status?.toLowerCase() === 'failed' ||
+                         delivery?.status?.toLowerCase() === 'cancelled' ||
+                         delivery?.status?.toLowerCase() === 'rejected';
   useEffect(() => {
     if (!order.company?.slug) return;   // still need a company slug
     const fetchStaff = async () => {
@@ -376,6 +417,20 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                         </span>
                       </div>
                     )}
+                    {/* ── ORDER CANCELLATION/FAILURE REASON ── */}
+                    {isOrderFailed && failureReason && (
+                      <div className="mt-2 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 shadow-sm">
+                        <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[9px] font-semibold text-rose-600">
+                            Reason
+                          </p>
+                          <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                            {failureReason}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     {/* <div className="mt-1">
                     <span className={getStatusBadge(delivery.status)}>{delivery.status?.replace(/_/g, " ")}</span>
                   </div> */}
@@ -404,6 +459,20 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
                         Assign Delivery person
                       </button>
                     ))}
+                  {/* ── ORDER CANCELLATION/FAILURE REASON (when no delivery person) ── */}
+                  {isOrderFailed && failureReason && (
+                    <div className="mt-3 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 text-left shadow-sm">
+                      <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-[9px] font-semibold text-rose-600">
+                          Reason
+                        </p>
+                        <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                          {failureReason}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -939,7 +1008,7 @@ const ReceiptReviewCard = ({
                       </p> */}
                       {h.admin_notes && (
                         <p className="text-[9px] text-rose-600 bg-rose-50/50 px-2 py-0.5 rounded border border-rose-100 mt-1 italic">
-                          Reason: "{h.admin_notes}"
+                          <span className="text-amber-600 font-semibold">Remark:</span> "{h.admin_notes}"
                         </p>
                       )}
                     </div>

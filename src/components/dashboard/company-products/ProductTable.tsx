@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Package, Edit, Trash2, Star } from "lucide-react";
 
@@ -6,10 +7,11 @@ interface Product {
   sku: string;
   title: string;
   price: number;
+  currency?: string; 
   stock: number;
   unit: string;
-  image?: string; // adjust based on your API field name
-  image_url?: string; // alternative field
+  image?: string; 
+  image_url?: string; 
   is_featured?: boolean;
   average_rating?: string | number;
   total_reviews?: number;
@@ -113,9 +115,9 @@ function SkeletonRow({ hasActions }: { hasActions: boolean }) {
       <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
         <div className="h-4 bg-gray-200 rounded w-16" />
       </td>
-      <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
-        <div className="h-4 bg-gray-200 rounded w-24" />
-      </td>
+<td className="px-1.5 sm:px-2 py-1.5 sm:py-2 max-w-[200px]">
+  <div className="h-4 bg-gray-200 rounded w-24" />
+</td>
       <td className="px-1.5 sm:px-2 py-1.5 sm:py-2">
         <div className="h-4 bg-gray-200 rounded w-16" />
       </td>
@@ -171,20 +173,20 @@ export function ProductTable({
                     SKU
                   </span>
                 </th>
-                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+<th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap max-w-[200px]">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Title
                   </span>
                 </th>
 
-                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1">
+<th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+                  <span className="inline-flex items-center justify-end gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                    Price (ETB)
+                    Price
                   </span>
                 </th>
-                <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+<th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap min-w-[100px]">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Rating
@@ -265,10 +267,10 @@ export function ProductTable({
                   Title
                 </span>
               </th>
-              <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
+              <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
+                <span className="inline-flex items-center justify-end gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  Price (ETB)
+                  Price
                 </span>
               </th>
               <th className="px-1.5 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
@@ -323,10 +325,22 @@ export function ProductTable({
                   <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">
                     {product.title}
                   </td>
-                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
-                    {product.price.toLocaleString()}
-                  </td>
-                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap">
+<td className="px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap text-right">
+  <div className="flex items-center justify-end gap-1.5">
+    <span className="text-[11px] sm:text-sm font-medium text-gray-900">
+      {product.price.toLocaleString()}
+    </span>
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold
+      ${(product.currency || 'ETB') === 'ETB' ? 'bg-green-100 text-green-700' :
+        (product.currency || 'ETB') === 'USD' ? 'bg-blue-100 text-blue-700' :
+        (product.currency || 'ETB') === 'EUR' ? 'bg-orange-100 text-orange-700' :
+        'bg-gray-100 text-gray-600'}`}
+    >
+      {product.currency || 'ETB'}
+    </span>
+  </div>
+</td>
+                  <td className="px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">
                     <RatingDisplay
                       rating={Number(product.average_rating || 0)}
                       reviews={product.total_reviews || 0}
@@ -343,7 +357,7 @@ export function ProductTable({
                       {product.is_featured ? 'Yes' : 'No'}
                     </span>
                   </td>
-                  <td className="px-1.5 sm:px-2 py-1.5 sm:py-2 whitespace-nowrap text-right">
+                 <td className="px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                       {onEdit && (
                         <button
