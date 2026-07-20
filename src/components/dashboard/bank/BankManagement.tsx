@@ -515,8 +515,8 @@ function BankAccountForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert("File size must be under 2 MB");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be under 5 MB");
       return;
     }
     setLogoFile(file);
@@ -569,197 +569,221 @@ function BankAccountForm({
           </button>
         </div>
 
-       <form onSubmit={handleSubmit} className="p-4 overflow-y-auto space-y-3">
-
-  {/* Bank Name & Account Number */}
-  <div className="flex flex-col md:flex-row items-start gap-3">
-    <div className="flex-1">
-      <label className="block text-sm font-medium text-gray-700 mb-0.5">
-        Bank Name <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        value={formData.bank_name}
-        onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-        className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-        placeholder="e.g. Commercial Bank of Ethiopia"
-        required
-      />
-    </div>
-    <div className="flex-1">
-      <label className="block text-sm font-medium text-gray-700 mb-0.5">
-        Account Number <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        value={formData.account_number}
-        onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-        className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-        placeholder="e.g. 100013456789"
-        required
-      />
-    </div>
-  </div>
-
-  {/* Account Holder Name & Company Slug */}
-  <div className="flex flex-col md:flex-row items-start gap-3">
-    <div className="flex-1">
-      <label className="block text-sm font-medium text-gray-700 mb-0.5">
-        Account Holder Name <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        value={formData.account_name}
-        onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-        className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-        placeholder="e.g. ABC Trading PLC"
-        required
-      />
-    </div>
-    {isSuperAdmin && !bank && (
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 mb-0.5">
-          Company Slug
-        </label>
-        <input
-          type="text"
-          value={formData.company_slug || ""}
-          onChange={(e) => setFormData({ ...formData, company_slug: e.target.value })}
-          className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-          placeholder="e.g. abc-trading"
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          Leave empty for an unassigned bank account.
-        </p>
-      </div>
-    )}
-  </div>
-
-  {/* Bank Logo */}
-  <div className="space-y-2">
-    <label className="block text-sm font-semibold text-gray-700">
-      Bank Logo
-    </label>
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        {/* Preview */}
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50"
-        >
-          {logoPreview ? (
-            <img
-              src={logoPreview}
-              alt="Bank Logo"
-              className="h-full w-full object-contain p-1"
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-gray-400">
-              <Building2 className="h-6 w-6 mb-1" />
-              <span className="text-xs font-medium">No Logo</span>
+        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto space-y-3">
+          {/* Bank Name & Account Number */}
+          <div className="flex flex-col md:flex-row items-start gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Bank Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.bank_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, bank_name: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. Commercial Bank of Ethiopia"
+                required
+              />
             </div>
-          )}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-white text-xs font-semibold">Upload</span>
-          </div>
-        </div>
-
-        {/* Upload Controls */}
-        <div className="flex-1 space-y-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-
-          <div>
-            <h4 className="font-semibold text-gray-900 text-sm">Upload Bank Logo</h4>
-            <p className="mt-0.5 text-xs text-gray-500">PNG, JPG or SVG • Max 2 MB</p>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Account Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.account_number}
+                onChange={(e) =>
+                  setFormData({ ...formData, account_number: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. 100013456789"
+                required
+              />
+            </div>
           </div>
 
-          {logoFile && (
-            <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1">
-              <p className="text-xs font-medium text-emerald-700 truncate">{logoFile.name}</p>
-              <p className="text-xs text-emerald-600">{(logoFile.size / 1024).toFixed(1)} KB</p>
+          {/* Account Holder Name & Company Slug */}
+          <div className="flex flex-col md:flex-row items-start gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Account Holder Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.account_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, account_name: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. ABC Trading PLC"
+                required
+              />
             </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-secondary/90"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {logoPreview ? "Replace" : "Choose"}
-            </button>
-            {(logoPreview || logoFile) && (
-              <button
-                type="button"
-                onClick={clearLogo}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
-              >
-                <XCircle className="h-3.5 w-3.5" />
-                Remove
-              </button>
+            {isSuperAdmin && !bank && (
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                  Company Slug
+                </label>
+                <input
+                  type="text"
+                  value={formData.company_slug || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, company_slug: e.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                  placeholder="e.g. abc-trading"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty for an unassigned bank account.
+                </p>
+              </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  {/* Order & Active */}
-  <div className="grid grid-cols-2 gap-3">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-0.5">
-        Display Order
-      </label>
-      <input
-        type="number"
-        min="0"
-        value={formData.order || 0}
-        onChange={(e) =>
-          setFormData({ ...formData, order: parseInt(e.target.value) || 0 })
-        }
-        className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-      />
-    </div>
-    <div className="flex items-end">
-      <label className="flex items-center gap-2 cursor-pointer py-2">
-        <input
-          type="checkbox"
-          checked={formData.is_active ?? true}
-          onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-          className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
-        />
-        <span className="text-sm font-medium text-gray-700">Active</span>
-      </label>
-    </div>
-  </div>
+          {/* Bank Logo */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Bank Logo
+            </label>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {/* Preview */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50"
+                >
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Bank Logo"
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center text-gray-400">
+                      <Building2 className="h-6 w-6 mb-1" />
+                      <span className="text-xs font-medium">No Logo</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">
+                      Upload
+                    </span>
+                  </div>
+                </div>
 
-  {/* Buttons */}
-  <div className="flex gap-3 pt-3 border-t border-gray-100">
-    <button
-      type="button"
-      onClick={onClose}
-      disabled={saving}
-      className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition disabled:opacity-50"
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      disabled={saving}
-      className="flex-1 py-2 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
-    >
-      {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-      {bank ? "Update" : "Create"} Account
-    </button>
-  </div>
-</form>
+                {/* Upload Controls */}
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900 text-sm">
+                      Upload Bank Logo
+                    </h4>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      PNG, JPG or SVG • Max 5 MB
+                    </p>
+                  </div>
+
+                  {logoFile && (
+                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1">
+                      <p className="text-xs font-medium text-emerald-700 truncate">
+                        {logoFile.name}
+                      </p>
+                      <p className="text-xs text-emerald-600">
+                        {(logoFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-secondary/90"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {logoPreview ? "Replace" : "Choose"}
+                    </button>
+                    {(logoPreview || logoFile) && (
+                      <button
+                        type="button"
+                        onClick={clearLogo}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order & Active */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Display Order
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.order || 0}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer py-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active ?? true}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
+                  className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Active
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-3 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {bank ? "Update" : "Create"} Account
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
