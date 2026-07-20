@@ -1,6 +1,7 @@
 // src/pages/TrackingPage.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationsContext";
 import {
   Building2,
   Calendar,
@@ -38,6 +39,7 @@ interface RegisteredCompany {
 
 export default function TrackingPage() {
   const navigate = useNavigate();
+  const { refetch } = useNotifications(); // ADDED
   const [companies, setCompanies] = useState<RegisteredCompany[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -97,6 +99,7 @@ export default function TrackingPage() {
   // ADDED: Handle status change function
   const handleStatusChange = (id: number, newStatus: string) => {
     // Update local state
+    const company = companies.find(c => c.id === id);
     const updatedCompanies = companies.map(c => 
       c.id === id ? { ...c, subscription_status: newStatus as any } : c
     );
@@ -108,6 +111,9 @@ export default function TrackingPage() {
       c.id === id ? { ...c, subscription_status: newStatus } : c
     );
     localStorage.setItem("registeredCompanies", JSON.stringify(updated));
+    
+    // Refresh notifications (backend will send notification)
+    refetch();
   };
 
   // Filter companies
