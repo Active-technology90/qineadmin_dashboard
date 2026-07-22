@@ -34,6 +34,7 @@ import {
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
+import { CustomSelect } from "../../ui/CustomSelect";
 
 // ---------- Animation Variants ----------
 const containerVariants = {
@@ -238,6 +239,12 @@ const DeliveryCard = ({
     const rating = parseFloat(avg).toFixed(1);
     return `⭐ ${rating} (${reviews})`;
   };
+  const staffOptions = staffList.map((s) => ({
+    value: String(s.id),
+    label: `${s.name} (${s.phone || "No Phone"}) — ${renderRating(s.average_rating, s.total_reviews)}`,
+    // icon: optional – could add a user icon if desired
+  }));
+
   // ── Get order cancellation/failure reason ──
   const getOrderFailureReason = () => {
     // Check delivery first
@@ -330,10 +337,8 @@ const DeliveryCard = ({
   }, [showAssignForm, order.company?.slug]);
 
   const handleAssign = async () => {
-    if (!selectedUserId) return;
     setAssigning(true);
     try {
-      console.log("delivery", delivery);
       if (delivery) {
         await updateDeliveryPerson(delivery.id.toString(), selectedUserId);
       } else {
@@ -342,11 +347,12 @@ const DeliveryCard = ({
           delivery_person: selectedUserId,
         });
       }
+      // 👇 Wait for the parent to fetch the updated order
+      await onUpdate();
       showToast("success", "Delivery person assigned successfully");
       setShowAssignForm(false);
-      onUpdate();
     } catch (err: any) {
-      showToast("error", "Failed to assign Delivery person");
+      showToast("error", "Failed to assign delivery person");
     } finally {
       setAssigning(false);
     }
@@ -412,7 +418,7 @@ const DeliveryCard = ({
                       {usernameMap.get(delivery.delivery_person_phone) ||
                         delivery.delivery_person_name}
                     </p>
-                  
+
                     <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200">
                       <PhoneCall className="h-3 w-3 text-blue-600" />
                       <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight">
@@ -526,21 +532,14 @@ const DeliveryCard = ({
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 Select Delivery person
               </label>
-              <select
+              <CustomSelect
                 value={selectedUserId}
-                onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500 px-2"
-              >
-                <option value="" className="px-2">
-                  Choose from the list...
-                </option>
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.phone || "No Phone"}) —{" "}
-                    {renderRating(s.average_rating, s.total_reviews)}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedUserId(val)}
+                options={staffOptions}
+                placeholder="Choose from the list..."
+                className="w-full"
+              />
+
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={handleAssign}
@@ -637,6 +636,7 @@ const ReceiptReviewCard = ({
   // image modal (KEEP SECOND UI)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
   // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<
@@ -662,31 +662,27 @@ const ReceiptReviewCard = ({
   // =========================================================
   // COD CONFIRMATION
   // =========================================================
-  const handleConfirmCOD = async () => {
-    if (!companySlug || !orderId) return;
-    setCodConfirming(true);
+ const handleConfirmCOD = async () => {
+  if (!companySlug || !orderId) return;
 
-    try {
-      await confirmCODPayment(companySlug, Number(orderId));
-      showToast("success", "COD payment confirmed successfully");
-      setShowCODConfirm(false);
-      onUpdate();
-    } catch (err: any) {
-      showToast(
-        "error",
-        err.response?.data?.detail ||
-          err.message ||
-          "Failed to confirm COD payment",
-      );
-      console.error(
-        err.response?.data?.detail ||
-          err.message ||
-          "Failed to confirm COD payment",
-      );
-    } finally {
-      setCodConfirming(false);
-    }
-  };
+  setCodConfirming(true);
+  try {
+    await confirmCODPayment(companySlug, Number(orderId));
+    showToast("success", "COD payment confirmed successfully");
+    setShowCODConfirm(false);
+
+    // 👇 Await the parent refresh – this keeps the loading visible
+    await onUpdate();   // <-- THIS IS THE KEY CHANGE
+
+  } catch (err: any) {
+    showToast(
+      "error",
+      err.response?.data?.detail || err.message || "Failed to confirm COD payment"
+    );
+  } finally {
+    setCodConfirming(false);
+  }
+};
 
   // =========================================================
   // CHAPA
@@ -849,30 +845,32 @@ const ReceiptReviewCard = ({
     setPendingAction(action);
     setShowConfirm(true);
   };
+const handleConfirm = async () => {
+  if (!pendingAction) return;
 
-  const handleConfirm = async () => {
-    if (!pendingAction) return;
+  setShowConfirm(false);
+  setSubmitting(true);
+setSubmittingAction(pendingAction);
 
-    // Immediately close the modal so the main button becomes visible
-    setShowConfirm(false);
-    setSubmitting(true);
+  try {
+    await reviewReceipt(receipt.id, {
+      status: pendingAction,
+      admin_notes: notes || undefined,
+    });
 
-    try {
-      await reviewReceipt(receipt.id, {
-        status: pendingAction,
-        admin_notes: notes || undefined,
-      });
+    showToast("success", `Receipt ${pendingAction}`);
+    setNotes("");
+    setPendingAction(null);
 
-      showToast("success", `Receipt ${pendingAction}`);
-      setNotes("");
-      setPendingAction(null);
-      onUpdate();
-    } catch (err: any) {
-      showToast("error", err.response?.data?.detail || "Review failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    // ✅ Wait for the parent to fully refresh the order data
+    await onUpdate();
+
+  } catch (err: any) {
+    showToast("error", err.response?.data?.detail || "Review failed");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
@@ -957,43 +955,43 @@ const ReceiptReviewCard = ({
             />
 
             <div className="flex gap-2">
-              <button
-                onClick={() => handleActionClick("approved")}
-                disabled={submitting}
-                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Approving...
-                  </>
-                ) : (
-                  "Approve"
-                )}
-              </button>
+  <button
+    onClick={() => handleActionClick("approved")}
+    disabled={submitting}
+    className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+  >
+    {submittingAction === "approved" ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Approving...
+      </>
+    ) : (
+      "Approve"
+    )}
+  </button>
 
-              <button
-                onClick={() => handleActionClick("rejected")}
-                disabled={submitting}
-                className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
-             py-2.5 rounded-xl text-sm font-bold
-             shadow-md shadow-rose-200
-             hover:from-rose-600 hover:to-red-700
-             active:scale-[0.98]
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed
-             flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Rejecting...
-                  </>
-                ) : (
-                  "Reject"
-                )}
-              </button>
-            </div>
+  <button
+    onClick={() => handleActionClick("rejected")}
+    disabled={submitting}
+    className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
+      py-2.5 rounded-xl text-sm font-bold
+      shadow-md shadow-rose-200
+      hover:from-rose-600 hover:to-red-700
+      active:scale-[0.98]
+      transition-all duration-200
+      disabled:opacity-50 disabled:cursor-not-allowed
+      flex items-center justify-center gap-2"
+  >
+    {submittingAction === "rejected" ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Rejecting...
+      </>
+    ) : (
+      "Reject"
+    )}
+  </button>
+</div>
           </div>
         )}
 
@@ -1142,18 +1140,17 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
   const status = order.status?.toLowerCase();
 
   const handlePrepare = async () => {
-    setShowConfirm(false); // close modal immediately so the main button becomes visible
+    setShowConfirm(false);
     setPreparing(true);
     try {
       await prepareVendorOrder(order.company.slug, order.id);
-      showToast("success", "Order has been marked as Prepared!");
-      onUpdate();
+      // 👇 Await the parent's refresh – this keeps the spinner visible
+      await onUpdate();
+      showToast("success", "Order marked as Prepared!");
     } catch (err: any) {
       showToast(
         "error",
-        err.response?.data?.detail ||
-          err.message ||
-          "Failed to mark order as prepared",
+        err.response?.data?.detail || "Failed to prepare order",
       );
     } finally {
       setPreparing(false);

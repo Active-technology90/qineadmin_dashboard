@@ -149,6 +149,8 @@ export interface CompanyListItem {
   is_featured: boolean;
   supports_table_service: boolean;
   description?: string;
+  
+  address_am?: string
 }
 
 // ── Products ──
