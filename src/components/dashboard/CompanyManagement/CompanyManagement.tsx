@@ -989,32 +989,225 @@ export default function CompanyManagement() {
                 </p>
               )}
             </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Business Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.business_type}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    business_type: e.target.value,
-                  }))
-                }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
-              >
-                <option value="">Select Business Type</option>
-                <option value="brand">Company</option>
-                <option value="store">Store</option>
-                <option value="service">Service</option>
-                <option value="DeliveryService">Delivery Service</option>
-              </select>
-              {formErrors.business_type && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.business_type}
-                </p>
-              )}
-            </div>
+<div>
+  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+    Business Type <span className="text-red-500">*</span>
+  </label>
+  <select
+    value={formData.business_type}
+    onChange={(e) =>
+      setFormData((prev) => ({
+        ...prev,
+        business_type: e.target.value,
+      }))
+    }
+    className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
+  >
+    <option value="">Select Business Type</option>
+    <option value="brand">Company</option>
+    <option value="store">Store</option>
+    <option value="service">Service</option>
+    <option value="delivery">Delivery</option>
+  </select>
+  {formErrors.business_type && (
+    <p className="text-red-500 text-xs mt-1">
+      {formErrors.business_type}
+    </p>
+  )}
+</div>
+
+{/* Service Provider Fields - Only show when business_type is "service" */}
+{formData.business_type === "service" && (
+  <div className="md:col-span-2 border-l-4 border-purple-400 pl-4 space-y-3">
+    <p className="text-sm font-semibold text-purple-600 mb-1">Service Provider Information</p>
+    
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Full Name *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter full name"
+        value={formData.full_name || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, full_name: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        National ID *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter national ID number"
+        value={formData.national_id || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, national_id: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Skills / Services Offered *
+      </label>
+      <textarea
+        placeholder="List your skills, qualifications, and services"
+        value={formData.skills || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, skills: e.target.value }))
+        }
+        rows={2}
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Experience Years
+      </label>
+      <input
+        type="number"
+        min="0"
+        placeholder="Years of experience"
+        value={formData.experience_years || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, experience_years: Number(e.target.value) }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+  </div>
+)}
+
+{/* Delivery Partner Fields - Only show when business_type is "delivery" */}
+{formData.business_type === "delivery" && (
+  <div className="md:col-span-2 border-l-4 border-orange-400 pl-4 space-y-3">
+    <p className="text-sm font-semibold text-orange-600 mb-1">Delivery Partner Information</p>
+    
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Full Name *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter full name"
+        value={formData.full_name || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, full_name: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Driver License *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter driver license number"
+        value={formData.driver_license || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, driver_license: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Vehicle Registration *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter vehicle registration number"
+        value={formData.vehicle_registration || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, vehicle_registration: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Vehicle Type *
+      </label>
+      <select
+        value={formData.vehicle_type || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, vehicle_type: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      >
+        <option value="">Select Vehicle Type</option>
+        <option value="car">Car</option>
+        <option value="motorcycle">Motorcycle</option>
+        <option value="bicycle">Bicycle</option>
+        <option value="scooter">Scooter</option>
+        <option value="truck">Truck</option>
+        <option value="van">Van</option>
+      </select>
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        Insurance Document
+      </label>
+      <input
+        type="text"
+        placeholder="Insurance document reference"
+        value={formData.insurance_document || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, insurance_document: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+  </div>
+)}
+
+{/* Vendor Fields - Only show when business_type is "brand" or "store" */}
+{(formData.business_type === "brand" || formData.business_type === "store") && (
+  <div className="md:col-span-2 border-l-4 border-blue-400 pl-4 space-y-3">
+    <p className="text-sm font-semibold text-blue-600 mb-1">Vendor Information</p>
+    
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        License Number *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter business license number"
+        value={formData.license_number || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, license_number: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+        TIN Number *
+      </label>
+      <input
+        type="text"
+        placeholder="Enter TIN number"
+        value={formData.tin_number || ""}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, tin_number: e.target.value }))
+        }
+        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+      />
+    </div>
+  </div>
+)}
             {/* Address Field */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
