@@ -26,7 +26,6 @@ import {
   Filter,
 } from "lucide-react";
 import {
-  deleteUser,
   getAllUsers,
   getAvailableCompanies,
   removeUserFromCompany,
@@ -71,13 +70,13 @@ const roleStyles: Record<UserRole, string> = {
   delivery: "bg-emerald-100 text-emerald-700 border-emerald-200",
 };
 
-const roleBadgeStyles: Record<UserRole, string> = {
-  owner: "bg-rose-600 text-white",
-  admin: "bg-purple-600 text-white",
-  staff: "bg-blue-600 text-white",
-  viewer: "bg-amber-600 text-white",
-  delivery: "bg-emerald-600 text-white",
-};
+// const roleBadgeStyles: Record<UserRole, string> = {
+//   owner: "bg-rose-600 text-white",
+//   admin: "bg-purple-600 text-white",
+//   staff: "bg-blue-600 text-white",
+//   viewer: "bg-amber-600 text-white",
+//   delivery: "bg-emerald-600 text-white",
+// };
 
 const formatPhone = (phone: string | null): string => {
   if (!phone) return "—";
@@ -184,55 +183,55 @@ const UserFilters: React.FC<FiltersProps> = ({
     <>
       <div className="w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
         {/* SEARCH + FILTER INSIDE INPUT */}
-     <div className="relative flex flex-1 min-w-0 items-center gap-2 px-2">
-  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/10 to-purple-300/10 blur-xl opacity-70" />
+        <div className="relative flex flex-1 min-w-0 items-center gap-2 px-2">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-secondary/10 to-purple-300/10 blur-xl opacity-70" />
 
-  {/* SEARCH BOX */}
-  <div className="w-3/4 md:w-full relative flex items-center rounded-2xl border border-gray-200/70 bg-white/80 backdrop-blur-xl shadow-sm hover:shadow-md focus-within:ring-4 focus-within:ring-secondary/10 focus-within:border-secondary/30 transition-all duration-300">
-    
-    <Search className="absolute left-3 sm:left-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          {/* SEARCH BOX */}
+          <div className="w-3/4 md:w-full relative flex items-center rounded-2xl border border-gray-200/70 bg-white/80 backdrop-blur-xl shadow-sm hover:shadow-md focus-within:ring-4 focus-within:ring-secondary/10 focus-within:border-secondary/30 transition-all duration-300">
 
-    <input
-      type="text"
-      placeholder="Search users, email, role..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full bg-transparent pl-10 sm:pl-12 pr-24 py-2 sm:py-2.5 text-sm sm:text-[15px] text-gray-700 placeholder:text-gray-400 rounded-xl border border-secondary outline-none"
-    />
+            <Search className="absolute left-3 sm:left-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
 
-    {searchTerm && (
-      <button
-        onClick={() => setSearchTerm("")}
-        className="absolute right-14 flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    )}
+            <input
+              type="text"
+              placeholder="Search users, email, role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-transparent pl-10 sm:pl-12 pr-24 py-2 sm:py-2.5 text-sm sm:text-[15px] text-gray-700 placeholder:text-gray-400 rounded-xl border border-secondary outline-none"
+            />
 
-    {/* MOBILE FILTER */}
-    <div className="absolute right-4 flex items-center gap-2 md:hidden">
-      <button
-        onClick={() => setSheetOpen(true)}
-        className="flex items-center justify-center h-7 w-7 rounded-full bg-secondary text-white shadow-md hover:scale-[1.02] active:scale-95 transition"
-      >
-        <Filter className="h-3 w-3" />
-      </button>
-    </div>
-  </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-14 flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
 
-  {/* PER PAGE SELECT (FIXED) */}
-  <div className="w-1/4 flex justify-end md:hidden">
-    <div className="w-full max-w-[120px]">
-      <CustomSelect
-        value={pageSize.toString()}
-        onChange={(val) => setPageSize(parseInt(val))}
-        options={pageSizeOptions}
-        placeholder="10"
-        className="h-9 text-xs w-full"
-      />
-    </div>
-  </div>
-</div>
+            {/* MOBILE FILTER */}
+            <div className="absolute right-4 flex items-center gap-2 md:hidden">
+              <button
+                onClick={() => setSheetOpen(true)}
+                className="flex items-center justify-center h-7 w-7 rounded-full bg-secondary text-white shadow-md hover:scale-[1.02] active:scale-95 transition"
+              >
+                <Filter className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* PER PAGE SELECT (FIXED) */}
+          <div className="w-1/4 flex justify-end md:hidden">
+            <div className="w-full max-w-[120px]">
+              <CustomSelect
+                value={pageSize.toString()}
+                onChange={(val) => setPageSize(parseInt(val))}
+                options={pageSizeOptions}
+                placeholder="10"
+                className="h-9 text-xs w-full"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* DESKTOP DROPDOWN FILTER (UNCHANGED) */}
         <div className="hidden md:flex w-full md:w-[240px] lg:w-[260px]">
@@ -280,10 +279,9 @@ const UserFilters: React.FC<FiltersProps> = ({
                   flex flex-col items-center justify-center gap-2
                   min-h-[88px] rounded-2xl border px-3 py-4
                   text-sm font-semibold transition-all active:scale-[0.97]
-                  ${
-                    roleFilter === opt.value
-                      ? "bg-gradient-to-br from-secondary to-secondary border-secondary text-white shadow-lg"
-                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
+                  ${roleFilter === opt.value
+                    ? "bg-gradient-to-br from-secondary to-secondary border-secondary text-white shadow-lg"
+                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
                   }
                 `}
               >
@@ -462,10 +460,9 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           overflow-hidden
           z-[999]
           transition-all duration-300 ease-out
-          ${
-            open
-              ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+          ${open
+            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
           }
         `}
       >
@@ -549,16 +546,24 @@ interface UserTableProps {
   setEditingRoleInTable: (value: string | null) => void;
   setEditingCompanyInTable: (value: Membership | null) => void;
   handleRoleChangeFromTable: (membership: Membership, newRole: UserRole, userId: number) => Promise<void>;
-  handleRemoveMembershipFromTable: (companyId: number, companyName: string, userId: number, userName: string) => Promise<void>;
+  handleRemoveMembershipFromTable: (companyId: number, companyName: string, userId: number, userName: string) => void;
 }
-const UserTable: React.FC<UserTableProps> = ({ 
-  users, 
+
+interface UserMobileCardsProps {
+  users: User[];
+  onView: (user: User) => void;
+  onEdit: (user: User) => void;
+  onRemove: (user: User) => void;
+  onManageMemberships: (user: User) => void;
+}
+const UserTable: React.FC<UserTableProps> = ({
+  users,
   editingRoleInTable,
   setEditingRoleInTable,
   setEditingCompanyInTable,
   handleRoleChangeFromTable,
   handleRemoveMembershipFromTable,
-  ...actionProps 
+  ...actionProps
 }) => (
   <div className="hidden lg:block overflow-x-auto">
     <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
@@ -632,59 +637,59 @@ const UserTable: React.FC<UserTableProps> = ({
                   <div className="max-h-[160px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-secondary/20 scrollbar-track-transparent hover:scrollbar-thumb-secondary/40">
                     <div className="flex flex-col gap-1.5">
                       {user.memberships.map((m: Membership, idx: number) => (
-                      <div
-                        key={idx}
-                        className="group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-gray-100/80 bg-white/50 hover:bg-secondary/5 hover:border-secondary/20 transition-all duration-200 hover:shadow-sm"
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-secondary" />
-                          <span className="text-xs font-medium text-gray-700 truncate max-w-[110px]">
-                            {m.company_name}
-                          </span>
-                        </div>
-                        {/* Role Dropdown or Role Badge */}
-                        <div className="flex items-center gap-1">
-                          {editingRoleInTable === `role-${user.id}-${m.company_id}` ? (
-                            <div className="relative">
-                              <select
-                                value={m.role}
-                                onChange={(e) => {
-                                  handleRoleChangeFromTable(m, e.target.value as UserRole, user.id);
+                        <div
+                          key={idx}
+                          className="group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-gray-100/80 bg-white/50 hover:bg-secondary/5 hover:border-secondary/20 transition-all duration-200 hover:shadow-sm"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-secondary" />
+                            <span className="text-xs font-medium text-gray-700 truncate max-w-[110px]">
+                              {m.company_name}
+                            </span>
+                          </div>
+                          {/* Role Dropdown or Role Badge */}
+                          <div className="flex items-center gap-1">
+                            {editingRoleInTable === `role-${user.id}-${m.company_id}` ? (
+                              <div className="relative">
+                                <select
+                                  value={m.role}
+                                  onChange={(e) => {
+                                    handleRoleChangeFromTable(m, e.target.value as UserRole, user.id);
+                                  }}
+                                  onBlur={() => {
+                                    setEditingRoleInTable(null);
+                                    setEditingCompanyInTable(null);
+                                  }}
+                                  autoFocus
+                                  className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-secondary/30 bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                                >
+                                  {['admin', 'staff', 'viewer', 'delivery'].map((role) => (
+                                    <option key={role} value={role} className="text-xs">
+                                      {role}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEditingRoleInTable(`role-${user.id}-${m.company_id}`);
+                                  setEditingCompanyInTable(m);
                                 }}
-                                onBlur={() => {
-                                  setEditingRoleInTable(null);
-                                  setEditingCompanyInTable(null);
-                                }}
-                                autoFocus
-                                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-secondary/30 bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : m.role === 'staff' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : m.role === 'delivery' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : m.role === 'viewer' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}
                               >
-                                {['admin', 'staff', 'viewer', 'delivery'].map((role) => (
-                                  <option key={role} value={role} className="text-xs">
-                                    {role}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          ) : (
+                                {m.role}
+                              </button>
+                            )}
                             <button
-                              onClick={() => {
-                                setEditingRoleInTable(`role-${user.id}-${m.company_id}`);
-                                setEditingCompanyInTable(m);
-                              }}
-                              className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : m.role === 'staff' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : m.role === 'delivery' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : m.role === 'viewer' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}
+                              onClick={() => handleRemoveMembershipFromTable(m.company_id, m.company_name, user.id, user.first_name || user.username)}
+                              className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                              title="Remove company"
                             >
-                              {m.role}
+                              <X className="h-3 w-3" />
                             </button>
-                          )}
-                          <button
-                            onClick={() => handleRemoveMembershipFromTable(m.company_id, m.company_name, user.id, user.first_name || user.username)}
-                            className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                            title="Remove company"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
+                          </div>
                         </div>
-                      </div>
                       ))}
                     </div>
                   </div>
@@ -695,8 +700,8 @@ const UserTable: React.FC<UserTableProps> = ({
               <td className="py-3.5 px-5">
                 <span className={`
                   inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-                  ${user.is_active 
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' 
+                  ${user.is_active
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'
                     : 'bg-gray-100 text-gray-500 border border-gray-200/50'
                   }
                 `}>
@@ -727,7 +732,7 @@ const UserTable: React.FC<UserTableProps> = ({
 // ============================================================
 // Mobile Cards Component – with Scrollable Companies
 // ============================================================
-const UserMobileCards: React.FC<UserTableProps> = ({
+const UserMobileCards: React.FC<UserMobileCardsProps> = ({
   users,
   ...actionProps
 }) => (
@@ -912,6 +917,10 @@ const SuperAdminUsers: React.FC = () => {
   } | null>(null);
   const [isRemovingMembership, setIsRemovingMembership] = useState(false);
 
+  console.log(isDeleteModalOpen, "isDeleteModalOpen")
+  console.log(editingCompanyInTable, "editingcompanyInTable")
+  console.log(deletingUser, "deletingUser")
+
   const fetchAllUsers = useCallback(async (): Promise<User[]> => {
     let page = 1;
     let all: User[] = [];
@@ -1062,18 +1071,18 @@ const SuperAdminUsers: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!deletingUser) return;
-    try {
-      await deleteUser(deletingUser.id);
-      showToast("success", "User deleted successfully");
-      setIsDeleteModalOpen(false);
-      setDeletingUser(null);
-      await refreshAllUsers();
-    } catch (err: any) {
-      showToast("error", err.message || "Failed to delete user");
-    }
-  };
+  // const handleConfirmDelete = async () => {
+  //   if (!deletingUser) return;
+  //   try {
+  //     await deleteUser(deletingUser.id);
+  //     showToast("success", "User deleted successfully");
+  //     setIsDeleteModalOpen(false);
+  //     setDeletingUser(null);
+  //     await refreshAllUsers();
+  //   } catch (err: any) {
+  //     showToast("error", err.message || "Failed to delete user");
+  //   }
+  // };
 
   const handleManageMemberships = (user: User) => {
     setManagingUser(user);
@@ -1101,11 +1110,11 @@ const SuperAdminUsers: React.FC = () => {
   // ── Confirm remove membership ──
   const confirmRemoveMembership = async () => {
     if (!removeMembershipData) return;
-    
+
     const { companyId, companyName, userId, userName } = removeMembershipData;
-    
+
     setIsRemovingMembership(true);
-    
+
     try {
       // Find the user to get their memberships
       const userToRemove = allUsers.find(u => u.id === userId);
@@ -1114,7 +1123,7 @@ const SuperAdminUsers: React.FC = () => {
         setIsRemovingMembership(false);
         return;
       }
-      
+
       // Find the membership to get the company_slug
       const membership = userToRemove.memberships.find(m => m.company_id === companyId);
       if (!membership) {
@@ -1122,7 +1131,7 @@ const SuperAdminUsers: React.FC = () => {
         setIsRemovingMembership(false);
         return;
       }
-      
+
       // Use the company_slug from the membership (not from availableCompanies)
       await removeUserFromCompany(membership.company_slug, userId);
       await refreshAllUsers();
@@ -1261,7 +1270,7 @@ const SuperAdminUsers: React.FC = () => {
             <TableControls
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
-              // className="w-full"
+            // className="w-full"
             >
               <UserFilters
                 searchTerm={searchTerm}

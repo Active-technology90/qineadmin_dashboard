@@ -16,7 +16,7 @@ export const firebaseConfig = {
 // Web Push (VAPID) public key — Firebase Console → Cloud Messaging → Web Push certificates.
 export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 /** Returns a Messaging instance, or null if the browser can't do web push. */
 export async function getMessagingIfSupported(): Promise<Messaging | null> {
