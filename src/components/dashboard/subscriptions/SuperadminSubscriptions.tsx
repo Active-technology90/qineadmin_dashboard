@@ -605,7 +605,7 @@ export default function SuperadminSubscriptions() {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+            className="bg-white rounded-3xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
               <h3 className="text-base sm:text-lg md:text-xl font-bold text-secondary">
@@ -618,7 +618,8 @@ export default function SuperadminSubscriptions() {
 
             <div className="p-6 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit} className="space-y-4">
-                <div>
+                <div className="flex flex-row">
+                   <div className="flex-1 mr-2">
                   <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Plan Name</label>
                   <input
                     type="text"
@@ -630,7 +631,7 @@ export default function SuperadminSubscriptions() {
                   />
                 </div>
 
-                <div>
+                <div className="flex-1 ml-2">
                   <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Price (ETB)</label>
                   <input
                     type="number"
@@ -641,8 +642,10 @@ export default function SuperadminSubscriptions() {
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
                   />
                 </div>
-
-                <div>
+                </div>
+               
+<div className="flex flex-row" >
+   <div className="flex-1 mr-2">
                   <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Max Featured Products</label>
                   <input
                     type="number"
@@ -652,8 +655,21 @@ export default function SuperadminSubscriptions() {
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
                     help-text="Use -1 for unlimited"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Use 0 for none, -1 for unlimited.</p>
+                  <p className="text-xs text-gray-500 mt-1">Use 0 for none</p>
+                  </div>
+                   <div className=" flex-1 ml-2 pt-4 border-t mt-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                      className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary"
+                    />
+                    <span className="text-xs sm:text-sm font-bold text-secondary">Plan is Active</span>
+                  </label>
                 </div>
+</div>
+               
 
                 <div className="space-y-3 pt-2">
                   <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-2 border-b pb-1">Ad Placements Allowed</label>
@@ -686,17 +702,7 @@ export default function SuperadminSubscriptions() {
                   </label>
                 </div>
 
-                <div className="pt-4 border-t mt-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-secondary"
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-secondary">Plan is Active</span>
-                  </label>
-                </div>
+               
               </form>
             </div>
 

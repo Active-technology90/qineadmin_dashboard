@@ -153,9 +153,9 @@ export default function CompanyManagement() {
     sub_category: 0,
     business_type: "",
     address: "",
-     address_am: "",
+    address_am: "",
     description: "",
-     description_am: "",
+    description_am: "",
     minimum_order_total: "0.00",
     latitude: "",
     longitude: "",
@@ -406,6 +406,8 @@ export default function CompanyManagement() {
           is_featured: company.is_featured,
           supports_table_service: company.supports_table_service,
           description: company.description || "",
+          address: company.address || "",
+          address_am: (company as any).address_am || "", // may not be in the typed response
         };
         setCompanies([companyListItem]);
         // Load form data for inline edit
@@ -419,9 +421,9 @@ export default function CompanyManagement() {
           sub_category: companyListItem.sub_category,
           business_type: companyListItem.business_type,
           address: companyListItem.address || "",
-           address_am: (companyListItem as any).address_am || "",
+          address_am: (companyListItem as any).address_am || "",
           description: companyListItem.description || "",
-            description_am: (companyListItem as any).description_am || "",
+          description_am: (companyListItem as any).description_am || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
           latitude: companyListItem.latitude || "",
           longitude: companyListItem.longitude || "",
@@ -431,6 +433,7 @@ export default function CompanyManagement() {
           supports_table_service: companyListItem.supports_table_service,
           logo: null,
           cover_image: null,
+          
         });
         if (companyListItem.logo) setLogoPreview(companyListItem.logo);
         if (companyListItem.cover_image)
@@ -460,7 +463,7 @@ export default function CompanyManagement() {
             address: first.address || "",
             address_am: (first as any).address_am || "",
             description: first.description || "",
-             description_am: (first as any).description_am || "",
+            description_am: (first as any).description_am || "",
             minimum_order_total: first.minimum_order_total || "0.00",
             latitude: first.latitude || "",
             longitude: first.longitude || "",
@@ -493,7 +496,7 @@ export default function CompanyManagement() {
       setSubcategories(subcategoriesRes.data);
       const headData = headCompaniesRes.data;
       setHeadCompanies(
-        Array.isArray(headData) ? headData : headData.results ?? [],
+        Array.isArray(headData) ? headData : (headData.results ?? []),
       );
     } catch (err: any) {
       setError(err.message || "Failed to load data");
@@ -515,6 +518,7 @@ export default function CompanyManagement() {
       errors.sub_category = "Please select a subcategory";
     if (!formData.business_type)
       errors.business_type = "Please select a business type";
+    if (!formData.address.trim()) errors.address = "Address is required";
     if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug))
       errors.slug =
         "Slug must contain only lowercase letters, numbers, and hyphens";
@@ -565,10 +569,16 @@ export default function CompanyManagement() {
           cleanString(originalFormData.business_type)
         )
           return true;
-        if (cleanString(formData.address) !== cleanString(originalFormData.address))
+        if (
+          cleanString(formData.address) !==
+          cleanString(originalFormData.address)
+        )
           return true;
-        if (cleanString(formData.address_am) !== cleanString(originalFormData.address_am))
-  return true;
+        if (
+          cleanString(formData.address_am) !==
+          cleanString(originalFormData.address_am)
+        )
+          return true;
         if (
           Number(formData.head_company ?? 0) !==
           Number(originalFormData.head_company ?? 0)
@@ -579,8 +589,11 @@ export default function CompanyManagement() {
           cleanString(originalFormData.description)
         )
           return true;
-          if (cleanString(formData.description_am) !== cleanString(originalFormData.description_am))   
-  return true;
+        if (
+          cleanString(formData.description_am) !==
+          cleanString(originalFormData.description_am)
+        )
+          return true;
 
         // Floats and Decimals (Monetary & Coordinates)
         if (
@@ -671,15 +684,15 @@ export default function CompanyManagement() {
         formPayload.append("address", formData.address);
       }
       if (formData.address_am) {
-  formPayload.append("address_am", formData.address_am);
-}
+        formPayload.append("address_am", formData.address_am);
+      }
 
       if (formData.description) {
         formPayload.append("description", formData.description);
       }
-      if (formData.description_am) {                    
-  formPayload.append("description_am", formData.description_am);
-}
+      if (formData.description_am) {
+        formPayload.append("description_am", formData.description_am);
+      }
 
       formPayload.append(
         "minimum_order_total",
@@ -701,7 +714,10 @@ export default function CompanyManagement() {
 
       formPayload.append("is_featured", String(formData.is_featured));
 
-      formPayload.append("supports_table_service", String(formData.supports_table_service))
+      formPayload.append(
+        "supports_table_service",
+        String(formData.supports_table_service),
+      );
 
       // Handle logo: only send if user uploaded a new file OR intentionally removed it
       // Do NOT send anything if the logo hasn't changed (formData.logo is null and original had image but user didn't click remove)
@@ -822,9 +838,9 @@ export default function CompanyManagement() {
         sub_category: company.sub_category,
         business_type: company.business_type,
         address: company.address || "",
-         address_am: (company as any).address_am || "",
+        address_am: (company as any).address_am || "",
         description: company.description || "",
-          description_am: (company as any).description_am || "", 
+        description_am: (company as any).description_am || "",
         minimum_order_total: company.minimum_order_total || "0.00",
         latitude: company.latitude || "",
         longitude: company.longitude || "",
@@ -1006,25 +1022,36 @@ export default function CompanyManagement() {
                 type="text"
                 placeholder="Street, city, area..."
                 value={formData.address}
-                onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, address: e.target.value }))
+                }
                 className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
               />
-              <p className="text-xs text-gray-400 mt-1">Optional – physical address of the company.</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Optional – physical address of the company.
+              </p>
             </div>
             {/* Address (Amharic) - ADD THIS BLOCK */}
-<div>
-  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-    Address (Amharic)
-  </label>
-  <input
-    type="text"
-    placeholder="አድራሻ በአማርኛ (ከሆነ)"
-    value={formData.address_am}
-    onChange={(e) => setFormData((prev) => ({ ...prev, address_am: e.target.value }))}
-    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-  />
-  <p className="text-xs text-gray-400 mt-1">Optional – Amharic version of the company address.</p>
-</div>
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                Address (Amharic)
+              </label>
+              <input
+                type="text"
+                placeholder="አድራሻ በአማርኛ (ከሆነ)"
+                value={formData.address_am}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    address_am: e.target.value,
+                  }))
+                }
+                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Optional – Amharic version of the company address.
+              </p>
+            </div>
 
             {/* 📍 GPS Coordinates & Map Picker - MOVED HERE (below Address) */}
             <div className="md:col-span-2">
@@ -1141,45 +1168,51 @@ export default function CompanyManagement() {
                 <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
               )}
             </div>
-{/* Description - English & Amharic side by side */}
-<div className="md:col-span-2">
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-    {/* English Description */}
-    <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Description
-              </label>
-              <textarea
-                placeholder="Enter company description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-                rows={3}
-              />
+            {/* Description - English & Amharic side by side */}
+            <div className="md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {/* English Description */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                    Description
+                  </label>
+                  <textarea
+                    placeholder="Enter company description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Amharic Description */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                    Description (Amharic)
+                  </label>
+                  <textarea
+                    placeholder="የኩባንያ መግለጫ በአማርኛ (ከሆነ)"
+                    value={formData.description_am}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description_am: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Optional – Amharic version of the company description.
+                  </p>
+                </div>
+              </div>
             </div>
-
-    {/* Amharic Description */}
-    <div>
-      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-        Description (Amharic)
-      </label>
-      <textarea
-        placeholder="የኩባንያ መግለጫ በአማርኛ (ከሆነ)"
-        value={formData.description_am}
-        onChange={(e) => setFormData((prev) => ({ ...prev, description_am: e.target.value }))}
-        className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-        rows={3}
-      />
-      <p className="text-xs text-gray-400 mt-1">Optional – Amharic version of the company description.</p>
-    </div>
-  </div>
-</div>
-
           </div>
         ),
         validate: validateBasicInfo,
@@ -1439,14 +1472,14 @@ export default function CompanyManagement() {
               </div>
             ) : (
               <>
-            <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
-              {isSuperAdmin ? "Companies" : "Company Detail"}
-            </h2>
-            {!isSuperAdmin && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
-                Manage your company details and settings
-              </p>
+                <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
+                  {isSuperAdmin ? "Companies" : "Company Detail"}
+                </h2>
+                {!isSuperAdmin && (
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
+                    Manage your company details and settings
+                  </p>
                 )}
               </>
             )}
@@ -1546,7 +1579,8 @@ export default function CompanyManagement() {
               submitting={submitting}
               editingSlug={editingSlug}
               headCompanyName={
-                headCompanies.find((h) => h.id === formData.head_company)?.name ??
+                headCompanies.find((h) => h.id === formData.head_company)
+                  ?.name ??
                 companies[0]?.head_company_detail?.name ??
                 null
               }

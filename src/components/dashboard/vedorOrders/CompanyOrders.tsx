@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Package, Building2, Settings, X } from "lucide-react";
+import { Package, Building2, Settings, X, Navigation } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 
 import {
@@ -17,6 +17,7 @@ import { VendorOrderFilters } from "./VendorOrderFilters";
 import { useReadOnly } from "../AdminDashboard";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { SearchInput } from "../../ui/SearchInput";
+import DeliveryTrackingMap from "./DeliveryTrackingMap";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -44,12 +45,10 @@ const StatusBadge = ({
     delivered: "Completed",
   };
 
-  const labels =
-    type === "delivery" ? deliveryStatusLabels : orderStatusLabels;
+  const labels = type === "delivery" ? deliveryStatusLabels : orderStatusLabels;
 
   const displayLabel =
-    labels[normalizedStatus] ||
-    normalizedStatus.replace(/_/g, " ");
+    labels[normalizedStatus] || normalizedStatus.replace(/_/g, " ");
 
   const colors: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -83,8 +82,6 @@ const StatusBadge = ({
   );
 };
 
-
-
 // Helper component for formatted date display
 const OrderDate = ({ dateString }: { dateString?: string }) => {
   if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
@@ -92,28 +89,28 @@ const OrderDate = ({ dateString }: { dateString?: string }) => {
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
+  const isYesterday =
+    new Date(now.setDate(now.getDate() - 1)).toDateString() ===
+    date.toDateString();
 
-  const formatTime = date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+  const formatTime = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
 
-  const formatDate = date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
+  const formatDate = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-sm font-medium text-gray-900">
-        {isToday ? 'Today' : isYesterday ? 'Yesterday' : formatDate}
+        {isToday ? "Today" : isYesterday ? "Yesterday" : formatDate}
       </span>
-      <span className="text-xs text-gray-500 font-mono">
-        {formatTime}
-      </span>
+      <span className="text-xs text-gray-500 font-mono">{formatTime}</span>
     </div>
   );
 };
@@ -224,6 +221,7 @@ export default function CompanyOrders() {
   const shouldFetchAll = isSuperAdmin || readOnly;
 
   const companySlug = company?.slug ?? null;
+   // Calculate effectiveSlug safely using useMemo (matches CompanyOrders logic)
   const effectiveSlug = useMemo(() => {
     if (shouldFetchAll) return null;
     if (user?.memberships?.length) {
@@ -254,6 +252,8 @@ export default function CompanyOrders() {
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+  // At the top of CompanyOrders component, add:
+  const [showTrackingMap, setShowTrackingMap] = useState(false);
   // Active filter count for mobile filter badge
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -263,7 +263,13 @@ export default function CompanyOrders() {
     if (paymentMethodFilter) count++;
     if (selectedCompanyId) count++;
     return count;
-  }, [searchTerm, orderStatusFilter, deliveryStatusFilter, paymentMethodFilter, selectedCompanyId]);
+  }, [
+    searchTerm,
+    orderStatusFilter,
+    deliveryStatusFilter,
+    paymentMethodFilter,
+    selectedCompanyId,
+  ]);
 
   const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
     const token = localStorage.getItem("access");
@@ -299,14 +305,19 @@ export default function CompanyOrders() {
       };
 
       const firstResponse = await fetchPage(1);
+
       if (controller.signal.aborted) return [];
 
       let allData = [...firstResponse.data.results];
+      console.log("Fetched first page:", allData.length, "orders");
       const total = firstResponse.data.count;
+      console.log("Total orders reported by API:", total);
 
       if (total > allData.length) {
         const actualPageSize = allData.length || 20;
-        const remainingPages = Math.ceil((total - allData.length) / actualPageSize);
+        const remainingPages = Math.ceil(
+          (total - allData.length) / actualPageSize,
+        );
         const promises = [];
         for (let i = 0; i < remainingPages; i++) {
           promises.push(fetchPage(i + 2));
@@ -315,11 +326,11 @@ export default function CompanyOrders() {
         results.forEach((res) => {
           allData = allData.concat(res.data.results);
         });
-        console.log(' Total orders after fetching all:', allData.length);
+        console.log(" Total orders after fetching all:", allData.length);
       }
 
       if (!controller.signal.aborted) {
-        console.log(' Setting allOrders with:', allData.length, 'orders');
+        console.log(" Setting allOrders with:", allData.length, "orders");
         setAllOrders(allData);
       }
       return allData;
@@ -511,7 +522,15 @@ export default function CompanyOrders() {
               </p>
             </div>
           )}
+          
         </div>
+        <button
+            onClick={() => setShowTrackingMap(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+          >
+            <Navigation className="h-4 w-4" />
+            <span className=" sm:inline">Live Tracking</span>
+          </button>
       </div>
       {/* Search Bar with Mobile Filter Button Inside - HIDDEN ON DESKTOP, VISIBLE ON MOBILE */}
       <div className="mb-4 lg:hidden">
@@ -615,8 +634,18 @@ export default function CompanyOrders() {
                 <th className="px-1.5 sm:px-4 lg:px-6 py-2 sm:py-4 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                    <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-secondary/60"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     <span>Date & Time</span>
                   </div>
@@ -631,7 +660,9 @@ export default function CompanyOrders() {
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} isAdminLike={isAdminLike} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonRow key={i} isAdminLike={isAdminLike} />
+                ))
               ) : paginatedOrders.length === 0 ? (
                 <EmptyState />
               ) : (
@@ -658,7 +689,9 @@ export default function CompanyOrders() {
                     )}
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                       {Number(order.amount).toLocaleString()}{" "}
-                      <span className="text-[9px] sm:text-xs text-gray-500 whitespace-nowrap">ETB</span>
+                      <span className="text-[9px] sm:text-xs text-gray-500 whitespace-nowrap">
+                        ETB
+                      </span>
                     </td>
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-[10px] sm:text-sm text-gray-700">
                       {order.payment_method
@@ -672,10 +705,9 @@ export default function CompanyOrders() {
                       <StatusBadge
                         status={
                           // Pickup orders have no shipping address
-                          order.fulfillment_type === "onspot" ?
-                            "On-Spot" : order.fulfillment_type === "pickup"
-                              ? "Self-Pickup"
-                              : (order.delivery?.status || "no assigned")
+                          !order.shipping_address_text
+                            ? "self_pickup"
+                            : order.delivery?.status || "no assigned"
                         }
                         type="delivery"
                       />
@@ -764,6 +796,7 @@ export default function CompanyOrders() {
         onClose={() => setSelectedOrder(null)}
         onUpdate={handleModalUpdate}
         readOnly={readOnly}
+         onOpenLiveTracking={() => setShowTrackingMap(true)} 
       />
 
       {/* Mobile Filter Modal - Bottom Sheet */}
@@ -793,8 +826,6 @@ export default function CompanyOrders() {
 
             {/* Content */}
             <div className="p-4 space-y-4">
-
-
               {/* Order Status Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
@@ -802,7 +833,6 @@ export default function CompanyOrders() {
                 </label>
                 <CustomSelect
                   value={orderStatusFilter}
-
                   onChange={setOrderStatusFilter}
                   options={orderStatusOptions}
                   placeholder="All Order Status"
@@ -829,7 +859,6 @@ export default function CompanyOrders() {
                 </label>
                 <CustomSelect
                   value={paymentMethodFilter}
-
                   onChange={setPaymentMethodFilter}
                   options={paymentMethodOptions}
                   placeholder="All Payment Method"
@@ -859,7 +888,11 @@ export default function CompanyOrders() {
 
               {/* Action Buttons - Equal width, side by side */}
               <div className="flex items-center gap-3 pt-2">
-                {(searchTerm || orderStatusFilter || deliveryStatusFilter || paymentMethodFilter || selectedCompanyId) && (
+                {(searchTerm ||
+                  orderStatusFilter ||
+                  deliveryStatusFilter ||
+                  paymentMethodFilter ||
+                  selectedCompanyId) && (
                   <button
                     onClick={() => {
                       setSearchTerm("");
@@ -885,6 +918,9 @@ export default function CompanyOrders() {
           </div>
         </div>
       )}
+     {showTrackingMap && (
+  <DeliveryTrackingMap onClose={() => setShowTrackingMap(false)} />
+)}
     </div>
   );
 }

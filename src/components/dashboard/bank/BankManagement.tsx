@@ -1,5 +1,14 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Building2, Pencil, Trash2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+// BankManagement.tsx (fully corrected)
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import {
+  Plus,
+  Building2,
+  Pencil,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import {
   getCompanyBankAccounts,
   createCompanyBankAccount,
@@ -19,20 +28,44 @@ import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useAuth } from "../../../hooks/useAuth";
 import type { BankInfo } from "../../../types";
 
-// Skeleton Row for loading state
+// ------------------------------------------------------------------
+// Skeleton Row
+// ------------------------------------------------------------------
 const SkeletonRow = () => (
   <tr className="animate-pulse">
-    <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-8" /></td>
-    <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="h-10 w-10 bg-gray-200 rounded-lg" /><div className="h-4 bg-gray-200 rounded w-24" /></div></td>
-    <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-    <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-32" /></td>
-    <td className="px-4 py-3"><div className="h-6 bg-gray-200 rounded-full w-20" /></td>
-    <td className="px-4 py-3"><div className="h-6 bg-gray-200 rounded-full w-16" /></td>
-    <td className="px-4 py-3"><div className="flex justify-end gap-2"><div className="h-8 w-8 bg-gray-200 rounded" /><div className="h-8 w-8 bg-gray-200 rounded" /></div></td>
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-8" />
+    </td>
+    <td className="px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 bg-gray-200 rounded-lg" />
+        <div className="h-4 bg-gray-200 rounded w-24" />
+      </div>
+    </td>
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+    </td>
+    <td className="px-4 py-3">
+      <div className="h-4 bg-gray-200 rounded w-32" />
+    </td>
+    <td className="px-4 py-3">
+      <div className="h-6 bg-gray-200 rounded-full w-20" />
+    </td>
+    <td className="px-4 py-3">
+      <div className="h-6 bg-gray-200 rounded-full w-16" />
+    </td>
+    <td className="px-4 py-3">
+      <div className="flex justify-end gap-2">
+        <div className="h-8 w-8 bg-gray-200 rounded" />
+        <div className="h-8 w-8 bg-gray-200 rounded" />
+      </div>
+    </td>
   </tr>
 );
 
-// Status Badge Component
+// ------------------------------------------------------------------
+// Status Badge
+// ------------------------------------------------------------------
 const StatusBadge = ({ isActive }: { isActive: boolean }) => {
   if (isActive) {
     return (
@@ -50,7 +83,9 @@ const StatusBadge = ({ isActive }: { isActive: boolean }) => {
   );
 };
 
+// ------------------------------------------------------------------
 // Main Component
+// ------------------------------------------------------------------
 export default function BankManagement() {
   const { company } = useCurrentCompany();
   const { user } = useAuth();
@@ -60,7 +95,7 @@ export default function BankManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [editingBank, setEditingBank] = useState<BankInfo | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BankInfo | null>(null);
@@ -68,28 +103,21 @@ export default function BankManagement() {
 
   const isSuperAdmin = !user?.memberships?.length;
   const companyName = company?.name || "Your Company";
-
-  console.log('setpage', setPageSize)
-  console.log('deleting', deleting)
-  // Determine if the current user can write (create/edit/delete)
-  const canWrite = isSuperAdmin || company?.role === "owner" || company?.role === "admin";
+  const canWrite =
+    isSuperAdmin || company?.role === "owner" || company?.role === "admin";
 
   const fetchBanks = useCallback(async () => {
     try {
       setLoading(true);
-
       let response;
       if (isSuperAdmin) {
-        // Superadmin: fetch ALL bank accounts via admin endpoint
         response = await getAdminBankAccounts();
       } else if (company?.slug) {
-        // Company staff/admin: fetch their company's bank accounts
         response = await getCompanyBankAccounts(company.slug);
       } else {
         setBanks([]);
         return;
       }
-
       const results = response.data?.results || response.data || [];
       setBanks(
         results.map((bank: any) => ({
@@ -97,7 +125,7 @@ export default function BankManagement() {
           is_active: bank.is_active ?? true,
           company_name: bank.company_name || "Unknown Company",
           company_slug: bank.company_slug || "unknown",
-        }))
+        })),
       );
     } catch (error) {
       console.error("Failed to load banks:", error);
@@ -120,7 +148,7 @@ export default function BankManagement() {
         b.bank_name.toLowerCase().includes(term) ||
         b.account_number.includes(term) ||
         b.account_name.toLowerCase().includes(term) ||
-        (b.company_name && b.company_name.toLowerCase().includes(term))
+        (b.company_name && b.company_name.toLowerCase().includes(term)),
     );
   }, [banks, searchTerm]);
 
@@ -145,34 +173,59 @@ export default function BankManagement() {
     setShowModal(true);
   };
 
-  const handleSave = async (data: Partial<BankInfo>) => {
+  // ── Corrected handleSave (multipart + _method patch) ──
+  const handleSave = async (data: Partial<BankInfo>, logoFile?: File) => {
     try {
+      // Remove company_slug if editing (backend may reject)
       if (editingBank) {
-        // ── Update ──
+        delete data.company_slug;
+      }
+
+      let payload: Record<string, unknown> | FormData = data as Record<
+        string,
+        unknown
+      >;
+
+      // If a logo file is provided, use FormData
+      if (logoFile) {
+        const fd = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            fd.append(key, value.toString());
+          }
+        });
+        fd.append("logo", logoFile);
+        payload = fd;
+      }
+
+      if (editingBank) {
+        // Update existing bank
         if (isSuperAdmin) {
-          await updateAdminBankAccount(editingBank.id, data);
+          await updateAdminBankAccount(editingBank.id, payload);
         } else if (company?.slug) {
-          await updateCompanyBankAccount(company.slug, editingBank.id, data);
+          await updateCompanyBankAccount(company.slug, editingBank.id, payload);
         }
         showToast("success", "Bank account updated successfully");
       } else {
-        // ── Create ──
+        // Create new bank
         if (isSuperAdmin) {
-          // For superadmin, include company_slug if provided
-          await createAdminBankAccount(data);
+          await createAdminBankAccount(payload);
         } else if (company?.slug) {
-          await createCompanyBankAccount(company.slug, data);
+          await createCompanyBankAccount(company.slug, payload);
         }
         showToast("success", "Bank account created successfully");
       }
+
       setShowModal(false);
       setEditingBank(null);
-      fetchBanks(); // Refresh from server
+      fetchBanks();
     } catch (error: any) {
       const msg =
         error?.response?.data?.detail ||
         error?.response?.data?.non_field_errors?.[0] ||
-        (editingBank ? "Failed to update bank account" : "Failed to create bank account");
+        (editingBank
+          ? "Failed to update bank account"
+          : "Failed to create bank account");
       showToast("error", msg);
     }
   };
@@ -188,9 +241,10 @@ export default function BankManagement() {
       }
       showToast("success", "Bank account deleted successfully");
       setDeleteTarget(null);
-      fetchBanks(); // Refresh from server
+      fetchBanks();
     } catch (error: any) {
-      const msg = error?.response?.data?.detail || "Failed to delete bank account";
+      const msg =
+        error?.response?.data?.detail || "Failed to delete bank account";
       showToast("error", msg);
     } finally {
       setDeleting(false);
@@ -207,7 +261,9 @@ export default function BankManagement() {
             Bank Accounts
           </h2>
           <p className="text-xs sm:text-sm text-secondary/70 mt-0.5">
-            {isSuperAdmin ? "Manage all company bank accounts" : `Bank accounts for ${companyName}`}
+            {isSuperAdmin
+              ? "Manage all company bank accounts"
+              : `Bank accounts for ${companyName}`}
           </p>
         </div>
         {canWrite && (
@@ -284,20 +340,30 @@ export default function BankManagement() {
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {loading ? (
-              Array.from({ length: pageSize }).map((_, i) => <SkeletonRow key={i} />)
+              Array.from({ length: pageSize }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))
             ) : paginatedBanks.length === 0 ? (
               <tr>
-                <td colSpan={isSuperAdmin ? 7 : 6} className="text-center py-12 text-gray-500">
+                <td
+                  colSpan={isSuperAdmin ? 7 : 6}
+                  className="text-center py-12 text-gray-500"
+                >
                   <Building2 className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p className="font-medium">No bank accounts found</p>
                   <p className="text-sm text-gray-400 mt-1">
-                    {canWrite ? "Add your first bank account" : "No bank accounts have been added yet"}
+                    {canWrite
+                      ? "Add your first bank account"
+                      : "No bank accounts have been added yet"}
                   </p>
                 </td>
               </tr>
             ) : (
               paginatedBanks.map((bank, index) => (
-                <tr key={bank.id} className="hover:bg-gray-50/60 transition-colors">
+                <tr
+                  key={bank.id}
+                  className="hover:bg-gray-50/60 transition-colors"
+                >
                   <td className="px-3 py-3 text-sm text-gray-500">
                     {(currentPage - 1) * pageSize + index + 1}
                   </td>
@@ -305,12 +371,18 @@ export default function BankManagement() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                         {bank.logo ? (
-                          <img src={bank.logo} alt={bank.bank_name} className="h-8 w-8 object-contain" />
+                          <img
+                            src={bank.logo}
+                            alt={bank.bank_name}
+                            className="h-8 w-8 object-contain"
+                          />
                         ) : (
                           <Building2 className="h-5 w-5 text-gray-400" />
                         )}
                       </div>
-                      <span className="font-medium text-gray-900 text-sm">{bank.bank_name}</span>
+                      <span className="font-medium text-gray-900 text-sm">
+                        {bank.bank_name}
+                      </span>
                     </div>
                   </td>
                   {isSuperAdmin && (
@@ -319,9 +391,13 @@ export default function BankManagement() {
                     </td>
                   )}
                   <td className="px-3 py-3">
-                    <span className="font-mono text-sm text-gray-700">{bank.account_number}</span>
+                    <span className="font-mono text-sm text-gray-700">
+                      {bank.account_number}
+                    </span>
                   </td>
-                  <td className="px-3 py-3 text-sm text-gray-700">{bank.account_name}</td>
+                  <td className="px-3 py-3 text-sm text-gray-700">
+                    {bank.account_name}
+                  </td>
                   <td className="px-3 py-3">
                     <StatusBadge isActive={bank.is_active ?? true} />
                   </td>
@@ -375,7 +451,6 @@ export default function BankManagement() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={`Bank Account "${deleteTarget?.bank_name || ""}"`}
@@ -386,11 +461,13 @@ export default function BankManagement() {
   );
 }
 
-// Bank Account Form Component
+// ------------------------------------------------------------------
+// Bank Account Form (logo upload with file, no base64)
+// ------------------------------------------------------------------
 function BankAccountForm({
   bank,
   isSuperAdmin,
-  companySlug,
+  companySlug: _,
   onClose,
   onSave,
 }: {
@@ -398,7 +475,7 @@ function BankAccountForm({
   isSuperAdmin: boolean;
   companySlug?: string;
   onClose: () => void;
-  onSave: (data: Partial<BankInfo>) => void;
+  onSave: (data: Partial<BankInfo>, logoFile?: File) => void;
 }) {
   const [formData, setFormData] = useState<Record<string, any>>({
     bank_name: "",
@@ -407,7 +484,10 @@ function BankAccountForm({
     is_active: true,
     order: 0,
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (bank) {
@@ -417,29 +497,66 @@ function BankAccountForm({
         account_name: bank.account_name || "",
         is_active: bank.is_active ?? true,
         order: bank.order ?? 0,
-        company_slug: bank.company_slug || "",
       });
+      setLogoPreview(bank.logo || null);
+    } else {
+      setFormData({
+        bank_name: "",
+        account_number: "",
+        account_name: "",
+        is_active: true,
+        order: 0,
+      });
+      setLogoPreview(null);
     }
+    setLogoFile(null);
   }, [bank]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be under 5 MB");
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const clearLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(bank?.logo || null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.bank_name || !formData.account_number || !formData.account_name) {
+    if (
+      !formData.bank_name.trim() ||
+      !formData.account_number.trim() ||
+      !formData.account_name.trim()
+    )
       return;
-    }
+
     setSaving(true);
     try {
-      await onSave(formData);
+      const dataToSend = { ...formData };
+
+      // Remove company_slug on edit or if not superadmin
+      if (!isSuperAdmin || bank) {
+        delete dataToSend.company_slug;
+      }
+
+      // Pass the file to parent – parent will handle multipart
+      await onSave(dataToSend, logoFile ?? undefined);
     } finally {
       setSaving(false);
     }
   };
 
-  console.log("companyslug", companySlug)
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
           <h3 className="text-xl font-bold text-secondary">
             {bank ? "Edit Bank Account" : "New Bank Account"}
@@ -452,108 +569,215 @@ function BankAccountForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bank Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.bank_name}
-              onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
-              placeholder="e.g. Commercial Bank of Ethiopia"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Account Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.account_number}
-              onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
-              placeholder="e.g. 100013456789"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Account Holder Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.account_name}
-              onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
-              placeholder="e.g. ABC Trading PLC"
-              required
-            />
-          </div>
-
-          {/* Superadmin can specify which company the bank account belongs to (only on create) */}
-          {isSuperAdmin && !bank && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Slug
+        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto space-y-3">
+          {/* Bank Name & Account Number */}
+          <div className="flex flex-col md:flex-row items-start gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Bank Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={formData.company_slug || ""}
-                onChange={(e) => setFormData({ ...formData, company_slug: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
-                placeholder="e.g. abc-trading"
+                value={formData.bank_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, bank_name: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. Commercial Bank of Ethiopia"
+                required
               />
-              <p className="text-xs text-gray-400 mt-1">
-                Leave empty for an unassigned bank account.
-              </p>
             </div>
-          )}
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Account Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.account_number}
+                onChange={(e) =>
+                  setFormData({ ...formData, account_number: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. 100013456789"
+                required
+              />
+            </div>
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Account Holder Name & Company Slug */}
+          <div className="flex flex-col md:flex-row items-start gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                Account Holder Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.account_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, account_name: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                placeholder="e.g. ABC Trading PLC"
+                required
+              />
+            </div>
+            {isSuperAdmin && !bank && (
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-0.5">
+                  Company Slug
+                </label>
+                <input
+                  type="text"
+                  value={formData.company_slug || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, company_slug: e.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
+                  placeholder="e.g. abc-trading"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty for an unassigned bank account.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Bank Logo */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Bank Logo
+            </label>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {/* Preview */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50"
+                >
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      alt="Bank Logo"
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center text-gray-400">
+                      <Building2 className="h-6 w-6 mb-1" />
+                      <span className="text-xs font-medium">No Logo</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">
+                      Upload
+                    </span>
+                  </div>
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  <div>
+                    <h4 className="font-semibold text-gray-900 text-sm">
+                      Upload Bank Logo
+                    </h4>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      PNG, JPG or SVG • Max 5 MB
+                    </p>
+                  </div>
+
+                  {logoFile && (
+                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1">
+                      <p className="text-xs font-medium text-emerald-700 truncate">
+                        {logoFile.name}
+                      </p>
+                      <p className="text-xs text-emerald-600">
+                        {(logoFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-secondary/90"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {logoPreview ? "Replace" : "Choose"}
+                    </button>
+                    {(logoPreview || logoFile) && (
+                      <button
+                        type="button"
+                        onClick={clearLogo}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order & Active */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-0.5">
                 Display Order
               </label>
               <input
                 type="number"
                 min="0"
                 value={formData.order || 0}
-                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
               />
             </div>
-
             <div className="flex items-end">
-              <label className="flex items-center gap-2 cursor-pointer py-2.5">
+              <label className="flex items-center gap-2 cursor-pointer py-2">
                 <input
                   type="checkbox"
                   checked={formData.is_active ?? true}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
                   className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
                 />
-                <span className="text-sm font-medium text-gray-700">Active</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Active
+                </span>
               </label>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100">
+          {/* Buttons */}
+          <div className="flex gap-3 pt-3 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
+              className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-secondary text-white font-medium hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              className="flex-1 py-2 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {bank ? "Update" : "Create"} Account

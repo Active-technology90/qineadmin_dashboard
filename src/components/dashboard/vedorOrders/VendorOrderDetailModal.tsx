@@ -22,6 +22,7 @@ import {
   ZoomIn,
   CheckCircle,
   Building2,
+  Navigation,
 } from "lucide-react";
 import {
   getCompanyStaffByRole,
@@ -33,6 +34,7 @@ import {
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
+import { CustomSelect } from "../../ui/CustomSelect";
 
 // ---------- Animation Variants ----------
 const containerVariants = {
@@ -200,7 +202,12 @@ const CopyButton = ({ text }: { text?: string | null }) => {
     </button>
   );
 };
-const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
+const DeliveryCard = ({
+  order,
+  onUpdate,
+  readOnly,
+  onOpenLiveTracking,
+}: any) => {
   const [staffList, setStaffList] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
   const [assigning, setAssigning] = useState(false);
@@ -232,52 +239,66 @@ const DeliveryCard = ({ order, onUpdate, readOnly }: any) => {
     const rating = parseFloat(avg).toFixed(1);
     return `⭐ ${rating} (${reviews})`;
   };
+  const staffOptions = staffList.map((s) => ({
+    value: String(s.id),
+    label: `${s.name} (${s.phone || "No Phone"}) — ${renderRating(s.average_rating, s.total_reviews)}`,
+    // icon: optional – could add a user icon if desired
+  }));
+
   // ── Get order cancellation/failure reason ──
-const getOrderFailureReason = () => {
-  // Check delivery first
-  if (delivery?.failure_reason) return delivery.failure_reason;
-  if (delivery?.cancellation_reason) return delivery.cancellation_reason;
-  if (delivery?.cancelled_reason) return delivery.cancelled_reason;
-  if (delivery?.reason) return delivery.reason;
-  if (delivery?.status_reason) return delivery.status_reason;
-  
-  // Check vendor_order_detail
-  if (order?.vendor_order_detail?.failure_reason) return order.vendor_order_detail.failure_reason;
-  if (order?.vendor_order_detail?.cancellation_reason) return order.vendor_order_detail.cancellation_reason;
-  if (order?.vendor_order_detail?.cancelled_reason) return order.vendor_order_detail.cancelled_reason;
-  if (order?.vendor_order_detail?.reason) return order.vendor_order_detail.reason;
-  
-  // Check order directly
-  if (order?.failure_reason) return order.failure_reason;
-  if (order?.cancellation_reason) return order.cancellation_reason;
-  if (order?.cancelled_reason) return order.cancelled_reason;
-  if (order?.reason) return order.reason;
-  
-  // Check status reason
-  if (order?.status_reason) return order.status_reason;
-  if (order?.cancel_reason) return order.cancel_reason;
-  
-  // Check notes (delivery_notes is where the reason is stored!)
-  if (order?.delivery_notes) return order.delivery_notes;
-  if (order?.notes) return order.notes;
-  if (order?.admin_notes) return order.admin_notes;
-  if (order?.cancellation_note) return order.cancellation_note;
-  
-  return null;
-};
+  const getOrderFailureReason = () => {
+    // Check delivery first
+    if (delivery?.failure_reason) return delivery.failure_reason;
+    if (delivery?.cancellation_reason) return delivery.cancellation_reason;
+    if (delivery?.cancelled_reason) return delivery.cancelled_reason;
+    if (delivery?.reason) return delivery.reason;
+    if (delivery?.status_reason) return delivery.status_reason;
+
+    // Check vendor_order_detail
+    if (order?.vendor_order_detail?.failure_reason)
+      return order.vendor_order_detail.failure_reason;
+    if (order?.vendor_order_detail?.cancellation_reason)
+      return order.vendor_order_detail.cancellation_reason;
+    if (order?.vendor_order_detail?.cancelled_reason)
+      return order.vendor_order_detail.cancelled_reason;
+    if (order?.vendor_order_detail?.reason)
+      return order.vendor_order_detail.reason;
+
+    // Check order directly
+    if (order?.failure_reason) return order.failure_reason;
+    if (order?.cancellation_reason) return order.cancellation_reason;
+    if (order?.cancelled_reason) return order.cancelled_reason;
+    if (order?.reason) return order.reason;
+
+    // Check status reason
+    if (order?.status_reason) return order.status_reason;
+    if (order?.cancel_reason) return order.cancel_reason;
+
+    // Check notes (delivery_notes is where the reason is stored!)
+    if (order?.delivery_notes) return order.delivery_notes;
+    if (order?.notes) return order.notes;
+    if (order?.admin_notes) return order.admin_notes;
+    if (order?.cancellation_note) return order.cancellation_note;
+
+    return null;
+  };
 
   const failureReason = getOrderFailureReason();
-  const isOrderFailed = order.status?.toLowerCase() === 'cancelled' || 
-                         order.status?.toLowerCase() === 'failed' ||
-                         order.status?.toLowerCase() === 'rejected' ||
-                         delivery?.status?.toLowerCase() === 'failed' ||
-                         delivery?.status?.toLowerCase() === 'cancelled' ||
-                         delivery?.status?.toLowerCase() === 'rejected';
+  const isOrderFailed =
+    order.status?.toLowerCase() === "cancelled" ||
+    order.status?.toLowerCase() === "failed" ||
+    order.status?.toLowerCase() === "rejected" ||
+    delivery?.status?.toLowerCase() === "failed" ||
+    delivery?.status?.toLowerCase() === "cancelled" ||
+    delivery?.status?.toLowerCase() === "rejected";
   useEffect(() => {
-    if (!order.company?.slug) return;   // still need a company slug
+    if (!order.company?.slug) return; // still need a company slug
     const fetchStaff = async () => {
       try {
-        const res = await getCompanyStaffByRole(order.company.slug!, "delivery");
+        const res = await getCompanyStaffByRole(
+          order.company.slug!,
+          "delivery",
+        );
         const mapped = (res.data.results || res.data).map((s: any) => ({
           id: s.user.id,
           name: `${s.user.username || s.user.first_name || ""}`.trim(),
@@ -316,10 +337,8 @@ const getOrderFailureReason = () => {
   }, [showAssignForm, order.company?.slug]);
 
   const handleAssign = async () => {
-    if (!selectedUserId) return;
     setAssigning(true);
     try {
-      console.log("delivery", delivery);
       if (delivery) {
         await updateDeliveryPerson(delivery.id.toString(), selectedUserId);
       } else {
@@ -328,11 +347,12 @@ const getOrderFailureReason = () => {
           delivery_person: selectedUserId,
         });
       }
+      // 👇 Wait for the parent to fetch the updated order
+      await onUpdate();
       showToast("success", "Delivery person assigned successfully");
       setShowAssignForm(false);
-      onUpdate();
     } catch (err: any) {
-      showToast("error", "Failed to assign Delivery person");
+      showToast("error", "Failed to assign delivery person");
     } finally {
       setAssigning(false);
     }
@@ -389,7 +409,7 @@ const getOrderFailureReason = () => {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                        delivery.delivery_person_name,
+                          delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -398,13 +418,40 @@ const getOrderFailureReason = () => {
                       {usernameMap.get(delivery.delivery_person_phone) ||
                         delivery.delivery_person_name}
                     </p>
+
                     <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200">
                       <PhoneCall className="h-3 w-3 text-blue-600" />
                       <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight">
                         {delivery.delivery_person_phone}
                       </span>
+
                       <CopyButton text={delivery.delivery_person_phone} />
                     </div>
+                    {delivery?.status === "out_for_delivery" &&
+                      onOpenLiveTracking && (
+                        <button
+                          onClick={onOpenLiveTracking}
+                          className="mt-3 inline-flex w-full sm:w-auto items-center justify-center gap-2
+      rounded-xl border border-emerald-200
+      bg-gradient-to-r from-emerald-500 to-green-600
+      px-4 py-1.5
+      text-xs sm:text-sm font-semibold text-white
+      shadow-sm transition-all duration-200
+      hover:from-emerald-600 hover:to-green-700
+      hover:shadow-lg hover:-translate-y-0.5
+      active:translate-y-0
+      focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        >
+                          <span className="relative flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+                          </span>
+
+                          <Navigation className="h-4 w-4" />
+
+                          <span>Live Tracking</span>
+                        </button>
+                      )}
                     {ratingMap.has(delivery.delivery_person_phone) && (
                       <div className="mt-1 flex items-center gap-1 text-xs text-gray-600">
                         <span>
@@ -485,21 +532,14 @@ const getOrderFailureReason = () => {
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 Select Delivery person
               </label>
-              <select
+              <CustomSelect
                 value={selectedUserId}
-                onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                className="w-full text-sm rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-500 px-2"
-              >
-                <option value="" className="px-2">
-                  Choose from the list...
-                </option>
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.phone || "No Phone"}) —{" "}
-                    {renderRating(s.average_rating, s.total_reviews)}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedUserId(val)}
+                options={staffOptions}
+                placeholder="Choose from the list..."
+                className="w-full"
+              />
+
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={handleAssign}
@@ -596,6 +636,7 @@ const ReceiptReviewCard = ({
   // image modal (KEEP SECOND UI)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
   // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<
@@ -610,42 +651,38 @@ const ReceiptReviewCard = ({
 
   const displayHistory = receiptHistory
     ? receiptHistory.filter((h: any) => {
-      // Skip the current active receipt only if it is pending review
-      if (h.id === receipt?.id && receipt?.status === "pending") {
-        return false;
-      }
-      return true;
-    })
+        // Skip the current active receipt only if it is pending review
+        if (h.id === receipt?.id && receipt?.status === "pending") {
+          return false;
+        }
+        return true;
+      })
     : [];
 
   // =========================================================
   // COD CONFIRMATION
   // =========================================================
-  const handleConfirmCOD = async () => {
-    if (!companySlug || !orderId) return;
-    setCodConfirming(true);
+ const handleConfirmCOD = async () => {
+  if (!companySlug || !orderId) return;
 
-    try {
-      await confirmCODPayment(companySlug, Number(orderId));
-      showToast("success", "COD payment confirmed successfully");
-      setShowCODConfirm(false);
-      onUpdate();
-    } catch (err: any) {
-      showToast(
-        "error",
-        err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",
-      );
-      console.error(
-        err.response?.data?.detail ||
-        err.message ||
-        "Failed to confirm COD payment",
-      );
-    } finally {
-      setCodConfirming(false);
-    }
-  };
+  setCodConfirming(true);
+  try {
+    await confirmCODPayment(companySlug, Number(orderId));
+    showToast("success", "COD payment confirmed successfully");
+    setShowCODConfirm(false);
+
+    // 👇 Await the parent refresh – this keeps the loading visible
+    await onUpdate();   // <-- THIS IS THE KEY CHANGE
+
+  } catch (err: any) {
+    showToast(
+      "error",
+      err.response?.data?.detail || err.message || "Failed to confirm COD payment"
+    );
+  } finally {
+    setCodConfirming(false);
+  }
+};
 
   // =========================================================
   // CHAPA
@@ -730,10 +767,11 @@ const ReceiptReviewCard = ({
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                      : "bg-gray-300 cursor-not-allowed shadow-none"
-                      }`}
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                      canCollect
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                        : "bg-gray-300 cursor-not-allowed shadow-none"
+                    }`}
                   >
                     {codConfirming ? (
                       <>
@@ -807,30 +845,32 @@ const ReceiptReviewCard = ({
     setPendingAction(action);
     setShowConfirm(true);
   };
+const handleConfirm = async () => {
+  if (!pendingAction) return;
 
-  const handleConfirm = async () => {
-    if (!pendingAction) return;
+  setShowConfirm(false);
+  setSubmitting(true);
+setSubmittingAction(pendingAction);
 
-    // Immediately close the modal so the main button becomes visible
-    setShowConfirm(false);
-    setSubmitting(true);
+  try {
+    await reviewReceipt(receipt.id, {
+      status: pendingAction,
+      admin_notes: notes || undefined,
+    });
 
-    try {
-      await reviewReceipt(receipt.id, {
-        status: pendingAction,
-        admin_notes: notes || undefined,
-      });
+    showToast("success", `Receipt ${pendingAction}`);
+    setNotes("");
+    setPendingAction(null);
 
-      showToast("success", `Receipt ${pendingAction}`);
-      setNotes("");
-      setPendingAction(null);
-      onUpdate();
-    } catch (err: any) {
-      showToast("error", err.response?.data?.detail || "Review failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    // ✅ Wait for the parent to fully refresh the order data
+    await onUpdate();
+
+  } catch (err: any) {
+    showToast("error", err.response?.data?.detail || "Review failed");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
@@ -915,43 +955,43 @@ const ReceiptReviewCard = ({
             />
 
             <div className="flex gap-2">
-              <button
-                onClick={() => handleActionClick("approved")}
-                disabled={submitting}
-                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Approving...
-                  </>
-                ) : (
-                  "Approve"
-                )}
-              </button>
+  <button
+    onClick={() => handleActionClick("approved")}
+    disabled={submitting}
+    className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+  >
+    {submittingAction === "approved" ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Approving...
+      </>
+    ) : (
+      "Approve"
+    )}
+  </button>
 
-              <button
-                onClick={() => handleActionClick("rejected")}
-                disabled={submitting}
-                className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
-             py-2.5 rounded-xl text-sm font-bold
-             shadow-md shadow-rose-200
-             hover:from-rose-600 hover:to-red-700
-             active:scale-[0.98]
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed
-             flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Rejecting...
-                  </>
-                ) : (
-                  "Reject"
-                )}
-              </button>
-            </div>
+  <button
+    onClick={() => handleActionClick("rejected")}
+    disabled={submitting}
+    className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
+      py-2.5 rounded-xl text-sm font-bold
+      shadow-md shadow-rose-200
+      hover:from-rose-600 hover:to-red-700
+      active:scale-[0.98]
+      transition-all duration-200
+      disabled:opacity-50 disabled:cursor-not-allowed
+      flex items-center justify-center gap-2"
+  >
+    {submittingAction === "rejected" ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Rejecting...
+      </>
+    ) : (
+      "Reject"
+    )}
+  </button>
+</div>
           </div>
         )}
 
@@ -990,16 +1030,24 @@ const ReceiptReviewCard = ({
             <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
               {displayHistory.map((h: any) => {
                 return (
-                  <div key={h.id} className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-2">
+                  <div
+                    key={h.id}
+                    className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-2"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-bold text-gray-700">
                           {h.bank_name || "Unknown Bank"}
                         </span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${h.status === "approved" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                          h.status === "rejected" ? "bg-rose-50 text-rose-700 border-rose-100" :
-                            "bg-gray-100 text-gray-600 border-gray-200"
-                          }`}>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${
+                            h.status === "approved"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              : h.status === "rejected"
+                                ? "bg-rose-50 text-rose-700 border-rose-100"
+                                : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
+                        >
                           {h.status}
                         </span>
                       </div>
@@ -1008,7 +1056,10 @@ const ReceiptReviewCard = ({
                       </p> */}
                       {h.admin_notes && (
                         <p className="text-[9px] text-rose-600 bg-rose-50/50 px-2 py-0.5 rounded border border-rose-100 mt-1 italic">
-                          <span className="text-amber-600 font-semibold">Remark:</span> "{h.admin_notes}"
+                          <span className="text-amber-600 font-semibold">
+                            Remark:
+                          </span>{" "}
+                          "{h.admin_notes}"
                         </p>
                       )}
                     </div>
@@ -1018,7 +1069,11 @@ const ReceiptReviewCard = ({
                         onClick={() => setPreviewImage(h.receipt_image)}
                         className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 hover:opacity-80 transition cursor-zoom-in"
                       >
-                        <img src={h.receipt_image} alt="Prior Receipt" className="w-full h-full object-cover" />
+                        <img
+                          src={h.receipt_image}
+                          alt="Prior Receipt"
+                          className="w-full h-full object-cover"
+                        />
                       </button>
                     )}
                   </div>
@@ -1069,7 +1124,7 @@ const ReceiptReviewCard = ({
         description="This action will notify the customer and update the order workflow. Are you sure?"
         confirmText={submitting ? "Processing..." : "Confirm Action"}
         confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
-        loading={false}               // loading is handled on the card buttons, not the modal
+        loading={false} // loading is handled on the card buttons, not the modal
         autoClose={false}
       />
     </div>
@@ -1085,18 +1140,17 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
   const status = order.status?.toLowerCase();
 
   const handlePrepare = async () => {
-    setShowConfirm(false);   // close modal immediately so the main button becomes visible
+    setShowConfirm(false);
     setPreparing(true);
     try {
       await prepareVendorOrder(order.company.slug, order.id);
-      showToast("success", "Order has been marked as Prepared!");
-      onUpdate();
+      // 👇 Await the parent's refresh – this keeps the spinner visible
+      await onUpdate();
+      showToast("success", "Order marked as Prepared!");
     } catch (err: any) {
       showToast(
         "error",
-        err.response?.data?.detail ||
-        err.message ||
-        "Failed to mark order as prepared",
+        err.response?.data?.detail || "Failed to prepare order",
       );
     } finally {
       setPreparing(false);
@@ -1170,7 +1224,7 @@ const PreparationCard = ({ order, onUpdate, readOnly }: any) => {
         description="Are you sure you want to mark this order as prepared and ready for dispatch?"
         confirmText={preparing ? "Marking..." : "Yes, Prepared"}
         confirmVariant="primary"
-        loading={false}      // loading is shown on the main button, not inside the modal
+        loading={false} // loading is shown on the main button, not inside the modal
         autoClose={false}
       />
     </>
@@ -1187,6 +1241,7 @@ export function VendorOrderDetailModal({
   onClose,
   onUpdate,
   readOnly = false,
+  onOpenLiveTracking,
 }: any) {
   if (!order) return null;
   const [refreshing, setRefreshing] = useState(false);
@@ -1326,8 +1381,18 @@ export function VendorOrderDetailModal({
                           </p>
                           {order.fulfillment_type === "pickup" && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
                               </svg>
                               Self Pickup
                             </span>
@@ -1337,7 +1402,10 @@ export function VendorOrderDetailModal({
                               {/* <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                               </svg> */}
-                              On Spot at Table - {order.table_number ? `${order.table_number}` : ""}
+                              On Spot at Table -{" "}
+                              {order.table_number
+                                ? `${order.table_number}`
+                                : ""}
                             </span>
                           )}
                         </div>
@@ -1427,12 +1495,15 @@ export function VendorOrderDetailModal({
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {(() => {
-                          const itemsByRound = order.items.reduce((acc: any, item: any) => {
-                            const r = item.round || 1;
-                            if (!acc[r]) acc[r] = [];
-                            acc[r].push(item);
-                            return acc;
-                          }, {});
+                          const itemsByRound = order.items.reduce(
+                            (acc: any, item: any) => {
+                              const r = item.round || 1;
+                              if (!acc[r]) acc[r] = [];
+                              acc[r].push(item);
+                              return acc;
+                            },
+                            {},
+                          );
 
                           return Object.keys(itemsByRound)
                             .sort((a, b) => Number(a) - Number(b))
@@ -1440,7 +1511,9 @@ export function VendorOrderDetailModal({
                               const roundItems = itemsByRound[roundKey];
                               const roundNum = Number(roundKey);
                               const roundTime = roundItems[0]?.created_at
-                                ? new Date(roundItems[0].created_at).toLocaleTimeString("en-US", {
+                                ? new Date(
+                                    roundItems[0].created_at,
+                                  ).toLocaleTimeString("en-US", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     hour12: true,
@@ -1450,9 +1523,13 @@ export function VendorOrderDetailModal({
                               return (
                                 <React.Fragment key={roundKey}>
                                   <tr className="bg-purple-50/20">
-                                    <td colSpan={4} className="px-4 py-2 text-left">
+                                    <td
+                                      colSpan={4}
+                                      className="px-4 py-2 text-left"
+                                    >
                                       <span className="text-[10px] font-black uppercase tracking-wider text-[#6750A4]">
-                                        Round {roundNum} {roundTime ? `(${roundTime})` : ""}
+                                        Round {roundNum}{" "}
+                                        {roundTime ? `(${roundTime})` : ""}
                                       </span>
                                     </td>
                                   </tr>
@@ -1489,10 +1566,14 @@ export function VendorOrderDetailModal({
                                         </span>
                                       </td>
                                       <td className="px-6 py-4 text-right text-xs font-bold text-gray-500">
-                                        {Number(item.unit_price).toLocaleString()}
+                                        {Number(
+                                          item.unit_price,
+                                        ).toLocaleString()}
                                       </td>
                                       <td className="px-6 py-4 text-right font-black text-gray-900 text-sm">
-                                        {Number(item.line_total).toLocaleString()}{" "}
+                                        {Number(
+                                          item.line_total,
+                                        ).toLocaleString()}{" "}
                                         <span className="text-[9px] text-gray-400">
                                           ETB
                                         </span>
@@ -1577,28 +1658,33 @@ export function VendorOrderDetailModal({
                   companySlug={order.company?.slug}
                   orderStatus={order.status}
                   receiptHistory={order.receipt_history}
-                  fulfillmentType={order.fulfillment_type || (order.shipping_address_text ? "delivery" : "pickup")}
+                  fulfillmentType={
+                    order.fulfillment_type ||
+                    (order.shipping_address_text ? "delivery" : "pickup")
+                  }
                 />
 
                 {/* Preparation Card */}
                 {(order.status === "confirmed" ||
                   (order.payment_method === "cod" &&
                     order.status === "pending")) && (
-                    <PreparationCard
-                      order={order}
-                      onUpdate={onUpdate}
-                      readOnly={readOnly}
-                    />
-                  )}
-
-                {/* 5. Delivery person Assignment Card */}
-                {order.fulfillment_type === "delivery" && order.shipping_address_text && (
-                  <DeliveryCard
+                  <PreparationCard
                     order={order}
                     onUpdate={onUpdate}
                     readOnly={readOnly}
                   />
                 )}
+
+                {/* 5. Delivery person Assignment Card */}
+                {order.fulfillment_type === "delivery" &&
+                  order.shipping_address_text && (
+                    <DeliveryCard
+                      order={order}
+                      onUpdate={onUpdate}
+                      readOnly={readOnly}
+                      onOpenLiveTracking={onOpenLiveTracking}
+                    />
+                  )}
 
                 {/* 6. Simple Timeline Sidebar */}
                 {/* <Card title="Activity Log" icon={Clock}>
