@@ -24,9 +24,9 @@ import type {
   UserRole,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
 
-// const API_URL = "http://localhost:8000/api/v1"; 
+const API_URL = "http://localhost:8000/api/v1"; 
 
 
 const api = axios.create({
@@ -785,5 +785,15 @@ export const updateAdminSubscriptionPlan = (id: number, data: any) => api.patch(
 export const deleteAdminSubscriptionPlan = (id: number) => api.delete(`/subscriptions/admin/plans/${id}/`);
 
 export const getAdminCompanySubscriptions = () => api.get("/subscriptions/admin/company-subscriptions/");
+
+// ========== MARKETING PERFORMANCE ==========
+export const getMarketingPerformance = () =>
+  api.get("/users/marketing/performance/");
+
+export const getAdminMarketingAgents = () =>
+  api.get("/users/marketing/admin/agents/");
+
+export const getAdminMarketingAgentPerformance = (agentId: number) =>
+  api.get(`/users/marketing/admin/agents/${agentId}/performance/`);
 
 export default api;

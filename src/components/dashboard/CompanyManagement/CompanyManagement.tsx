@@ -76,9 +76,10 @@ export default function CompanyManagement() {
   const { company: currentCompany } = useCurrentCompany();
 
   // Permission flags
-  const isSuperAdmin = !user?.memberships?.length;
+  const isMarketing = !!user?.is_marketing;
+  const isSuperAdmin = !user?.memberships?.length && !isMarketing;
   const memberships = user?.memberships ?? [];
-  const primaryMembership = !isSuperAdmin
+  const primaryMembership = !isSuperAdmin && !isMarketing
     ? getPrimaryMembership(memberships)
     : null;
   // const userCompanySlug = primaryMembership?.company_slug ?? null;
@@ -96,11 +97,11 @@ export default function CompanyManagement() {
 
   const currentCompanyRole = getCurrentCompanyRole();
 
-  const canAddCompany = isSuperAdmin;
+  const canAddCompany = isSuperAdmin || isMarketing;
   const canDeleteCompany = isSuperAdmin;
   const canEditCompany = useCallback(
     (companySlug: string) => {
-      if (isSuperAdmin) return true;
+      if (isSuperAdmin || isMarketing) return true;
       // Get the role for the specific company being edited
       const membershipForCompany = memberships.find(
         (m) => m.company_slug === companySlug,
@@ -108,7 +109,7 @@ export default function CompanyManagement() {
       const roleForCompany = membershipForCompany?.role;
       return roleForCompany === "owner" || roleForCompany === "admin";
     },
-    [isSuperAdmin, memberships],
+    [isSuperAdmin, isMarketing, memberships],
   );
 
   // Data states
@@ -178,9 +179,9 @@ export default function CompanyManagement() {
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
 
-  // Filtered companies (super admin only)
+  // Filtered companies (super admin or marketing agent)
   const filteredCompanies = useMemo(() => {
-    if (!isSuperAdmin) return companies;
+    if (!isSuperAdmin && !isMarketing) return companies;
     let data = [...companies];
     if (businessTypeFilter !== "all") {
       data = data.filter((comp) => comp.business_type === businessTypeFilter);
@@ -244,7 +245,7 @@ export default function CompanyManagement() {
 
   // Sorting & pagination
   const { sortedItems, handleSort, sortField, sortOrder } = useSorting(
-    isSuperAdmin ? filteredCompanies : companies,
+    isSuperAdmin || isMarketing ? filteredCompanies : companies,
     "name",
     "asc",
   );
@@ -381,7 +382,7 @@ export default function CompanyManagement() {
     try {
       setLoading(true);
       setError(null);
-      if (!isSuperAdmin && currentCompany?.slug) {
+      if (!isSuperAdmin && !isMarketing && currentCompany?.slug) {
         const companyRes = await getCompanyDetail(currentCompany.slug);
         const company = companyRes.data as Company;
         const companyListItem: CompanyListItem = {
@@ -438,7 +439,7 @@ export default function CompanyManagement() {
         if (companyListItem.logo) setLogoPreview(companyListItem.logo);
         if (companyListItem.cover_image)
           setCoverPreview(companyListItem.cover_image);
-      } else if (isSuperAdmin) {
+      } else if (isSuperAdmin || isMarketing) {
         let allCompanies: CompanyListItem[] = [];
         let nextUrl: string | null = "/companies/?page=1&ordering=name";
         while (nextUrl) {
@@ -646,7 +647,7 @@ export default function CompanyManagement() {
       if (!changesExist) {
         showToast("info", "No changes detected. Update canceled.");
         // Close edit mode without submitting
-        if (!isSuperAdmin) {
+        if (!isSuperAdmin && !isMarketing) {
           setIsEditingActive(false);
           resetForm();
         } else {
@@ -1006,6 +1007,7 @@ export default function CompanyManagement() {
                 <option value="brand">Company</option>
                 <option value="store">Store</option>
                 <option value="service">Service</option>
+                <option value="DeliveryService">Delivery Service</option>
               </select>
               {formErrors.business_type && (
                 <p className="text-red-500 text-xs mt-1">
@@ -1473,9 +1475,9 @@ export default function CompanyManagement() {
             ) : (
               <>
                 <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
-                  {isSuperAdmin ? "Companies" : "Company Detail"}
+                  {isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
                 </h2>
-                {!isSuperAdmin && (
+                {!isSuperAdmin && !isMarketing && (
                   <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
                     Manage your company details and settings
@@ -1499,8 +1501,8 @@ export default function CompanyManagement() {
           )}
         </div>
 
-        {/* Filters Section (super admin only) with premium card styling */}
-        {isSuperAdmin && (
+        {/* Filters Section (super admin or marketing) with premium card styling */}
+        {(isSuperAdmin || isMarketing) && (
           // <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-5">
 
           <CompanyFilters
@@ -1528,7 +1530,7 @@ export default function CompanyManagement() {
         )}
 
         {/* Main content views with responsive overflow handling */}
-        {isSuperAdmin ? (
+        {isSuperAdmin || isMarketing ? (
           <div className=" ">
             <SuperAdminView
               // Original data / layout props

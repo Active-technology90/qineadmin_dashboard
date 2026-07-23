@@ -24,6 +24,9 @@ export interface User {
   is_active?: boolean;
   role?: string;
   permissions?: string[];
+  is_marketing?: boolean;
+  daily_target?: number;
+  weekly_target?: number;
 }
 export interface UsersResponse {
   count: number;
@@ -121,6 +124,8 @@ export interface Company {
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
+  registered_by?: number;
+  registered_by_username?: string;
 }
 
 export interface CompanyListItem {
@@ -150,7 +155,9 @@ export interface CompanyListItem {
   supports_table_service: boolean;
   description?: string;
   
-  address_am?: string
+  address_am?: string;
+  registered_by?: number;
+  registered_by_username?: string;
 }
 
 // ── Products ──

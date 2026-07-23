@@ -501,8 +501,10 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
       email: "",
       phone_number: "",
       username: "",
-
       is_active: true,
+      is_marketing: false,
+      daily_target: 0,
+      weekly_target: 0,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -517,6 +519,9 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
           phone_number: user.phone_number || "",
           username: user.username,
           is_active: Boolean(user.is_active),
+          is_marketing: Boolean(user.is_marketing),
+          daily_target: user.daily_target || 0,
+          weekly_target: user.weekly_target || 0,
         });
         setFieldErrors({});
       }
@@ -552,6 +557,9 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
           phone_number: formData.phone_number,
           username: formData.username,
           is_active: formData.is_active,
+          is_marketing: formData.is_marketing,
+          daily_target: formData.daily_target,
+          weekly_target: formData.weekly_target,
         };
         console.log(updateData);
         await onSave(updateData);
@@ -711,6 +719,59 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                     label="Active Account"
                     description="User can log in and access the platform"
                   />
+
+                  <ToggleSwitch
+                    checked={formData.is_marketing}
+                    onChange={(checked) =>
+                      setFormData({ 
+                        ...formData, 
+                        is_marketing: checked,
+                        daily_target: checked ? formData.daily_target : 0,
+                        weekly_target: checked ? formData.weekly_target : 0
+                      })
+                    }
+                    label="Marketing Agent"
+                    description="Designate this user as a Qine marketing person"
+                  />
+
+                  {formData.is_marketing && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-purple-50/50 rounded-2xl border border-purple-100/50">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-2">
+                          Daily Registration Target
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.daily_target}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              daily_target: Math.max(0, parseInt(e.target.value) || 0)
+                            })
+                          }
+                          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-900 outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/10"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-2">
+                          Weekly Registration Target
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.weekly_target}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              weekly_target: Math.max(0, parseInt(e.target.value) || 0)
+                            })
+                          }
+                          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-900 outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/10"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Error Message */}
                   {error && (

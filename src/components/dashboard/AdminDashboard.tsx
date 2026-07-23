@@ -46,6 +46,8 @@ import NotificationsPage from "./notifications/NotificationsPage";
 import NotificationBell from "./notifications/NotificationBell";
 import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
+import MarketingOverview from "./overview/MarketingOverview";
+import MarketingAgentsManagement from "./UserManagement/MarketingAgentsManagement";
 
 type Tab =
   | "overview"
@@ -65,7 +67,8 @@ type Tab =
   | "notifications"
   | "settings"
   | "billing"
-  | "adminSubscriptions";
+  | "adminSubscriptions"
+  | "marketingAgents";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -269,8 +272,9 @@ export default function AdminDashboard() {
     }
   }, []);
   // ── Core identity flags ────────────────────────────────
-  const isSuperAdmin = !user?.memberships?.length;
-  const isViewer = !isSuperAdmin && company?.role === "viewer";
+  const isMarketing = !!user?.is_marketing;
+  const isSuperAdmin = !user?.memberships?.length && !isMarketing;
+  const isViewer = !isSuperAdmin && !isMarketing && company?.role === "viewer";
 
   // For viewers: show everything like super admin but read‑only
   const showPlatformAdmin = isSuperAdmin || isViewer;
@@ -369,7 +373,9 @@ export default function AdminDashboard() {
     const content = (() => {
       switch (activeTab) {
         case "overview":
-          return (
+          return isMarketing ? (
+            <MarketingOverview key={componentKey} />
+          ) : (
             <Overview key={componentKey} onNavigate={navigateFromOverview} />
           );
         case "products":
@@ -406,6 +412,8 @@ export default function AdminDashboard() {
           return <BillingPage key={componentKey} />;
         case "notifications":
           return <NotificationsPage key={componentKey} />;
+        case "marketingAgents":
+          return <MarketingAgentsManagement key={componentKey} />;
 
         default:
           return (
@@ -479,13 +487,39 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="flex-1 px-2 py-6 space-y-1.5 overflow-y-auto scrollbar-thin custom-scrollbar">
-          <SidebarItem
-            icon={<LayoutDashboard className="h-5 w-5" />}
-            label="Dashboard"
-            active={activeTab === "overview"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("overview")}
-          />
+          {isMarketing ? (
+            <>
+              <SidebarItem
+                icon={<LayoutDashboard className="h-5 w-5" />}
+                label="Performance"
+                active={activeTab === "overview"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("overview")}
+              />
+              <SidebarItem
+                icon={<Building2 className="h-5 w-5" />}
+                label="Companies"
+                active={activeTab === "companies"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("companies")}
+              />
+              <SidebarItem
+                icon={<User className="h-5 w-5" />}
+                label="Profile"
+                active={activeTab === "profile"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("profile")}
+              />
+            </>
+          ) : (
+            <>
+              <SidebarItem
+                icon={<LayoutDashboard className="h-5 w-5" />}
+                label="Dashboard"
+                active={activeTab === "overview"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("overview")}
+              />
 
           {/* Platform Admin section – shown for super admin AND viewer */}
           {showPlatformAdmin && (
@@ -536,6 +570,15 @@ export default function AdminDashboard() {
               active={activeTab === "superUsers"}
               collapsed={sidebarCollapsed}
               onClick={() => navigate("superUsers")}
+            />
+          )}
+          {isSuperAdmin && (
+            <SidebarItem
+              icon={<Users className="h-5 w-5" />}
+              label="Marketing Agents"
+              active={activeTab === "marketingAgents"}
+              collapsed={sidebarCollapsed}
+              onClick={() => navigate("marketingAgents")}
             />
           )}
           {showPlatformAdmin && (
@@ -657,6 +700,8 @@ export default function AdminDashboard() {
             <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
             {!sidebarCollapsed && <span>Logout</span>}
           </button> */}
+          </>
+          )}
         </nav>
 
         <div
@@ -715,6 +760,19 @@ export default function AdminDashboard() {
                       Full Control
                     </span>
                   </div>
+                </div>
+              </div>
+            )}
+            {isMarketing && (
+              <div className="hidden sm:block">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 rounded-full border border-emerald-200 shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                    Role:
+                  </span>
+                  <span className="text-sm font-black bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                    Qine Marketing Agent
+                  </span>
                 </div>
               </div>
             )}
