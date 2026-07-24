@@ -24,6 +24,7 @@ import {
   X,
   ChevronRight,
   Filter,
+  UserPlus,
 } from "lucide-react";
 import {
   getAllUsers,
@@ -46,6 +47,7 @@ import { Toast } from "../../ui/Toast";
 import { CustomSelect } from "../../ui/CustomSelect";
 import BottomSheet from "../../ui/BottomSheet";
 import MobileCardSkeleton from "../../ui/MobileCardSkeleton";
+import CreateUserModal from "./CreateUserModal";
 
 // ============================================================
 // Utility Functions
@@ -188,7 +190,6 @@ const UserFilters: React.FC<FiltersProps> = ({
 
           {/* SEARCH BOX */}
           <div className="w-3/4 md:w-full relative flex items-center rounded-2xl border border-gray-200/70 bg-white/80 backdrop-blur-xl shadow-sm hover:shadow-md focus-within:ring-4 focus-within:ring-secondary/10 focus-within:border-secondary/30 transition-all duration-300">
-
             <Search className="absolute left-3 sm:left-4 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
 
             <input
@@ -279,9 +280,10 @@ const UserFilters: React.FC<FiltersProps> = ({
                   flex flex-col items-center justify-center gap-2
                   min-h-[88px] rounded-2xl border px-3 py-4
                   text-sm font-semibold transition-all active:scale-[0.97]
-                  ${roleFilter === opt.value
-                    ? "bg-gradient-to-br from-secondary to-secondary border-secondary text-white shadow-lg"
-                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
+                  ${
+                    roleFilter === opt.value
+                      ? "bg-gradient-to-br from-secondary to-secondary border-secondary text-white shadow-lg"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-purple-50"
                   }
                 `}
               >
@@ -296,7 +298,7 @@ const UserFilters: React.FC<FiltersProps> = ({
   );
 };
 // ============================================================
-// Actions Dropdown Component 
+// Actions Dropdown Component
 // ============================================================
 
 interface ActionsDropdownProps {
@@ -460,9 +462,10 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           overflow-hidden
           z-[999]
           transition-all duration-300 ease-out
-          ${open
-            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+          ${
+            open
+              ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
           }
         `}
       >
@@ -545,8 +548,17 @@ interface UserTableProps {
   editingRoleInTable: string | null;
   setEditingRoleInTable: (value: string | null) => void;
   setEditingCompanyInTable: (value: Membership | null) => void;
-  handleRoleChangeFromTable: (membership: Membership, newRole: UserRole, userId: number) => Promise<void>;
-  handleRemoveMembershipFromTable: (companyId: number, companyName: string, userId: number, userName: string) => void;
+  handleRoleChangeFromTable: (
+    membership: Membership,
+    newRole: UserRole,
+    userId: number,
+  ) => Promise<void>;
+  handleRemoveMembershipFromTable: (
+    companyId: number,
+    companyName: string,
+    userId: number,
+    userName: string,
+  ) => void;
 }
 
 interface UserMobileCardsProps {
@@ -596,7 +608,7 @@ const UserTable: React.FC<UserTableProps> = ({
               key={user.id}
               className={`
                 group transition-all duration-150
-                ${index !== users.length - 1 ? 'border-b border-gray-100/80' : ''}
+                ${index !== users.length - 1 ? "border-b border-gray-100/80" : ""}
                 hover:bg-gray-50/60
               `}
             >
@@ -610,7 +622,11 @@ const UserTable: React.FC<UserTableProps> = ({
                         className="h-full w-full rounded-full object-cover"
                       />
                     ) : (
-                      getInitials(user.first_name, user.last_name, user.username)
+                      getInitials(
+                        user.first_name,
+                        user.last_name,
+                        user.username,
+                      )
                     )}
                   </div>
                   <div>
@@ -618,7 +634,9 @@ const UserTable: React.FC<UserTableProps> = ({
                       {user.first_name || user.username}
                       {user.last_name && ` ${user.last_name}`}
                     </p>
-                    <p className="text-xs text-gray-400 font-medium">@{user.username}</p>
+                    <p className="text-xs text-gray-400 font-medium">
+                      @{user.username}
+                    </p>
                   </div>
                 </div>
               </td>
@@ -649,12 +667,17 @@ const UserTable: React.FC<UserTableProps> = ({
                           </div>
                           {/* Role Dropdown or Role Badge */}
                           <div className="flex items-center gap-1">
-                            {editingRoleInTable === `role-${user.id}-${m.company_id}` ? (
+                            {editingRoleInTable ===
+                            `role-${user.id}-${m.company_id}` ? (
                               <div className="relative">
                                 <select
                                   value={m.role}
                                   onChange={(e) => {
-                                    handleRoleChangeFromTable(m, e.target.value as UserRole, user.id);
+                                    handleRoleChangeFromTable(
+                                      m,
+                                      e.target.value as UserRole,
+                                      user.id,
+                                    );
                                   }}
                                   onBlur={() => {
                                     setEditingRoleInTable(null);
@@ -663,26 +686,41 @@ const UserTable: React.FC<UserTableProps> = ({
                                   autoFocus
                                   className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-secondary/30 bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20"
                                 >
-                                  {['admin', 'staff', 'viewer', 'delivery'].map((role) => (
-                                    <option key={role} value={role} className="text-xs">
-                                      {role}
-                                    </option>
-                                  ))}
+                                  {["admin", "staff", "viewer", "delivery"].map(
+                                    (role) => (
+                                      <option
+                                        key={role}
+                                        value={role}
+                                        className="text-xs"
+                                      >
+                                        {role}
+                                      </option>
+                                    ),
+                                  )}
                                 </select>
                               </div>
                             ) : (
                               <button
                                 onClick={() => {
-                                  setEditingRoleInTable(`role-${user.id}-${m.company_id}`);
+                                  setEditingRoleInTable(
+                                    `role-${user.id}-${m.company_id}`,
+                                  );
                                   setEditingCompanyInTable(m);
                                 }}
-                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : m.role === 'staff' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : m.role === 'delivery' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : m.role === 'viewer' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}
+                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${m.role === "admin" ? "bg-purple-100 text-purple-700 hover:bg-purple-200" : m.role === "staff" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : m.role === "delivery" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : m.role === "viewer" ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "bg-rose-100 text-rose-700 hover:bg-rose-200"}`}
                               >
                                 {m.role}
                               </button>
                             )}
                             <button
-                              onClick={() => handleRemoveMembershipFromTable(m.company_id, m.company_name, user.id, user.first_name || user.username)}
+                              onClick={() =>
+                                handleRemoveMembershipFromTable(
+                                  m.company_id,
+                                  m.company_name,
+                                  user.id,
+                                  user.first_name || user.username,
+                                )
+                              }
                               className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
                               title="Remove company"
                             >
@@ -694,17 +732,22 @@ const UserTable: React.FC<UserTableProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-400 italic">No companies</span>
+                  <span className="text-xs text-gray-400 italic">
+                    No companies
+                  </span>
                 )}
               </td>
               <td className="py-3.5 px-5">
-                <span className={`
+                <span
+                  className={`
                   inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-                  ${user.is_active
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'
-                    : 'bg-gray-100 text-gray-500 border border-gray-200/50'
+                  ${
+                    user.is_active
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200/50"
+                      : "bg-gray-100 text-gray-500 border border-gray-200/50"
                   }
-                `}>
+                `}
+                >
                   {user.is_active ? (
                     <>
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -905,10 +948,14 @@ const SuperAdminUsers: React.FC = () => {
     Array<{ id: number; name: string; slug: string }>
   >([]);
   // Table row role editing states
-  const [editingRoleInTable, setEditingRoleInTable] = useState<string | null>(null);
-  const [editingCompanyInTable, setEditingCompanyInTable] = useState<Membership | null>(null);
+  const [editingRoleInTable, setEditingRoleInTable] = useState<string | null>(
+    null,
+  );
+  const [editingCompanyInTable, setEditingCompanyInTable] =
+    useState<Membership | null>(null);
   // Remove membership modal states
-  const [removeMembershipModalOpen, setRemoveMembershipModalOpen] = useState(false);
+  const [removeMembershipModalOpen, setRemoveMembershipModalOpen] =
+    useState(false);
   const [removeMembershipData, setRemoveMembershipData] = useState<{
     companyId: number;
     companyName: string;
@@ -916,10 +963,10 @@ const SuperAdminUsers: React.FC = () => {
     userName: string;
   } | null>(null);
   const [isRemovingMembership, setIsRemovingMembership] = useState(false);
-
-  console.log(isDeleteModalOpen, "isDeleteModalOpen")
-  console.log(editingCompanyInTable, "editingcompanyInTable")
-  console.log(deletingUser, "deletingUser")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  console.log(isDeleteModalOpen, "isDeleteModalOpen");
+  console.log(editingCompanyInTable, "editingcompanyInTable");
+  console.log(deletingUser, "deletingUser");
 
   const fetchAllUsers = useCallback(async (): Promise<User[]> => {
     let page = 1;
@@ -1089,7 +1136,11 @@ const SuperAdminUsers: React.FC = () => {
     setIsMembershipModalOpen(true);
   };
   // ── Table row role change handler ──
-  const handleRoleChangeFromTable = async (membership: Membership, newRole: UserRole, userId: number) => {
+  const handleRoleChangeFromTable = async (
+    membership: Membership,
+    newRole: UserRole,
+    userId: number,
+  ) => {
     try {
       await updateUserCompanyRole(membership.company_slug, userId, newRole);
       await refreshAllUsers();
@@ -1102,7 +1153,12 @@ const SuperAdminUsers: React.FC = () => {
   };
 
   // ── Table row remove membership handler ──
-  const handleRemoveMembershipFromTable = (companyId: number, companyName: string, userId: number, userName: string) => {
+  const handleRemoveMembershipFromTable = (
+    companyId: number,
+    companyName: string,
+    userId: number,
+    userName: string,
+  ) => {
     setRemoveMembershipData({ companyId, companyName, userId, userName });
     setRemoveMembershipModalOpen(true);
   };
@@ -1117,7 +1173,7 @@ const SuperAdminUsers: React.FC = () => {
 
     try {
       // Find the user to get their memberships
-      const userToRemove = allUsers.find(u => u.id === userId);
+      const userToRemove = allUsers.find((u) => u.id === userId);
       if (!userToRemove) {
         showToast("error", "User not found");
         setIsRemovingMembership(false);
@@ -1125,7 +1181,9 @@ const SuperAdminUsers: React.FC = () => {
       }
 
       // Find the membership to get the company_slug
-      const membership = userToRemove.memberships.find(m => m.company_id === companyId);
+      const membership = userToRemove.memberships.find(
+        (m) => m.company_id === companyId,
+      );
       if (!membership) {
         showToast("error", "Membership not found");
         setIsRemovingMembership(false);
@@ -1174,38 +1232,11 @@ const SuperAdminUsers: React.FC = () => {
               <div className="hidden sm:flex h-10 w-1.5 rounded-full bg-gradient-to-b from-secondary to-purple-400 shadow-sm" />
 
               <div className="min-w-0">
-                <h1
-                  className="
-          text-base
-          xs:text-md
-          sm:text-lg
-          md:text-xl
-          font-black
-          tracking-tight
-          leading-tight
-          bg-gradient-to-r
-          from-secondary
-          via-secondary
-          to-secondary-dark
-          bg-clip-text
-          text-transparent
-          break-words
-        "
-                >
+                <h1 className="text-base xs:text-md sm:text-lg md:text-xl font-black tracking-tight leading-tight bg-gradient-to-r from-secondary via-secondary to-secondary-dark bg-clip-text text-transparent break-words">
                   User Management
                 </h1>
 
-                <p
-                  className="
-          mt-1
-          text-xs
-          xs:text-sm
-          sm:text-base
-          text-secondary-light
-          leading-relaxed
-          max-w-2xl
-        "
-                >
+                <p className="mt-1 text-xs xs:text-sm sm:text-base text-secondary-light leading-relaxed max-w-2xl">
                   Manage platform users, roles, and company memberships
                 </p>
               </div>
@@ -1214,12 +1245,31 @@ const SuperAdminUsers: React.FC = () => {
             {/* Decorative line */}
             <div className="mt-1 h-[3px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-secondary to-purple-300 opacity-80" />
           </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+
+          {/* FIXED: Button placement - responsive */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile: Full-width button, Desktop: Normal button */}
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Create user</span>
+            </button>
+
+            {/* Total users badge - hidden on mobile, shown on desktop */}
+            <div className="hidden sm:flex bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap">
               Total Users: {allUsers.length}
             </div>
           </div>
         </div>
+
+        {/* Mobile: Total users shown below the button */}
+        {/* <div className="sm:hidden flex items-center justify-center mt-2">
+  <div className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-medium">
+    Total Users: {allUsers.length}
+  </div>
+</div> */}
 
         <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
           <StatCard
@@ -1270,7 +1320,7 @@ const SuperAdminUsers: React.FC = () => {
             <TableControls
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
-            // className="w-full"
+              // className="w-full"
             >
               <UserFilters
                 searchTerm={searchTerm}
@@ -1346,7 +1396,14 @@ const SuperAdminUsers: React.FC = () => {
         message={`Are you sure you want to remove ${removeMembershipData?.companyName} from ${removeMembershipData?.userName}? This will revoke all access to that company.`}
         loading={isRemovingMembership}
       />
-
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          setIsCreateModalOpen(false);
+          refreshAllUsers(); // Refresh the user list
+        }}
+      />
       <ManageMembershipsModal
         isOpen={isMembershipModalOpen}
         onClose={() => setIsMembershipModalOpen(false)}
