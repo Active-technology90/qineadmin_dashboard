@@ -441,7 +441,8 @@ export default function CompanyManagement() {
           setCoverPreview(companyListItem.cover_image);
       } else if (isSuperAdmin || isMarketing) {
         let allCompanies: CompanyListItem[] = [];
-        let nextUrl: string | null = "/companies/?page=1&ordering=name";
+        const extraParam = isMarketing ? "&my_registrations=true" : "";
+        let nextUrl: string | null = `/companies/?page=1&ordering=name${extraParam}`;
         while (nextUrl) {
           const res = await api.get(nextUrl);
           const data = res.data as PaginatedResponse<CompanyListItem>;
@@ -767,12 +768,14 @@ export default function CompanyManagement() {
         await fetchData();
       }, 250);
     } catch (err: any) {
+      console.error("Company registration submit error:", err.response?.data || err);
       if (err?.response?.status === 401) {
         showToast("error", "Session expired. Please refresh the page.");
       } else {
         const msg =
           err.response?.data?.message ||
           err.response?.data?.detail ||
+          (err.response?.data ? JSON.stringify(err.response.data) : null) ||
           "Operation failed";
 
         showToast("error", msg);
@@ -1007,7 +1010,7 @@ export default function CompanyManagement() {
                 <option value="brand">Company</option>
                 <option value="store">Store</option>
                 <option value="service">Service</option>
-                <option value="DeliveryService">Delivery Service</option>
+                <option value="delivery_service">Delivery Service</option>
               </select>
               {formErrors.business_type && (
                 <p className="text-red-500 text-xs mt-1">
