@@ -415,6 +415,7 @@ export default function HeadCompanyManagement() {
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.name || ""}
+        deleteTitle={"Delete Head Company"}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

@@ -3,11 +3,12 @@ import { Trash2 } from 'lucide-react';
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   title: string;
+  deleteTitle:string
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function DeleteConfirmModal({ isOpen, title, onConfirm, onCancel }: DeleteConfirmModalProps) {
+export function DeleteConfirmModal({ isOpen, title, onConfirm, onCancel, deleteTitle="Delete Product" ,}: DeleteConfirmModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -19,7 +20,7 @@ export function DeleteConfirmModal({ isOpen, title, onConfirm, onCancel }: Delet
               <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Delete Product</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{deleteTitle}</h3>
               <p className="text-sm text-gray-600 mt-0.5">
                 Are you sure you want to delete <span className="font-semibold text-gray-800">"{title}"</span>?
               </p>

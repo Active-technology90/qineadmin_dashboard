@@ -58,7 +58,7 @@ export function OrderFilters({
   };
 
   return (
-    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-visible relative z-30">
+    <div className="hidden lg:block w-full bg-white rounded-2xl border border-gray-100 shadow-sm transition-all overflow-visible relative z-10">
       {/* Header */}
       <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-gray-100">
         <div className="flex items-center gap-2" />

@@ -455,6 +455,7 @@ export default function BankManagement() {
         isOpen={!!deleteTarget}
         title={`Bank Account "${deleteTarget?.bank_name || ""}"`}
         onConfirm={handleDelete}
+        deleteTitle={"Delete Banck Account"}
         onCancel={() => setDeleteTarget(null)}
       />
     </div>
