@@ -14,8 +14,8 @@ interface CurrentCompanyContextType {
 
 const CurrentCompanyContext = createContext<CurrentCompanyContextType>({
   company: null,
-  switchCompany: () => {},
-  clearCompany: () => {},
+  switchCompany: () => { },
+  clearCompany: () => { },
 });
 
 interface Props {
