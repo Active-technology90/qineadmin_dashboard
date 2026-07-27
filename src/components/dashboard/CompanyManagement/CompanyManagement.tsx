@@ -39,6 +39,7 @@ import { ImageIcon } from "lucide-react";
 import SuperAdminView from "./SuperAdminView";
 import NonSuperAdminView from "./NonSuperAdminView";
 import CompanyFilters from "./CompanyFilters";
+import CompanyForm from "./CompanyForm";
 import type { CompanyFormData } from "./CompanyForm";
 import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
 import LocationPickerModal from "./LocationPickerModal";
@@ -145,6 +146,7 @@ export default function CompanyManagement() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [showMapPicker, setShowMapPicker] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<CompanyFormData>({
     name: "",
     name_am: "",
@@ -178,6 +180,22 @@ export default function CompanyManagement() {
   );
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
+
+  // Helper functions for marketing agent company tracking
+  const getMarketingCompanyIds = useCallback(() => {
+    if (!user?.id || !isMarketing) return [];
+    const stored = localStorage.getItem(`marketing_agent_companies_${user.id}`);
+    return stored ? JSON.parse(stored) : [];
+  }, [user?.id, isMarketing]);
+
+  const saveMarketingCompanyId = useCallback((companyId: number) => {
+    if (!user?.id || !isMarketing) return;
+    const ids = getMarketingCompanyIds();
+    if (!ids.includes(companyId)) {
+      ids.push(companyId);
+      localStorage.setItem(`marketing_agent_companies_${user.id}`, JSON.stringify(ids));
+    }
+  }, [user?.id, isMarketing, getMarketingCompanyIds]);
 
   // Filtered companies (super admin or marketing agent)
   const filteredCompanies = useMemo(() => {
@@ -434,21 +452,35 @@ export default function CompanyManagement() {
           supports_table_service: companyListItem.supports_table_service,
           logo: null,
           cover_image: null,
-          
+
         });
         if (companyListItem.logo) setLogoPreview(companyListItem.logo);
         if (companyListItem.cover_image)
           setCoverPreview(companyListItem.cover_image);
       } else if (isSuperAdmin || isMarketing) {
         let allCompanies: CompanyListItem[] = [];
-        const extraParam = isMarketing ? "&my_registrations=true" : "";
-        let nextUrl: string | null = `/companies/?page=1&ordering=name${extraParam}`;
+        let nextUrl: string | null = "/companies/?page=1&ordering=name";
         while (nextUrl) {
           const res = await api.get(nextUrl);
           const data = res.data as PaginatedResponse<CompanyListItem>;
           allCompanies = [...allCompanies, ...data.results];
           nextUrl = data.next;
         }
+
+        // If marketing agent, filter companies they registered using localStorage
+        if (isMarketing && user?.id) {
+          // Get stored company IDs from localStorage
+          const storedIds = getMarketingCompanyIds();
+
+          // Filter using localStorage ONLY
+          allCompanies = allCompanies.filter((company) => {
+            if (storedIds.includes(company.id)) {
+              return true;
+            }
+            return false;
+          });
+        }
+
         setCompanies(allCompanies);
         // Auto-select first for modal form
         if (allCompanies.length > 0) {
@@ -514,16 +546,110 @@ export default function CompanyManagement() {
   // --- Form handlers ---
   const validateBasicInfo = () => {
     const errors: Record<string, string> = {};
-    if (!formData.name.trim()) errors.name = "Company name is required";
-    if (formData.category === 0) errors.category = "Please select a category";
-    if (formData.sub_category === 0)
-      errors.sub_category = "Please select a subcategory";
-    if (!formData.business_type)
-      errors.business_type = "Please select a business type";
-    if (!formData.address.trim()) errors.address = "Address is required";
-    if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug))
-      errors.slug =
-        "Slug must contain only lowercase letters, numbers, and hyphens";
+
+    // Slug format validation - only if slug exists
+    if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug)) {
+      errors.slug = "Slug must contain only lowercase letters, numbers, and hyphens";
+    }
+
+    // Registration type specific validations
+    if (formData.registration_type === "vendor") {
+      // Vendor validations
+      if (!formData.name.trim()) {
+        errors.name = "Company name is required";
+      }
+      if (formData.category === 0) {
+        errors.category = "Please select a category";
+      }
+      if (formData.sub_category === 0) {
+        errors.sub_category = "Please select a subcategory";
+      }
+      if (!formData.business_type) {
+        errors.business_type = "Please select a business type";
+      }
+      if (!formData.slug.trim()) {
+        errors.slug = "Slug is required";
+      }
+    } else if (formData.registration_type === "service_provider") {
+      // Service Provider validations
+      if (!formData.full_name?.trim()) {
+        errors.full_name = "Full name is required";
+      }
+      if (!formData.national_id?.trim()) {
+        errors.national_id = "National ID is required";
+      }
+      if (!formData.skills?.trim()) {
+        errors.skills = "Skills / Services Offered is required";
+      }
+    } else if (formData.registration_type === "delivery_partner") {
+      // Delivery Partner validations
+      if (!formData.full_name?.trim()) {
+        errors.full_name = "Full name is required";
+      }
+      if (!formData.driver_license?.trim()) {
+        errors.driver_license = "Driver license is required";
+      }
+      if (!formData.vehicle_registration?.trim()) {
+        errors.vehicle_registration = "Vehicle registration is required";
+      }
+      if (!formData.vehicle_type) {
+        errors.vehicle_type = "Vehicle type is required";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateLocation = () => {
+    const errors: Record<string, string> = {};
+    if (!formData.address?.trim()) {
+      errors.address = "Address is required";
+    }
+    if (!formData.phone?.trim()) {
+      errors.phone = "Phone Number is required";
+    }
+    if (!formData.email?.trim()) {
+      errors.email = "Email Address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Please enter a valid email address";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateDocuments = () => {
+    const errors: Record<string, string> = {};
+    // Vendor document validations
+    if (formData.registration_type === "vendor") {
+      if (!formData.license_number?.trim()) {
+        errors.license_number = "License Number is required";
+      }
+      if (!formData.tin_number?.trim()) {
+        errors.tin_number = "TIN Number is required";
+      }
+      if (!formData.license_document) {
+        errors.license_document = "License Document is required";
+      }
+      if (!formData.tin_document) {
+        errors.tin_document = "TIN Document is required";
+      }
+    }
+    // Service Provider document validations
+    if (formData.registration_type === "service_provider") {
+      if (!formData.national_id_document) {
+        errors.national_id_document = "National ID Document is required";
+      }
+    }
+    // Delivery Partner document validations
+    if (formData.registration_type === "delivery_partner") {
+      if (!formData.driver_license_document) {
+        errors.driver_license_document = "Driver License Document is required";
+      }
+      if (!formData.vehicle_document) {
+        errors.vehicle_document = "Vehicle Document is required";
+      }
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -749,7 +875,11 @@ export default function CompanyManagement() {
       if (editingSlug) {
         await updateCompany(editingSlug, formPayload);
       } else {
-        await createCompany(formPayload);
+        const response = await createCompany(formPayload);
+        // If marketing agent, save the company ID to localStorage
+        if (isMarketing && user?.id && response.data?.id) {
+          saveMarketingCompanyId(response.data.id);
+        }
       }
 
       showToast(
@@ -768,14 +898,12 @@ export default function CompanyManagement() {
         await fetchData();
       }, 250);
     } catch (err: any) {
-      console.error("Company registration submit error:", err.response?.data || err);
       if (err?.response?.status === 401) {
         showToast("error", "Session expired. Please refresh the page.");
       } else {
         const msg =
           err.response?.data?.message ||
           err.response?.data?.detail ||
-          (err.response?.data ? JSON.stringify(err.response.data) : null) ||
           "Operation failed";
 
         showToast("error", msg);
@@ -784,6 +912,117 @@ export default function CompanyManagement() {
       setSubmitting(false);
     }
   };
+  // Multi-step form steps
+  const steps = useMemo(
+    () => [
+      {
+        id: "basic",
+        title: <span className="text-secondary">Basic Information</span>,
+        content: (
+          <CompanyForm
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+            categories={categories}
+            subcategories={subcategories}
+            logoPreview={logoPreview}
+            coverPreview={coverPreview}
+            isEditingActive={true}
+            submitting={submitting}
+            editingSlug={editingSlug}
+            headCompanyName={headCompanies.find((h) => h.id === formData.head_company)?.name ?? null}
+            currentStep={0}
+            onSubmit={handleSubmit}
+            onClose={() => setModalOpen(false)}
+          />
+        ),
+        validate: validateBasicInfo,
+      },
+      {
+        id: "location",
+        title: <span className="text-secondary">Location & Contact</span>,
+        content: (
+          <CompanyForm
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+            categories={categories}
+            subcategories={subcategories}
+            logoPreview={logoPreview}
+            coverPreview={coverPreview}
+            isEditingActive={true}
+            submitting={submitting}
+            editingSlug={editingSlug}
+            headCompanyName={headCompanies.find((h) => h.id === formData.head_company)?.name ?? null}
+            currentStep={1}
+            onSubmit={handleSubmit}
+            onClose={() => setModalOpen(false)}
+          />
+        ),
+        validate: validateLocation,
+      },
+      {
+        id: "documents",
+        title: <span className="text-secondary">Media & Documents</span>,
+        content: (
+          <CompanyForm
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+            categories={categories}
+            subcategories={subcategories}
+            logoPreview={logoPreview}
+            coverPreview={coverPreview}
+            isEditingActive={true}
+            submitting={submitting}
+            editingSlug={editingSlug}
+            headCompanyName={headCompanies.find((h) => h.id === formData.head_company)?.name ?? null}
+            currentStep={2}
+            onSubmit={handleSubmit}
+            onClose={() => setModalOpen(false)}
+          />
+        ),
+        validate: validateDocuments,
+      },
+      {
+        id: "summary",
+        title: <span className="text-secondary">Review</span>,
+        content: (
+          <CompanyForm
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+            categories={categories}
+            subcategories={subcategories}
+            logoPreview={logoPreview}
+            coverPreview={coverPreview}
+            isEditingActive={true}
+            submitting={submitting}
+            editingSlug={editingSlug}
+            headCompanyName={headCompanies.find((h) => h.id === formData.head_company)?.name ?? null}
+            currentStep={3}
+            onSubmit={handleSubmit}
+            onClose={() => setModalOpen(false)}
+          />
+        ),
+      },
+    ],
+    [
+      formData,
+      formErrors,
+      categories,
+      subcategories,
+      headCompanies,
+      logoPreview,
+      coverPreview,
+      submitting,
+      editingSlug,
+      handleSubmit,
+      validateBasicInfo,
+      validateLocation,
+      validateDocuments,
+    ],
+  );
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -891,572 +1130,7 @@ export default function CompanyManagement() {
     setSubCategoryFilter("all");
   }, []);
 
-  // Multi-step form steps (unchanged, uses current state)
-  const steps = useMemo(
-    () => [
-      {
-        id: "basic",
-        title: <span className="text-secondary">Basic Information</span>,
-        content: (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 gap-y-5">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Company Name (English) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter company name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.name ? "border-red-500" : "border-gray-300"}`}
-              />
-              {formErrors.name && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Name (Amharic)
-              </label>
-              <input
-                type="text"
-                placeholder="Enter company name in Amharic"
-                value={formData.name_am}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name_am: e.target.value }))
-                }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => {
-                  const catId = Number(e.target.value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    category: catId,
-                    sub_category: 0,
-                  }));
-                }}
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.category ? "border-red-500" : "border-gray-300"}`}
-              >
-                <option value={0}>Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              {formErrors.category && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.category}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Subcategory <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.sub_category}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    sub_category: Number(e.target.value),
-                  }))
-                }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${!formData.category ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"} ${formErrors.sub_category ? "border-red-500" : "border-gray-300"}`}
-                disabled={!formData.category}
-                style={{
-                  cursor: !formData.category ? "not-allowed" : "default",
-                }}
-              >
-                <option value={0}>Select Subcategory</option>
-                {subcategories
-                  .filter((sub) => sub.category === formData.category)
-                  .map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </option>
-                  ))}
-              </select>
-              {formErrors.sub_category && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.sub_category}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Business Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.business_type}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    business_type: e.target.value,
-                  }))
-                }
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.business_type ? "border-red-500" : "border-gray-300"}`}
-              >
-                <option value="">Select Business Type</option>
-                <option value="brand">Company</option>
-                <option value="store">Store</option>
-                <option value="service">Service</option>
-                <option value="delivery_service">Delivery Service</option>
-              </select>
-              {formErrors.business_type && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.business_type}
-                </p>
-              )}
-            </div>
-            {/* Address Field */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Address
-              </label>
-              <input
-                type="text"
-                placeholder="Street, city, area..."
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, address: e.target.value }))
-                }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Optional – physical address of the company.
-              </p>
-            </div>
-            {/* Address (Amharic) - ADD THIS BLOCK */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Address (Amharic)
-              </label>
-              <input
-                type="text"
-                placeholder="አድራሻ በአማርኛ (ከሆነ)"
-                value={formData.address_am}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    address_am: e.target.value,
-                  }))
-                }
-                className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Optional – Amharic version of the company address.
-              </p>
-            </div>
 
-            {/* 📍 GPS Coordinates & Map Picker - MOVED HERE (below Address) */}
-            <div className="md:col-span-2">
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs sm:text-sm font-medium text-gray-700">
-                  Company Location (GPS)
-                </label>
-                {/* <button
-                  type="button"
-                  onClick={() => setShowMapPicker(true)}
-                  className="text-xs text-secondary hover:text-[#5b4694] font-extrabold flex items-center gap-1 hover:underline transition-all cursor-pointer"
-                >
-                  <MapPin className="h-3 w-3" />
-                  Pick on Map
-                </button> */}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="Latitude"
-                    value={formData.latitude}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        latitude: e.target.value,
-                      }))
-                    }
-                    className="w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base pr-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary border-gray-300"
-                  />
-                  <span className="absolute right-3 top-3 text-[10px] font-extrabold text-gray-400 select-none">
-                    LAT
-                  </span>
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="Longitude"
-                    value={formData.longitude}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        longitude: e.target.value,
-                      }))
-                    }
-                    className="w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base pr-8 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary border-gray-300"
-                  />
-                  <span className="absolute right-3 top-3 text-[10px] font-extrabold text-gray-400 select-none">
-                    LON
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowMapPicker(true)}
-                className="mt-2 w-full py-2.5 border border-dashed border-secondary/40 hover:border-secondary hover:bg-purple-50/30 text-secondary rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Choose Location on Map Picker
-              </button>
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Head Company
-              </label>
-              <select
-                value={formData.head_company ?? 0}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    head_company: val === 0 ? null : val,
-                  }));
-                }}
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.head_company ? "border-red-500" : "border-gray-300"}`}
-              >
-                <option value={0}>— None (standalone) —</option>
-                {headCompanies.map((head) => (
-                  <option key={head.id} value={head.id}>
-                    {head.name}
-                  </option>
-                ))}
-              </select>
-              {formErrors.head_company && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.head_company}
-                </p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                Group this company under a parent head company. A head can span
-                any categories - each branch keeps its own category.
-              </p>
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                Slug <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., my-company-slug"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                disabled={!!editingSlug}
-                className={`w-full border rounded-lg p-2.5 sm:p-3 text-sm sm:text-base font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary ${formErrors.slug ? "border-red-500" : "border-gray-300"}
-               ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
-              />
-              {formErrors.slug && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
-              )}
-            </div>
-            {/* Description - English & Amharic side by side */}
-            <div className="md:col-span-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {/* English Description */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Enter company description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Amharic Description */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
-                    Description (Amharic)
-                  </label>
-                  <textarea
-                    placeholder="የኩባንያ መግለጫ በአማርኛ (ከሆነ)"
-                    value={formData.description_am}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description_am: e.target.value,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-30 focus:border-secondary"
-                    rows={3}
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Optional – Amharic version of the company description.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ),
-        validate: validateBasicInfo,
-      },
-      {
-        id: "images",
-        title: <span className="text-secondary">Images & Status</span>,
-        content: (
-          <div className="space-y-8">
-            {/* Logo and Cover Image - Side by Side */}
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-secondary to-secondary-light"></div>
-                Company Images
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* <div className="flex flex-col h-full">
-                  <div className="flex-1">
-                    <DragDropImageUpload
-                      label="Logo"
-                      size="sm"
-                      value={formData.logo}
-              onChange={(file) =>
-                setFormData((prev) => ({ ...prev, logo: file }))
-              }
-              previewUrl={logoPreview}
-              required={false}
-            />
-            </div>
-                  <p className="text-xs text-gray-400 mt-2 text-center">Square image recommended (1:1 ratio)</p>
-                </div> */}
-                <div className="flex flex-col h-full">
-                  <div className="flex-1">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Logo
-                    </label>
-                    <div
-                      className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-3 flex flex-col items-center justify-center transition-all duration-300 hover:border-secondary hover:bg-gray-50/80 min-h-[140px] sm:min-h-[160px]"
-                      style={{ height: "auto" }}
-                    >
-                      <input
-                        type="file"
-                        id="company-logo-upload"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              alert("File must be smaller than 5MB");
-                              return;
-                            }
-                            setFormData((prev) => ({ ...prev, logo: file }));
-                            setLogoPreview(URL.createObjectURL(file));
-                          }
-                        }}
-                      />
-                      {logoPreview ? (
-                        <div className="relative w-full h-full flex flex-col items-center justify-center">
-                          <div className="relative group/preview">
-                            <img
-                              src={logoPreview}
-                              alt="Logo Preview"
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shadow-lg ring-2 ring-secondary/20"
-                            />
-                            <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-white text-[10px] font-medium">
-                                Preview
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, logo: null }));
-                              setLogoPreview(null);
-                              const fileInput = document.getElementById(
-                                "company-logo-upload",
-                              ) as HTMLInputElement;
-                              if (fileInput) fileInput.value = "";
-                            }}
-                            className="mt-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-                            title="Remove image"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      ) : (
-                        <label
-                          htmlFor="company-logo-upload"
-                          className="flex flex-col items-center justify-center cursor-pointer w-full h-full transition-all duration-200 hover:scale-102 py-4"
-                        >
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 flex items-center justify-center mb-1.5 transition-all duration-200 group-hover:shadow-md">
-                            <svg
-                              className="w-5 h-5 sm:w-6 sm:h-6 text-secondary"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
-                          <span className="text-[11px] sm:text-xs font-semibold text-gray-600">
-                            Upload Logo
-                          </span>
-                          <span className="text-[10px] text-gray-400 mt-0.5">
-                            PNG, JPG up to 5MB
-                          </span>
-                        </label>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2 text-center">
-                      Square image recommended (1:1 ratio)
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col h-full">
-                  <div className="flex-1">
-                    <DragDropImageUpload
-                      label="Cover Image"
-                      value={formData.cover_image}
-                      onChange={(file) =>
-                        setFormData((prev) => ({ ...prev, cover_image: file }))
-                      }
-                      previewUrl={coverPreview}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2 text-center">
-                    Wide banner recommended (16:9 ratio)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Status Settings */}
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-gradient-to-b from-secondary to-secondary-light"></div>
-                Status Settings
-              </h4>
-              <div className="bg-gray-50/50 rounded-xl p-5 border border-gray-100">
-                <div className="flex flex-wrap items-center gap-8">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          is_active: e.target.checked,
-                        }))
-                      }
-                      className="h-4 w-4 text-secondary rounded border-gray-300 focus:ring-secondary focus:ring-2 cursor-pointer"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-secondary transition-colors">
-                        Active
-                      </span>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Company is visible to customers
-                      </p>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_featured}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          is_featured: e.target.checked,
-                        }))
-                      }
-                      className="h-4 w-4 text-secondary rounded border-gray-300 focus:ring-secondary focus:ring-2 cursor-pointer"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-secondary transition-colors">
-                        Featured
-                      </span>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Highlighted on homepage and listings
-                      </p>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={formData.supports_table_service}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          supports_table_service: e.target.checked,
-                        }))
-                      }
-                      className="h-4 w-4 text-secondary rounded border-gray-300 focus:ring-secondary focus:ring-2 cursor-pointer"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-secondary transition-colors">
-                        OnSpot Service
-                      </span>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Enable table service for this company
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        ),
-      },
-    ],
-    [
-      formData,
-      formErrors,
-      categories,
-      subcategories,
-      headCompanies,
-      logoPreview,
-      coverPreview,
-    ],
-  );
 
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
@@ -1600,6 +1274,8 @@ export default function CompanyManagement() {
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           steps={steps}
+          currentStep={currentStep}
+          onStepChange={setCurrentStep}
           onSubmit={handleSubmit}
           submitting={submitting}
           maxWidth="2xl"
