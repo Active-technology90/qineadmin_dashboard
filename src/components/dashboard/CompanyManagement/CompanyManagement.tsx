@@ -181,21 +181,7 @@ export default function CompanyManagement() {
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
 
-  // Helper functions for marketing agent company tracking
-  const getMarketingCompanyIds = useCallback(() => {
-    if (!user?.id || !isMarketing) return [];
-    const stored = localStorage.getItem(`marketing_agent_companies_${user.id}`);
-    return stored ? JSON.parse(stored) : [];
-  }, [user?.id, isMarketing]);
 
-  const saveMarketingCompanyId = useCallback((companyId: number) => {
-    if (!user?.id || !isMarketing) return;
-    const ids = getMarketingCompanyIds();
-    if (!ids.includes(companyId)) {
-      ids.push(companyId);
-      localStorage.setItem(`marketing_agent_companies_${user.id}`, JSON.stringify(ids));
-    }
-  }, [user?.id, isMarketing, getMarketingCompanyIds]);
 
   // Filtered companies (super admin or marketing agent)
   const filteredCompanies = useMemo(() => {
@@ -459,26 +445,13 @@ export default function CompanyManagement() {
           setCoverPreview(companyListItem.cover_image);
       } else if (isSuperAdmin || isMarketing) {
         let allCompanies: CompanyListItem[] = [];
-        let nextUrl: string | null = "/companies/?page=1&ordering=name";
+        const extraParam = isMarketing ? "&my_registrations=true" : "";
+        let nextUrl: string | null = `/companies/?page=1&ordering=name${extraParam}`;
         while (nextUrl) {
           const res = await api.get(nextUrl);
           const data = res.data as PaginatedResponse<CompanyListItem>;
           allCompanies = [...allCompanies, ...data.results];
           nextUrl = data.next;
-        }
-
-        // If marketing agent, filter companies they registered using localStorage
-        if (isMarketing && user?.id) {
-          // Get stored company IDs from localStorage
-          const storedIds = getMarketingCompanyIds();
-
-          // Filter using localStorage ONLY
-          allCompanies = allCompanies.filter((company) => {
-            if (storedIds.includes(company.id)) {
-              return true;
-            }
-            return false;
-          });
         }
 
         setCompanies(allCompanies);
@@ -875,11 +848,7 @@ export default function CompanyManagement() {
       if (editingSlug) {
         await updateCompany(editingSlug, formPayload);
       } else {
-        const response = await createCompany(formPayload);
-        // If marketing agent, save the company ID to localStorage
-        if (isMarketing && user?.id && response.data?.id) {
-          saveMarketingCompanyId(response.data.id);
-        }
+        await createCompany(formPayload);
       }
 
       showToast(
