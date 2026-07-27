@@ -168,6 +168,9 @@ export default function CompanyManagement() {
     supports_table_service: false,
     logo: null,
     cover_image: null,
+      tin_number: "",
+  vat_registration_number: "",
+  tax_type: "none",
   });
   const [originalFormData, setOriginalFormData] =
     useState<CompanyFormData | null>(null);
@@ -331,14 +334,28 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => comp.address || "-",
       },
-
-      // {
-      //   key: "head_company",
-      //   header: "Head Company",
-      //   sortable: true,
-      //   render: (comp) => comp.head_company_detail?.name || "-",
-      // },
-
+    //  TIN Number column
+    {
+      key: "tin_number",
+      header: "TIN",
+      sortable: true,
+      render: (comp) => comp.tin_number || "-",
+    },
+    // ✅ ADDED: Tax Type column
+    {
+      key: "tax_type",
+      header: "Tax Type",
+      sortable: true,
+      render: (comp) => {
+        const taxLabels: Record<string, string> = {
+          vat: "VAT",
+          turnover: "Turnover",
+          withholding: "Withholding",
+          none: "None",
+        };
+        return taxLabels[comp.tax_type || "none"] || "-";
+      },
+    },
       {
         key: "is_active",
         header: "Is Active",
@@ -388,32 +405,39 @@ export default function CompanyManagement() {
       setError(null);
       if (!isSuperAdmin && !isMarketing && currentCompany?.slug) {
         const companyRes = await getCompanyDetail(currentCompany.slug);
+        console.log(
+          "company",companyRes
+        )
         const company = companyRes.data as Company;
-        const companyListItem: CompanyListItem = {
-          id: company.id,
-          name: company.name,
-          name_am: company.name_am || "",
-          slug: company.slug,
-          logo: company.logo,
-          cover_image: company.cover_image,
-          head_company: company.head_company ?? null,
-          head_company_detail: company.head_company_detail ?? null,
-          category: company.category,
-          category_name: company.category_name,
-          sub_category: company.sub_category,
-          sub_category_name: company.sub_category_name,
-          business_type: company.business_type,
-          minimum_order_total: company.minimum_order_total || "0.00",
-          latitude: company.latitude || "",
-          longitude: company.longitude || "",
-          delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
-          is_active: company.is_active,
-          is_featured: company.is_featured,
-          supports_table_service: company.supports_table_service,
-          description: company.description || "",
-          address: company.address || "",
-          address_am: (company as any).address_am || "", // may not be in the typed response
-        };
+const companyListItem: CompanyListItem = {
+  id: company.id,
+  name: company.name,
+  name_am: company.name_am || "",
+  slug: company.slug,
+  logo: company.logo,
+  cover_image: company.cover_image,
+  head_company: company.head_company ?? null,
+  head_company_detail: company.head_company_detail ?? null,
+  category: company.category,
+  category_name: company.category_name,
+  sub_category: company.sub_category,
+  sub_category_name: company.sub_category_name,
+  business_type: company.business_type,
+  minimum_order_total: company.minimum_order_total || "0.00",
+  latitude: company.latitude || "",
+  longitude: company.longitude || "",
+  delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
+  is_active: company.is_active,
+  is_featured: company.is_featured,
+  supports_table_service: company.supports_table_service,
+  description: company.description || "",
+  address: company.address || "",
+  address_am: (company as any).address_am || "",
+  tin_number: (company as any).tin_number || "",
+  vat_registration_number: (company as any).vat_registration_number || "",
+  tax_type: (company as any).tax_type || "none",
+  license: (company as any).license || null,
+};
         setCompanies([companyListItem]);
         // Load form data for inline edit
         setEditingSlug(companyListItem.slug);
@@ -438,7 +462,9 @@ export default function CompanyManagement() {
           supports_table_service: companyListItem.supports_table_service,
           logo: null,
           cover_image: null,
-
+          tin_number: companyListItem.tin_number || "",
+          vat_registration_number: companyListItem.vat_registration_number || "",
+          tax_type: companyListItem.tax_type || "none",
         });
         if (companyListItem.logo) setLogoPreview(companyListItem.logo);
         if (companyListItem.cover_image)
@@ -454,10 +480,30 @@ export default function CompanyManagement() {
           nextUrl = data.next;
         }
 
-        setCompanies(allCompanies);
+        // 🟢 Fetch detail for each company to get TIN fields (list endpoint does not include them)
+        const detailedCompanies = await Promise.all(
+          allCompanies.map(async (company) => {
+            try {
+              const detailRes = await getCompanyDetail(company.slug);
+              const detail = detailRes.data as any;
+              return {
+                ...company,
+                tin_number: detail.tin_number || "",
+                vat_registration_number: detail.vat_registration_number || "",
+                tax_type: detail.tax_type || "none",
+                license: detail.license || null,
+              };
+            } catch (err) {
+              // If detail fails, keep the list data (without TIN fields)
+              return company;
+            }
+          })
+        );
+
+        setCompanies(detailedCompanies);
         // Auto-select first for modal form
-        if (allCompanies.length > 0) {
-          const first = allCompanies[0];
+        if (detailedCompanies.length > 0) {
+          const first = detailedCompanies[0];
           setEditingSlug(first.slug);
           const newFormData = {
             name: first.name,
@@ -480,6 +526,9 @@ export default function CompanyManagement() {
             supports_table_service: first.supports_table_service,
             logo: null,
             cover_image: null,
+            tin_number: first.tin_number || "",
+            vat_registration_number: first.vat_registration_number || "",
+            tax_type: first.tax_type || "none",
           };
           setFormData(newFormData);
           setOriginalFormData({
@@ -591,41 +640,42 @@ export default function CompanyManagement() {
     return Object.keys(errors).length === 0;
   };
 
-  const validateDocuments = () => {
-    const errors: Record<string, string> = {};
-    // Vendor document validations
-    if (formData.registration_type === "vendor") {
-      if (!formData.license_number?.trim()) {
-        errors.license_number = "License Number is required";
-      }
-      if (!formData.tin_number?.trim()) {
-        errors.tin_number = "TIN Number is required";
-      }
-      if (!formData.license_document) {
-        errors.license_document = "License Document is required";
-      }
-      if (!formData.tin_document) {
-        errors.tin_document = "TIN Document is required";
-      }
+const validateDocuments = () => {
+  const errors: Record<string, string> = {};
+  // Vendor document validations
+  if (formData.registration_type === "vendor") {
+    if (!formData.tin_number?.trim()) {
+      errors.tin_number = "TIN Number is required";
     }
-    // Service Provider document validations
-    if (formData.registration_type === "service_provider") {
-      if (!formData.national_id_document) {
-        errors.national_id_document = "National ID Document is required";
-      }
+    //  TIN format validation
+    if (formData.tin_number && !/^\d{10}$/.test(formData.tin_number)) {
+      errors.tin_number = "TIN must be exactly 10 digits";
     }
-    // Delivery Partner document validations
-    if (formData.registration_type === "delivery_partner") {
-      if (!formData.driver_license_document) {
-        errors.driver_license_document = "Driver License Document is required";
-      }
-      if (!formData.vehicle_document) {
-        errors.vehicle_document = "Vehicle Document is required";
-      }
+    if (!formData.license_document) {
+      errors.license_document = "License Document is required";
     }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    if (!formData.tin_document) {
+      errors.tin_document = "TIN Document is required";
+    }
+  }
+  // Service Provider document validations
+  if (formData.registration_type === "service_provider") {
+    if (!formData.national_id_document) {
+      errors.national_id_document = "National ID Document is required";
+    }
+  }
+  // Delivery Partner document validations
+  if (formData.registration_type === "delivery_partner") {
+    if (!formData.driver_license_document) {
+      errors.driver_license_document = "Driver License Document is required";
+    }
+    if (!formData.vehicle_document) {
+      errors.vehicle_document = "Vehicle Document is required";
+    }
+  }
+  setFormErrors(errors);
+  return Object.keys(errors).length === 0;
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -730,6 +780,14 @@ export default function CompanyManagement() {
         )
           return true;
 
+        // ✅ TIN Fields
+        if (cleanString(formData.tin_number) !== cleanString(originalFormData.tin_number))
+          return true;
+        if (cleanString(formData.vat_registration_number) !== cleanString(originalFormData.vat_registration_number))
+          return true;
+        if (cleanString(formData.tax_type) !== cleanString(originalFormData.tax_type))
+          return true;
+
         // File Uploads
         if (formData.logo !== null) return true;
         if (formData.cover_image !== null) return true;
@@ -811,14 +869,28 @@ export default function CompanyManagement() {
         formData.delivery_fee_per_km || "0.00",
       );
 
-      formPayload.append("is_active", String(formData.is_active));
+formPayload.append("is_active", String(formData.is_active));
 
-      formPayload.append("is_featured", String(formData.is_featured));
+formPayload.append("is_featured", String(formData.is_featured));
 
-      formPayload.append(
-        "supports_table_service",
-        String(formData.supports_table_service),
-      );
+formPayload.append(
+  "supports_table_service",
+  String(formData.supports_table_service),
+);
+
+//  TIN FIELDS - ALWAYS SEND (even if empty)
+formPayload.append("tin_number", formData.tin_number || "");
+formPayload.append("vat_registration_number", formData.vat_registration_number || "");
+formPayload.append("tax_type", formData.tax_type || "none");
+
+// Handle license document (file) - NOT the text license_number
+if (formData.license_document instanceof File) {
+  formPayload.append("license", formData.license_document);
+} else if (formData.license_document === null && originalFormData?.license_document) {
+  // User removed the file
+  formPayload.append("license", "");
+}
+// If no file and not removed, don't append anything (backend may keep existing)
 
       // Handle logo: only send if user uploaded a new file OR intentionally removed it
       // Do NOT send anything if the logo hasn't changed (formData.logo is null and original had image but user didn't click remove)
@@ -1027,6 +1099,9 @@ export default function CompanyManagement() {
       supports_table_service: false,
       logo: null,
       cover_image: null,
+          tin_number: "",
+    vat_registration_number: "",
+    tax_type: "none",
     });
     setOriginalFormData(null);
     setLogoPreview(null);
@@ -1062,6 +1137,10 @@ export default function CompanyManagement() {
         supports_table_service: company.supports_table_service,
         logo: null,
         cover_image: null,
+      // TIN fields for edit
+      tin_number: company.tin_number || "",
+      vat_registration_number: company.vat_registration_number || "",
+      tax_type: company.tax_type || "none",
       };
       setFormData(newFormData);
       // Save original data for change detection (including original image URLs)

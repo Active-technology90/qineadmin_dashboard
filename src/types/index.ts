@@ -109,6 +109,7 @@ export interface Company {
   contact_phone?: string;
   contact_email?: string;
   address?: string;
+  address_am?: string; 
   is_active: boolean;
   is_featured: boolean;
   supports_table_service: boolean;
@@ -124,6 +125,7 @@ export interface Company {
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
+  license?: string | null;
   registered_by?: number;
   registered_by_username?: string;
 }
@@ -143,6 +145,7 @@ export interface CompanyListItem {
   sub_category_name: string;
   business_type: string;
   address?: string;
+  address_am?: string;
   minimum_order_total?: string;
   latitude?: string;
   longitude?: string;
@@ -154,8 +157,10 @@ export interface CompanyListItem {
   is_featured: boolean;
   supports_table_service: boolean;
   description?: string;
-  
-  address_am?: string;
+  tin_number?: string;
+  vat_registration_number?: string;
+  tax_type?: string;
+  license?: string | null;
   registered_by?: number;
   registered_by_username?: string;
 }
