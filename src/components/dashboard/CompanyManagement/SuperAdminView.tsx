@@ -168,8 +168,35 @@ export default function SuperAdminView({
     </span>
   );
 
-  return (
-    <div className="space-y-4 sm:space-y-5">
+return (
+  <div className="space-y-4 sm:space-y-5">
+{!loading && paginatedItems.length > 0 && (
+  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Total Companies</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">{paginatedItems.length}</p>
+    </div>
+    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl p-4 border border-emerald-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Active</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {paginatedItems.filter(c => c.is_active).length}
+      </p>
+    </div>
+    <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Featured</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {paginatedItems.filter(c => c.is_featured).length}
+      </p>
+    </div>
+    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Categories</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {new Set(paginatedItems.map(c => c.category_name)).size}
+      </p>
+    </div>
+  </div>
+)}
+
       {/* ============ DESKTOP / TABLET ============ */}
       <div className="hidden md:block">
         <DataTable

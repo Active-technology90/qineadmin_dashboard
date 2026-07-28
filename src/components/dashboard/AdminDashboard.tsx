@@ -504,6 +504,13 @@ export default function AdminDashboard() {
                 onClick={() => navigate("companies")}
               />
               <SidebarItem
+                icon={<CreditCard className="h-5 w-5" />}
+                label="Billing"
+                active={activeTab === "billing"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("billing")}
+              />
+              <SidebarItem
                 icon={<User className="h-5 w-5" />}
                 label="Profile"
                 active={activeTab === "profile"}
@@ -763,22 +770,23 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-            {isMarketing && (
-              <div className="hidden sm:block">
-                <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 rounded-full border border-emerald-200 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
-                    Role:
-                  </span>
-                  <span className="text-sm font-black bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    Qine Marketing Agent
-                  </span>
-                </div>
-              </div>
-            )}
-            {/* Company name – show for non‑super‑admin (including viewer) */}
-            {company && !isSuperAdmin && (
-              <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
+{isMarketing && (
+  <div className="hidden sm:block">
+    <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2 rounded-full border border-orange-200 shadow-sm">
+      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+      <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+        Role:
+      </span>
+      <span className="text-sm font-black bg-gradient-to-r from-orange-700 to-amber-700 bg-clip-text text-transparent">
+         Elilita Marketing Agent
+      </span>
+    </div>
+  </div>
+)}
+{/* Company name – show for non‑super‑admin and non‑marketing users */}
+{company && !isSuperAdmin && !isMarketing && (
+  <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
+
                 <div className="relative flex-shrink-0 group">
                   {/* Outer glow effect */}
                   <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-secondary-dark via-secondary to-secondary-dark opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>

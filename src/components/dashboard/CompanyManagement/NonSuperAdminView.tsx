@@ -148,6 +148,8 @@ interface NonSuperAdminViewProps {
   subcategories: SubCategory[];
   logoPreview: string | null;
   coverPreview: string | null;
+    onLogoFileChange?: (file: File | null) => void;   
+  onCoverFileChange?: (file: File | null) => void;
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
@@ -168,6 +170,8 @@ export default function NonSuperAdminView({
   subcategories,
   logoPreview,
   coverPreview,
+  onLogoFileChange,   
+  onCoverFileChange, 
   isEditingActive,
   submitting,
   editingSlug,
@@ -358,6 +362,8 @@ export default function NonSuperAdminView({
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            onLogoFileChange={onLogoFileChange}   
+            onCoverFileChange={onCoverFileChange}
             isEditingActive={isEditingActive}
             submitting={submitting}
             editingSlug={editingSlug}

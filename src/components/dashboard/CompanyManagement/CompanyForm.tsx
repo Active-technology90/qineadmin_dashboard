@@ -59,6 +59,8 @@ interface CompanyFormProps {
   subcategories: SubCategory[];
   logoPreview: string | null;
   coverPreview: string | null;
+    onLogoFileChange?: (file: File | null) => void;    
+  onCoverFileChange?: (file: File | null) => void;  
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
@@ -76,6 +78,8 @@ export default function CompanyForm({
   subcategories,
   logoPreview,
   coverPreview,
+   onLogoFileChange,   
+  onCoverFileChange,  
   isEditingActive,
   headCompanyName,
   submitting,
@@ -410,7 +414,36 @@ export default function CompanyForm({
               rows={3}
               className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
             />
-          </div>      </div>
+          </div>
+
+          {/* Active & Featured Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Is Active</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
+              </label>
+            </div>
+          </div>
+        </div>
 
       {/* Additional fields for Service Provider */}
       {formData.registration_type === "service_provider" && (
@@ -671,6 +704,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, logo: file }));
+                          if (onLogoFileChange) onLogoFileChange(file); 
                   }
                 }}
               />
@@ -683,6 +717,7 @@ export default function CompanyForm({
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, logo: null }));
+                      if (onLogoFileChange) onLogoFileChange(null);  
                       const fileInput = document.getElementById("logo-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -720,6 +755,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, cover_image: file }));
+                          if (onCoverFileChange) onCoverFileChange(file);   
                   }
                 }}
               />
@@ -732,6 +768,7 @@ export default function CompanyForm({
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, cover_image: null }));
+                          if (onCoverFileChange) onCoverFileChange(null);  
                       const fileInput = document.getElementById("cover-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}

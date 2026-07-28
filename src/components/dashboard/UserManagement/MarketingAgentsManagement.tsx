@@ -11,7 +11,10 @@ import {
   TrendingUp,
   CheckCircle,
   Filter,
+   User,
+   ZoomIn,
 } from "lucide-react";
+import AgentPersonalInfoModal from "./AgentPersonalInfoModal";
 import { getAdminMarketingAgents } from "../../../services/api";
 import MarketingOverview from "../overview/MarketingOverview";
 import { SearchInput } from "../../ui/SearchInput";
@@ -86,6 +89,8 @@ export default function MarketingAgentsManagement() {
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [selectedAgentName, setSelectedAgentName] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+const [personalModalAgent, setPersonalModalAgent] = useState<MarketingAgent | null>(null);
+const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null);   
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -398,23 +403,41 @@ export default function MarketingAgentsManagement() {
                     {/* Agent Info */}
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
-                        {agent.profile_image ? (
+{agent.profile_image ? (
+  <div className="relative flex-shrink-0">
                           <img
                             src={agent.profile_image}
                             alt={agent.username}
-                            className="h-10 w-10 rounded-full object-cover border-2 border-secondary/20 shadow-sm"
-                          />
+      className="h-10 w-10 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
+      onClick={() => setZoomImageAgent(agent)}
+    />
+    <div
+      className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
+      onClick={() => setZoomImageAgent(agent)}
+    >
+      <ZoomIn className="h-3 w-3" />
+    </div>
+  </div>
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary-dark flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-secondary/10 flex-shrink-0">
                             {getInitials(agent.first_name, agent.last_name, agent.username)}
                           </div>
                         )}
-                        <div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
                           <p className="font-semibold text-gray-900 text-sm leading-tight">
                             {agent.first_name && agent.last_name
                               ? `${agent.first_name} ${agent.last_name}`
                               : agent.username}
                           </p>
+                            <button
+                              onClick={() => setPersonalModalAgent(agent)}
+                              className="p-1.5 rounded-full hover:bg-gray-200/50 transition-colors"
+                              title="View Profile"
+                            >
+                              <User className="h-4 w-4 text-gray-500 hover:text-secondary" />
+                            </button>
+                          </div>
                           <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
                         </div>
                       </div>
@@ -532,23 +555,41 @@ export default function MarketingAgentsManagement() {
               >
                 {/* Header */}
                 <div className="flex items-start gap-3">
-                  {agent.profile_image ? (
+{agent.profile_image ? (
+  <div className="relative flex-shrink-0">
                     <img
                       src={agent.profile_image}
                       alt={agent.username}
-                      className="h-12 w-12 rounded-full object-cover border-2 border-secondary/20 shadow-sm"
-                    />
+      className="h-12 w-12 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
+      onClick={() => setZoomImageAgent(agent)}
+    />
+    <div
+      className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
+      onClick={() => setZoomImageAgent(agent)}
+    >
+      <ZoomIn className="h-3.5 w-3.5" />
+    </div>
+  </div>
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-secondary to-secondary-dark flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-secondary/10 flex-shrink-0">
                       {getInitials(agent.first_name, agent.last_name, agent.username)}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900 text-sm truncate">
                       {agent.first_name && agent.last_name
                         ? `${agent.first_name} ${agent.last_name}`
                         : agent.username}
                     </p>
+                      <button
+                        onClick={() => setPersonalModalAgent(agent)}
+                        className="p-1 rounded-full hover:bg-gray-200/50 transition-colors flex-shrink-0 ml-1"
+                        title="View Profile"
+                      >
+                        <User className="h-3.5 w-3.5 text-gray-500 hover:text-secondary" />
+                      </button>
+                    </div>
                     <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
                   </div>
                   <span className={`
@@ -639,12 +680,12 @@ export default function MarketingAgentsManagement() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-hidden">
           <div className="bg-white w-full max-w-6xl h-[90dvh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-50 zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-secondary px-6 py-4 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-secondary/30 px-6 py-4 flex items-center justify-between z-10 border-b border-secondary/20">
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-white">
+                <h2 className="text-base sm:text-lg font-bold text-secondary">
                   Auditing Agent: {selectedAgentName}
                 </h2>
-                <p className="text-purple-100 text-xs mt-0.5">
+                <p className="text-secondary/60 text-xs mt-0.5">
                   Detailed registration activity and metrics for agent #{selectedAgentId}
                 </p>
               </div>
@@ -653,7 +694,7 @@ export default function MarketingAgentsManagement() {
                   setSelectedAgentId(null);
                   setSelectedAgentName("");
                 }}
-                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                className="p-1.5 rounded-full bg-secondary/10 hover:bg-secondary/20 text-secondary transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -662,6 +703,45 @@ export default function MarketingAgentsManagement() {
             {/* Scrollable Audit Report content */}
             <div className="flex-1 overflow-y-auto bg-gray-50/50">
               <MarketingOverview agentId={selectedAgentId} />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Personal Info Modal - MOVED OUTSIDE the Audit modal */}
+      {personalModalAgent && (
+        <AgentPersonalInfoModal
+          agent={personalModalAgent}
+          onClose={() => setPersonalModalAgent(null)}
+        />
+      )}
+
+      {/* Image Zoom Modal */}
+      {zoomImageAgent && zoomImageAgent.profile_image && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setZoomImageAgent(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={zoomImageAgent.profile_image}
+              alt={zoomImageAgent.username}
+              className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border-4 border-white/20"
+            />
+            <button
+              onClick={() => setZoomImageAgent(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="absolute bottom-6 left-0 right-0 text-center text-white/80 text-sm font-medium bg-black/30 py-2 px-4 mx-auto max-w-md rounded-full backdrop-blur-sm">
+              {zoomImageAgent.first_name && zoomImageAgent.last_name
+                ? `${zoomImageAgent.first_name} ${zoomImageAgent.last_name}`
+                : zoomImageAgent.username}
+              <span className="mx-2 text-white/40">•</span>
+              @{zoomImageAgent.username}
             </div>
           </div>
         </div>
