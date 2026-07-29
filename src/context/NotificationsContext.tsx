@@ -1,6 +1,6 @@
 // src/context/NotificationsContext.tsx
 // Shared notification state for the dashboard: auto-registers for web push on
-// start, polls the in-app center, surfaces foreground pushes as toasts, and
+// login, polls the in-app center, surfaces foreground pushes as toasts, and
 // exposes unread count + list to the header bell and the notifications page.
 import React, {
   createContext,
@@ -17,9 +17,13 @@ import {
   markNotificationsRead,
 } from "../services/api";
 import {
-  enablePushNotifications,
   listenForegroundMessages,
+  registerPushForSession,
 } from "../services/notifications";
+import { useAuth } from "./authContext";
+import {
+  dispatchPushNavigation,
+} from "../utils/notificationNavigation";
 
 export interface AppNotification {
   id: number;
@@ -63,11 +67,12 @@ function currentPushState(): PushState {
 }
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
   const [pushState, setPushState] = useState<PushState>(currentPushState());
-  const started = useRef(false);
+  const foregroundUnsub = useRef<() => void>(() => {});
 
   const refetch = useCallback(async () => {
     if (!localStorage.getItem("access")) return;
@@ -103,45 +108,72 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const enablePush = useCallback(async () => {
-    try {
-      await enablePushNotifications("admin");
-    } catch {
-      /* denied / unsupported — in-app center still works */
-    } finally {
-      setPushState(currentPushState());
-    }
+    await registerPushForSession("admin");
+    setPushState(currentPushState());
+  }, []);
+
+  // Background notification click → service worker postMessage → navigate dashboard.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "PUSH_NOTIFICATION_CLICK") return;
+      dispatchPushNavigation(event.data.payload ?? {});
+    };
+
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
   }, []);
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    if (!localStorage.getItem("access")) return;
+    if (isLoading || !isAuthenticated) return;
 
     refetch();
 
-    // Auto-ask for notification permission on start (and register the device).
-    if (pushState === "granted" || pushState === "default") {
-      enablePush();
-    }
+    // Register this browser for background + foreground FCM on every login/session.
+    registerPushForSession("admin").finally(() => {
+      setPushState(currentPushState());
+    });
 
-    // Foreground pushes → toast + refresh the list.
-    let unsub: () => void = () => {};
+    foregroundUnsub.current();
     listenForegroundMessages((payload) => {
       const title = payload.notification?.title ?? "Notification";
       const body = payload.notification?.body ?? "";
-      toast.success(body ? `${title} — ${body}` : title, { duration: 6000 });
+      const data = (payload.data ?? {}) as Record<string, unknown>;
+
+      toast.success(
+        (t) => (
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              dispatchPushNavigation({
+                pushTab: data.type === "vendor_order" ? "auto" : "notifications",
+                pushType: typeof data.type === "string" ? data.type : null,
+                vendor_order_id:
+                  data.vendor_order_id != null ? String(data.vendor_order_id) : null,
+              });
+            }}
+            className="text-left w-full"
+          >
+            <span className="font-semibold block">{title}</span>
+            {body ? <span className="text-sm opacity-90">{body}</span> : null}
+            <span className="text-xs opacity-70 mt-1 block">Tap to open</span>
+          </button>
+        ),
+        { duration: 8000 },
+      );
       refetch();
-    }).then((u) => {
-      unsub = u;
+    }).then((unsub) => {
+      foregroundUnsub.current = unsub;
     });
 
     const interval = setInterval(refetch, POLL_MS);
     return () => {
       clearInterval(interval);
-      unsub();
+      foregroundUnsub.current();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated, isLoading, refetch]);
 
   return (
     <Ctx.Provider

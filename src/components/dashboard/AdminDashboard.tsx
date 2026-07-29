@@ -44,6 +44,13 @@ import AdManagement from "./AdManagement";
 import SettingsPage from "./settings/Settings";
 import NotificationsPage from "./notifications/NotificationsPage";
 import NotificationBell from "./notifications/NotificationBell";
+import {
+  clearPushParamsFromUrl,
+  dispatchPushNavigation,
+  readPushParamsFromUrl,
+  resolvePushTab,
+  type PushNavigationPayload,
+} from "../../utils/notificationNavigation";
 import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
 import MarketingOverview from "./overview/MarketingOverview";
@@ -296,6 +303,29 @@ export default function AdminDashboard() {
       navigate(tab as Tab);
     }
   };
+
+  const applyPushNavigation = (payload: PushNavigationPayload) => {
+    const tab = resolvePushTab(payload, isSuperAdmin);
+    navigate(tab);
+    clearPushParamsFromUrl();
+  };
+
+  // Cold start: user clicked OS notification while browser was closed.
+  useEffect(() => {
+    const payload = readPushParamsFromUrl();
+    if (payload) applyPushNavigation(payload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuperAdmin]);
+
+  // Warm start: dashboard already open, service worker sent postMessage.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      applyPushNavigation((event as CustomEvent<PushNavigationPayload>).detail);
+    };
+    window.addEventListener("admin-push-navigate", handler);
+    return () => window.removeEventListener("admin-push-navigate", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuperAdmin]);
 
   // Handle logout with confirmation
   const handleLogoutClick = () => {
