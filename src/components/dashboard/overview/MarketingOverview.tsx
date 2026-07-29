@@ -841,15 +841,10 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       `}</style>
 
       {/* ============================================================ */}
-      {/* HEADER - Glass with Color */}
+      {/* HEADER  */}
       {/* ============================================================ */}
       <div className="mb-8">
-        <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-secondary/20 to-purple-500/20 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-400/20 to-teal-500/20 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-pink-400/10 via-purple-400/10 to-indigo-400/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-          
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary to-purple-700 flex items-center justify-center shadow-sm shadow-secondary/30 relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary to-purple-700 rounded-2xl animate-pulse opacity-50"></div>
@@ -888,16 +883,6 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                   className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                 >
                   <List className="h-4 w-4" />
-                </button>
-              </div>
-
-              <button
-                onClick={() => fetchPerformance(true)}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl hover:border-secondary/40 hover:shadow transition-all text-sm font-semibold text-gray-600 disabled:opacity-50 active:scale-95"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           </div>

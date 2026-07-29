@@ -13,6 +13,8 @@ import {
   Filter,
    User,
    ZoomIn,
+     FileDown,
+  AlertTriangle,
 } from "lucide-react";
 import AgentPersonalInfoModal from "./AgentPersonalInfoModal";
 import { getAdminMarketingAgents } from "../../../services/api";
@@ -74,6 +76,22 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
         {icon}
       </div>
+    </div>
+  </div>
+);
+
+// ============================================================
+// Skeleton Card (for loading) - matches real stat card exactly
+// ============================================================
+const SkeletonStatCard: React.FC = () => (
+  <div className="bg-gray-200/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-200/40 animate-pulse">
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="h-3 w-20 bg-gray-300/70 rounded"></div>
+        <div className="h-8 w-16 bg-gray-300/70 rounded mt-2"></div>
+        <div className="h-3 w-24 bg-gray-300/70 rounded mt-1"></div>
+      </div>
+      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-300/70 rounded-2xl"></div>
     </div>
   </div>
 );
@@ -217,18 +235,142 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
     return phone;
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-3">
-          <svg className="animate-spin h-10 w-10 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span className="text-sm font-semibold text-gray-500">Loading agents registry...</span>
+  // ─── Loading skeleton renderer ──────────────────────────────
+  const renderSkeleton = () => (
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 font-sans bg-gray-50/50 min-h-screen animate-pulse">
+      {/* Title Header Skeleton */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="h-8 w-48 bg-gray-300/70 rounded mb-2"></div>
+          <div className="h-4 w-64 bg-gray-300/70 rounded"></div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-20 bg-gray-300/70 rounded-md"></div>
+          <div className="h-8 w-24 bg-gray-300/70 rounded-full"></div>
         </div>
       </div>
-    );
+
+      {/* Stats Skeleton */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <SkeletonStatCard key={i} />
+        ))}
+      </div>
+
+      {/* Table Controls Skeleton */}
+      <div className="flex flex-col md:flex-row gap-3 w-full items-start md:items-center">
+        <div className="w-full md:flex-1 h-10 bg-gray-300/70 rounded-xl"></div>
+        <div className="hidden md:flex flex-col sm:flex-row items-center gap-2">
+          <div className="w-48 h-10 bg-gray-300/70 rounded-xl"></div>
+          <div className="w-40 h-10 bg-gray-300/70 rounded-xl"></div>
+          <div className="w-10 h-10 bg-gray-300/70 rounded-xl"></div>
+        </div>
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gradient-to-r from-gray-50/80 to-gray-100/50 border-b border-gray-200/60">
+                {["Agent", "Contact", "Targets", "Performance", "Status", "Actions"].map((h) => (
+                  <th key={h} className="text-left py-3.5 px-5">
+                    <div className="h-4 w-16 bg-gray-300/70 rounded"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(5)].map((_, i) => (
+                <tr key={i} className="border-b border-gray-100/80">
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gray-300/70"></div>
+                      <div>
+                        <div className="h-4 w-24 bg-gray-300/70 rounded mb-1"></div>
+                        <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <div className="space-y-1">
+                      <div className="h-3 w-32 bg-gray-300/70 rounded"></div>
+                      <div className="h-3 w-24 bg-gray-300/70 rounded"></div>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <div className="flex gap-2">
+                      <div className="h-5 w-12 bg-gray-300/70 rounded"></div>
+                      <div className="h-5 w-12 bg-gray-300/70 rounded"></div>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <div className="space-y-1">
+                      <div className="h-4 w-20 bg-gray-300/70 rounded"></div>
+                      <div className="h-2 w-24 bg-gray-300/70 rounded-full"></div>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <div className="h-6 w-16 bg-gray-300/70 rounded-full"></div>
+                  </td>
+                  <td className="py-3.5 px-5 text-right">
+                    <div className="h-8 w-16 bg-gray-300/70 rounded-xl ml-auto"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Mobile skeleton */}
+        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 rounded-xl bg-gray-300/70"></div>
+                <div className="flex-1">
+                  <div className="h-4 w-24 bg-gray-300/70 rounded mb-1"></div>
+                  <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+                </div>
+                <div className="h-5 w-12 bg-gray-300/70 rounded-full"></div>
+              </div>
+              <div className="space-y-1">
+                <div className="h-3 w-32 bg-gray-300/70 rounded"></div>
+                <div className="h-3 w-24 bg-gray-300/70 rounded"></div>
+              </div>
+              <div className="flex justify-between">
+                <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+                <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <div className="h-6 w-6 bg-gray-300/70 rounded-full"></div>
+                <div className="h-6 w-6 bg-gray-300/70 rounded-full"></div>
+                <div className="h-6 w-6 bg-gray-300/70 rounded-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pagination Skeleton */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+          <div className="h-6 w-24 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-24 bg-gray-300/70 rounded-full"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+          <div className="h-8 w-8 bg-gray-300/70 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return renderSkeleton();
   }
 
   return (
@@ -245,15 +387,63 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/*  Export button */}
+          <button
+            onClick={() => {
+              const headers = ["Username", "Email", "Phone", "Companies", "Daily Target", "Weekly Target", "Status"];
+              const rows = filteredAgents.map(a => [
+                a.username,
+                a.email,
+                a.phone_number || "",
+                a.companies_count,
+                a.daily_target,
+                a.weekly_target,
+                a.is_active ? "Active" : "Inactive"
+              ]);
+              const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `agents_${new Date().toISOString().split("T")[0]}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 border border-gray-200 rounded-md transition"
+          >
+            Export
+          </button>
           <div className="bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-semibold">
             {agents.length} Agents
           </div>
         </div>
       </div>
 
-      {/* Stats Row - Very Light Colors */}
+      {/* Inactive agents alert banner */}
+      {agents.filter(a => !a.is_active).length > 0 && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+          <span className="text-amber-700">
+            <span className="font-semibold">{agents.filter(a => !a.is_active).length}</span> inactive agents found.
+            <button
+              onClick={() => { setTempCategory("inactive"); setCurrentPage(1); }}
+              className="ml-1 font-medium underline underline-offset-2 hover:text-amber-800 transition"
+            >
+              View inactive agents
+            </button>
+          </span>
+          <button
+            onClick={() => setTempCategory("all")}
+            className="ml-auto text-amber-600 hover:text-amber-800 transition"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Stats Row - Light cards (no animation) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-purple-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-100/40 transition-all hover:shadow-md">
+        <div className="bg-purple-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-100/40">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-purple-400 uppercase tracking-wider">
@@ -270,7 +460,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </div>
         </div>
 
-        <div className="bg-blue-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-blue-100/40 transition-all hover:shadow-md">
+        <div className="bg-blue-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-blue-100/40">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-blue-400 uppercase tracking-wider">
@@ -287,7 +477,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </div>
         </div>
 
-        <div className="bg-emerald-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-emerald-100/40 transition-all hover:shadow-md">
+        <div className="bg-emerald-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-emerald-100/40">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
@@ -306,7 +496,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </div>
         </div>
 
-        <div className="bg-amber-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-amber-100/40 transition-all hover:shadow-md">
+        <div className="bg-amber-50/60 rounded-2xl p-4 sm:p-5 shadow-sm border border-amber-100/40">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-amber-400 uppercase tracking-wider">
@@ -324,7 +514,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
         </div>
       </div>
 
-      {/* Table Controls - Search, Filter, Page Size */}
+      {/* Table Controls - Search, Filter, Sort (desktop) */}
       <TableControls
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -332,6 +522,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           setCurrentPage(1);
         }}
       >
+        <div className="flex flex-col md:flex-row gap-3 w-full items-start md:items-center">
         <SearchInput
           value={searchTerm}
           onChange={setSearchTerm}
@@ -341,8 +532,47 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           showMobileFilter={true}
           onMobileFilterClick={() => setFilterSheetOpen(true)}
           activeFilterCount={tempCategory !== "all" ? 1 : 0}
-          className="w-full"
-        />
+            className="w-full md:flex-1"
+          />
+          {/* Desktop-only sort & category dropdowns (hidden on mobile) */}
+          <div className="hidden md:flex flex-col sm:flex-row items-center gap-2">
+            <CustomSelect
+              value={tempSort}
+              onChange={(val) => {
+                setTempSort(val);
+                setCurrentPage(1);
+              }}
+              options={sortOptions}
+              placeholder="Sort by..."
+              className="w-full sm:w-48"
+            />
+            <CustomSelect
+              value={tempCategory}
+              onChange={(val) => {
+                setTempCategory(val);
+                setCurrentPage(1);
+              }}
+              options={categoryOptions}
+              placeholder="Category..."
+              className="w-full sm:w-40"
+            />
+            {/*  filters button (shows only when filters are active) */}
+            {(tempCategory !== "all" || tempSort !== "name|asc" || searchTerm.trim() !== "") && (
+              <button
+                onClick={() => {
+                  setTempCategory("all");
+                  setTempSort("name|asc");
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+                className="flex items-center justify-center h-10 w-10 rounded-xl bg-red-200 hover:bg-red-300 transition text-red-600 shadow-sm flex-shrink-0"
+                title="Clear all filters"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </TableControls>
 
       {/* Error State */}
@@ -423,23 +653,23 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                             {getInitials(agent.first_name, agent.last_name, agent.username)}
                           </div>
                         )}
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                          <p className="font-semibold text-gray-900 text-sm leading-tight">
-                            {agent.first_name && agent.last_name
-                              ? `${agent.first_name} ${agent.last_name}`
-                              : agent.username}
-                          </p>
-                            <button
-                              onClick={() => setPersonalModalAgent(agent)}
-                              className="p-1.5 rounded-full hover:bg-gray-200/50 transition-colors"
-                              title="View Profile"
-                            >
-                              <User className="h-4 w-4 text-gray-500 hover:text-secondary" />
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
-                        </div>
+<div className="flex-1">
+  <div className="flex items-center gap-0">
+    <p className="font-semibold text-gray-900 text-sm leading-tight truncate max-w-[120px]">
+      {agent.first_name && agent.last_name
+        ? `${agent.first_name} ${agent.last_name}`
+        : agent.username}
+    </p>
+<button
+  onClick={() => setPersonalModalAgent(agent)}
+  className="p-1.5 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+  title="View Profile"
+>
+  <User className="h-4 w-4 text-secondary group-hover:text-secondary-dark transition-colors" />
+</button>
+  </div>
+  <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
+</div>
                       </div>
                     </td>
 
@@ -479,23 +709,49 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
 
                     {/* Performance */}
                     <td className="py-3.5 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <Building2 className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm font-bold text-gray-800">
-                            {agent.companies_count}
-                          </span>
-                          <span className="text-[10px] text-gray-400">companies</span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="h-4 w-4 text-blue-500" />
+                            <span className="text-sm font-bold text-gray-800">
+                              {agent.companies_count}
+                            </span>
+                            <span className="text-[10px] text-gray-400">companies</span>
+                          </div>
+                          <div className="h-6 w-px bg-gray-200" />
+                          <div className="flex items-center gap-1.5">
+                            <TrendingUp className="h-4 w-4 text-emerald-500" />
+                            <span className="text-sm font-medium text-gray-600">
+                              {agent.daily_target > 0
+                                ? `${Math.round((agent.companies_count / (agent.daily_target * 7)) * 100)}%`
+                                : '—'}
+                            </span>
+                            <span className="text-[10px] text-gray-400">of weekly</span>
+                          </div>
                         </div>
-                        <div className="h-6 w-px bg-gray-200" />
-                        <div className="flex items-center gap-1.5">
-                          <TrendingUp className="h-4 w-4 text-emerald-500" />
-                          <span className="text-sm font-medium text-gray-600">
+                        {/*  Progress bar */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                agent.daily_target > 0
+                                  ? (agent.companies_count / (agent.daily_target * 7)) >= 1
+                                    ? "bg-emerald-500"
+                                    : (agent.companies_count / (agent.daily_target * 7)) >= 0.5
+                                    ? "bg-amber-500"
+                                    : "bg-red-400"
+                                  : "bg-gray-300"
+                              }`}
+                              style={{
+                                width: `${Math.min(100, agent.daily_target > 0 ? (agent.companies_count / (agent.daily_target * 7)) * 100 : 0)}%`
+                              }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-semibold text-gray-500 min-w-[32px] text-right">
                             {agent.daily_target > 0
-                              ? `${Math.round((agent.companies_count / (agent.daily_target * 7)) * 100)}%`
+                              ? `${Math.min(100, Math.round((agent.companies_count / (agent.daily_target * 7)) * 100))}%`
                               : '—'}
                           </span>
-                          <span className="text-[10px] text-gray-400">of weekly</span>
                         </div>
                       </div>
                     </td>
@@ -575,23 +831,23 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                       {getInitials(agent.first_name, agent.last_name, agent.username)}
                     </div>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
-                      {agent.first_name && agent.last_name
-                        ? `${agent.first_name} ${agent.last_name}`
-                        : agent.username}
-                    </p>
-                      <button
-                        onClick={() => setPersonalModalAgent(agent)}
-                        className="p-1 rounded-full hover:bg-gray-200/50 transition-colors flex-shrink-0 ml-1"
-                        title="View Profile"
-                      >
-                        <User className="h-3.5 w-3.5 text-gray-500 hover:text-secondary" />
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
-                  </div>
+<div className="min-w-0 flex-1">
+  <div className="flex items-center gap-0">
+    <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">
+      {agent.first_name && agent.last_name
+        ? `${agent.first_name} ${agent.last_name}`
+        : agent.username}
+    </p>
+<button
+  onClick={() => setPersonalModalAgent(agent)}
+  className="p-1 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+  title="View Profile"
+>
+  <User className="h-3.5 w-3.5 text-secondary group-hover:text-secondary-dark transition-colors" />
+</button>
+  </div>
+  <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
+</div>
                   <span className={`
                     shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold
                     ${agent.is_active

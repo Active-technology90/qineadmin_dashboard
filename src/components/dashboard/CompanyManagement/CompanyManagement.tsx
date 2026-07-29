@@ -71,6 +71,86 @@ const getPrimaryMembership = (memberships: any[] | undefined) => {
   return best;
 };
 
+// ─── Skeleton Components ──────────────────────────────────
+const SkeletonRow: React.FC = () => (
+  <tr className="border-b border-gray-100/80 animate-pulse">
+    <td className="py-3.5 px-5"><div className="h-4 w-6 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-10 w-10 rounded-full bg-gray-300/70"></div></td>
+    <td className="py-3.5 px-5">
+      <div className="h-4 w-24 bg-gray-300/70 rounded"></div>
+      <div className="h-3 w-16 bg-gray-300/70 rounded mt-1"></div>
+    </td>
+    <td className="py-3.5 px-5"><div className="h-4 w-20 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-16 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-16 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-12 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-20 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-20 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-4 w-20 bg-gray-300/70 rounded"></div></td>
+    <td className="py-3.5 px-5"><div className="h-6 w-16 bg-gray-300/70 rounded-full"></div></td>
+    <td className="py-3.5 px-5"><div className="h-6 w-16 bg-gray-300/70 rounded-full"></div></td>
+    <td className="py-3.5 px-5 text-right">
+      <div className="flex items-center justify-end gap-1.5">
+        <div className="h-8 w-12 bg-gray-300/70 rounded-xl"></div>
+        <div className="h-8 w-12 bg-gray-300/70 rounded-xl"></div>
+      </div>
+    </td>
+  </tr>
+);
+
+const SkeletonTable: React.FC<{ rowCount?: number }> = ({ rowCount = 5 }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-gradient-to-r from-gray-50/80 to-gray-100/50 border-b border-gray-200/60">
+            {["No.", "Logo", "Name", "Slug", "Category", "Subcategory", "Type", "Address", "TIN", "Tax Type", "Active", "Featured", "Actions"].map((h, i) => (
+              <th key={i} className="text-left py-3.5 px-5">
+                <div className="h-4 w-12 bg-gray-300/70 rounded"></div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(rowCount)].map((_, i) => (
+            <SkeletonRow key={i} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+const SkeletonDetailCard: React.FC = () => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex items-center gap-4">
+        <div className="h-16 w-16 rounded-full bg-gray-300/70"></div>
+        <div>
+          <div className="h-6 w-48 bg-gray-300/70 rounded mb-1"></div>
+          <div className="h-4 w-32 bg-gray-300/70 rounded"></div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="h-9 w-20 bg-gray-300/70 rounded-xl"></div>
+        <div className="h-9 w-20 bg-gray-300/70 rounded-xl"></div>
+      </div>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i}>
+          <div className="h-4 w-24 bg-gray-300/70 rounded mb-1"></div>
+          <div className="h-5 w-32 bg-gray-300/70 rounded"></div>
+        </div>
+      ))}
+    </div>
+    <div className="mt-6 flex justify-end gap-2">
+      <div className="h-10 w-24 bg-gray-300/70 rounded-xl"></div>
+      <div className="h-10 w-24 bg-gray-300/70 rounded-xl"></div>
+    </div>
+  </div>
+);
+
 export default function CompanyManagement() {
   const [pageSize, setPageSize] = useState(10);
   const { user } = useAuth();
@@ -1224,35 +1304,40 @@ const newFormData = {
 
   if (error) return <ErrorView error={error} onRetry={fetchData} />;
 
+  if (loading) {
+    return (
+      <div className="max-w-full min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="animate-pulse">
+            <div className="h-8 w-48 bg-gray-300/70 rounded mb-2"></div>
+            <div className="h-4 w-64 bg-gray-300/70 rounded"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-24 bg-gray-300/70 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+        {(isSuperAdmin || isMarketing) ? <SkeletonTable rowCount={pageSize} /> : <SkeletonDetailCard />}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-full  min-h-screen">
       <Toast toast={toast} />
       <div className="p-2  sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
         {/* Header Section - Premium & Responsive */}
         <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
-          <div className="min-w-0 flex-1">
-            {loading && !isSuperAdmin ? (
-              <div className="animate-pulse">
-                <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-48 sm:w-56 mb-2" />
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-gray-200" />
-                  <div className="h-4 bg-gray-200 rounded w-64 sm:w-80" />
-                </div>
-              </div>
-            ) : (
-              <>
-                <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
-                  {isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
-                </h2>
-                {!isSuperAdmin && !isMarketing && (
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
-                    Manage your company details and settings
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
+            {isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
+          </h2>
+          {!isSuperAdmin && !isMarketing && (
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
+              Manage your company details and settings
+            </p>
+          )}
+        </div>
 <div className="flex items-center gap-2 flex-wrap">
   {canAddCompany && (
     <>

@@ -22,6 +22,9 @@ import {
   Bell,
   Settings as SettingsIcon,
     Banknote,
+    ClipboardList,
+     Target,
+      CalendarIcon,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -48,9 +51,17 @@ import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
 import MarketingOverview from "./overview/MarketingOverview";
 import MarketingAgentsManagement from "./UserManagement/MarketingAgentsManagement";
+import LeadsManagement from "../marketing/LeadsManagement";
+import TasksManagement from "../marketing/TasksManagement";
+import TargetsManagement from "../marketing/TargetsManagement";
+import CalendarManagement from "../marketing/CalendarManagement";
 
 type Tab =
   | "overview"
+    | "leads"
+     | "tasks"
+       | "targets"
+        | "calendar"
   | "categories"
   | "subcategories"
   | "headcompanies"
@@ -378,6 +389,16 @@ export default function AdminDashboard() {
           ) : (
             <Overview key={componentKey} onNavigate={navigateFromOverview} />
           );
+  case "leads":
+    return <LeadsManagement key={componentKey} />;
+    case "tasks":
+  return <TasksManagement key={componentKey} />;
+  case "targets":
+  return <TargetsManagement key={componentKey} />;
+  case "calendar":
+  return <CalendarManagement key={componentKey} />;
+
+
         case "products":
           return <CompanyProducts key={componentKey} />;
         case "users":
@@ -496,6 +517,7 @@ export default function AdminDashboard() {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("overview")}
               />
+
               <SidebarItem
                 icon={<Building2 className="h-5 w-5" />}
                 label="Companies"
@@ -503,13 +525,42 @@ export default function AdminDashboard() {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("companies")}
               />
-              <SidebarItem
+                            <SidebarItem
                 icon={<CreditCard className="h-5 w-5" />}
                 label="Billing"
                 active={activeTab === "billing"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("billing")}
               />
+                                <SidebarItem
+      icon={<Users className="h-5 w-5" />}
+      label="Leads"
+      active={activeTab === "leads"}
+      collapsed={sidebarCollapsed}
+      onClick={() => navigate("leads")}
+    />
+    <SidebarItem
+  icon={<ClipboardList className="h-5 w-5" />}
+  label="Tasks"
+  active={activeTab === "tasks"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("tasks")}
+/>
+<SidebarItem
+  icon={<Target className="h-5 w-5" />}
+  label="Targets"
+  active={activeTab === "targets"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("targets")}
+/>
+<SidebarItem
+  icon={<CalendarIcon className="h-5 w-5" />}
+  label="Calendar"
+  active={activeTab === "calendar"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("calendar")}
+/>
+
               <SidebarItem
                 icon={<User className="h-5 w-5" />}
                 label="Profile"
