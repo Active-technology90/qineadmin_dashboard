@@ -4,11 +4,13 @@ import {
   Building2,
   Award,
   Eye,
+  Edit,
   X,
   Target,
   Mail,
   Phone,
   TrendingUp,
+  TrendingDown,
   CheckCircle,
   Filter,
    User,
@@ -17,7 +19,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import AgentPersonalInfoModal from "./AgentPersonalInfoModal";
-import { getAdminMarketingAgents } from "../../../services/api";
+import { getAdminMarketingAgents, updateUser } from "../../../services/api";
 import MarketingOverview from "../overview/MarketingOverview";
 import { SearchInput } from "../../ui/SearchInput";
 import { Pagination } from "../../ui/Pagination";
@@ -25,6 +27,9 @@ import { TableControls } from "../../ui/TableControls";
 import { CustomSelect } from "../../ui/CustomSelect";
 import BottomSheet from "../../ui/BottomSheet";
 import FilterSortSheet from "../../ui/FilterSortSheet";
+import { useToast } from "../../../hooks/useToast";
+import { Toast } from "../../ui/Toast";
+import { FormModal } from "../../ui/FormModal";
 
 interface MarketingAgent {
   id: number;
@@ -100,8 +105,12 @@ const SkeletonStatCard: React.FC = () => (
 // Main Component
 // ============================================================
 export default function MarketingAgentsManagement() {
+  const { toast, showToast } = useToast();
   const [agents, setAgents] = useState<MarketingAgent[]>([]);
   const [loading, setLoading] = useState(true);
+  // ... (keep all existing states)
+  const [editingAgent, setEditingAgent] = useState<MarketingAgent | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<MarketingAgent>>({});
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
@@ -233,6 +242,73 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
       return `+251 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8, 12)}`;
     }
     return phone;
+  };
+  // ─── Performance Ranking ──────────────────────────────
+  const getPerformanceRank = (agent: MarketingAgent) => {
+    const weeklyProgress = agent.daily_target > 0
+      ? Math.min(100, (agent.companies_count / (agent.daily_target * 7)) * 100)
+      : 0;
+
+    if (weeklyProgress >= 80) {
+      return {
+        label: "Top Performer",
+        color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        icon: <Award className="h-3 w-3" />,
+      };
+    }
+    if (weeklyProgress >= 50) {
+      return {
+        label: "On Track",
+        color: "bg-blue-100 text-blue-700 border-blue-200",
+        icon: <TrendingUp className="h-3 w-3" />,
+      };
+    }
+    if (weeklyProgress > 0) {
+      return {
+        label: "Needs Attention",
+        color: "bg-amber-100 text-amber-700 border-amber-200",
+        icon: <TrendingDown className="h-3 w-3" />,
+      };
+    }
+    return {
+      label: "No Progress",
+      color: "bg-gray-100 text-gray-500 border-gray-200",
+      icon: null,
+    };
+  };
+
+  // ─── Edit Agent ─────────────────────────────────────────
+  const openEditModal = (agent: MarketingAgent) => {
+    setEditingAgent(agent);
+    setEditFormData({
+      first_name: agent.first_name || "",
+      last_name: agent.last_name || "",
+      email: agent.email,
+      phone_number: agent.phone_number || "",
+      daily_target: agent.daily_target,
+      weekly_target: agent.weekly_target,
+      is_active: agent.is_active,
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingAgent) return;
+    try {
+      await updateUser(editingAgent.id, {
+        first_name: editFormData.first_name,
+        last_name: editFormData.last_name,
+        email: editFormData.email,
+        phone_number: editFormData.phone_number,
+        daily_target: editFormData.daily_target,
+        weekly_target: editFormData.weekly_target,
+        is_active: editFormData.is_active,
+      });
+      showToast("success", "Agent updated successfully");
+      setEditingAgent(null);
+      await fetchAgents(); // refresh
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to update agent");
+    }
   };
 
   // ─── Loading skeleton renderer ──────────────────────────────
@@ -654,19 +730,29 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                           </div>
                         )}
 <div className="flex-1">
-  <div className="flex items-center gap-0">
+  <div className="flex items-center gap-0 flex-wrap">
     <p className="font-semibold text-gray-900 text-sm leading-tight truncate max-w-[120px]">
       {agent.first_name && agent.last_name
         ? `${agent.first_name} ${agent.last_name}`
         : agent.username}
     </p>
-<button
-  onClick={() => setPersonalModalAgent(agent)}
-  className="p-1.5 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
-  title="View Profile"
->
-  <User className="h-4 w-4 text-secondary group-hover:text-secondary-dark transition-colors" />
-</button>
+    {/* Ranking Badge */}
+    {(() => {
+      const rank = getPerformanceRank(agent);
+      return (
+        <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${rank.color}`}>
+          {rank.icon}
+          {rank.label}
+        </span>
+      );
+    })()}
+    <button
+      onClick={() => setPersonalModalAgent(agent)}
+      className="p-1.5 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+      title="View Profile"
+    >
+      <User className="h-4 w-4 text-secondary group-hover:text-secondary-dark transition-colors" />
+    </button>
   </div>
   <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
 </div>
@@ -781,20 +867,29 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedAgentId(agent.id);
-                          setSelectedAgentName(
-                            agent.first_name && agent.last_name
-                              ? `${agent.first_name} ${agent.last_name}`
-                              : agent.username
-                          );
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-xl hover:bg-[#5b4694] transition text-sm font-semibold shadow-sm hover:shadow-md active:scale-95"
-                      >
-                        <Eye className="h-4 w-4" />
-                        Audit
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEditModal(agent)}
+                          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition text-gray-600 hover:text-secondary shadow-sm active:scale-95"
+                          title="Edit Agent"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedAgentId(agent.id);
+                            setSelectedAgentName(
+                              agent.first_name && agent.last_name
+                                ? `${agent.first_name} ${agent.last_name}`
+                                : agent.username
+                            );
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-xl hover:bg-[#5b4694] transition text-sm font-semibold shadow-sm hover:shadow-md active:scale-95"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Audit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -832,19 +927,29 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                     </div>
                   )}
 <div className="min-w-0 flex-1">
-  <div className="flex items-center gap-0">
+  <div className="flex items-center gap-0 flex-wrap">
     <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">
       {agent.first_name && agent.last_name
         ? `${agent.first_name} ${agent.last_name}`
         : agent.username}
     </p>
-<button
-  onClick={() => setPersonalModalAgent(agent)}
-  className="p-1 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
-  title="View Profile"
->
-  <User className="h-3.5 w-3.5 text-secondary group-hover:text-secondary-dark transition-colors" />
-</button>
+    {/* Ranking Badge */}
+    {(() => {
+      const rank = getPerformanceRank(agent);
+      return (
+        <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-semibold border ${rank.color}`}>
+          {rank.icon}
+          {rank.label}
+        </span>
+      );
+    })()}
+    <button
+      onClick={() => setPersonalModalAgent(agent)}
+      className="p-1 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+      title="View Profile"
+    >
+      <User className="h-3.5 w-3.5 text-secondary group-hover:text-secondary-dark transition-colors" />
+    </button>
   </div>
   <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
 </div>
@@ -893,21 +998,30 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                   </span>
                 </div>
 
-                {/* Audit Button */}
-                <button
-                  onClick={() => {
-                    setSelectedAgentId(agent.id);
-                    setSelectedAgentName(
-                      agent.first_name && agent.last_name
-                        ? `${agent.first_name} ${agent.last_name}`
-                        : agent.username
-                    );
-                  }}
-                  className="w-full bg-secondary text-white py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#5b4694] transition text-sm font-semibold shadow-sm"
-                >
-                  <Eye className="h-4 w-4" />
-                  Audit Performance
-                </button>
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => openEditModal(agent)}
+                    className="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition text-gray-600 hover:text-secondary text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedAgentId(agent.id);
+                      setSelectedAgentName(
+                        agent.first_name && agent.last_name
+                          ? `${agent.first_name} ${agent.last_name}`
+                          : agent.username
+                      );
+                    }}
+                    className="w-full bg-secondary text-white py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#5b4694] transition text-sm font-semibold shadow-sm"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Audit
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -1057,6 +1171,108 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </button>
         </div>
       </BottomSheet>
+            {/* Edit Agent Modal */}
+      {editingAgent && (
+        <FormModal
+          isOpen={!!editingAgent}
+          onClose={() => {
+            setEditingAgent(null);
+            setEditFormData({});
+          }}
+          title="Edit Marketing Agent"
+          onSubmit={handleEditSave}
+          submitting={false}
+          maxWidth="lg"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                First Name
+              </label>
+              <input
+                type="text"
+                value={editFormData.first_name || ""}
+                onChange={(e) => setEditFormData({ ...editFormData, first_name: e.target.value })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={editFormData.last_name || ""}
+                onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Email
+              </label>
+              <input
+                type="email"
+                value={editFormData.email || ""}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Phone
+              </label>
+              <input
+                type="text"
+                value={editFormData.phone_number || ""}
+                onChange={(e) => setEditFormData({ ...editFormData, phone_number: e.target.value })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Daily Target
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={editFormData.daily_target || 0}
+                onChange={(e) => setEditFormData({ ...editFormData, daily_target: Number(e.target.value) })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Weekly Target
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={editFormData.weekly_target || 0}
+                onChange={(e) => setEditFormData({ ...editFormData, weekly_target: Number(e.target.value) })}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editFormData.is_active ?? true}
+                  onChange={(e) => setEditFormData({ ...editFormData, is_active: e.target.checked })}
+                  className="h-5 w-5 text-secondary focus:ring-secondary focus:ring-2 border-gray-300 rounded cursor-pointer transition-all"
+                />
+                <span className="text-sm font-semibold text-gray-700">Active Agent</span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${editFormData.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {editFormData.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </label>
+            </div>
+          </div>
+        </FormModal>
+      )}
+
+      {/* Toast */}
+      <Toast toast={toast} />
     </div>
   );
 }

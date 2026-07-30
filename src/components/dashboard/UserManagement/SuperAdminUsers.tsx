@@ -88,6 +88,24 @@ const formatPhone = (phone: string | null): string => {
   }
   return phone;
 };
+// ─── Helper: Format date ──────────────────────────────────
+const formatDate = (user: User): string => {
+  const dateStr = (user as any).date_joined || (user as any).created_at;
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// ─── Helper: Check if user was created today ──────────────
+const isCreatedToday = (user: User): boolean => {
+  const dateStr = (user as any).date_joined || (user as any).created_at;
+  if (!dateStr) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return dateStr.startsWith(today);
+};
 
 const roleOptions = [
   { label: "All Roles", value: "all", icon: <Users className="h-4 w-4" /> },
@@ -591,6 +609,9 @@ const UserTable: React.FC<UserTableProps> = ({
             <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               Phone
             </th>
+              <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+    Joined
+  </th>
             <th className="text-left py-3.5 px-5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               Companies / Roles
             </th>
@@ -633,6 +654,13 @@ const UserTable: React.FC<UserTableProps> = ({
                     <p className="font-semibold text-gray-900 text-sm leading-tight">
                       {user.first_name || user.username}
                       {user.last_name && ` ${user.last_name}`}
+{/*  badge for users created today */}
+{isCreatedToday(user) && (
+  <span className="ml-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm shadow-emerald-100/50">
+    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+    New
+  </span>
+)}
                     </p>
                     <p className="text-xs text-gray-400 font-medium">
                       @{user.username}
@@ -650,6 +678,11 @@ const UserTable: React.FC<UserTableProps> = ({
                   {formatPhone(user.phone_number)}
                 </span>
               </td>
+              <td className="py-3.5 px-5">
+  <span className="text-sm text-gray-600 font-medium">
+    {formatDate(user)}
+  </span>
+</td>
               <td className="py-3.5 px-5">
                 {user.memberships.length > 0 ? (
                   <div className="max-h-[160px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-secondary/20 scrollbar-track-transparent hover:scrollbar-thumb-secondary/40">
@@ -791,8 +824,15 @@ const UserMobileCards: React.FC<UserMobileCardsProps> = ({
               {getInitials(user.first_name, user.last_name, user.username)}
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 text-xs xs:text-sm sm:text-base truncate">
+              <p className="font-semibold text-gray-900 text-xs xs:text-sm sm:text-base truncate flex items-center gap-1 flex-wrap">
                 {user.first_name || user.username}
+{/*  badge for users created today */}
+{isCreatedToday(user) && (
+  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm shadow-emerald-100/50">
+    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+    New
+  </span>
+)}
               </p>
               <p className="text-[10px] xs:text-[11px] sm:text-xs text-gray-500 truncate">
                 {user.email}
@@ -811,6 +851,12 @@ const UserMobileCards: React.FC<UserMobileCardsProps> = ({
               {formatPhone(user.phone_number)}
             </span>
           </div>
+          <div className="flex items-center gap-2 text-[11px] xs:text-xs sm:text-sm">
+  <span className="text-gray-500">Joined:</span>
+  <span className="text-gray-900 truncate">
+    {formatDate(user)}
+  </span>
+</div>
 
           {/* ─── SCROLLABLE COMPANIES SECTION ─── */}
           <div className="mt-1">
