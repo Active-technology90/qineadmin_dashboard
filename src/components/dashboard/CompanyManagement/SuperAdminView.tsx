@@ -1,6 +1,6 @@
 // src/components/admin/SuperAdminView.tsx
 import { useState, useEffect } from "react";
-import { Edit, Trash2, ImageIcon, Filter, Mail, Phone, MapPin, Building2, CheckCircle, XCircle } from "lucide-react";
+import { Edit, Trash2, ImageIcon, Filter } from "lucide-react";
 import { DataTable, type Column } from "../../ui/DataTable";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
@@ -262,65 +262,18 @@ return (
 )}
 
       {/* ============ DESKTOP / TABLET ============ */}
-      <div className="hidden md:block overflow-x-auto">
-        {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4 animate-pulse">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-gray-200" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/4" />
-                  <div className="h-3 bg-gray-100 rounded w-1/3" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : paginatedItems.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-              <ImageIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-gray-500 font-medium">No companies found</h3>
-            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or add a new company</p>
-          </div>
-        ) : (
-<table className="w-full bg-white rounded-xl shadow-sm border border-gray-100">
-            <thead className="bg-gray-50/80 border-b border-gray-200">
-              <tr>
-                {columns.map((col) => (
-                  <th
-                    key={col.key}
-                    className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                  >
-                    {col.header}
-                  </th>
-                ))}
-                {/* Preview column header – empty */}
-                <th className="w-0 p-0" />
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedItems.map((company) => (
-                <tr
-                  key={company.id}
-                  className="relative group transition-all duration-150 hover:bg-gray-50/60 border-b border-gray-100/80"
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} className="py-3 px-4 text-sm text-gray-700">
-                      {col.render ? col.render(company) : (company as any)[col.key]}
-                    </td>
-                  ))}
-                  {/* Preview column – holds the hover popover */}
-                  <td className="relative w-0 p-0 overflow-visible">
-                    <div className="absolute left-full top-0 ml-2 z-50 translate-x-2 group-hover:translate-x-0 transition-all duration-200">
-                      <CompanyHoverPreview company={company} />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="hidden md:block">
+        <DataTable
+          data={paginatedItems}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No companies found"
+          onEdit={onEdit}
+          onDelete={onDelete}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={onSort}
+        />
       </div>
 
       {/* ============ MOBILE LAYOUT ============ */}

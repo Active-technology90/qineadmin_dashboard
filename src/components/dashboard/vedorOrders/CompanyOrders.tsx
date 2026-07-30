@@ -114,6 +114,13 @@ const OrderDate = ({ dateString }: { dateString?: string }) => {
     </div>
   );
 };
+// ─── Helper: Check if date is today ──────────────────────────
+const isTodayDate = (dateString?: string): boolean => {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  const now = new Date();
+  return date.toDateString() === now.toDateString();
+};
 
 const CompanyAvatar = ({
   logo,
@@ -671,9 +678,17 @@ export default function CompanyOrders() {
                     key={order.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-secondary truncate max-w-[80px] sm:max-w-none">
-                      #{order.id}
-                    </td>
+<td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-secondary min-w-[100px] sm:min-w-0">
+  <div className="flex items-center gap-2 whitespace-nowrap">
+    <span>#{order.id}</span>
+    {isTodayDate(order.created_at) && (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm flex-shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        Today
+      </span>
+    )}
+  </div>
+</td>
                     {isAdminLike && (
                       <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -796,7 +811,9 @@ export default function CompanyOrders() {
         onClose={() => setSelectedOrder(null)}
         onUpdate={handleModalUpdate}
         readOnly={readOnly}
-         onOpenLiveTracking={() => setShowTrackingMap(true)} 
+        onOpenLiveTracking={() => setShowTrackingMap(true)}
+        allOrders={allOrders}
+        onSelectOrder={setSelectedOrder}
       />
 
       {/* Mobile Filter Modal - Bottom Sheet */}
