@@ -73,11 +73,11 @@ export default function SignIn(): React.JSX.Element {
 
           <div className="relative z-10 text-center flex flex-col items-center">
             <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white flex items-center justify-center mb-4 lg:mb-6">
-              <img src="/qinemartethio.jpeg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
+              <img src="/elilta1.jpg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
             </div>
 
             <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-              Qine Mart
+              Elilita
             </h1>
 
             <p className="text-xs lg:text-sm opacity-90 px-4">
@@ -177,7 +177,7 @@ export default function SignIn(): React.JSX.Element {
           </form>
 
           <div className="mt-6 text-[10px] sm:text-xs text-gray-400 text-center">
-            Secure Login • Qine Mart v1.0.0
+            Secure Login • Elilita v1.0.0
           </div>
 
         </div>

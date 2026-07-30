@@ -1000,6 +1000,7 @@ export default function SubCategoryManagement() {
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.name || ""}
+        deleteTitle={"Delete SubCategory"}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

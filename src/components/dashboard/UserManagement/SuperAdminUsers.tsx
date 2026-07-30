@@ -1271,7 +1271,7 @@ const SuperAdminUsers: React.FC = () => {
   </div>
 </div> */}
 
-        <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-5">
+        <div className="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-5">
           <StatCard
             title="Total Admins"
             value={stats.totalAdmins}

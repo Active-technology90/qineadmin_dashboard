@@ -1285,7 +1285,7 @@ export function VendorOrderDetailModal({
               <div className="mt-1.5  ">
                 <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-0.5 sm:mb-1">
                   <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent tracking-tight break-words">
-                    Order #{order.id}
+                    Order #{order.id}-{order.master_order_id}
                   </h2>
                   <StatusBadge
                     status={order.status}

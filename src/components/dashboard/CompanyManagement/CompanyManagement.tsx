@@ -1253,6 +1253,9 @@ export default function CompanyManagement() {
           isOpen={!!deleteTarget}
           title={deleteTarget?.name || ""}
           onConfirm={handleDelete}
+          deleteTitle={
+            "Delete Company"
+          }
           onCancel={() => setDeleteTarget(null)}
         />
       </div>

@@ -473,6 +473,7 @@ export default function CategoryManagement() {
       <DeleteConfirmModal
         isOpen={!!deleteTarget}
         title={deleteTarget?.name || ""}
+        deleteTitle={"Delete Category"}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

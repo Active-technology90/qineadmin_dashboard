@@ -35,7 +35,6 @@ import CompanyProducts from "./company-products/CompanyProducts";
 import CategoryManagement from "./CategoryManagement";
 import SubCategoryManagement from "./SubCategoryManagement";
 import HeadCompanyManagement from "./HeadCompanyManagement/HeadCompanyManagement";
-
 import MasterOrders from "./masterOrders/MasterOrders";
 import AdminProfile from "./AdminProfile";
 import CompanyManagement from "./CompanyManagement/CompanyManagement";
@@ -486,7 +485,7 @@ export default function AdminDashboard() {
             className={`bg-white/10 p-1 rounded-full backdrop-blur-sm flex-shrink-0 ${sidebarCollapsed ? "w-10 h-10" : "w-18 h-18"}`}
           >
             <img
-              src="/qinemartethio.jpeg"
+              src="/elilta1.jpg"
               alt="Qine Logo"
               className="w-full h-full object-cover rounded-full"
             />
@@ -497,8 +496,8 @@ export default function AdminDashboard() {
             <div className="px-2 py-1 rounded-md bg-white/5 backdrop-blur-sm border border-white/10">
               <div className="flex items-center gap-1">
                 <div className="w-0.5 h-2 rounded-full bg-gradient-to-b from-amber-400 to-amber-600"></div>
-                <span className="text-[10px] font-bold text-white/80 tracking-wide whitespace-nowrap">
-                  ACTIVE MART
+                <span className="text-[14px] font-bold text-white/80 tracking-wide whitespace-nowrap">
+                  Elilita
                 </span>
                 <div className="w-0.5 h-2 rounded-full bg-gradient-to-b from-amber-600 to-amber-400"></div>
               </div>
@@ -917,7 +916,7 @@ export default function AdminDashboard() {
               {profileDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-9999"
                     onClick={() => setProfileDropdownOpen(false)}
                   />
                   <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">

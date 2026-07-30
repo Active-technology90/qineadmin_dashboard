@@ -200,7 +200,7 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
           <p className="font-semibold text-gray-800 text-[10px] sm:text-base truncate">
             {vendorOrder.company?.name || "Unknown Company"}
           </p>
-          <p className="text-[8px] sm:text-[10px] text-gray-500">Vendor order</p>
+          <p className="text-[8px] sm:text-[10px] text-gray-500">Vendor order #{vendorOrder.id} </p> 
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -252,14 +252,14 @@ const VendorOrderCard = memo(({ vendorOrder }: { vendorOrder: VendorOrder }) => 
               </span>
             </div>
           )}
-          {vendorOrder.delivery.tracking_id && (
+          {/* {vendorOrder.delivery.tracking_id && (
             <div className="flex items-center gap-1 sm:gap-2 bg-white/50 rounded-full px-1.5 sm:px-3 py-0.5 sm:py-1">
               <span className="text-gray-700 font-mono text-[9px] sm:text-xs">
                 {vendorOrder.delivery.tracking_id.split("-")[0]}
               </span>
               <CopyButton text={vendorOrder.delivery.tracking_id.split("-")[0]} />
             </div>
-          )}
+          )} */}
           {vendorOrder.delivery.status && (
             <div
               className={`inline-flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-0.5 text-[8px] sm:text-[9px] rounded-full ${getDeliveryStatusBadge(
