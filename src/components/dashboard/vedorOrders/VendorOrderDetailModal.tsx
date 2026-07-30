@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -23,6 +23,8 @@ import {
   CheckCircle,
   Building2,
   Navigation,
+  History,
+  Clock,
 } from "lucide-react";
 import {
   getCompanyStaffByRole,
@@ -64,6 +66,102 @@ const formatAddress = (address?: string | null) => {
     .map((part) => part.trim())
     .filter(Boolean)
     .join(", ");
+};
+// ─── Order Timeline Builder ──────────────────────────────
+const buildOrderTimeline = (order: any) => {
+  const events: any[] = [];
+
+  // 1. Order Placed
+  if (order.created_at) {
+    events.push({
+      id: "placed",
+      label: "Order Placed",
+      icon: "📦",
+      time: order.created_at,
+      actor: "Customer",
+      status: "completed",
+    });
+  }
+
+  // 2. Payment Approved (from receipt history)
+  const approvedReceipt = order.receipt_history?.find(
+    (h: any) => h.status === "approved"
+  );
+  if (approvedReceipt) {
+    events.push({
+      id: "payment",
+      label: "Payment Approved",
+      icon: "💳",
+      time: approvedReceipt.updated_at || approvedReceipt.created_at,
+      actor: "Admin",
+      status: "completed",
+    });
+  } else if (order.payment_method === "chapa" && order.payment_status === "paid") {
+    events.push({
+      id: "payment",
+      label: "Payment Confirmed",
+      icon: "💳",
+      time: order.created_at,
+      actor: "Chapa",
+      status: "completed",
+    });
+  }
+
+  // 3. Order Prepared (if status is processing or fulfilled)
+  if (order.status?.toLowerCase() === "processing" || order.status?.toLowerCase() === "fulfilled") {
+    events.push({
+      id: "prepared",
+      label: "Order Prepared",
+      icon: "✅",
+      time: order.updated_at || order.created_at,
+      actor: "Admin",
+      status: "completed",
+    });
+  }
+
+  // 4. Out for Delivery (from delivery status)
+  if (order.delivery?.status?.toLowerCase() === "out_for_delivery") {
+    events.push({
+      id: "out_for_delivery",
+      label: "In Transit",
+      icon: "🚚",
+      time: order.delivery.updated_at || order.delivery.created_at,
+      actor: order.delivery.delivery_person_name || "Driver",
+      status: "completed",
+    });
+  }
+
+  // 5. Delivered / Completed
+  if (
+    order.delivery?.status?.toLowerCase() === "delivered" ||
+    order.status?.toLowerCase() === "fulfilled"
+  ) {
+    events.push({
+      id: "delivered",
+      label: "Delivered",
+      icon: "🏁",
+      time: order.delivery?.updated_at || order.updated_at,
+      actor: order.delivery?.delivery_person_name || "System",
+      status: "completed",
+    });
+  }
+
+  // If order is still pending, add a "pending" indicator
+  if (order.status?.toLowerCase() === "pending" && !approvedReceipt) {
+    events.push({
+      id: "pending",
+      label: "Awaiting Payment",
+      icon: "⏳",
+      time: order.created_at,
+      actor: "Waiting for customer",
+      status: "pending",
+    });
+  }
+
+  // Sort by time (oldest first)
+  events.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+  return events;
 };
 
 const getDisplayStatus = (
@@ -1242,6 +1340,8 @@ export function VendorOrderDetailModal({
   onUpdate,
   readOnly = false,
   onOpenLiveTracking,
+  allOrders = [],
+  onSelectOrder,
 }: any) {
   if (!order) return null;
   const [refreshing, setRefreshing] = useState(false);
@@ -1254,6 +1354,26 @@ export function VendorOrderDetailModal({
       setRefreshing(false);
     }
   };
+  // ─── Customer Order History (same company only) ──────────
+  const customerOrders = useMemo(() => {
+    if (!order || !allOrders.length) return [];
+    const customerPhone = order.shipping_phone;
+    const companyId = order.company?.id;
+    if (!customerPhone || !companyId) return [];
+
+    return allOrders
+      .filter(
+        (o: any) =>
+          o.shipping_phone === customerPhone &&
+          o.company?.id === companyId &&
+          o.id !== order.id // exclude current order
+      )
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .slice(0, 10); // show up to 10 most recent
+  }, [order, allOrders]);
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
@@ -1588,6 +1708,146 @@ export function VendorOrderDetailModal({
                     </table>
                   </div>
                 </motion.div>
+                                {/* ─── Order Timeline / Activity Log ─── */}
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white rounded-3xl border border-gray-100 p-4 md:p-6 shadow-sm"
+                >
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                    <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+                      <Clock className="h-4 w-4 text-secondary" />
+                    </div>
+                    <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
+                      Order Timeline
+                    </h4>
+                    <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                      {buildOrderTimeline(order).length} steps
+                    </span>
+                  </div>
+
+                  <div className="relative pl-6 space-y-4">
+                    {/* Vertical line */}
+                    <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200" />
+
+                    {buildOrderTimeline(order).map((event: any, idx: number) => (
+                      <div key={event.id} className="relative flex items-start gap-4">
+                        {/* Dot */}
+                        <div
+                          className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${
+                            event.status === "completed"
+                              ? "bg-emerald-500 border-emerald-500"
+                              : "bg-amber-500 border-amber-500 animate-pulse"
+                          }`}
+                        >
+                          <div
+                            className={`absolute inset-0 rounded-full ${
+                              event.status === "completed"
+                                ? "bg-emerald-400/30 animate-pulse"
+                                : "bg-amber-400/30 animate-pulse"
+                            }`}
+                            style={{ width: "200%", height: "200%", left: "-50%", top: "-50%" }}
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-bold text-gray-900">
+                              {event.icon} {event.label}
+                            </span>
+                            {event.status === "pending" && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 mt-0.5">
+                            <span className="text-xs text-gray-400 font-mono">
+                              {new Date(event.time).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}{" "}
+                              •{" "}
+                              {new Date(event.time).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            {event.actor && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {event.actor}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+                                {/* ─── Customer Order History ─── */}
+                {customerOrders.length > 0 && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-white rounded-3xl border border-gray-100 p-4 md:p-6 shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                      <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary-light/20 rounded-lg shadow-inner">
+                        <History className="h-4 w-4 text-secondary" />
+                      </div>
+                      <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary-light bg-clip-text text-transparent">
+                        Customer Order History
+                      </h4>
+                      <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {customerOrders.length} orders
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                      {customerOrders.map((ord: any) => (
+                        <div
+                          key={ord.id}
+                          onClick={() => onSelectOrder && onSelectOrder(ord)}
+                          className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-secondary/30 transition-all cursor-pointer group"
+                        >
+<div className="flex flex-col min-w-0">
+  <span className="text-sm font-bold text-secondary group-hover:text-secondary-dark">
+    #{ord.id}
+  </span>
+  {ord.company?.name && (
+    <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
+      {ord.company.name}
+    </span>
+  )}
+  <span className="text-[10px] text-gray-400 font-mono">
+    {new Date(ord.created_at).toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    )}
+  </span>
+</div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-bold text-gray-800">
+                              {Number(ord.amount).toLocaleString()}{" "}
+                              <span className="text-[9px] text-gray-400">
+                                ETB
+                              </span>
+                            </span>
+                            <StatusBadge status={ord.status} type="order" />
+                            <span className="text-xs text-secondary opacity-0 group-hover:opacity-100 transition">
+                              View →
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {/* Right Side: Finances & Workflow (4 cols) */}
