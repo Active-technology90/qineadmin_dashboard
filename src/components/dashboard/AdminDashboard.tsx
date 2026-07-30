@@ -48,7 +48,6 @@ import NotificationsPage from "./notifications/NotificationsPage";
 import NotificationBell from "./notifications/NotificationBell";
 import {
   clearPushParamsFromUrl,
-  dispatchPushNavigation,
   readPushParamsFromUrl,
   resolvePushTab,
   type PushNavigationPayload,

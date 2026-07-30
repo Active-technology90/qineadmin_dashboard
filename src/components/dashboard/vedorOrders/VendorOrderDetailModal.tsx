@@ -271,9 +271,8 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
-        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-      }`}
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+        }`}
     >
       {displayStatus}
     </span>
@@ -438,11 +437,11 @@ const DeliveryCard = ({
     setAssigning(true);
     try {
       if (delivery) {
-        await updateDeliveryPerson(delivery.id.toString(), selectedUserId);
+        await updateDeliveryPerson(delivery.id.toString(), Number(selectedUserId));
       } else {
         await assignDelivery({
           vendor_order: order.id,
-          delivery_person: selectedUserId,
+          delivery_person: Number(selectedUserId),
         });
       }
       // 👇 Wait for the parent to fetch the updated order
@@ -507,7 +506,7 @@ const DeliveryCard = ({
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                          delivery.delivery_person_name,
+                        delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -631,8 +630,8 @@ const DeliveryCard = ({
                 Select Delivery person
               </label>
               <CustomSelect
-                value={selectedUserId}
-                onChange={(val) => setSelectedUserId(val)}
+                value={String(selectedUserId)}
+                onChange={(val: any) => setSelectedUserId(val)}
                 options={staffOptions}
                 placeholder="Choose from the list..."
                 className="w-full"
@@ -734,7 +733,7 @@ const ReceiptReviewCard = ({
   // image modal (KEEP SECOND UI)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
+  const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
   // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<
@@ -749,38 +748,38 @@ const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected"
 
   const displayHistory = receiptHistory
     ? receiptHistory.filter((h: any) => {
-        // Skip the current active receipt only if it is pending review
-        if (h.id === receipt?.id && receipt?.status === "pending") {
-          return false;
-        }
-        return true;
-      })
+      // Skip the current active receipt only if it is pending review
+      if (h.id === receipt?.id && receipt?.status === "pending") {
+        return false;
+      }
+      return true;
+    })
     : [];
 
   // =========================================================
   // COD CONFIRMATION
   // =========================================================
- const handleConfirmCOD = async () => {
-  if (!companySlug || !orderId) return;
+  const handleConfirmCOD = async () => {
+    if (!companySlug || !orderId) return;
 
-  setCodConfirming(true);
-  try {
-    await confirmCODPayment(companySlug, Number(orderId));
-    showToast("success", "COD payment confirmed successfully");
-    setShowCODConfirm(false);
+    setCodConfirming(true);
+    try {
+      await confirmCODPayment(companySlug, Number(orderId));
+      showToast("success", "COD payment confirmed successfully");
+      setShowCODConfirm(false);
 
-    // 👇 Await the parent refresh – this keeps the loading visible
-    await onUpdate();   // <-- THIS IS THE KEY CHANGE
+      // 👇 Await the parent refresh – this keeps the loading visible
+      await onUpdate();   // <-- THIS IS THE KEY CHANGE
 
-  } catch (err: any) {
-    showToast(
-      "error",
-      err.response?.data?.detail || err.message || "Failed to confirm COD payment"
-    );
-  } finally {
-    setCodConfirming(false);
-  }
-};
+    } catch (err: any) {
+      showToast(
+        "error",
+        err.response?.data?.detail || err.message || "Failed to confirm COD payment"
+      );
+    } finally {
+      setCodConfirming(false);
+    }
+  };
 
   // =========================================================
   // CHAPA
@@ -865,11 +864,10 @@ const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected"
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
-                      canCollect
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
                         ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                         : "bg-gray-300 cursor-not-allowed shadow-none"
-                    }`}
+                      }`}
                   >
                     {codConfirming ? (
                       <>
@@ -943,32 +941,32 @@ const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected"
     setPendingAction(action);
     setShowConfirm(true);
   };
-const handleConfirm = async () => {
-  if (!pendingAction) return;
+  const handleConfirm = async () => {
+    if (!pendingAction) return;
 
-  setShowConfirm(false);
-  setSubmitting(true);
-setSubmittingAction(pendingAction);
+    setShowConfirm(false);
+    setSubmitting(true);
+    setSubmittingAction(pendingAction);
 
-  try {
-    await reviewReceipt(receipt.id, {
-      status: pendingAction,
-      admin_notes: notes || undefined,
-    });
+    try {
+      await reviewReceipt(receipt.id, {
+        status: pendingAction,
+        admin_notes: notes || undefined,
+      });
 
-    showToast("success", `Receipt ${pendingAction}`);
-    setNotes("");
-    setPendingAction(null);
+      showToast("success", `Receipt ${pendingAction}`);
+      setNotes("");
+      setPendingAction(null);
 
-    // ✅ Wait for the parent to fully refresh the order data
-    await onUpdate();
+      // ✅ Wait for the parent to fully refresh the order data
+      await onUpdate();
 
-  } catch (err: any) {
-    showToast("error", err.response?.data?.detail || "Review failed");
-  } finally {
-    setSubmitting(false);
-  }
-};
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Review failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-white flex-col rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
@@ -1053,25 +1051,25 @@ setSubmittingAction(pendingAction);
             />
 
             <div className="flex gap-2">
-  <button
-    onClick={() => handleActionClick("approved")}
-    disabled={submitting}
-    className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-  >
-    {submittingAction === "approved" ? (
-      <>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Approving...
-      </>
-    ) : (
-      "Approve"
-    )}
-  </button>
+              <button
+                onClick={() => handleActionClick("approved")}
+                disabled={submitting}
+                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submittingAction === "approved" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Approving...
+                  </>
+                ) : (
+                  "Approve"
+                )}
+              </button>
 
-  <button
-    onClick={() => handleActionClick("rejected")}
-    disabled={submitting}
-    className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
+              <button
+                onClick={() => handleActionClick("rejected")}
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white
       py-2.5 rounded-xl text-sm font-bold
       shadow-md shadow-rose-200
       hover:from-rose-600 hover:to-red-700
@@ -1079,17 +1077,17 @@ setSubmittingAction(pendingAction);
       transition-all duration-200
       disabled:opacity-50 disabled:cursor-not-allowed
       flex items-center justify-center gap-2"
-  >
-    {submittingAction === "rejected" ? (
-      <>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Rejecting...
-      </>
-    ) : (
-      "Reject"
-    )}
-  </button>
-</div>
+              >
+                {submittingAction === "rejected" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Reject"
+                )}
+              </button>
+            </div>
           </div>
         )}
 
@@ -1138,13 +1136,12 @@ setSubmittingAction(pendingAction);
                           {h.bank_name || "Unknown Bank"}
                         </span>
                         <span
-                          className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${
-                            h.status === "approved"
+                          className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${h.status === "approved"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                               : h.status === "rejected"
                                 ? "bg-rose-50 text-rose-700 border-rose-100"
                                 : "bg-gray-100 text-gray-600 border-gray-200"
-                          }`}
+                            }`}
                         >
                           {h.status}
                         </span>
@@ -1632,12 +1629,12 @@ export function VendorOrderDetailModal({
                               const roundNum = Number(roundKey);
                               const roundTime = roundItems[0]?.created_at
                                 ? new Date(
-                                    roundItems[0].created_at,
-                                  ).toLocaleTimeString("en-US", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: true,
-                                  })
+                                  roundItems[0].created_at,
+                                ).toLocaleTimeString("en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
                                 : "";
 
                               return (
@@ -1708,7 +1705,7 @@ export function VendorOrderDetailModal({
                     </table>
                   </div>
                 </motion.div>
-                                {/* ─── Order Timeline / Activity Log ─── */}
+                {/* ─── Order Timeline / Activity Log ─── */}
                 <motion.div
                   variants={itemVariants}
                   className="bg-white rounded-3xl border border-gray-100 p-4 md:p-6 shadow-sm"
@@ -1729,22 +1726,20 @@ export function VendorOrderDetailModal({
                     {/* Vertical line */}
                     <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200" />
 
-                    {buildOrderTimeline(order).map((event: any, idx: number) => (
+                    {buildOrderTimeline(order).map((event: any) => (
                       <div key={event.id} className="relative flex items-start gap-4">
                         {/* Dot */}
                         <div
-                          className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${
-                            event.status === "completed"
-                              ? "bg-emerald-500 border-emerald-500"
+                          className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${event.status === "completed"
+                            ? "bg-emerald-500 border-emerald-500"
                               : "bg-amber-500 border-amber-500 animate-pulse"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`absolute inset-0 rounded-full ${
-                              event.status === "completed"
+                            className={`absolute inset-0 rounded-full ${event.status === "completed"
                                 ? "bg-emerald-400/30 animate-pulse"
                                 : "bg-amber-400/30 animate-pulse"
-                            }`}
+                              }`}
                             style={{ width: "200%", height: "200%", left: "-50%", top: "-50%" }}
                           />
                         </div>
@@ -1786,7 +1781,7 @@ export function VendorOrderDetailModal({
                     ))}
                   </div>
                 </motion.div>
-                                {/* ─── Customer Order History ─── */}
+                {/* ─── Customer Order History ─── */}
                 {customerOrders.length > 0 && (
                   <motion.div
                     variants={itemVariants}
@@ -1811,26 +1806,26 @@ export function VendorOrderDetailModal({
                           onClick={() => onSelectOrder && onSelectOrder(ord)}
                           className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-secondary/30 transition-all cursor-pointer group"
                         >
-<div className="flex flex-col min-w-0">
-  <span className="text-sm font-bold text-secondary group-hover:text-secondary-dark">
-    #{ord.id}
-  </span>
-  {ord.company?.name && (
-    <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
-      {ord.company.name}
-    </span>
-  )}
-  <span className="text-[10px] text-gray-400 font-mono">
-    {new Date(ord.created_at).toLocaleDateString(
-      "en-US",
-      {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }
-    )}
-  </span>
-</div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-bold text-secondary group-hover:text-secondary-dark">
+                              #{ord.id}
+                            </span>
+                            {ord.company?.name && (
+                              <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
+                                {ord.company.name}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {new Date(ord.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-bold text-gray-800">
                               {Number(ord.amount).toLocaleString()}{" "}
@@ -1838,7 +1833,7 @@ export function VendorOrderDetailModal({
                                 ETB
                               </span>
                             </span>
-                            <StatusBadge status={ord.status} type="order" />
+                            <StatusBadge status={ord.status} />
                             <span className="text-xs text-secondary opacity-0 group-hover:opacity-100 transition">
                               View →
                             </span>
@@ -1928,12 +1923,12 @@ export function VendorOrderDetailModal({
                 {(order.status === "confirmed" ||
                   (order.payment_method === "cod" &&
                     order.status === "pending")) && (
-                  <PreparationCard
-                    order={order}
-                    onUpdate={onUpdate}
-                    readOnly={readOnly}
-                  />
-                )}
+                    <PreparationCard
+                      order={order}
+                      onUpdate={onUpdate}
+                      readOnly={readOnly}
+                    />
+                  )}
 
                 {/* 5. Delivery person Assignment Card */}
                 {order.fulfillment_type === "delivery" &&

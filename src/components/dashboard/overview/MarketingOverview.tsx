@@ -14,8 +14,6 @@ import {
   Users,
   TrendingUp,
   TrendingDown,
-  RefreshCw,
-  ChevronRight,
   Sparkles,
   Target,
   Clock,
@@ -29,11 +27,8 @@ import {
   Crown,
   Star,
   Rocket,
-  Globe,
   Briefcase,
   Layers,
-  Gauge,
-  Timer,
   Flame,
 } from "lucide-react";
 import {
@@ -46,7 +41,6 @@ import {
   Area,
   BarChart,
   Bar,
-  Legend,
   PieChart as RePieChart,
   Pie,
   Cell,
@@ -145,16 +139,15 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
     <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white/5 rounded-full animate-pulse"></div>
-    
+
     <div className="relative z-10">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className={`text-[10px] font-medium uppercase tracking-wider ${textColor === 'text-white' ? 'text-white/80 group-hover:text-secondary/80' : 'text-gray-500 group-hover:text-secondary/80'} transition-colors duration-300`}>{title}</span>
             {trend !== undefined && (
-              <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-                trend >= 0 ? 'bg-green-400/30 text-green-200 group-hover:bg-secondary/30 group-hover:text-secondary' : 'bg-red-400/30 text-red-200 group-hover:bg-secondary/30 group-hover:text-secondary'
-              } transition-colors duration-300`}>
+              <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${trend >= 0 ? 'bg-green-400/30 text-green-200 group-hover:bg-secondary/30 group-hover:text-secondary' : 'bg-red-400/30 text-red-200 group-hover:bg-secondary/30 group-hover:text-secondary'
+                } transition-colors duration-300`}>
                 {trend >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
                 {trend >= 0 ? '+' : ''}{trend}%
               </span>
@@ -167,7 +160,7 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
           <div className={`${textColor === 'text-white' ? 'text-white group-hover:text-secondary' : 'text-gray-700 group-hover:text-secondary'} transition-colors duration-300`}>{icon}</div>
         </div>
       </div>
-      
+
       {progress !== undefined && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1.5">
@@ -216,16 +209,15 @@ const GlassStatCard: React.FC<GlassStatCardProps> = ({
 }) => (
   <div className={`relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl p-5 border ${borderColor} shadow-sm hover:shadow transition-all duration-300 group`}>
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-    
+
     <div className="relative flex items-start justify-between">
       <div className="flex-1">
         <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
         <p className="text-2xl font-black text-gray-800 mt-1.5">{value}</p>
         {subtitle && <p className="text-[10px] text-gray-400 mt-0.5">{subtitle}</p>}
         {trend !== undefined && (
-          <div className={`flex items-center gap-1 mt-1.5 text-xs font-semibold ${
-            trend >= 0 ? 'text-emerald-600' : 'text-red-600'
-          }`}>
+          <div className={`flex items-center gap-1 mt-1.5 text-xs font-semibold ${trend >= 0 ? 'text-emerald-600' : 'text-red-600'
+            }`}>
             {trend >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {trend >= 0 ? '+' : ''}{trend}%
           </div>
@@ -265,14 +257,13 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
   label,
   sublabel,
   color,
-  icon,
   bgGradient = "from-white/80 to-gray-50/80",
   ringBg = "#E5E7EB",
 }) => {
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (percentage / 100) * circumference;
-  
+
   //  Determine if progress is complete (100%)
   const isComplete = percentage >= 100;
   // Use green color when complete, otherwise use the provided color
@@ -281,7 +272,7 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${bgGradient} backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 hover:shadow-lg hover:scale-[1.02] transition-all duration-500 group`}>
       <div className={`absolute -inset-1 bg-gradient-to-r ${activeColor}/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500`}></div>
-      
+
       <div className="relative flex flex-col md:flex-row items-center gap-8">
         <div className="relative w-36 h-36 shrink-0 group-hover:scale-105 transition-transform duration-500">
           <svg className="w-full h-full transform -rotate-90 group-hover:brightness-110 group-hover:saturate-150 transition-all duration-500">
@@ -331,7 +322,7 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
             )}
           </div>
           <h3 className="text-lg font-bold text-gray-800 group-hover:text-gray-900 transition-colors duration-500">{sublabel}</h3>
-          
+
           <div className="mt-4">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-gray-500 group-hover:text-gray-600 transition-colors duration-500">Progress</span>
@@ -340,8 +331,8 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
             <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner group-hover:shadow-md transition-shadow duration-500">
               <div
                 className="h-full rounded-full transition-all duration-1000 ease-out relative group-hover:brightness-110 group-hover:saturate-150"
-                style={{ 
-                  width: `${percentage}%`, 
+                style={{
+                  width: `${percentage}%`,
                   background: `linear-gradient(90deg, ${activeColor}88, ${activeColor})`,
                   boxShadow: `0 0 20px ${activeColor}40`
                 }}
@@ -350,12 +341,12 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
               </div>
             </div>
           </div>
-          
+
           <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5 group-hover:text-gray-600 transition-colors duration-500">
-            {percentage >= 100 ? '🎉 Target achieved! Outstanding performance!' : 
-             percentage >= 80 ? '🔥 On fire! Keep pushing to the finish line!' :
-             percentage >= 50 ? '💪 Making solid progress. Keep going!' :
-             '🚀 Getting started. Every step counts!'}
+            {percentage >= 100 ? '🎉 Target achieved! Outstanding performance!' :
+              percentage >= 80 ? '🔥 On fire! Keep pushing to the finish line!' :
+                percentage >= 50 ? '💪 Making solid progress. Keep going!' :
+                  '🚀 Getting started. Every step counts!'}
           </p>
         </div>
       </div>
@@ -372,10 +363,13 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
   const [error, setError] = useState("");
   const [data, setData] = useState<PerformanceData | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const { toast } = useToast();
-  
+  const { toast, showToast } = useToast();
+
   const [companyData, setCompanyData] = useState<any>(null);
   const [companyLoading, setCompanyLoading] = useState(false);
+
+  console.log("refresh", refreshing)
+  console.log("companyloading", companyLoading);
 
   const fetchPerformance = async (showRefresh = false) => {
     try {
@@ -392,7 +386,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
 
       setData(res.data);
       if (showRefresh) {
-        toast.showToast("success", "Dashboard refreshed successfully ✨");
+        showToast("success", "Dashboard refreshed successfully ✨");
       }
     } catch (err: any) {
       console.error(err);
@@ -818,7 +812,13 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
     );
   }
 
-  const { agent, target_progress, total_companies_registered, active_subscriptions_count, registrations_by_plan, daily_performance } = data;
+  const {
+    agent,
+    target_progress,
+    total_companies_registered,
+    // active_subscriptions_count, 
+    registrations_by_plan, daily_performance
+  } = data;
 
   const planColors: Record<string, string> = {
     Starter: "bg-blue-100/70 text-blue-700 border-blue-300/50",
@@ -845,44 +845,44 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       {/* ============================================================ */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary to-purple-700 flex items-center justify-center shadow-sm shadow-secondary/30 relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary to-purple-700 rounded-2xl animate-pulse opacity-50"></div>
-                <Rocket className="h-8 w-8 text-white relative z-10" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                  <span className="text-secondary">Performance</span> <span className="text-gray-900">Hub</span>
-                  <span className="ml-2 inline-block text-[8px] font-bold text-emerald-600 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300/50 align-middle">
-                    LIVE
-                  </span>
-                </h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <p className="text-sm text-gray-500">
-                    Tracking <span className="font-semibold text-gray-700">{agent.first_name || agent.username}</span>
-                    <span className="text-gray-300 mx-1.5">•</span>
-                    <span className="text-gray-400">ID: {agent.id}</span>
-                    <span className="text-gray-300 mx-1.5">•</span>
-                    <span className="text-emerald-600 font-medium">{total_companies_registered} companies</span>
-                  </p>
-                </div>
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary to-purple-700 flex items-center justify-center shadow-sm shadow-secondary/30 relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary to-purple-700 rounded-2xl animate-pulse opacity-50"></div>
+              <Rocket className="h-8 w-8 text-white relative z-10" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                <span className="text-secondary">Performance</span> <span className="text-gray-900">Hub</span>
+                <span className="ml-2 inline-block text-[8px] font-bold text-emerald-600 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300/50 align-middle">
+                  LIVE
+                </span>
+              </h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <p className="text-sm text-gray-500">
+                  Tracking <span className="font-semibold text-gray-700">{agent.first_name || agent.username}</span>
+                  <span className="text-gray-300 mx-1.5">•</span>
+                  <span className="text-gray-400">ID: {agent.id}</span>
+                  <span className="text-gray-300 mx-1.5">•</span>
+                  <span className="text-emerald-600 font-medium">{total_companies_registered} companies</span>
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-white/70 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50 shadow-sm">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                  <List className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-white/70 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50 shadow-sm">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                <List className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -947,16 +947,16 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
           bgGradient="from-purple-100/80 via-indigo-50/80 to-white/80"
           ringBg="#E5E7EB"
         />
-<ColorfulProgressRing
-  value={target_progress.registered_this_week}
-  max={target_progress.weekly_target}
-  label="Weekly Quota"
-  sublabel="Weekly Company Onboardings"
-  color="#8B5CF6"
-  icon={<Award className="h-5 w-5" />}
-  bgGradient="from-purple-100/80 via-indigo-50/80 to-white/80"
-  ringBg="#E5E7EB"
-/>
+        <ColorfulProgressRing
+          value={target_progress.registered_this_week}
+          max={target_progress.weekly_target}
+          label="Weekly Quota"
+          sublabel="Weekly Company Onboardings"
+          color="#8B5CF6"
+          icon={<Award className="h-5 w-5" />}
+          bgGradient="from-purple-100/80 via-indigo-50/80 to-white/80"
+          ringBg="#E5E7EB"
+        />
       </div>
 
       {/* ============================================================ */}
@@ -1032,7 +1032,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                   }}
                 />
                 <Bar dataKey="count" fill="#7C3AED" radius={[4, 4, 0, 0]}>
-                  {categoryData.map((entry, index) => (
+                  {categoryData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
@@ -1127,7 +1127,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {pieData.map((entry, index) => (
+                    {pieData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -1244,7 +1244,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {companyData.results.slice(0, 6).map((company: any) => (
-              <div 
+              <div
                 key={company.id}
                 className="flex items-center gap-3 p-3 rounded-xl border border-gray-200/50 bg-white/40 hover:bg-white/60 transition-all hover:shadow-sm"
               >
@@ -1260,11 +1260,10 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-[10px] font-medium text-gray-500">{company.category_name}</span>
                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      company.is_active 
-                        ? 'bg-emerald-100/70 text-emerald-700 border border-emerald-300/50' 
-                        : 'bg-red-100/70 text-red-700 border border-red-300/50'
-                    }`}>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${company.is_active
+                      ? 'bg-emerald-100/70 text-emerald-700 border border-emerald-300/50'
+                      : 'bg-red-100/70 text-red-700 border border-red-300/50'
+                      }`}>
                       {company.is_active ? 'Active' : 'Inactive'}
                     </span>
                     {company.is_featured && (
@@ -1342,9 +1341,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                     <span className="text-sm font-bold text-gray-800">{count}</span>
                   </div>
                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full rounded-full transition-all duration-1000"
-                      style={{ 
+                      style={{
                         width: `${percentage}%`,
                         background: type === 'brand' ? '#7C3AED' : type === 'store' ? '#10B981' : '#3B82F6'
                       }}
@@ -1377,7 +1376,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                 <span className="text-sm font-bold text-emerald-600">{activeCompaniesCount}</span>
               </div>
               <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                   style={{ width: `${companyData?.count ? (activeCompaniesCount / companyData.count) * 100 : 0}%` }}
                 />
@@ -1389,7 +1388,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                 <span className="text-sm font-bold text-red-600">{companyData?.count ? companyData.count - activeCompaniesCount : 0}</span>
               </div>
               <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full transition-all duration-1000"
                   style={{ width: `${companyData?.count ? ((companyData.count - activeCompaniesCount) / companyData.count) * 100 : 0}%` }}
                 />
@@ -1466,21 +1465,19 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
               return (
                 <div
                   key={day.date}
-                  className={`relative overflow-hidden rounded-2xl p-5 border transition-all hover:shadow ${
-                    isLatest
-                      ? 'border-secondary/30 bg-gradient-to-br from-secondary/10 via-purple-50/50 to-transparent'
-                      : 'border-gray-200/50 bg-white/40 hover:bg-white/60'
-                  }`}
+                  className={`relative overflow-hidden rounded-2xl p-5 border transition-all hover:shadow ${isLatest
+                    ? 'border-secondary/30 bg-gradient-to-br from-secondary/10 via-purple-50/50 to-transparent'
+                    : 'border-gray-200/50 bg-white/40 hover:bg-white/60'
+                    }`}
                 >
                   {isLatest && (
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-secondary/20 to-purple-500/20 rounded-full -translate-y-16 translate-x-16"></div>
                   )}
-                  
+
                   <div className="relative flex items-center justify-between pb-3 border-b border-gray-200/60">
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                        isLatest ? 'bg-gradient-to-br from-secondary to-purple-600 text-white shadow-sm shadow-secondary/30' : 'bg-gray-100 text-gray-400'
-                      }`}>
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isLatest ? 'bg-gradient-to-br from-secondary to-purple-600 text-white shadow-sm shadow-secondary/30' : 'bg-gray-100 text-gray-400'
+                        }`}>
                         <Calendar className="h-4 w-4" />
                       </div>
                       <div>
@@ -1493,18 +1490,16 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <span className={`text-[9px] font-bold px-3 py-1.5 rounded-full ${
-                        day.companies_registered_count > 0
-                          ? 'bg-secondary/10 text-secondary border border-secondary/20'
-                          : 'bg-gray-100 text-gray-400 border border-gray-200'
-                      }`}>
+                      <span className={`text-[9px] font-bold px-3 py-1.5 rounded-full ${day.companies_registered_count > 0
+                        ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        }`}>
                         🏢 {day.companies_registered_count}
                       </span>
-                      <span className={`text-[9px] font-bold px-3 py-1.5 rounded-full ${
-                        day.subscriptions_started.length > 0
-                          ? 'bg-emerald-100/70 text-emerald-600 border border-emerald-300/50'
-                          : 'bg-gray-100 text-gray-400 border border-gray-200'
-                      }`}>
+                      <span className={`text-[9px] font-bold px-3 py-1.5 rounded-full ${day.subscriptions_started.length > 0
+                        ? 'bg-emerald-100/70 text-emerald-600 border border-emerald-300/50'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        }`}>
                         💳 {day.subscriptions_started.length}
                       </span>
                     </div>

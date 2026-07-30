@@ -3,7 +3,6 @@ import React, { useState, useMemo } from "react";
 import {
   X,
   Mail,
-  User,
   Lock,
   Phone,
   UserCircle,

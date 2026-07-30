@@ -11,8 +11,6 @@ import {
   AlertCircle,
   Calendar,
   Flag,
-  Search,
-  Filter,
   FileDown,
 } from "lucide-react";
 import { TableControls } from "../ui/TableControls";
@@ -23,6 +21,7 @@ import FilterSortSheet from "../ui/FilterSortSheet";
 import { FormModal } from "../ui/FormModal";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 import { useToast } from "../../hooks/useToast";
+import { Toast } from "../ui/Toast";
 
 // ─── Types ───────────────────────────────────────────────
 interface Task {
@@ -168,7 +167,7 @@ const SkeletonTaskTable: React.FC<{ rowCount?: number }> = ({ rowCount = 5 }) =>
 );
 
 export default function TasksManagement() {
-  const { toast } = useToast();
+  const { toast, showToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -279,7 +278,7 @@ export default function TasksManagement() {
   // ─── CRUD handlers ─────────────────────────────────────
   const handleAddTask = () => {
     if (!newTask.title?.trim()) {
-      toast.showToast("error", "Title is required");
+      showToast("error", "Title is required");
       return;
     }
     const task: Task = {
@@ -296,7 +295,7 @@ export default function TasksManagement() {
     setTasks([task, ...tasks]);
     setIsModalOpen(false);
     setNewTask({ title: "", description: "", status: "pending", priority: "medium", due_date: "" });
-    toast.showToast("success", "Task added successfully");
+    showToast("success", "Task added successfully");
   };
 
   const handleView = (task: Task) => setViewingTask(task);
@@ -309,7 +308,7 @@ export default function TasksManagement() {
   const handleUpdateTask = () => {
     if (!editingTask) return;
     if (!editFormData.title?.trim()) {
-      toast.showToast("error", "Title is required");
+      showToast("error", "Title is required");
       return;
     }
     const updated: Task = {
@@ -324,7 +323,7 @@ export default function TasksManagement() {
     setTasks(tasks.map((t) => (t.id === editingTask.id ? updated : t)));
     setEditingTask(null);
     setEditFormData({});
-    toast.showToast("success", "Task updated successfully");
+    showToast("success", "Task updated successfully");
   };
 
   const handleDelete = (task: Task) => setDeletingTask(task);
@@ -332,7 +331,7 @@ export default function TasksManagement() {
     if (!deletingTask) return;
     setTasks(tasks.filter((t) => t.id !== deletingTask.id));
     setDeletingTask(null);
-    toast.showToast("success", "Task deleted successfully");
+    showToast("success", "Task deleted successfully");
   };
 
   // ─── Export CSV ────────────────────────────────────────
@@ -354,7 +353,7 @@ export default function TasksManagement() {
     a.download = `tasks_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.showToast("success", "Export successful");
+    showToast("success", "Export successful");
   };
 
   // ─── Loading & error states ────────────────────────────
@@ -416,6 +415,7 @@ export default function TasksManagement() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 font-sans bg-gray-50/50 min-h-screen">
+      <Toast toast={toast} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

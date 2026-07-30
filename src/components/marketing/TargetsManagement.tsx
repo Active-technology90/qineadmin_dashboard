@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Target,
   Calendar,
@@ -9,11 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  RefreshCw,
-  FileDown,
   User,
 } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
 import { getMarketingPerformance } from "../../services/api";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
@@ -36,7 +33,7 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
   label,
   sublabel,
   color,
-  icon,
+  icon: _icon,
   bgGradient = "from-white/80 to-gray-50/80",
   ringBg = "#E5E7EB",
 }) => {
@@ -122,10 +119,10 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
           </div>
           <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5 group-hover:text-gray-600 transition-colors duration-500">
             {percentage >= 100 ? '🎉 Target achieved! Outstanding performance!' :
-             percentage >= 80 ? '🔥 On fire! Keep pushing to the finish line!' :
-             percentage >= 50 ? '💪 Making solid progress. Keep going!' :
-             percentage > 0 ? '🚀 Getting started. Every step counts!' :
-             '📋 No target set. Contact your admin to set goals.'}
+              percentage >= 80 ? '🔥 On fire! Keep pushing to the finish line!' :
+                percentage >= 50 ? '💪 Making solid progress. Keep going!' :
+                  percentage > 0 ? '🚀 Getting started. Every step counts!' :
+                    '📋 No target set. Contact your admin to set goals.'}
           </p>
         </div>
       </div>
@@ -171,9 +168,8 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
           <div className="flex items-center gap-2 mb-1">
             <span className={`text-[10px] font-medium uppercase tracking-wider ${textColor === 'text-white' ? 'text-white/80 group-hover:text-secondary/80' : 'text-gray-500 group-hover:text-secondary/80'} transition-colors duration-300`}>{title}</span>
             {trend !== undefined && (
-              <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-                trend >= 0 ? 'bg-green-400/30 text-green-200 group-hover:bg-secondary/30 group-hover:text-secondary' : 'bg-red-400/30 text-red-200 group-hover:bg-secondary/30 group-hover:text-secondary'
-              } transition-colors duration-300`}>
+              <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${trend >= 0 ? 'bg-green-400/30 text-green-200 group-hover:bg-secondary/30 group-hover:text-secondary' : 'bg-red-400/30 text-red-200 group-hover:bg-secondary/30 group-hover:text-secondary'
+                } transition-colors duration-300`}>
                 {trend >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
                 {trend >= 0 ? '+' : ''}{trend}%
               </span>
@@ -253,13 +249,14 @@ const SkeletonSummaryCard: React.FC = () => (
 );
 
 export default function TargetsManagement() {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  // const { user } = useAuth();
+  const { toast, showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  console.log("refreshing", refreshing)
   const fetchPerformance = async (showRefresh = false) => {
     try {
       if (showRefresh) setRefreshing(true);
@@ -269,7 +266,7 @@ export default function TargetsManagement() {
       const res = await getMarketingPerformance(); // for logged-in marketing agent
       setData(res.data);
       if (showRefresh) {
-        toast.showToast("success", "Targets refreshed ✨");
+        showToast("success", "Targets refreshed ✨");
       }
     } catch (err: any) {
       console.error(err);
@@ -285,31 +282,31 @@ export default function TargetsManagement() {
   }, []);
 
   // Export CSV
-  const handleExport = () => {
-    if (!data) return;
-    const { agent, target_progress, total_companies_registered } = data;
-    const headers = ["Metric", "Value"];
-    const rows = [
-      ["Agent", `${agent.first_name || ''} ${agent.last_name || ''}`],
-      ["Username", agent.username],
-      ["Daily Target", target_progress.daily_target],
-      ["Registered Today", target_progress.registered_today],
-      ["Daily Progress", `${Math.round(target_progress.daily_progress_percentage)}%`],
-      ["Weekly Target", target_progress.weekly_target],
-      ["Registered This Week", target_progress.registered_this_week],
-      ["Weekly Progress", `${Math.round(target_progress.weekly_progress_percentage)}%`],
-      ["Total Companies", total_companies_registered],
-    ];
-    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `targets_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.showToast("success", "Export successful");
-  };
+  // const handleExport = () => {
+  //   if (!data) return;
+  //   const { agent, target_progress, total_companies_registered } = data;
+  //   const headers = ["Metric", "Value"];
+  //   const rows = [
+  //     ["Agent", `${agent.first_name || ''} ${agent.last_name || ''}`],
+  //     ["Username", agent.username],
+  //     ["Daily Target", target_progress.daily_target],
+  //     ["Registered Today", target_progress.registered_today],
+  //     ["Daily Progress", `${Math.round(target_progress.daily_progress_percentage)}%`],
+  //     ["Weekly Target", target_progress.weekly_target],
+  //     ["Registered This Week", target_progress.registered_this_week],
+  //     ["Weekly Progress", `${Math.round(target_progress.weekly_progress_percentage)}%`],
+  //     ["Total Companies", total_companies_registered],
+  //   ];
+  //   const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+  //   const blob = new Blob([csv], { type: "text/csv" });
+  //   const url = URL.createObjectURL(blob);
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = `targets_${new Date().toISOString().split("T")[0]}.csv`;
+  //   a.click();
+  //   URL.revokeObjectURL(url);
+  //   showToast("success", "Export successful");
+  // };
 
   if (loading) {
     return (
@@ -382,7 +379,6 @@ export default function TargetsManagement() {
 
   // Monthly target = weekly * 4 (approx)
   const monthlyTarget = target_progress.weekly_target * 4;
-  const monthlyProgress = monthlyTarget > 0 ? (total_companies_registered / monthlyTarget) * 100 : 0;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 font-sans bg-gray-50/50 min-h-screen">

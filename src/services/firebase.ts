@@ -20,6 +20,7 @@ export const app = initializeApp(firebaseConfig);
 export async function getMessagingIfSupported(): Promise<Messaging | null> {
   try {
     if (await isSupported()) return getMessaging(app);
+    return null;
   } catch {
     return null;
   }

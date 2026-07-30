@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react';
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   title: string;
-  deleteTitle:string
+  deleteTitle?: string
   onConfirm: () => void;
   onCancel: () => void;
 }

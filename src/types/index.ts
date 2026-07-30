@@ -109,7 +109,7 @@ export interface Company {
   contact_phone?: string;
   contact_email?: string;
   address?: string;
-  address_am?: string; 
+  address_am?: string;
   is_active: boolean;
   is_featured: boolean;
   supports_table_service: boolean;
@@ -157,6 +157,8 @@ export interface CompanyListItem {
   is_featured: boolean;
   supports_table_service: boolean;
   description?: string;
+  contact_phone: string;
+  contact_email: string;
   tin_number?: string;
   vat_registration_number?: string;
   tax_type?: string;
@@ -320,6 +322,11 @@ export interface Delivery {
   delivery_person_name?: string;
   tracking_id?: string;
   status?: string;
+  delivery_person_image: string;
+  customer_lat: number;
+  customer_lon: number;
+  current_lat: number;
+  current_lng: number;
 }
 
 export interface VendorOrder {

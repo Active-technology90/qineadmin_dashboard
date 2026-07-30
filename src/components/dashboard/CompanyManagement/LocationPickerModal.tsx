@@ -8,7 +8,6 @@ import {
   Navigation,
   Check,
   Loader2,
-  Copy,
   AlertTriangle,
   Info,
 } from "lucide-react";
@@ -424,13 +423,13 @@ export default function LocationPickerModal({
   };
 
   // ── Copy coordinates ──────────────────────────────────────────────
-  const copyCoordinates = () => {
-    const text = `${selectedLat}, ${selectedLon}`;
-    navigator.clipboard.writeText(text).then(
-      () => showToast("Coordinates copied to clipboard", "success"),
-      () => showToast("Failed to copy", "error")
-    );
-  };
+  // const copyCoordinates = () => {
+  //   const text = `${selectedLat}, ${selectedLon}`;
+  //   navigator.clipboard.writeText(text).then(
+  //     () => showToast("Coordinates copied to clipboard", "success"),
+  //     () => showToast("Failed to copy", "error")
+  //   );
+  // };
 
   // ── Save ──────────────────────────────────────────────────────────
   const handleSave = () => {

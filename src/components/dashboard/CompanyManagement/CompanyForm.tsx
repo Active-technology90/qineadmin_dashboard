@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
+// import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
 import type { Category, SubCategory } from "../../../types";
 import LocationPickerModal from "./LocationPickerModal";
 import { 
   MapPin, Building2, Shield, Users, Truck, Car, FileText, 
-  Award, IdCard, FileCheck, Store, Check, Camera, XCircle 
+  Award, IdCard, FileCheck, Camera, XCircle 
 } from "lucide-react";
 
 export interface CompanyFormData {
@@ -79,14 +79,10 @@ export default function CompanyForm({
   logoPreview,
   coverPreview,
    onLogoFileChange,   
-  onCoverFileChange,  
-  isEditingActive,
-  headCompanyName,
-  submitting,
+  onCoverFileChange,
   editingSlug,
   currentStep = 0,
   onSubmit,
-  onClose,
 }: CompanyFormProps) {
   const filteredSubcategories = subcategories.filter(
     (sub) => sub.category === formData.category,
@@ -109,14 +105,15 @@ export default function CompanyForm({
     }
   }, [formData.business_type, formData.registration_type, setFormData]);
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
+  // const fileToBase64 = (file: File): Promise<string> => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(file);
+  //     reader.onload = () => resolve(reader.result as string);
+  //     reader.onerror = (error) => reject(error);
+  //   });
+  // };
+
 
   // ==================== STEP 1: BASIC INFORMATION ====================
   const renderStep1 = () => (

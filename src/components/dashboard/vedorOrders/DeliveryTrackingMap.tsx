@@ -28,6 +28,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useReadOnly } from "../AdminDashboard";
 import { useQuery } from "@tanstack/react-query";
+import type * as Leaflet from "leaflet";
 import { db } from "../../../services/firebase";
 import { ref, onValue, off } from "firebase/database";
 import type { VendorOrder } from "../../../types";
@@ -279,7 +280,7 @@ const createDriverPopup = (
 };
 
 // ── Marker icon helpers (unchanged) ────────────────────────────────
-const makeCustomerIcon = (count: number): L.DivIcon => {
+const makeCustomerIcon = (count: number): Leaflet.DivIcon => {
   const L = (window as any).L;
   return L.divIcon({
     className: "customer-marker-grouped",
@@ -342,7 +343,7 @@ const makeDriverIcon = (
   driverName: string,
   count: number,
   color: string,
-): L.DivIcon => {
+): Leaflet.DivIcon => {
   const L = (window as any).L;
   return L.divIcon({
     className: "driver-marker-grouped",
@@ -426,12 +427,12 @@ export default function DeliveryTrackingMap({
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
   // Refs
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const driverMarkers = useRef<Map<string, L.Marker>>(new Map());
-  const customerMarkers = useRef<Map<string, L.Marker>>(new Map());
-  const routeLines = useRef<Map<number, L.Polyline>>(new Map());
-  const clusterGroup = useRef<L.MarkerClusterGroup | null>(null);
+  const driverMarkers = useRef<Map<string, Leaflet.Marker>>(new Map());
+  const customerMarkers = useRef<Map<string, Leaflet.Marker>>(new Map());
+  const routeLines = useRef<Map<number, Leaflet.Polyline>>(new Map());
+  const clusterGroup = useRef<Leaflet.LayerGroup | null>(null);
   const subscribedIds = useRef<Set<string>>(new Set());
   const initialFitDone = useRef(false);
 
@@ -633,7 +634,7 @@ export default function DeliveryTrackingMap({
     currentTrackingIds.forEach((id) => {
       if (!subscribedIds.current.has(id)) {
         const trackingRef = ref(db, `deliveries/${id}`);
-        const listener = onValue(trackingRef, (snapshot) => {
+        onValue(trackingRef, (snapshot) => {
           const val = snapshot.val();
           if (!val) return;
           liveDeliveries.forEach((o) => {
@@ -776,13 +777,13 @@ export default function DeliveryTrackingMap({
       if (!marker) {
         const count = orders.length;
         const icon = makeCustomerIcon(count);
-        marker = L.marker([lat, lng], { icon }).bindPopup(
+        const newMarker = L.marker([lat, lng], { icon }).bindPopup(
           createCustomerPopup(orders),
           { maxWidth: 320 },
         );
-        marker.on("click", () => setActiveOrderId(orders[0].id));
-        cluster.addLayer(marker);
-        customerMarkers.current.set(key, marker);
+        newMarker.on("click", () => setActiveOrderId(orders[0].id));
+        cluster.addLayer(newMarker);
+        customerMarkers.current.set(key, newMarker);
       } else {
         marker.setIcon(makeCustomerIcon(orders.length));
         marker.setLatLng([lat, lng]);
@@ -815,13 +816,13 @@ export default function DeliveryTrackingMap({
           const count = orders.length;
           const phone = orders[0]?.delivery.delivery_person_phone;
           const icon = makeDriverIcon(driverName, count, color);
-          marker = L.marker([driverLat, driverLng], { icon }).bindPopup(
+          const newMarker = L.marker([driverLat, driverLng], { icon }).bindPopup(
             createDriverPopup(driverName, orders, color, phone),
             { maxWidth: 320 },
           );
-          marker.on("click", () => setActiveOrderId(orders[0].id));
-          cluster.addLayer(marker);
-          driverMarkers.current.set(driverName, marker);
+          newMarker.on("click", () => setActiveOrderId(orders[0].id));
+          cluster.addLayer(newMarker);
+          driverMarkers.current.set(driverName, newMarker);
         } else {
           marker.setLatLng([driverLat, driverLng]);
           const count = orders.length;
@@ -853,12 +854,13 @@ export default function DeliveryTrackingMap({
 
               if (realCoords && realCoords.length > 0) {
                 if (!line) {
-                  line = L.polyline(realCoords, {
+                  const newLine = L.polyline(realCoords, {
                     color,
                     weight: 3,
                     opacity: 0.8,
-                  }).addTo(mapRef.current!);
-                  routeLines.current.set(orderId, line);
+                  });
+                  newLine.addTo(mapRef.current!);
+                  routeLines.current.set(orderId, newLine);
                 } else {
                   line.setLatLngs(realCoords);
                   line.setStyle({ color, weight: 3, opacity: 0.8, dashArray: undefined });
@@ -866,14 +868,15 @@ export default function DeliveryTrackingMap({
               } else {
                 // Fallback: straight line
                 if (!line) {
-                  line = L.polyline(
+                  const newLine = L.polyline(
                     [
                       [driverLat, driverLng],
                       [custLat, custLng],
                     ],
                     { color, weight: 2, opacity: 0.7, dashArray: "8 6" },
-                  ).addTo(mapRef.current!);
-                  routeLines.current.set(orderId, line);
+                  );
+                  newLine.addTo(mapRef.current!);
+                  routeLines.current.set(orderId, newLine);
                 } else {
                   line.setLatLngs([
                     [driverLat, driverLng],

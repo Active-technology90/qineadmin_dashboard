@@ -5,19 +5,13 @@ import {
   ChevronRight,
   Plus,
   Eye,
-  Edit,
-  Trash2,
   X,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Users,
   FileDown,
   List,
   Grid,
-  Briefcase,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import { Toast } from "../ui/Toast";
 import { FormModal } from "../ui/FormModal";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 
@@ -202,7 +196,7 @@ const SkeletonSidebar: React.FC = () => (
 );
 
 export default function CalendarManagement() {
-  const { toast } = useToast();
+  const { toast, showToast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -224,6 +218,7 @@ export default function CalendarManagement() {
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null);
   const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
 
+  console.log("editingEvent", editingEvent)
   // ─── Fetch data ─────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
@@ -262,7 +257,7 @@ export default function CalendarManagement() {
     ];
 
     const days: Array<{ day: number; date: string; events: CalendarEvent[] }> = [];
-    const today = new Date();
+    // const today = new Date();
 
     for (let i = 0; i < firstDay; i++) {
       const prevMonthDate = new Date(year, month, -firstDay + i + 1);
@@ -316,7 +311,7 @@ export default function CalendarManagement() {
   // ─── CRUD handlers ──────────────────────────────────────
   const handleAddEvent = () => {
     if (!newEvent.title?.trim()) {
-      toast.showToast("error", "Title is required");
+      showToast("error", "Title is required");
       return;
     }
     const event: CalendarEvent = {
@@ -331,25 +326,25 @@ export default function CalendarManagement() {
     setEvents([...events, event]);
     setIsModalOpen(false);
     setNewEvent({ title: "", date: "", time: "", description: "", type: "event", priority: "medium" });
-    toast.showToast("success", "Event added successfully");
+    showToast("success", "Event added successfully");
   };
 
-  const handleUpdateEvent = () => {
-    if (!editingEvent) return;
-    if (!editingEvent.title?.trim()) {
-      toast.showToast("error", "Title is required");
-      return;
-    }
-    setEvents(events.map((e) => (e.id === editingEvent.id ? editingEvent : e)));
-    setEditingEvent(null);
-    toast.showToast("success", "Event updated successfully");
-  };
+  // const handleUpdateEvent = () => {
+  //   if (!editingEvent) return;
+  //   if (!editingEvent.title?.trim()) {
+  //     showToast("error", "Title is required");
+  //     return;
+  //   }
+  //   setEvents(events.map((e) => (e.id === editingEvent.id ? editingEvent : e)));
+  //   setEditingEvent(null);
+  //   showToast("success", "Event updated successfully");
+  // };
 
   const handleDeleteEvent = () => {
     if (!deletingEvent) return;
     setEvents(events.filter((e) => e.id !== deletingEvent.id));
     setDeletingEvent(null);
-    toast.showToast("success", "Event deleted successfully");
+    showToast("success", "Event deleted successfully");
   };
 
   const handleViewEvent = (event: CalendarEvent) => {
@@ -375,7 +370,7 @@ export default function CalendarManagement() {
     a.download = `calendar_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.showToast("success", "Export successful");
+    showToast("success", "Export successful");
   };
 
   // Group events by date for the events sidebar
@@ -438,6 +433,7 @@ export default function CalendarManagement() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 font-sans bg-gray-50/50 min-h-screen">
+      <Toast toast={toast} />
       {/* ─── Header ──────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -496,18 +492,16 @@ export default function CalendarManagement() {
         <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
           <button
             onClick={() => setView("month")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              view === "month" ? "bg-white text-secondary shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${view === "month" ? "bg-white text-secondary shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             <Grid className="h-3.5 w-3.5" />
             Month
           </button>
           <button
             onClick={() => setView("week")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              view === "week" ? "bg-white text-secondary shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${view === "week" ? "bg-white text-secondary shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             <List className="h-3.5 w-3.5" />
             Week
@@ -536,9 +530,8 @@ export default function CalendarManagement() {
                 <div
                   key={index}
                   onClick={() => openAddEvent(day.date)}
-                  className={`relative min-h-[80px] sm:min-h-[100px] p-1.5 rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-50/80 ${
-                    !isCurrentMonth ? "text-gray-300" : "text-gray-700"
-                  } ${isTodayFlag ? "bg-secondary/5 border-2 border-secondary/30" : "border border-transparent hover:border-gray-200"}`}
+                  className={`relative min-h-[80px] sm:min-h-[100px] p-1.5 rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-50/80 ${!isCurrentMonth ? "text-gray-300" : "text-gray-700"
+                    } ${isTodayFlag ? "bg-secondary/5 border-2 border-secondary/30" : "border border-transparent hover:border-gray-200"}`}
                 >
                   <span className={`text-xs font-medium ${isTodayFlag ? "text-secondary font-bold" : ""}`}>
                     {day.day}
@@ -548,7 +541,7 @@ export default function CalendarManagement() {
                       {day.events.slice(0, 3).map((e, i) => (
                         <div
                           key={i}
-                          onClick={(e) => { e.stopPropagation(); handleViewEvent(e); }}
+                          onClick={(ev) => { ev.stopPropagation(); handleViewEvent(e); }}
                           className="flex items-center gap-1 text-[9px] font-medium truncate px-1.5 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition"
                           style={{ backgroundColor: `${typeConfig[e.type].dotColor}20`, color: typeConfig[e.type].dotColor.replace('bg-', 'text-') }}
                         >
@@ -616,7 +609,7 @@ export default function CalendarManagement() {
                           </div>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleViewEvent(e); }}
+                          onClick={(ev) => { ev.stopPropagation(); handleViewEvent(e); }}
                           className="opacity-0 group-hover:opacity-100 transition"
                         >
                           <Eye className="h-3.5 w-3.5 text-gray-400 hover:text-secondary" />

@@ -43,69 +43,69 @@ interface SuperAdminViewProps {
   onPageSizeChange: (size: number) => void;
 }
 // ─── Company Hover Preview ──────────────────────────────
-const CompanyHoverPreview: React.FC<{ company: any }> = ({ company }) => {
-  return (
-    <div className="absolute left-full top-0 ml-2 z-50 w-72 p-4 bg-white rounded-2xl shadow-2xl border border-gray-100/50 backdrop-blur-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-2 group-hover:translate-x-0 pointer-events-none">
-      <div className="flex items-start gap-3">
-        {company.logo ? (
-          <img
-            src={company.logo}
-            alt={company.name}
-            className="h-12 w-12 rounded-xl object-cover border border-gray-200"
-          />
-        ) : (
-          <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center">
-            <Building2 className="h-6 w-6 text-gray-400" />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-gray-900 text-sm truncate">
-            {company.name}
-          </h4>
-          <p className="text-xs text-gray-500 truncate">@{company.slug}</p>
-          <div className="flex flex-wrap items-center gap-1 mt-0.5">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-              company.is_active
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-gray-100 text-gray-500'
-            }`}>
-              {company.is_active ? (
-                <CheckCircle className="h-2.5 w-2.5" />
-              ) : (
-                <XCircle className="h-2.5 w-2.5" />
-              )}
-              {company.is_active ? 'Active' : 'Inactive'}
-            </span>
-            {company.is_featured && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
-                ⭐ Featured
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+// const CompanyHoverPreview: React.FC<{ company: any }> = ({ company }) => {
+//   return (
+//     <div className="absolute left-full top-0 ml-2 z-50 w-72 p-4 bg-white rounded-2xl shadow-2xl border border-gray-100/50 backdrop-blur-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-2 group-hover:translate-x-0 pointer-events-none">
+//       <div className="flex items-start gap-3">
+//         {company.logo ? (
+//           <img
+//             src={company.logo}
+//             alt={company.name}
+//             className="h-12 w-12 rounded-xl object-cover border border-gray-200"
+//           />
+//         ) : (
+//           <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center">
+//             <Building2 className="h-6 w-6 text-gray-400" />
+//           </div>
+//         )}
+//         <div className="flex-1 min-w-0">
+//           <h4 className="font-semibold text-gray-900 text-sm truncate">
+//             {company.name}
+//           </h4>
+//           <p className="text-xs text-gray-500 truncate">@{company.slug}</p>
+//           <div className="flex flex-wrap items-center gap-1 mt-0.5">
+//             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+//               company.is_active
+//                 ? 'bg-emerald-100 text-emerald-700'
+//                 : 'bg-gray-100 text-gray-500'
+//             }`}>
+//               {company.is_active ? (
+//                 <CheckCircle className="h-2.5 w-2.5" />
+//               ) : (
+//                 <XCircle className="h-2.5 w-2.5" />
+//               )}
+//               {company.is_active ? 'Active' : 'Inactive'}
+//             </span>
+//             {company.is_featured && (
+//               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+//                 ⭐ Featured
+//               </span>
+//             )}
+//           </div>
+//         </div>
+//       </div>
 
-      <div className="mt-3 space-y-1.5 text-xs text-gray-600 border-t border-gray-100 pt-3">
-        <div className="flex items-center gap-2">
-          <Mail className="h-3.5 w-3.5 text-gray-400" />
-          <span className="truncate">{company.email || company.contact_email || '—'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Phone className="h-3.5 w-3.5 text-gray-400" />
-          <span>{company.phone || company.contact_phone || '—'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5 text-gray-400" />
-          <span className="truncate">{company.address || '—'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Building2 className="h-3.5 w-3.5 text-gray-400" />
-          <span className="truncate">{company.category_name} · {company.sub_category_name}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+//       <div className="mt-3 space-y-1.5 text-xs text-gray-600 border-t border-gray-100 pt-3">
+//         <div className="flex items-center gap-2">
+//           <Mail className="h-3.5 w-3.5 text-gray-400" />
+//           <span className="truncate">{company.email || company.contact_email || '—'}</span>
+//         </div>
+//         <div className="flex items-center gap-2">
+//           <Phone className="h-3.5 w-3.5 text-gray-400" />
+//           <span>{company.phone || company.contact_phone || '—'}</span>
+//         </div>
+//         <div className="flex items-center gap-2">
+//           <MapPin className="h-3.5 w-3.5 text-gray-400" />
+//           <span className="truncate">{company.address || '—'}</span>
+//         </div>
+//         <div className="flex items-center gap-2">
+//           <Building2 className="h-3.5 w-3.5 text-gray-400" />
+//           <span className="truncate">{company.category_name} · {company.sub_category_name}</span>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 export default function SuperAdminView({
   paginatedItems,

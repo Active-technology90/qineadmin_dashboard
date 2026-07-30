@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Users,
-  Search,
   Plus,
   Eye,
   Edit,
@@ -14,7 +13,6 @@ import {
   Phone,
   Building2,
   Star,
-  Filter,
   FileDown,
 } from "lucide-react";
 import { TableControls } from "../ui/TableControls";
@@ -22,8 +20,8 @@ import { SearchInput } from "../ui/SearchInput";
 import { Pagination } from "../ui/Pagination";
 import { CustomSelect } from "../ui/CustomSelect";
 import FilterSortSheet from "../ui/FilterSortSheet";
-import { Toast } from "../ui/Toast";
 import { useToast } from "../../hooks/useToast";
+import { Toast } from "../ui/Toast";
 import { FormModal } from "../ui/FormModal";
 import { DeleteConfirmModal } from "../ui/DeleteConfirmModal";
 
@@ -197,7 +195,7 @@ const SkeletonLeadTable: React.FC<{ rowCount?: number }> = ({ rowCount = 5 }) =>
 );
 
 export default function LeadsManagement() {
-  const { toast } = useToast();
+  const { toast, showToast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -335,13 +333,13 @@ export default function LeadsManagement() {
     a.download = `leads_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.showToast("success", "Export successful");
+    showToast("success", "Export successful");
   };
 
   // Add new lead
   const handleAddLead = () => {
     if (!newLead.company_name?.trim() || !newLead.contact_name?.trim()) {
-      toast.showToast("error", "Company name and contact name are required");
+      showToast("error", "Company name and contact name are required");
       return;
     }
     const lead: Lead = {
@@ -368,7 +366,7 @@ export default function LeadsManagement() {
       source: "",
       notes: "",
     });
-    toast.showToast("success", "Lead added successfully");
+    showToast("success", "Lead added successfully");
   };
 
   // View Lead
@@ -394,7 +392,7 @@ export default function LeadsManagement() {
   const handleUpdateLead = () => {
     if (!editingLead) return;
     if (!editFormData.company_name?.trim() || !editFormData.contact_name?.trim()) {
-      toast.showToast("error", "Company name and contact name are required");
+      showToast("error", "Company name and contact name are required");
       return;
     }
 
@@ -413,7 +411,7 @@ export default function LeadsManagement() {
     setLeads(leads.map((l) => (l.id === editingLead.id ? updatedLead : l)));
     setEditingLead(null);
     setEditFormData({});
-    toast.showToast("success", "Lead updated successfully");
+    showToast("success", "Lead updated successfully");
   };
 
   // Delete Lead
@@ -425,7 +423,7 @@ export default function LeadsManagement() {
     if (!deletingLead) return;
     setLeads(leads.filter((l) => l.id !== deletingLead.id));
     setDeletingLead(null);
-    toast.showToast("success", "Lead deleted successfully");
+    showToast("success", "Lead deleted successfully");
   };
 
   if (loading) {
@@ -485,6 +483,7 @@ export default function LeadsManagement() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 font-sans bg-gray-50/50 min-h-screen">
+      <Toast toast={toast} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -612,9 +611,8 @@ export default function LeadsManagement() {
                 {paginatedLeads.map((lead, index) => (
                   <tr
                     key={lead.id}
-                    className={`group transition-all duration-150 ${
-                      index !== paginatedLeads.length - 1 ? "border-b border-gray-100/80" : ""
-                    } hover:bg-gray-50/60`}
+                    className={`group transition-all duration-150 ${index !== paginatedLeads.length - 1 ? "border-b border-gray-100/80" : ""
+                      } hover:bg-gray-50/60`}
                   >
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
@@ -881,7 +879,7 @@ export default function LeadsManagement() {
           </div>
         </div>
       </FormModal>
-            {/* View Lead Modal */}
+      {/* View Lead Modal */}
       {viewingLead && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Building2,
@@ -12,10 +12,8 @@ import {
   TrendingUp,
   TrendingDown,
   CheckCircle,
-  Filter,
-   User,
-   ZoomIn,
-     FileDown,
+  User,
+  ZoomIn,
   AlertTriangle,
 } from "lucide-react";
 import AgentPersonalInfoModal from "./AgentPersonalInfoModal";
@@ -48,42 +46,42 @@ interface MarketingAgent {
 // ============================================================
 // Stat Card Component
 // ============================================================
-interface StatCardProps {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  gradient: string;
-  subtitle?: string;
-}
+// interface StatCardProps {
+//   title: string;
+//   value: number;
+//   icon: React.ReactNode;
+//   gradient: string;
+//   subtitle?: string;
+// }
 
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  icon,
-  gradient,
-  subtitle,
-}) => (
-  <div
-    className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 sm:p-5 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5`}
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-xs font-medium text-white/70 uppercase tracking-wider">
-          {title}
-        </p>
-        <p className="text-2xl sm:text-3xl font-bold text-white mt-2">
-          {value}
-        </p>
-        {subtitle && (
-          <p className="text-[10px] text-white/60 mt-1">{subtitle}</p>
-        )}
-      </div>
-      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-        {icon}
-      </div>
-    </div>
-  </div>
-);
+// const StatCard: React.FC<StatCardProps> = ({
+//   title,
+//   value,
+//   icon,
+//   gradient,
+//   subtitle,
+// }) => (
+//   <div
+//     className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 sm:p-5 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5`}
+//   >
+//     <div className="flex items-center justify-between">
+//       <div>
+//         <p className="text-xs font-medium text-white/70 uppercase tracking-wider">
+//           {title}
+//         </p>
+//         <p className="text-2xl sm:text-3xl font-bold text-white mt-2">
+//           {value}
+//         </p>
+//         {subtitle && (
+//           <p className="text-[10px] text-white/60 mt-1">{subtitle}</p>
+//         )}
+//       </div>
+//       <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+//         {icon}
+//       </div>
+//     </div>
+//   </div>
+// );
 
 // ============================================================
 // Skeleton Card (for loading) - matches real stat card exactly
@@ -116,18 +114,18 @@ export default function MarketingAgentsManagement() {
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [selectedAgentName, setSelectedAgentName] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
-const [personalModalAgent, setPersonalModalAgent] = useState<MarketingAgent | null>(null);
-const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null);   
-  
+  const [personalModalAgent, setPersonalModalAgent] = useState<MarketingAgent | null>(null);
+  const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   // Filter/Sort Sheet state
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [tempSort, setTempSort] = useState("name|asc");
   const [tempCategory, setTempCategory] = useState("all");
-  
+
   const sortOptions = [
     { label: "Name (A-Z)", value: "name|asc", icon: <Users className="h-4 w-4" /> },
     { label: "Name (Z-A)", value: "name|desc", icon: <Users className="h-4 w-4" /> },
@@ -136,13 +134,13 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
     { label: "Highest Daily Target", value: "daily_target|desc", icon: <Target className="h-4 w-4" /> },
     { label: "Highest Weekly Target", value: "weekly_target|desc", icon: <Award className="h-4 w-4" /> },
   ];
-  
+
   const categoryOptions = [
     { label: "All Agents", value: "all", icon: <Users className="h-4 w-4" /> },
     { label: "Active", value: "active", icon: <CheckCircle className="h-4 w-4" /> },
     { label: "Inactive", value: "inactive", icon: <X className="h-4 w-4" /> },
   ];
-  
+
   const categoryNameMap: Record<string, string> = {
     active: "Active",
     inactive: "Inactive",
@@ -168,7 +166,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
 
   const filteredAgents = useMemo(() => {
     let result = [...agents];
-    
+
     // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
@@ -181,35 +179,35 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           (a.phone_number && a.phone_number.includes(term))
       );
     }
-    
+
     // Category filter (active/inactive)
     if (tempCategory === "active") {
       result = result.filter((a) => a.is_active === true);
     } else if (tempCategory === "inactive") {
       result = result.filter((a) => a.is_active === false);
     }
-    
+
     // Sort
     const [field, order] = tempSort.split("|");
     result.sort((a, b) => {
       let valA: any = a[field as keyof MarketingAgent];
       let valB: any = b[field as keyof MarketingAgent];
-      
+
       if (typeof valA === "string") {
         valA = valA.toLowerCase();
         valB = valB.toLowerCase();
       }
-      
+
       if (order === "asc") {
         return valA > valB ? 1 : valA < valB ? -1 : 0;
       } else {
         return valA < valB ? 1 : valA > valB ? -1 : 0;
       }
     });
-    
+
     return result;
   }, [agents, searchTerm, tempCategory, tempSort]);
-  
+
   // Paginated agents
   const paginatedAgents = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -222,8 +220,8 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
     const totalAgents = agents.length;
     const totalCompanies = agents.reduce((sum, a) => sum + a.companies_count, 0);
     const activeAgents = agents.filter((a) => a.is_active).length;
-    const avgDailyTarget = agents.length > 0 
-      ? Math.round(agents.reduce((sum, a) => sum + a.daily_target, 0) / agents.length) 
+    const avgDailyTarget = agents.length > 0
+      ? Math.round(agents.reduce((sum, a) => sum + a.daily_target, 0) / agents.length)
       : 0;
     return { totalAgents, totalCompanies, activeAgents, avgDailyTarget };
   }, [agents]);
@@ -599,15 +597,15 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
         }}
       >
         <div className="flex flex-col md:flex-row gap-3 w-full items-start md:items-center">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Search by agent name, username, or email..."
-          debounceMs={300}
-          showClearButton={true}
-          showMobileFilter={true}
-          onMobileFilterClick={() => setFilterSheetOpen(true)}
-          activeFilterCount={tempCategory !== "all" ? 1 : 0}
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search by agent name, username, or email..."
+            debounceMs={300}
+            showClearButton={true}
+            showMobileFilter={true}
+            onMobileFilterClick={() => setFilterSheetOpen(true)}
+            activeFilterCount={tempCategory !== "all" ? 1 : 0}
             className="w-full md:flex-1"
           />
           {/* Desktop-only sort & category dropdowns (hidden on mobile) */}
@@ -709,53 +707,53 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                     {/* Agent Info */}
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
-{agent.profile_image ? (
-  <div className="relative flex-shrink-0">
-                          <img
-                            src={agent.profile_image}
-                            alt={agent.username}
-      className="h-10 w-10 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
-      onClick={() => setZoomImageAgent(agent)}
-    />
-    <div
-      className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
-      onClick={() => setZoomImageAgent(agent)}
-    >
-      <ZoomIn className="h-3 w-3" />
-    </div>
-  </div>
+                        {agent.profile_image ? (
+                          <div className="relative flex-shrink-0">
+                            <img
+                              src={agent.profile_image}
+                              alt={agent.username}
+                              className="h-10 w-10 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
+                              onClick={() => setZoomImageAgent(agent)}
+                            />
+                            <div
+                              className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
+                              onClick={() => setZoomImageAgent(agent)}
+                            >
+                              <ZoomIn className="h-3 w-3" />
+                            </div>
+                          </div>
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary-dark flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-secondary/10 flex-shrink-0">
                             {getInitials(agent.first_name, agent.last_name, agent.username)}
                           </div>
                         )}
-<div className="flex-1">
-  <div className="flex items-center gap-0 flex-wrap">
-    <p className="font-semibold text-gray-900 text-sm leading-tight truncate max-w-[120px]">
-      {agent.first_name && agent.last_name
-        ? `${agent.first_name} ${agent.last_name}`
-        : agent.username}
-    </p>
-    {/* Ranking Badge */}
-    {(() => {
-      const rank = getPerformanceRank(agent);
-      return (
-        <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${rank.color}`}>
-          {rank.icon}
-          {rank.label}
-        </span>
-      );
-    })()}
-    <button
-      onClick={() => setPersonalModalAgent(agent)}
-      className="p-1.5 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
-      title="View Profile"
-    >
-      <User className="h-4 w-4 text-secondary group-hover:text-secondary-dark transition-colors" />
-    </button>
-  </div>
-  <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
-</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-0 flex-wrap">
+                            <p className="font-semibold text-gray-900 text-sm leading-tight truncate max-w-[120px]">
+                              {agent.first_name && agent.last_name
+                                ? `${agent.first_name} ${agent.last_name}`
+                                : agent.username}
+                            </p>
+                            {/* Ranking Badge */}
+                            {(() => {
+                              const rank = getPerformanceRank(agent);
+                              return (
+                                <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${rank.color}`}>
+                                  {rank.icon}
+                                  {rank.label}
+                                </span>
+                              );
+                            })()}
+                            <button
+                              onClick={() => setPersonalModalAgent(agent)}
+                              className="p-1.5 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+                              title="View Profile"
+                            >
+                              <User className="h-4 w-4 text-secondary group-hover:text-secondary-dark transition-colors" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-gray-400 font-medium">@{agent.username}</p>
+                        </div>
                       </div>
                     </td>
 
@@ -819,15 +817,14 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                agent.daily_target > 0
-                                  ? (agent.companies_count / (agent.daily_target * 7)) >= 1
-                                    ? "bg-emerald-500"
-                                    : (agent.companies_count / (agent.daily_target * 7)) >= 0.5
+                              className={`h-full rounded-full transition-all duration-300 ${agent.daily_target > 0
+                                ? (agent.companies_count / (agent.daily_target * 7)) >= 1
+                                  ? "bg-emerald-500"
+                                  : (agent.companies_count / (agent.daily_target * 7)) >= 0.5
                                     ? "bg-amber-500"
                                     : "bg-red-400"
-                                  : "bg-gray-300"
-                              }`}
+                                : "bg-gray-300"
+                                }`}
                               style={{
                                 width: `${Math.min(100, agent.daily_target > 0 ? (agent.companies_count / (agent.daily_target * 7)) * 100 : 0)}%`
                               }}
@@ -906,53 +903,53 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
               >
                 {/* Header */}
                 <div className="flex items-start gap-3">
-{agent.profile_image ? (
-  <div className="relative flex-shrink-0">
-                    <img
-                      src={agent.profile_image}
-                      alt={agent.username}
-      className="h-12 w-12 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
-      onClick={() => setZoomImageAgent(agent)}
-    />
-    <div
-      className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
-      onClick={() => setZoomImageAgent(agent)}
-    >
-      <ZoomIn className="h-3.5 w-3.5" />
-    </div>
-  </div>
+                  {agent.profile_image ? (
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={agent.profile_image}
+                        alt={agent.username}
+                        className="h-12 w-12 rounded-full object-cover border-2 border-secondary/20 shadow-sm cursor-pointer hover:ring-2 hover:ring-secondary/40 transition-all duration-200"
+                        onClick={() => setZoomImageAgent(agent)}
+                      />
+                      <div
+                        className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 shadow-md cursor-pointer hover:scale-110 transition-transform"
+                        onClick={() => setZoomImageAgent(agent)}
+                      >
+                        <ZoomIn className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-secondary to-secondary-dark flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-secondary/10 flex-shrink-0">
                       {getInitials(agent.first_name, agent.last_name, agent.username)}
                     </div>
                   )}
-<div className="min-w-0 flex-1">
-  <div className="flex items-center gap-0 flex-wrap">
-    <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">
-      {agent.first_name && agent.last_name
-        ? `${agent.first_name} ${agent.last_name}`
-        : agent.username}
-    </p>
-    {/* Ranking Badge */}
-    {(() => {
-      const rank = getPerformanceRank(agent);
-      return (
-        <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-semibold border ${rank.color}`}>
-          {rank.icon}
-          {rank.label}
-        </span>
-      );
-    })()}
-    <button
-      onClick={() => setPersonalModalAgent(agent)}
-      className="p-1 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
-      title="View Profile"
-    >
-      <User className="h-3.5 w-3.5 text-secondary group-hover:text-secondary-dark transition-colors" />
-    </button>
-  </div>
-  <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
-</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-0 flex-wrap">
+                      <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">
+                        {agent.first_name && agent.last_name
+                          ? `${agent.first_name} ${agent.last_name}`
+                          : agent.username}
+                      </p>
+                      {/* Ranking Badge */}
+                      {(() => {
+                        const rank = getPerformanceRank(agent);
+                        return (
+                          <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-semibold border ${rank.color}`}>
+                            {rank.icon}
+                            {rank.label}
+                          </span>
+                        );
+                      })()}
+                      <button
+                        onClick={() => setPersonalModalAgent(agent)}
+                        className="p-1 rounded-full bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 hover:ring-2 hover:ring-secondary/20 transition-all flex-shrink-0 group cursor-pointer"
+                        title="View Profile"
+                      >
+                        <User className="h-3.5 w-3.5 text-secondary group-hover:text-secondary-dark transition-colors" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 truncate">@{agent.username}</p>
+                  </div>
                   <span className={`
                     shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold
                     ${agent.is_active
@@ -1171,7 +1168,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
           </button>
         </div>
       </BottomSheet>
-            {/* Edit Agent Modal */}
+      {/* Edit Agent Modal */}
       {editingAgent && (
         <FormModal
           isOpen={!!editingAgent}

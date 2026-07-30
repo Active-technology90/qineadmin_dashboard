@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   X, User, Mail, Phone, Building2, Target, Award, TrendingUp, 
   CheckCircle, XCircle, Edit, Save 
