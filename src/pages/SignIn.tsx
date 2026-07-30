@@ -73,7 +73,7 @@ export default function SignIn(): React.JSX.Element {
 
           <div className="relative z-10 text-center flex flex-col items-center">
             <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white flex items-center justify-center mb-4 lg:mb-6">
-              <img src="/elilta1.jpg" alt="Qine Logo" className="w-full h-full object-cover rounded-full" />
+              <img src="/elilta1.jpg" alt="Elilita Logo" className="w-full h-full object-cover rounded-full" />
             </div>
 
             <h1 className="text-2xl lg:text-3xl font-bold mb-2">
@@ -118,7 +118,7 @@ export default function SignIn(): React.JSX.Element {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full mt-1 p-2.5 sm:p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#6a5acd] outline-none transition-all text-sm sm:text-base"
-                placeholder="admin@qine.com"
+                placeholder="admin@elilita.com"
               />
             </div>
 

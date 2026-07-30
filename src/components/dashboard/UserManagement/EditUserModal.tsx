@@ -731,7 +731,7 @@ const EditUserModal: React.FC<EditUserModalProps> = React.memo(
                       })
                     }
                     label="Marketing Agent"
-                    description="Designate this user as a Qine marketing person"
+                    description="Designate this user as a Elilita marketing person"
                   />
 
                   {formData.is_marketing && (

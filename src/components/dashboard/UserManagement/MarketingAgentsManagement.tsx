@@ -459,7 +459,7 @@ const [zoomImageAgent, setZoomImageAgent] = useState<MarketingAgent | null>(null
             Marketing Agents
           </h1>
           <p className="text-xs sm:text-sm text-secondary-light/80 mt-1">
-            Manage target quotas and audit onboardings for Qine platform's marketing agents
+            Manage target quotas and audit onboardings for Elilita platform's marketing agents
           </p>
         </div>
         <div className="flex items-center gap-3">

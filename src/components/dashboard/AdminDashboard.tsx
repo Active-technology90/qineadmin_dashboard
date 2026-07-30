@@ -507,7 +507,7 @@ export default function AdminDashboard() {
           >
             <img
               src="/elilta1.jpg"
-              alt="Qine Logo"
+              alt="Elilita Logo"
               className="w-full h-full object-cover rounded-full"
             />
           </div>
