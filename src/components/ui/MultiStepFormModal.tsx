@@ -269,12 +269,11 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
               }}
               className={`
                 relative transition-all duration-300
-                ${
-                  active
-                    ? "w-10 bg-secondary"
-                    : completed
-                      ? "w-3 bg-secondary/40"
-                      : "w-3 bg-gray-300"
+                ${active
+                  ? "w-10 bg-secondary"
+                  : completed
+                    ? "w-3 bg-secondary/40"
+                    : "w-3 bg-gray-300"
                 }
                 h-3 rounded-full
               `}
@@ -300,10 +299,9 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           transition-all duration-200
           flex items-center sm:items-center justify-center
           px-4 sm:px-6
-          ${
-            animateOut
-              ? "bg-black/0 backdrop-blur-0"
-              : "bg-black/60 backdrop-blur-sm"
+          ${animateOut
+            ? "bg-black/0 backdrop-blur-0"
+            : "bg-black/60 backdrop-blur-sm"
           }
         `}
       >
@@ -321,10 +319,9 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
             max-h-[95dvh]  sm:max-h-[92vh]
             ${maxWidthClasses[maxWidth]}
             transition-all duration-300
-            ${
-              animateOut
-                ? "translate-y-full sm:translate-y-10 opacity-0 scale-[0.98]"
-                : "translate-y-0 opacity-100 scale-100"
+            ${animateOut
+              ? "translate-y-full sm:translate-y-10 opacity-0 scale-[0.98]"
+              : "translate-y-0 opacity-100 scale-100"
             }
           `}
         >

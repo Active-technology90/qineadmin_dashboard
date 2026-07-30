@@ -258,7 +258,7 @@ export default function CompanyManagement() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  // ADD THESE FUNCTIONS
+
   const handleLogoChange = useCallback((file: File | null) => {
     // Revoke old blob URL to avoid memory leaks
     if (logoPreview && logoPreview.startsWith('blob:')) {
@@ -268,6 +268,7 @@ export default function CompanyManagement() {
       const url = URL.createObjectURL(file);
       setLogoPreview(url);
     } else {
+      // File is null - user wants to remove the image
       setLogoPreview(null);
     }
   }, [logoPreview]);
@@ -280,6 +281,7 @@ export default function CompanyManagement() {
       const url = URL.createObjectURL(file);
       setCoverPreview(url);
     } else {
+      // File is null - user wants to remove the image
       setCoverPreview(null);
     }
   }, [coverPreview]);
@@ -289,6 +291,11 @@ export default function CompanyManagement() {
   );
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
+
+  // ====== SYNC PREVIEW WITH FORMDATA ======
+  // Preview is managed by handleLogoChange and handleCoverChange callbacks
+  // No useEffect needed - they were causing previews to clear on edit
+
 
 
 
@@ -468,8 +475,8 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => (
           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${comp.is_active
-              ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-              : 'bg-red-100 text-red-700 border-red-200'
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            : 'bg-red-100 text-red-700 border-red-200'
             }`}>
             {comp.is_active ? 'Yes' : 'No'}
           </span>
@@ -481,8 +488,8 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => (
           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${comp.is_featured
-              ? 'bg-amber-100 text-amber-700 border-amber-200'
-              : 'bg-red-100 text-red-700 border-red-200'
+            ? 'bg-amber-100 text-amber-700 border-amber-200'
+            : 'bg-red-100 text-red-700 border-red-200'
             }`}>
             {comp.is_featured ? 'Yes' : 'No'}
           </span>
@@ -513,9 +520,6 @@ export default function CompanyManagement() {
       setError(null);
       if (!isSuperAdmin && !isMarketing && currentCompany?.slug) {
         const companyRes = await getCompanyDetail(currentCompany.slug);
-        console.log(
-          "company", companyRes
-        )
         const company = companyRes.data as Company;
         const companyListItem: CompanyListItem = {
           id: company.id,
@@ -895,7 +899,7 @@ export default function CompanyManagement() {
         )
           return true;
 
-        // ✅ TIN Fields
+        //  TIN Fields
         if (cleanString(formData.tin_number) !== cleanString(originalFormData.tin_number))
           return true;
         if (cleanString(formData.vat_registration_number) !== cleanString(originalFormData.vat_registration_number))
@@ -903,19 +907,17 @@ export default function CompanyManagement() {
         if (cleanString(formData.tax_type) !== cleanString(originalFormData.tax_type))
           return true;
 
-        // File Uploads
+        // File Uploads - Check if logo was removed 
+        if (originalFormData.logo && formData.logo === null) return true;
         if (formData.logo !== null) return true;
+        // Check if cover was removed (original had image, now null)
+        if (originalFormData.cover_image && formData.cover_image === null) return true;
         if (formData.cover_image !== null) return true;
 
         return false;
       };
 
       const changesExist = hasChanges();
-      console.log("Changes detected:", changesExist);
-      console.log("Form data logo:", formData.logo);
-      console.log("Original logo:", originalFormData.logo);
-      console.log("Form data cover:", formData.cover_image);
-      console.log("Original cover:", originalFormData.cover_image);
 
       if (!changesExist) {
         showToast("info", "No changes detected. Update canceled.");
@@ -1108,6 +1110,8 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            onLogoFileChange={handleLogoChange}
+            onCoverFileChange={handleCoverChange}
             isEditingActive={true}
             submitting={submitting}
             editingSlug={editingSlug}
@@ -1119,6 +1123,7 @@ export default function CompanyManagement() {
         ),
         validate: validateLocation,
       },
+
       {
         id: "documents",
         title: <span className="text-secondary">Media & Documents</span>,
@@ -1131,6 +1136,8 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            onLogoFileChange={handleLogoChange}
+            onCoverFileChange={handleCoverChange}
             isEditingActive={true}
             submitting={submitting}
             editingSlug={editingSlug}
@@ -1154,6 +1161,8 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            onLogoFileChange={handleLogoChange}
+            onCoverFileChange={handleCoverChange}
             isEditingActive={true}
             submitting={submitting}
             editingSlug={editingSlug}
@@ -1176,6 +1185,8 @@ export default function CompanyManagement() {
       submitting,
       editingSlug,
       handleSubmit,
+      handleLogoChange,
+      handleCoverChange,
       validateBasicInfo,
       validateLocation,
       validateDocuments,

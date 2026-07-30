@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 // import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
 import type { Category, SubCategory } from "../../../types";
 import LocationPickerModal from "./LocationPickerModal";
-import { 
-  MapPin, Building2, Shield, Users, Truck, Car, FileText, 
-  Award, IdCard, FileCheck, Camera, XCircle 
+import {
+  MapPin, Building2, Shield, Users, Truck, Car, FileText,
+  Award, IdCard, FileCheck, Camera, XCircle
 } from "lucide-react";
 
 export interface CompanyFormData {
@@ -59,8 +59,8 @@ interface CompanyFormProps {
   subcategories: SubCategory[];
   logoPreview: string | null;
   coverPreview: string | null;
-    onLogoFileChange?: (file: File | null) => void;    
-  onCoverFileChange?: (file: File | null) => void;  
+  onLogoFileChange?: (file: File | null) => void;
+  onCoverFileChange?: (file: File | null) => void;
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
@@ -78,7 +78,7 @@ export default function CompanyForm({
   subcategories,
   logoPreview,
   coverPreview,
-   onLogoFileChange,   
+  onLogoFileChange,
   onCoverFileChange,
   editingSlug,
   currentStep = 0,
@@ -118,17 +118,17 @@ export default function CompanyForm({
   // ==================== STEP 1: BASIC INFORMATION ====================
   const renderStep1 = () => (
     <div className="space-y-4">
-{/* Registration Type Selector - Compact Horizontal */}
-<div className="bg-gray-50/50 rounded-xl p-4 border border-gray-200">
-  <div className="flex items-center gap-2 mb-3">
-    <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-    <label className="block text-sm font-semibold text-gray-700">
-      Registration Type <span className="text-red-500">*</span>
-    </label>
-  </div>
-  
-  {/* COMMENTED OUT - Registration type buttons (Vendor, Service, Delivery) */}
-  {/*
+      {/* Registration Type Selector - Compact Horizontal */}
+      <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-200">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
+          <label className="block text-sm font-semibold text-gray-700">
+            Registration Type <span className="text-red-500">*</span>
+          </label>
+        </div>
+
+        {/* COMMENTED OUT - Registration type buttons (Vendor, Service, Delivery) */}
+        {/*
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
     {/* Vendor Option - Compact * /}
     <button
@@ -221,50 +221,50 @@ export default function CompanyForm({
     </button>
   </div>
   */}
-  
-  {/* Compact tag display - shows selected type's tags */}
-  <div className="mt-2 flex flex-wrap gap-1">
-    {formData.registration_type === "vendor" && (
-      <>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-medium border border-blue-200/50">
-          <Shield className="w-2.5 h-2.5" /> License
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[9px] font-medium border border-purple-200/50">
-          <FileText className="w-2.5 h-2.5" /> TIN
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-medium border border-emerald-200/50">
-          <Building2 className="w-2.5 h-2.5" /> Business
-        </span>
-      </>
-    )}
-    {formData.registration_type === "service_provider" && (
-      <>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] font-medium border border-rose-200/50">
-          <Award className="w-2.5 h-2.5" /> Skills
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-medium border border-indigo-200/50">
-          <FileCheck className="w-2.5 h-2.5" /> Credentials
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md text-[9px] font-medium border border-amber-200/50">
-          <IdCard className="w-2.5 h-2.5" /> National ID
-        </span>
-      </>
-    )}
-    {formData.registration_type === "delivery_partner" && (
-      <>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-[9px] font-medium border border-orange-200/50">
-          <Car className="w-2.5 h-2.5" /> Driver License
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-50 text-cyan-600 rounded-md text-[9px] font-medium border border-cyan-200/50">
-          <Car className="w-2.5 h-2.5" /> Vehicle
-        </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-md text-[9px] font-medium border border-green-200/50">
-          <FileCheck className="w-2.5 h-2.5" /> Insurance
-        </span>
-      </>
-    )}
-  </div>
-</div>
+
+        {/* Compact tag display - shows selected type's tags */}
+        <div className="mt-2 flex flex-wrap gap-1">
+          {formData.registration_type === "vendor" && (
+            <>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-medium border border-blue-200/50">
+                <Shield className="w-2.5 h-2.5" /> License
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[9px] font-medium border border-purple-200/50">
+                <FileText className="w-2.5 h-2.5" /> TIN
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-medium border border-emerald-200/50">
+                <Building2 className="w-2.5 h-2.5" /> Business
+              </span>
+            </>
+          )}
+          {formData.registration_type === "service_provider" && (
+            <>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] font-medium border border-rose-200/50">
+                <Award className="w-2.5 h-2.5" /> Skills
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-medium border border-indigo-200/50">
+                <FileCheck className="w-2.5 h-2.5" /> Credentials
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md text-[9px] font-medium border border-amber-200/50">
+                <IdCard className="w-2.5 h-2.5" /> National ID
+              </span>
+            </>
+          )}
+          {formData.registration_type === "delivery_partner" && (
+            <>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-[9px] font-medium border border-orange-200/50">
+                <Car className="w-2.5 h-2.5" /> Driver License
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-50 text-cyan-600 rounded-md text-[9px] font-medium border border-cyan-200/50">
+                <Car className="w-2.5 h-2.5" /> Vehicle
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-md text-[9px] font-medium border border-green-200/50">
+                <FileCheck className="w-2.5 h-2.5" /> Insurance
+              </span>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Business Information ( registration types) */}
       <div>
@@ -272,175 +272,170 @@ export default function CompanyForm({
           <div className="flex items-center gap-2 text-blue-700">
             <Building2 className="w-4 h-4" />
             <p className="text-xs font-medium">Business Information</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter company name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.name ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              />
-              {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name (Amharic)
-              </label>
-              <input
-                type="text"
-                placeholder="Enter company name in Amharic"
-                value={formData.name_am}
-                onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slug <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., my-company-slug"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                disabled={!!editingSlug}
-                className={`w-full border rounded-xl p-3 text-sm font-mono ${
-                  formErrors.slug ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
-              />
-              {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Business Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.business_type}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  let registrationType = formData.registration_type || "vendor";
-                  if (value === "brand" || value === "store") {
-                    registrationType = "vendor";
-                  } else if (value === "service") {
-                    registrationType = "service_provider";
-                  } else if (value === "delivery") {
-                    registrationType = "delivery_partner";
-                  }
-                  setFormData({ ...formData, business_type: value, registration_type: registrationType });
-                }}
-                className={`w-full border rounded-xl p-3 text-sm font-medium transition-all duration-200 ${
-                  formErrors.business_type ? "border-red-500" : 
-                  formData.business_type === "brand" || formData.business_type === "store" ? "border-blue-500 bg-blue-50/30 text-blue-700" :
-                  formData.business_type === "service" ? "border-purple-500 bg-purple-50/30 text-purple-700" :
-                  formData.business_type === "delivery" ? "border-orange-500 bg-orange-50/30 text-orange-700" :
-                  "border-gray-300 bg-white"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              >
-                <option value="">Select Business Type</option>
-                <option value="brand" className="text-blue-600">🏢 Company</option>
-                <option value="store" className="text-blue-600">🏪 Store</option>
-                <option value="service" className="text-purple-600">🛠️ Service</option>
-                <option value="delivery" className="text-orange-600">🚚 Delivery</option>
-              </select>
-              {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => {
-                  const catId = Number(e.target.value);
-                  setFormData({ ...formData, category: catId, sub_category: 0 });
-                }}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.category ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
-              >
-                <option value={0}>Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-              {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Subcategory <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.sub_category}
-                onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
-                disabled={!formData.category}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  !formData.category ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-                } ${formErrors.sub_category ? "border-red-500" : "border-gray-300"} focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              >
-                <option value={0}>Select Subcategory</option>
-                {filteredSubcategories.map((sub) => (
-                  <option key={sub.id} value={sub.id}>{sub.name}</option>
-                ))}
-              </select>
-              {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              placeholder="Enter company description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
-            />
-          </div>
-
-          {/* Active & Featured Toggles */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <div className="flex items-center gap-3">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                <span className="ml-3 text-sm font-medium text-gray-700">Is Active</span>
-              </label>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={formData.is_featured}
-                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-                <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
-              </label>
-            </div>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Company Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Enter company name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className={`w-full border rounded-xl p-3 text-sm ${formErrors.name ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            />
+            {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Company Name (Amharic)
+            </label>
+            <input
+              type="text"
+              placeholder="Enter company name in Amharic"
+              value={formData.name_am}
+              onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Slug <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., my-company-slug"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              disabled={!!editingSlug}
+              className={`w-full border rounded-xl p-3 text-sm font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+            />
+            {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Business Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.business_type}
+              onChange={(e) => {
+                const value = e.target.value;
+                let registrationType = formData.registration_type || "vendor";
+                if (value === "brand" || value === "store") {
+                  registrationType = "vendor";
+                } else if (value === "service") {
+                  registrationType = "service_provider";
+                } else if (value === "delivery") {
+                  registrationType = "delivery_partner";
+                }
+                setFormData({ ...formData, business_type: value, registration_type: registrationType });
+              }}
+              className={`w-full border rounded-xl p-3 text-sm font-medium transition-all duration-200 ${formErrors.business_type ? "border-red-500" :
+                formData.business_type === "brand" || formData.business_type === "store" ? "border-blue-500 bg-blue-50/30 text-blue-700" :
+                  formData.business_type === "service" ? "border-purple-500 bg-purple-50/30 text-purple-700" :
+                    formData.business_type === "delivery" ? "border-orange-500 bg-orange-50/30 text-orange-700" :
+                      "border-gray-300 bg-white"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            >
+              <option value="">Select Business Type</option>
+              <option value="brand" className="text-blue-600">🏢 Company</option>
+              <option value="store" className="text-blue-600">🏪 Store</option>
+              <option value="service" className="text-purple-600">🛠️ Service</option>
+              <option value="delivery" className="text-orange-600">🚚 Delivery</option>
+            </select>
+            {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => {
+                const catId = Number(e.target.value);
+                setFormData({ ...formData, category: catId, sub_category: 0 });
+              }}
+              className={`w-full border rounded-xl p-3 text-sm ${formErrors.category ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
+            >
+              <option value={0}>Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subcategory <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.sub_category}
+              onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+              disabled={!formData.category}
+              className={`w-full border rounded-xl p-3 text-sm ${!formData.category ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                } ${formErrors.sub_category ? "border-red-500" : "border-gray-300"} focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            >
+              <option value={0}>Select Subcategory</option>
+              {filteredSubcategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
+              ))}
+            </select>
+            {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            placeholder="Enter company description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={3}
+            className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
+          />
+        </div>
+
+        {/* Active & Featured Toggles */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <div className="flex items-center gap-3">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              />
+              <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              <span className="ml-3 text-sm font-medium text-gray-700">Is Active</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+              />
+              <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
       {/* Additional fields for Service Provider */}
       {formData.registration_type === "service_provider" && (
@@ -461,9 +456,8 @@ export default function CompanyForm({
                 placeholder="Enter full name"
                 value={formData.full_name || ""}
                 onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.full_name ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+                className={`w-full border rounded-xl p-3 text-sm ${formErrors.full_name ? "border-red-500" : "border-gray-300"
+                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
               />
               {formErrors.full_name && <p className="text-red-500 text-xs mt-1">{formErrors.full_name}</p>}
             </div>
@@ -476,9 +470,8 @@ export default function CompanyForm({
                 placeholder="Enter national ID number"
                 value={formData.national_id || ""}
                 onChange={(e) => setFormData((prev) => ({ ...prev, national_id: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.national_id ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+                className={`w-full border rounded-xl p-3 text-sm ${formErrors.national_id ? "border-red-500" : "border-gray-300"
+                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
               />
               {formErrors.national_id && <p className="text-red-500 text-xs mt-1">{formErrors.national_id}</p>}
             </div>
@@ -492,9 +485,8 @@ export default function CompanyForm({
               value={formData.skills || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, skills: e.target.value }))}
               rows={3}
-              className={`w-full border rounded-xl p-3 text-sm ${
-                formErrors.skills ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none`}
+              className={`w-full border rounded-xl p-3 text-sm ${formErrors.skills ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none`}
             />
             {formErrors.skills && <p className="text-red-500 text-xs mt-1">{formErrors.skills}</p>}
           </div>
@@ -519,9 +511,8 @@ export default function CompanyForm({
               placeholder="Enter full name"
               value={formData.full_name || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
-              className={`w-full border rounded-xl p-3 text-sm ${
-                formErrors.full_name ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+              className={`w-full border rounded-xl p-3 text-sm ${formErrors.full_name ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
             />
             {formErrors.full_name && <p className="text-red-500 text-xs mt-1">{formErrors.full_name}</p>}
           </div>
@@ -535,9 +526,8 @@ export default function CompanyForm({
                 placeholder="Enter driver license number"
                 value={formData.driver_license || ""}
                 onChange={(e) => setFormData((prev) => ({ ...prev, driver_license: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.driver_license ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+                className={`w-full border rounded-xl p-3 text-sm ${formErrors.driver_license ? "border-red-500" : "border-gray-300"
+                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
               />
               {formErrors.driver_license && <p className="text-red-500 text-xs mt-1">{formErrors.driver_license}</p>}
             </div>
@@ -550,9 +540,8 @@ export default function CompanyForm({
                 placeholder="Enter vehicle registration number"
                 value={formData.vehicle_registration || ""}
                 onChange={(e) => setFormData((prev) => ({ ...prev, vehicle_registration: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${
-                  formErrors.vehicle_registration ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+                className={`w-full border rounded-xl p-3 text-sm ${formErrors.vehicle_registration ? "border-red-500" : "border-gray-300"
+                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
               />
               {formErrors.vehicle_registration && <p className="text-red-500 text-xs mt-1">{formErrors.vehicle_registration}</p>}
             </div>
@@ -564,9 +553,8 @@ export default function CompanyForm({
             <select
               value={formData.vehicle_type || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, vehicle_type: e.target.value }))}
-              className={`w-full border rounded-xl p-3 text-sm ${
-                formErrors.vehicle_type ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
+              className={`w-full border rounded-xl p-3 text-sm ${formErrors.vehicle_type ? "border-red-500" : "border-gray-300"
+                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
             >
               <option value="">Select Vehicle Type</option>
               <option value="car">Car</option>
@@ -595,9 +583,8 @@ export default function CompanyForm({
           placeholder="Street, city, area..."
           value={formData.address}
           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          className={`w-full border rounded-xl p-3 text-sm ${
-            formErrors.address ? "border-red-500" : "border-gray-300"
-          } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+          className={`w-full border rounded-xl p-3 text-sm ${formErrors.address ? "border-red-500" : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
         />
         {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
       </div>
@@ -612,9 +599,8 @@ export default function CompanyForm({
             placeholder="+251 911 234 567"
             value={formData.phone || ""}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${
-              formErrors.phone ? "border-red-500" : "border-gray-300"
-            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.phone ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
           {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
         </div>
@@ -627,9 +613,8 @@ export default function CompanyForm({
             placeholder="info@company.com"
             value={formData.email || ""}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${
-              formErrors.email ? "border-red-500" : "border-gray-300"
-            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.email ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
           {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
         </div>
@@ -701,7 +686,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, logo: file }));
-                          if (onLogoFileChange) onLogoFileChange(file); 
+                    if (onLogoFileChange) onLogoFileChange(file);
                   }
                 }}
               />
@@ -712,9 +697,14 @@ export default function CompanyForm({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setFormData((prev) => ({ ...prev, logo: null }));
-                      if (onLogoFileChange) onLogoFileChange(null);  
+                      if (onLogoFileChange) {
+                        onLogoFileChange(null);
+                      } else {
+                        setLogoPreview?.(null);
+                      }
                       const fileInput = document.getElementById("logo-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -752,7 +742,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, cover_image: file }));
-                          if (onCoverFileChange) onCoverFileChange(file);   
+                    if (onCoverFileChange) onCoverFileChange(file);
                   }
                 }}
               />
@@ -763,9 +753,15 @@ export default function CompanyForm({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
+
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setFormData((prev) => ({ ...prev, cover_image: null }));
-                          if (onCoverFileChange) onCoverFileChange(null);  
+                      if (onCoverFileChange) {
+                        onCoverFileChange(null);
+                      } else {
+                        setCoverPreview?.(null);
+                      }
                       const fileInput = document.getElementById("cover-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -789,39 +785,38 @@ export default function CompanyForm({
         </div>
       </div>
 
-{/* License & Tax Information - for Vendor and Service Provider */}
-{(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
-  <div>
-    <div className="flex items-center gap-2 mb-3">
-      <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-      <h3 className="text-sm font-bold text-secondary">License & Tax Information</h3>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* License & Tax Information - for Vendor and Service Provider */}
+      {(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
+            <h3 className="text-sm font-bold text-secondary">License & Tax Information</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-      
-      {/* TIN NUMBER - MODIFIED: Added placeholder hint */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          TIN Number <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Enter TIN number (e.g. 1234567890)"
-            value={formData.tin_number || ""}
-            onChange={(e) => setFormData((prev) => ({ ...prev, tin_number: e.target.value }))}
-            className={`w-full border rounded-xl p-3 text-sm pl-10 ${
-              formErrors.tin_number ? "border-red-500" : "border-gray-300"
-            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-          />
-        </div>
-        {formErrors.tin_number && <p className="text-red-500 text-xs mt-1">{formErrors.tin_number}</p>}
-        <p className="text-[10px] text-gray-400 mt-1">10-digit Tax Identification Number</p>
-      </div>
 
-      {/* VAT REGISTRATION NUMBER  */}
-      {/*  VAT Registration Number 
+            {/* TIN NUMBER - MODIFIED: Added placeholder hint */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                TIN Number <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Enter TIN number (e.g. 1234567890)"
+                  value={formData.tin_number || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, tin_number: e.target.value }))}
+                  className={`w-full border rounded-xl p-3 text-sm pl-10 ${formErrors.tin_number ? "border-red-500" : "border-gray-300"
+                    } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+                />
+              </div>
+              {formErrors.tin_number && <p className="text-red-500 text-xs mt-1">{formErrors.tin_number}</p>}
+              <p className="text-[10px] text-gray-400 mt-1">10-digit Tax Identification Number</p>
+            </div>
+
+            {/* VAT REGISTRATION NUMBER  */}
+            {/*  VAT Registration Number 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           VAT Registration Number
@@ -840,26 +835,26 @@ export default function CompanyForm({
       </div>
       */}
 
-      {/*  TAX TYPE DROPDOWN  */}
-      <div className="md:col-span-3">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tax Type
-        </label>
-        <select
-          value={formData.tax_type || "none"}
-          onChange={(e) => setFormData((prev) => ({ ...prev, tax_type: e.target.value }))}
-          className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white"
-        >
-          <option value="none">None - Not Registered for Tax</option>
-          <option value="vat">VAT Registered</option>
-          <option value="turnover">Turnover Tax</option>
-          <option value="withholding">Withholding Tax</option>
-        </select>
-        <p className="text-[10px] text-gray-400 mt-1">Select the applicable tax regime for this business</p>
-      </div>
-    </div>
-  </div>
-)}
+            {/*  TAX TYPE DROPDOWN  */}
+            <div className="md:col-span-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tax Type
+              </label>
+              <select
+                value={formData.tax_type || "none"}
+                onChange={(e) => setFormData((prev) => ({ ...prev, tax_type: e.target.value }))}
+                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white"
+              >
+                <option value="none">None - Not Registered for Tax</option>
+                <option value="vat">VAT Registered</option>
+                <option value="turnover">Turnover Tax</option>
+                <option value="withholding">Withholding Tax</option>
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1">Select the applicable tax regime for this business</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Verification Documents */}
       <div>
@@ -914,9 +909,8 @@ export default function CompanyForm({
                         const file = e.target.files?.[0] || null;
                         setFormData(prev => ({ ...prev, license_document: file }));
                       }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
-                        formErrors.license_document ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.license_document ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   </div>
                 )}
@@ -958,9 +952,8 @@ export default function CompanyForm({
                         const file = e.target.files?.[0] || null;
                         setFormData(prev => ({ ...prev, tin_document: file }));
                       }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
-                        formErrors.tin_document ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.tin_document ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   </div>
                 )}
@@ -1016,9 +1009,8 @@ export default function CompanyForm({
                         const file = e.target.files?.[0] || null;
                         setFormData(prev => ({ ...prev, national_id_document: file }));
                       }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
-                        formErrors.national_id_document ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.national_id_document ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   </div>
                 )}
@@ -1116,9 +1108,8 @@ export default function CompanyForm({
                         const file = e.target.files?.[0] || null;
                         setFormData(prev => ({ ...prev, driver_license_document: file }));
                       }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
-                        formErrors.driver_license_document ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.driver_license_document ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   </div>
                 )}
@@ -1160,9 +1151,8 @@ export default function CompanyForm({
                         const file = e.target.files?.[0] || null;
                         setFormData(prev => ({ ...prev, vehicle_document: file }));
                       }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
-                        formErrors.vehicle_document ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.vehicle_document ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   </div>
                 )}
@@ -1289,22 +1279,22 @@ export default function CompanyForm({
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Slug</p><p className="text-xs font-mono text-gray-700 truncate">{formData.slug || '—'}</p></div>
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Business Type</p><p className="text-xs font-semibold text-gray-800 capitalize truncate">{formData.business_type || '—'}</p></div>
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Category</p><p className="text-xs font-semibold text-gray-800 truncate">{categories.find(c => c.id === formData.category)?.name || '—'}</p></div>
-    {/*  TIN Number in Review */}
-    <div>
-      <p className="text-[9px] text-gray-400 uppercase tracking-wider">TIN Number</p>
-      <p className="text-xs font-semibold text-gray-800 truncate">{formData.tin_number || '—'}</p>
-    </div>
-    {/*  Tax Type in Review */}
-    <div>
-      <p className="text-[9px] text-gray-400 uppercase tracking-wider">Tax Type</p>
-      <p className="text-xs font-semibold text-gray-800 truncate">
-        {formData.tax_type === 'vat' ? 'VAT Registered' :
-         formData.tax_type === 'turnover' ? 'Turnover Tax' :
-         formData.tax_type === 'withholding' ? 'Withholding Tax' : 'None'}
-      </p>
-    </div>
-  </div>
-)}
+            {/*  TIN Number in Review */}
+            <div>
+              <p className="text-[9px] text-gray-400 uppercase tracking-wider">TIN Number</p>
+              <p className="text-xs font-semibold text-gray-800 truncate">{formData.tin_number || '—'}</p>
+            </div>
+            {/*  Tax Type in Review */}
+            <div>
+              <p className="text-[9px] text-gray-400 uppercase tracking-wider">Tax Type</p>
+              <p className="text-xs font-semibold text-gray-800 truncate">
+                {formData.tax_type === 'vat' ? 'VAT Registered' :
+                  formData.tax_type === 'turnover' ? 'Turnover Tax' :
+                    formData.tax_type === 'withholding' ? 'Withholding Tax' : 'None'}
+              </p>
+            </div>
+          </div>
+        )}
         {formData.registration_type === "service_provider" && (
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Full Name</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.full_name || '—'}</p></div>
