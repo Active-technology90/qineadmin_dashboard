@@ -384,10 +384,10 @@ export const MultiStepFormModal: React.FC<MultiStepFormModalProps> = ({
           </div>
 
           {/* CONTENT */}
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col flex-1 overflow-hidden"
-          >
+<form
+  onSubmit={handleSubmit}
+  className="flex flex-col flex-1 overflow-hidden"
+>
             <div
               ref={contentRef}
               className="

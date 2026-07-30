@@ -715,9 +715,14 @@ export default function CompanyForm({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, logo: null }));
-                      if (onLogoFileChange) onLogoFileChange(null);  
+  onClick={(e) => {
+    e.stopPropagation();
+    setFormData((prev) => ({ ...prev, logo: null }));
+    if (onLogoFileChange) {
+      onLogoFileChange(null);
+    } else {
+      setLogoPreview?.(null);
+    }
                       const fileInput = document.getElementById("logo-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -766,9 +771,15 @@ export default function CompanyForm({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, cover_image: null }));
-                          if (onCoverFileChange) onCoverFileChange(null);  
+
+  onClick={(e) => {
+    e.stopPropagation();
+    setFormData((prev) => ({ ...prev, cover_image: null }));
+    if (onCoverFileChange) {
+      onCoverFileChange(null);
+    } else {
+      setCoverPreview?.(null);
+    }
                       const fileInput = document.getElementById("cover-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
