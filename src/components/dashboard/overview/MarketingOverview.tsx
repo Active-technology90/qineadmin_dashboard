@@ -1,3 +1,8 @@
+
+
+
+
+
 import { useState, useEffect, useMemo } from "react";
 import {
   Building2,
@@ -107,7 +112,7 @@ interface PerformanceData {
 }
 
 // ============================================================
-// Vibrant Gradient Card
+// Vibrant Gradient Card (Shadows Reduced)
 // ============================================================
 interface VibrantGradientCardProps {
   title: string;
@@ -120,6 +125,7 @@ interface VibrantGradientCardProps {
   progress?: number;
   progressLabel?: string;
   progressColor?: string;
+  textColor?: string;
 }
 
 const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
@@ -133,8 +139,9 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
   progress,
   progressLabel,
   progressColor = "bg-gray-700",
+  textColor = "text-white",
 }) => (
-  <div className={`relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br ${gradient} shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-[1.02] group`}>
+  <div className={`relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br ${gradient} shadow-sm hover:shadow transition-all duration-500 hover:scale-[1.02] group`}>
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
     <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white/5 rounded-full animate-pulse"></div>
@@ -143,33 +150,33 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-medium text-white/80 uppercase tracking-wider">{title}</span>
+            <span className={`text-[10px] font-medium uppercase tracking-wider ${textColor === 'text-white' ? 'text-white/80 group-hover:text-secondary/80' : 'text-gray-500 group-hover:text-secondary/80'} transition-colors duration-300`}>{title}</span>
             {trend !== undefined && (
               <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-                trend >= 0 ? 'bg-green-400/30 text-green-200' : 'bg-red-400/30 text-red-200'
-              }`}>
+                trend >= 0 ? 'bg-green-400/30 text-green-200 group-hover:bg-secondary/30 group-hover:text-secondary' : 'bg-red-400/30 text-red-200 group-hover:bg-secondary/30 group-hover:text-secondary'
+              } transition-colors duration-300`}>
                 {trend >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
                 {trend >= 0 ? '+' : ''}{trend}%
               </span>
             )}
           </div>
-          <p className="text-3xl font-black text-white tracking-tight">{value.toLocaleString()}</p>
-          {subtitle && <p className="text-[11px] text-white/70 mt-0.5">{subtitle}</p>}
+          <p className={`text-3xl font-black tracking-tight ${textColor} group-hover:text-secondary transition-colors duration-300`}>{value.toLocaleString()}</p>
+          {subtitle && <p className={`text-[11px] mt-0.5 ${textColor === 'text-white' ? 'text-white/70 group-hover:text-secondary/70' : 'text-gray-400 group-hover:text-secondary/70'} transition-colors duration-300`}>{subtitle}</p>}
         </div>
-        <div className={`h-12 w-12 rounded-2xl ${iconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:rotate-6 transition-transform duration-300 border border-white/20 shadow-lg`}>
-          <div className="text-white">{icon}</div>
+        <div className={`h-12 w-12 rounded-2xl ${iconBg} backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:rotate-6 transition-transform duration-300 border border-white/20 shadow-sm group-hover:border-secondary/50`}>
+          <div className={`${textColor === 'text-white' ? 'text-white group-hover:text-secondary' : 'text-gray-700 group-hover:text-secondary'} transition-colors duration-300`}>{icon}</div>
         </div>
       </div>
       
       {progress !== undefined && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-white/80">{progressLabel || 'Progress'}</span>
-            <span className="text-xs font-bold text-white">{Math.round(progress)}%</span>
+            <span className={`text-[10px] ${textColor === 'text-white' ? 'text-white/80 group-hover:text-secondary/80' : 'text-gray-500 group-hover:text-secondary/80'} transition-colors duration-300`}>{progressLabel || 'Progress'}</span>
+            <span className={`text-xs font-bold ${textColor} group-hover:text-secondary transition-colors duration-300`}>{Math.round(progress)}%</span>
           </div>
-          <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+          <div className={`w-full h-2 rounded-full overflow-hidden backdrop-blur-sm ${textColor === 'text-white' ? 'bg-white/20' : 'bg-gray-200/80'}`}>
             <div
-              className={`h-full ${progressColor} rounded-full transition-all duration-1000 ease-out shadow-lg`}
+              className={`h-full ${progressColor} rounded-full transition-all duration-1000 ease-out shadow-sm group-hover:bg-secondary`}
               style={{ width: `${Math.min(progress, 100)}%` }}
             >
               <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
@@ -182,7 +189,7 @@ const VibrantGradientCard: React.FC<VibrantGradientCardProps> = ({
 );
 
 // ============================================================
-// Glassmorphism Stat Card
+// Glassmorphism Stat Card (Shadows Reduced)
 // ============================================================
 interface GlassStatCardProps {
   title: string;
@@ -207,7 +214,7 @@ const GlassStatCard: React.FC<GlassStatCardProps> = ({
   trend,
   borderColor = "border-white/50",
 }) => (
-  <div className={`relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl p-5 border ${borderColor} shadow-md hover:shadow-xl transition-all duration-300 group`}>
+  <div className={`relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl p-5 border ${borderColor} shadow-sm hover:shadow transition-all duration-300 group`}>
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
     
     <div className="relative flex items-start justify-between">
@@ -224,7 +231,7 @@ const GlassStatCard: React.FC<GlassStatCardProps> = ({
           </div>
         )}
       </div>
-      <div className={`h-11 w-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md`}>
+      <div className={`h-11 w-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm`}>
         <div className={iconColor}>{icon}</div>
       </div>
     </div>
@@ -239,7 +246,7 @@ const GlassStatCard: React.FC<GlassStatCardProps> = ({
 );
 
 // ============================================================
-// Colorful Progress Ring
+//  Progress Ring 
 // ============================================================
 interface ColorfulProgressRingProps {
   value: number;
@@ -265,73 +272,78 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (percentage / 100) * circumference;
+  
+  //  Determine if progress is complete (100%)
+  const isComplete = percentage >= 100;
+  // Use green color when complete, otherwise use the provided color
+  const activeColor = isComplete ? '#22C55E' : color;
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${bgGradient} backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 group`}>
-      <div className={`absolute -inset-1 bg-gradient-to-r ${color}/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500`}></div>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${bgGradient} backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 hover:shadow-lg hover:scale-[1.02] transition-all duration-500 group`}>
+      <div className={`absolute -inset-1 bg-gradient-to-r ${activeColor}/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500`}></div>
       
       <div className="relative flex flex-col md:flex-row items-center gap-8">
-        <div className="relative w-36 h-36 shrink-0">
-          <svg className="w-full h-full transform -rotate-90">
+        <div className="relative w-36 h-36 shrink-0 group-hover:scale-105 transition-transform duration-500">
+          <svg className="w-full h-full transform -rotate-90 group-hover:brightness-110 group-hover:saturate-150 transition-all duration-500">
             <circle cx="72" cy="72" r="54" stroke={ringBg} strokeWidth="10" fill="transparent" />
             <circle
               cx="72"
               cy="72"
               r="54"
-              stroke={color}
+              stroke={activeColor}
               strokeWidth="10"
               fill="transparent"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
               strokeLinecap="round"
-              className="transition-all duration-1000 ease-out"
+              className="transition-all duration-1000 ease-out group-hover:stroke-[12] group-hover:brightness-110 group-hover:saturate-150"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-black text-gray-800">{value}</span>
-            <span className="text-[11px] font-semibold text-gray-400">/ {max}</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center group-hover:scale-105 transition-transform duration-500">
+            <span className="text-4xl font-black text-gray-800 group-hover:text-gray-900 transition-colors duration-500">{value}</span>
+            <span className="text-[11px] font-semibold text-gray-400 group-hover:text-gray-500 transition-colors duration-500">/ {max}</span>
           </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75`} style={{ backgroundColor: color }}></span>
-            <span className={`relative inline-flex rounded-full h-4 w-4`} style={{ backgroundColor: color }}></span>
+          <div className="absolute -top-1 -right-1 w-4 h-4 transition-transform duration-500 group-hover:scale-110">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-500`} style={{ backgroundColor: activeColor }}></span>
+            <span className={`relative inline-flex rounded-full h-4 w-4`} style={{ backgroundColor: activeColor }}></span>
           </div>
         </div>
 
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2 mb-2.5 flex-wrap">
-            <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ backgroundColor: `${color}20`, color: color }}>
+            <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full transition-all duration-500 group-hover:scale-105" style={{ backgroundColor: `${activeColor}20`, color: activeColor }}>
               {label}
             </span>
             {percentage >= 100 && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300/50">
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300/50 group-hover:scale-105 transition-transform duration-500">
                 <CheckCircle2 className="h-3 w-3" /> Achieved!
               </span>
             )}
             {percentage >= 80 && percentage < 100 && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-100/80 px-2.5 py-1 rounded-full border border-amber-300/50">
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-100/80 px-2.5 py-1 rounded-full border border-amber-300/50 group-hover:scale-105 transition-transform duration-500">
                 <Flame className="h-3 w-3" /> Almost there!
               </span>
             )}
             {percentage >= 50 && percentage < 80 && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 bg-blue-100/80 px-2.5 py-1 rounded-full border border-blue-300/50">
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 bg-blue-100/80 px-2.5 py-1 rounded-full border border-blue-300/50 group-hover:scale-105 transition-transform duration-500">
                 <Activity className="h-3 w-3" /> In progress
               </span>
             )}
           </div>
-          <h3 className="text-lg font-bold text-gray-800">{sublabel}</h3>
+          <h3 className="text-lg font-bold text-gray-800 group-hover:text-gray-900 transition-colors duration-500">{sublabel}</h3>
           
           <div className="mt-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-gray-500">Progress</span>
-              <span className="text-sm font-bold" style={{ color }}>{Math.round(percentage)}%</span>
+              <span className="text-xs font-medium text-gray-500 group-hover:text-gray-600 transition-colors duration-500">Progress</span>
+              <span className="text-sm font-bold transition-all duration-500 group-hover:scale-105" style={{ color: activeColor }}>{Math.round(percentage)}%</span>
             </div>
-            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner group-hover:shadow-md transition-shadow duration-500">
               <div
-                className="h-full rounded-full transition-all duration-1000 ease-out relative"
+                className="h-full rounded-full transition-all duration-1000 ease-out relative group-hover:brightness-110 group-hover:saturate-150"
                 style={{ 
                   width: `${percentage}%`, 
-                  background: `linear-gradient(90deg, ${color}88, ${color})`,
-                  boxShadow: `0 0 20px ${color}40`
+                  background: `linear-gradient(90deg, ${activeColor}88, ${activeColor})`,
+                  boxShadow: `0 0 20px ${activeColor}40`
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
@@ -339,7 +351,7 @@ const ColorfulProgressRing: React.FC<ColorfulProgressRingProps> = ({
             </div>
           </div>
           
-          <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5">
+          <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5 group-hover:text-gray-600 transition-colors duration-500">
             {percentage >= 100 ? '🎉 Target achieved! Outstanding performance!' : 
              percentage >= 80 ? '🔥 On fire! Keep pushing to the finish line!' :
              percentage >= 50 ? '💪 Making solid progress. Keep going!' :
@@ -362,7 +374,6 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { toast } = useToast();
   
-  // NEW: State for company data
   const [companyData, setCompanyData] = useState<any>(null);
   const [companyLoading, setCompanyLoading] = useState(false);
 
@@ -392,7 +403,6 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
     }
   };
 
-  // NEW: Function to fetch companies
   const fetchCompanies = async () => {
     try {
       setCompanyLoading(true);
@@ -408,7 +418,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
 
   useEffect(() => {
     fetchPerformance();
-    fetchCompanies(); // NEW: Also fetch companies
+    fetchCompanies();
   }, [agentId]);
 
   const chartData = useMemo(() => {
@@ -447,7 +457,6 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
     }));
   }, [data]);
 
-  // NEW: Computed values for company stats
   const activeCompaniesCount = useMemo(() => {
     if (!companyData?.results) return 0;
     return companyData.results.filter((company: any) => company.is_active).length;
@@ -478,17 +487,311 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[600px] bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Zap className="h-10 w-10 text-secondary animate-pulse" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-4 sm:p-6 lg:p-8">
+        <Toast toast={toast} />
+
+        {/* ============================================================ */}
+        {/* HEADER SKELETON */}
+        {/* ============================================================ */}
+        <div className="mb-8">
+          <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm animate-pulse">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-2xl bg-gray-200/70"></div>
+                <div>
+                  <div className="h-8 w-48 bg-gray-200/70 rounded-lg"></div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-gray-200/70"></div>
+                    <div className="h-4 w-32 bg-gray-200/70 rounded"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-24 bg-gray-200/70 rounded-xl"></div>
+                <div className="h-10 w-28 bg-gray-200/70 rounded-xl"></div>
+              </div>
             </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm font-bold text-gray-700">Loading Performance Hub</p>
-            <p className="text-xs text-gray-400 mt-1">Fetching your latest metrics...</p>
+        </div>
+
+        {/* ============================================================ */}
+        {/* COMPANY STATS CARDS SKELETON (4 cards) */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white/70 backdrop-blur-md rounded-2xl p-5 border border-white/50 shadow-sm animate-pulse">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="h-3 w-20 bg-gray-200/70 rounded"></div>
+                  <div className="h-8 w-16 bg-gray-200/70 rounded mt-1.5"></div>
+                  <div className="h-3 w-24 bg-gray-200/70 rounded mt-0.5"></div>
+                </div>
+                <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ============================================================ */}
+        {/* VIBRANT GRADIENT STATS ROW SKELETON (4 cards) */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="relative overflow-hidden rounded-2xl p-6 bg-gray-200/70 shadow-sm animate-pulse h-[120px]">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="h-3 w-24 bg-gray-300/70 rounded"></div>
+                  <div className="h-8 w-16 bg-gray-300/70 rounded mt-1"></div>
+                  <div className="h-3 w-32 bg-gray-300/70 rounded mt-0.5"></div>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-gray-300/70"></div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+                  <div className="h-3 w-8 bg-gray-300/70 rounded"></div>
+                </div>
+                <div className="w-full h-2 bg-gray-300/70 rounded-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ============================================================ */}
+        {/* PROGRESS RINGS SKELETON (2 cards) */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-gray-200/70 backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 animate-pulse">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="w-36 h-36 shrink-0 rounded-full bg-gray-300/70"></div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="h-6 w-32 bg-gray-300/70 rounded-full mx-auto md:mx-0"></div>
+                  <div className="h-8 w-48 bg-gray-300/70 rounded mt-2"></div>
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="h-3 w-16 bg-gray-300/70 rounded"></div>
+                      <div className="h-3 w-8 bg-gray-300/70 rounded"></div>
+                    </div>
+                    <div className="w-full h-2.5 bg-gray-300/70 rounded-full"></div>
+                  </div>
+                  <div className="h-4 w-40 bg-gray-300/70 rounded mt-3"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ============================================================ */}
+        {/* CATEGORY DISTRIBUTION CHART SKELETON */}
+        {/* ============================================================ */}
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6 animate-pulse">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+            <div>
+              <div className="h-5 w-48 bg-gray-200/70 rounded"></div>
+              <div className="h-3 w-32 bg-gray-200/70 rounded"></div>
+            </div>
+          </div>
+          <div className="h-[280px] w-full bg-gray-200/70 rounded-xl"></div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* SUBSCRIPTIONS BREAKDOWN SKELETON */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-48 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-32 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="relative overflow-hidden rounded-2xl p-5 border bg-gray-200/70 h-[100px]"></div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-32 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-24 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="h-[220px] w-full bg-gray-200/70 rounded-xl"></div>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* CHART SECTION SKELETON */}
+        {/* ============================================================ */}
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6 animate-pulse">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-48 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-32 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-5">
+              <div className="h-3 w-20 bg-gray-200/70 rounded-full"></div>
+              <div className="h-3 w-20 bg-gray-200/70 rounded-full"></div>
+            </div>
+          </div>
+          <div className="h-[300px] w-full bg-gray-200/70 rounded-xl"></div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* RECENT COMPANIES SKELETON */}
+        {/* ============================================================ */}
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6 animate-pulse">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-48 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-32 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="h-6 w-20 bg-gray-200/70 rounded-full"></div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200/50 bg-white/40">
+                <div className="w-12 h-12 rounded-xl bg-gray-200/70"></div>
+                <div className="flex-1">
+                  <div className="h-4 w-32 bg-gray-200/70 rounded"></div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-3 w-16 bg-gray-200/70 rounded"></div>
+                    <div className="w-1 h-1 bg-gray-200/70 rounded-full"></div>
+                    <div className="h-3 w-12 bg-gray-200/70 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-2 w-2 rounded-full bg-gray-200/70"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* COMPANY OVERVIEW SKELETON */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm lg:col-span-1 animate-pulse">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-32 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-24 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-gray-200/40">
+                  <div className="h-4 w-24 bg-gray-200/70 rounded"></div>
+                  <div className="h-4 w-8 bg-gray-200/70 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm lg:col-span-2 animate-pulse">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-32 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-24 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-3 bg-white/40 rounded-xl border border-gray-200/40">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="h-4 w-16 bg-gray-200/70 rounded"></div>
+                    <div className="h-4 w-8 bg-gray-200/70 rounded"></div>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200/70 rounded-full"></div>
+                  <div className="h-3 w-12 bg-gray-200/70 rounded mt-1"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Company Status Overview skeleton (2 cards) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm animate-pulse">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+                <div>
+                  <div className="h-5 w-32 bg-gray-200/70 rounded"></div>
+                  <div className="h-3 w-24 bg-gray-200/70 rounded"></div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="h-4 w-16 bg-gray-200/70 rounded"></div>
+                    <div className="h-4 w-8 bg-gray-200/70 rounded"></div>
+                  </div>
+                  <div className="w-full h-3 bg-gray-200/70 rounded-full"></div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="h-4 w-16 bg-gray-200/70 rounded"></div>
+                    <div className="h-4 w-8 bg-gray-200/70 rounded"></div>
+                  </div>
+                  <div className="w-full h-3 bg-gray-200/70 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ============================================================ */}
+        {/* DAILY ACTIVITY LOG SKELETON */}
+        {/* ============================================================ */}
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm animate-pulse">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-gray-200/70"></div>
+              <div>
+                <div className="h-5 w-48 bg-gray-200/70 rounded"></div>
+                <div className="h-3 w-32 bg-gray-200/70 rounded"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-20 bg-gray-200/70 rounded-full"></div>
+              <div className="h-6 w-20 bg-gray-200/70 rounded-full"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-2xl p-5 border border-gray-200/50 bg-white/40">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200/60">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-gray-200/70"></div>
+                    <div className="h-5 w-24 bg-gray-200/70 rounded"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-5 w-12 bg-gray-200/70 rounded-full"></div>
+                    <div className="h-5 w-12 bg-gray-200/70 rounded-full"></div>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-3">
+                  <div className="h-4 w-32 bg-gray-200/70 rounded"></div>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="h-8 w-20 bg-gray-200/70 rounded-xl"></div>
+                    <div className="h-8 w-20 bg-gray-200/70 rounded-xl"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -498,15 +801,15 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-12 max-w-lg text-center border border-white/50 shadow-2xl">
-          <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-12 max-w-lg text-center border border-white/50 shadow-sm">
+          <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
             <XCircle className="h-12 w-12 text-red-500" />
           </div>
           <h3 className="text-2xl font-bold text-gray-800 mb-2">Dashboard Unavailable</h3>
           <p className="text-sm text-gray-500">{error || "No data returned from the server"}</p>
           <button
             onClick={() => fetchPerformance()}
-            className="mt-8 px-8 py-3.5 bg-gradient-to-r from-secondary to-purple-700 text-white rounded-xl text-sm font-bold hover:shadow-xl transition-all active:scale-95 shadow-lg shadow-secondary/30"
+            className="mt-8 px-8 py-3.5 bg-gradient-to-r from-secondary to-purple-700 text-white rounded-xl text-sm font-bold hover:shadow transition-all active:scale-95 shadow-sm shadow-secondary/30"
           >
             Retry Loading
           </button>
@@ -538,17 +841,12 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       `}</style>
 
       {/* ============================================================ */}
-      {/* HEADER - Glass with Color */}
+      {/* HEADER  */}
       {/* ============================================================ */}
       <div className="mb-8">
-        <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-secondary/20 to-purple-500/20 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-400/20 to-teal-500/20 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-pink-400/10 via-purple-400/10 to-indigo-400/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-          
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary to-purple-700 flex items-center justify-center shadow-lg shadow-secondary/30 relative group">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-secondary to-purple-700 flex items-center justify-center shadow-sm shadow-secondary/30 relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary to-purple-700 rounded-2xl animate-pulse opacity-50"></div>
                 <Rocket className="h-8 w-8 text-white relative z-10" />
               </div>
@@ -576,25 +874,15 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
               <div className="flex items-center gap-1 bg-white/70 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50 shadow-sm">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-secondary text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                  className={`p-2.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-secondary text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                  className={`p-2.5 rounded-lg transition-all ${viewMode === "list" ? "bg-secondary text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                 >
                   <List className="h-4 w-4" />
-                </button>
-              </div>
-
-              <button
-                onClick={() => fetchPerformance(true)}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl hover:border-secondary/40 hover:shadow-lg transition-all text-sm font-semibold text-gray-600 disabled:opacity-50 active:scale-95"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           </div>
@@ -602,7 +890,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       </div>
 
       {/* ============================================================ */}
-      {/* COMPANY STATS CARDS - NEW SECTION */}
+      {/* COMPANY STATS CARDS -  */}
       {/* ============================================================ */}
       {companyData?.results && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -646,59 +934,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       )}
 
       {/* ============================================================ */}
-      {/* VIBRANT GRADIENT STATS ROW */}
-      {/* ============================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <VibrantGradientCard
-          title="Total Companies"
-          value={total_companies_registered}
-          icon={<Building2 className="h-6 w-6" />}
-          gradient="from-indigo-600 via-purple-600 to-pink-600"
-          iconBg="bg-white/20"
-          subtitle="All time registrations"
-          trend={trends.registrations}
-          progress={target_progress.daily_progress_percentage}
-          progressLabel="Daily progress"
-          progressColor="bg-white/80"
-        />
-        <VibrantGradientCard
-          title="Active Subscriptions"
-          value={active_subscriptions_count}
-          icon={<Crown className="h-6 w-6" />}
-          gradient="from-emerald-500 via-teal-600 to-cyan-700"
-          iconBg="bg-white/20"
-          subtitle="Revenue generating"
-          trend={trends.subscriptions}
-          progress={target_progress.weekly_progress_percentage}
-          progressLabel="Weekly progress"
-          progressColor="bg-white/80"
-        />
-        <VibrantGradientCard
-          title="Daily Registrations"
-          value={target_progress.registered_today}
-          icon={<Target className="h-6 w-6" />}
-          gradient="from-blue-500 via-blue-600 to-indigo-700"
-          iconBg="bg-white/20"
-          subtitle={`of ${target_progress.daily_target} target`}
-          progress={target_progress.daily_progress_percentage}
-          progressLabel="Daily target"
-          progressColor="bg-white/80"
-        />
-        <VibrantGradientCard
-          title="Weekly Registrations"
-          value={target_progress.registered_this_week}
-          icon={<Calendar className="h-6 w-6" />}
-          gradient="from-amber-500 via-orange-600 to-red-700"
-          iconBg="bg-white/20"
-          subtitle={`of ${target_progress.weekly_target} target`}
-          progress={target_progress.weekly_progress_percentage}
-          progressLabel="Weekly target"
-          progressColor="bg-white/80"
-        />
-      </div>
-
-      {/* ============================================================ */}
-      {/* COLORFUL PROGRESS RINGS */}
+      {/*  PROGRESS RINGS */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <ColorfulProgressRing
@@ -711,15 +947,58 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
           bgGradient="from-purple-100/80 via-indigo-50/80 to-white/80"
           ringBg="#E5E7EB"
         />
-        <ColorfulProgressRing
+<ColorfulProgressRing
+  value={target_progress.registered_this_week}
+  max={target_progress.weekly_target}
+  label="Weekly Quota"
+  sublabel="Weekly Company Onboardings"
+  color="#8B5CF6"
+  icon={<Award className="h-5 w-5" />}
+  bgGradient="from-purple-100/80 via-indigo-50/80 to-white/80"
+  ringBg="#E5E7EB"
+/>
+      </div>
+
+      {/* ============================================================ */}
+      {/* VIBRANT GRADIENT STATS ROW */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <VibrantGradientCard
+          title="Total Companies"
+          value={total_companies_registered}
+          icon={<Building2 className="h-6 w-6" />}
+          gradient="from-indigo-100 via-purple-100 to-pink-100"
+          iconBg="bg-white/50"
+          subtitle="All time registrations"
+          trend={trends.registrations}
+          progress={target_progress.daily_progress_percentage}
+          progressLabel="Daily progress"
+          progressColor="bg-indigo-500"
+          textColor="text-gray-800"
+        />
+        <VibrantGradientCard
+          title="Daily Registrations"
+          value={target_progress.registered_today}
+          icon={<Target className="h-6 w-6" />}
+          gradient="from-blue-100 via-blue-200 to-indigo-100"
+          iconBg="bg-white/50"
+          subtitle={`of ${target_progress.daily_target} target`}
+          progress={target_progress.daily_progress_percentage}
+          progressLabel="Daily target"
+          progressColor="bg-blue-500"
+          textColor="text-gray-800"
+        />
+        <VibrantGradientCard
+          title="Weekly Registrations"
           value={target_progress.registered_this_week}
-          max={target_progress.weekly_target}
-          label="Weekly Quota"
-          sublabel="Weekly Company Onboardings"
-          color="#059669"
-          icon={<Award className="h-5 w-5" />}
-          bgGradient="from-emerald-100/80 via-teal-50/80 to-white/80"
-          ringBg="#E5E7EB"
+          icon={<Calendar className="h-6 w-6" />}
+          gradient="from-amber-100 via-orange-100 to-red-100"
+          iconBg="bg-white/50"
+          subtitle={`of ${target_progress.weekly_target} target`}
+          progress={target_progress.weekly_progress_percentage}
+          progressLabel="Weekly target"
+          progressColor="bg-amber-500"
+          textColor="text-gray-800"
         />
       </div>
 
@@ -727,9 +1006,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       {/* CATEGORY DISTRIBUTION - NEW CHART SECTION */}
       {/* ============================================================ */}
       {categoryData.length > 0 && (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg mb-6">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6">
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-sm shadow-indigo-400/30">
               <PieChart className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -767,9 +1046,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       {/* SUBSCRIPTIONS BREAKDOWN - Colorful Glass */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2 bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
+        <div className="lg:col-span-2 bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-sm shadow-emerald-400/30">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -794,7 +1073,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                 return (
                   <div
                     key={planName}
-                    className={`relative overflow-hidden rounded-2xl p-5 border ${colorClass} transition-all hover:scale-[1.02] hover:shadow-lg`}
+                    className={`relative overflow-hidden rounded-2xl p-5 border ${colorClass} transition-all hover:scale-[1.02] hover:shadow`}
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/30 to-transparent rounded-full -translate-y-12 translate-x-12"></div>
                     <div className="relative">
@@ -825,9 +1104,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
         </div>
 
         {/* Pie Chart - Colorful Glass */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-sm shadow-purple-400/30">
               <PieChart className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -883,13 +1162,13 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       </div>
 
       {/* ============================================================ */}
-      {/* CHART SECTION - Colorful Glass */}
+      {/* CHART SECTION -  */}
       {/* ============================================================ */}
       {chartData.length > 0 && (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg mb-6">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-400/30">
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shadow-sm shadow-blue-400/30">
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -944,13 +1223,13 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       )}
 
       {/* ============================================================ */}
-      {/* RECENT COMPANIES - NEW SECTION */}
+      {/* RECENT COMPANIES - */}
       {/* ============================================================ */}
       {companyData?.results && companyData.results.length > 0 && (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg mb-6">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm mb-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-400/30">
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-sm shadow-cyan-400/30">
                 <Building2 className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -958,7 +1237,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                 <p className="text-[11px] text-gray-400">Latest registrations on the platform</p>
               </div>
             </div>
-            <span className="text-xs font-semibold text-gray-500 bg-gray-100/80 px-3 py-1.5 rounded-full border border-gray-200/50">
+            <span className="text-xs font-semibold text-gray-500 bg-gray-100/80 px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm">
               {companyData.results.length} shown
             </span>
           </div>
@@ -967,7 +1246,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
             {companyData.results.slice(0, 6).map((company: any) => (
               <div 
                 key={company.id}
-                className="flex items-center gap-3 p-3 rounded-xl border border-gray-200/50 bg-white/40 hover:bg-white/60 transition-all hover:shadow-md"
+                className="flex items-center gap-3 p-3 rounded-xl border border-gray-200/50 bg-white/40 hover:bg-white/60 transition-all hover:shadow-sm"
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {company.logo ? (
@@ -1004,14 +1283,14 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
         </div>
       )}
 
-            {/* ============================================================ */}
-      {/* COMPANY OVERVIEW - NEW SECTION */}
+      {/* ============================================================ */}
+      {/* COMPANY OVERVIEW -  */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Registered By Stats */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg lg:col-span-1">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm lg:col-span-1">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-sm shadow-blue-400/30">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1042,9 +1321,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
         </div>
 
         {/* Business Type Distribution */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg lg:col-span-2">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm lg:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-sm shadow-emerald-400/30">
               <Briefcase className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1081,9 +1360,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
 
       {/* Company Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-sm shadow-amber-400/30">
               <Activity className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1119,9 +1398,9 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
+        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-sm shadow-purple-400/30">
               <Star className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1149,10 +1428,10 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
       {/* ============================================================ */}
       {/* DAILY ACTIVITY LOG - Colorful Glass */}
       {/* ============================================================ */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-lg">
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 border border-white/50 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-400/30">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm shadow-amber-400/30">
               <Clock className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1187,7 +1466,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
               return (
                 <div
                   key={day.date}
-                  className={`relative overflow-hidden rounded-2xl p-5 border transition-all hover:shadow-lg ${
+                  className={`relative overflow-hidden rounded-2xl p-5 border transition-all hover:shadow ${
                     isLatest
                       ? 'border-secondary/30 bg-gradient-to-br from-secondary/10 via-purple-50/50 to-transparent'
                       : 'border-gray-200/50 bg-white/40 hover:bg-white/60'
@@ -1200,7 +1479,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                   <div className="relative flex items-center justify-between pb-3 border-b border-gray-200/60">
                     <div className="flex items-center gap-3">
                       <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                        isLatest ? 'bg-gradient-to-br from-secondary to-purple-600 text-white shadow-lg shadow-secondary/30' : 'bg-gray-100 text-gray-400'
+                        isLatest ? 'bg-gradient-to-br from-secondary to-purple-600 text-white shadow-sm shadow-secondary/30' : 'bg-gray-100 text-gray-400'
                       }`}>
                         <Calendar className="h-4 w-4" />
                       </div>
@@ -1242,7 +1521,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                             {day.companies.slice(0, 5).map((company) => (
                               <span
                                 key={company.id}
-                                className="inline-flex items-center gap-2 text-[10px] font-medium bg-white px-3 py-1.5 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all"
+                                className="inline-flex items-center gap-2 text-[10px] font-medium bg-white px-3 py-1.5 rounded-xl border border-gray-200/50 shadow-sm hover:shadow transition-all"
                               >
                                 {company.logo ? (
                                   <img src={company.logo} alt="" className="w-5 h-5 rounded-full object-cover" />
@@ -1272,7 +1551,7 @@ export default function MarketingOverview({ agentId }: { agentId?: number }) {
                             {day.subscriptions_started.slice(0, 4).map((sub) => (
                               <span
                                 key={sub.id}
-                                className="text-[10px] font-medium bg-gradient-to-r from-emerald-100/70 to-teal-100/70 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-300/50 shadow-sm hover:shadow-md transition-all"
+                                className="text-[10px] font-medium bg-gradient-to-r from-emerald-100/70 to-teal-100/70 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-300/50 shadow-sm hover:shadow transition-all"
                               >
                                 {sub.company_name} · <span className="font-bold">{sub.plan_name}</span>
                               </span>

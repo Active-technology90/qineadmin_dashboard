@@ -37,8 +37,9 @@ export interface CompanyFormData {
   vehicle_registration?: string;
   vehicle_type?: string;
   insurance_document?: string;
-  license_number?: string;
   tin_number?: string;
+  vat_registration_number?: string;
+  tax_type?: string;
   license_document?: File | null;
   tin_document?: File | null;
   national_id_document?: File | null;
@@ -58,6 +59,8 @@ interface CompanyFormProps {
   subcategories: SubCategory[];
   logoPreview: string | null;
   coverPreview: string | null;
+    onLogoFileChange?: (file: File | null) => void;    
+  onCoverFileChange?: (file: File | null) => void;  
   isEditingActive: boolean;
   submitting: boolean;
   editingSlug: string | null;
@@ -75,6 +78,8 @@ export default function CompanyForm({
   subcategories,
   logoPreview,
   coverPreview,
+   onLogoFileChange,   
+  onCoverFileChange,  
   isEditingActive,
   headCompanyName,
   submitting,
@@ -125,8 +130,10 @@ export default function CompanyForm({
     </label>
   </div>
   
+  {/* COMMENTED OUT - Registration type buttons (Vendor, Service, Delivery) */}
+  {/*
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-    {/* Vendor Option - Compact */}
+    {/* Vendor Option - Compact * /}
     <button
       type="button"
       onClick={() => setFormData(prev => ({ ...prev, registration_type: "vendor" }))}
@@ -156,7 +163,7 @@ export default function CompanyForm({
       )}
     </button>
 
-    {/* Service Provider Option - Compact */}
+    {/* Service Provider Option - Compact * /}
     <button
       type="button"
       onClick={() => setFormData(prev => ({ ...prev, registration_type: "service_provider" }))}
@@ -186,7 +193,7 @@ export default function CompanyForm({
       )}
     </button>
 
-    {/* Delivery Partner Option - Compact */}
+    {/* Delivery Partner Option - Compact * /}
     <button
       type="button"
       onClick={() => setFormData(prev => ({ ...prev, registration_type: "delivery_partner" }))}
@@ -216,6 +223,7 @@ export default function CompanyForm({
       )}
     </button>
   </div>
+  */}
   
   {/* Compact tag display - shows selected type's tags */}
   <div className="mt-2 flex flex-wrap gap-1">
@@ -261,13 +269,12 @@ export default function CompanyForm({
   </div>
 </div>
 
-      {/* Vendor Info */}
-      {formData.registration_type === "vendor" && (
-        <>
-          <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-blue-700">
-              <Building2 className="w-4 h-4" />
-              <p className="text-xs font-medium">Vendor Registration - Business Information</p>
+      {/* Business Information ( registration types) */}
+      <div>
+        <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-3">
+          <div className="flex items-center gap-2 text-blue-700">
+            <Building2 className="w-4 h-4" />
+            <p className="text-xs font-medium">Business Information</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -408,10 +415,37 @@ export default function CompanyForm({
               className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
             />
           </div>
-        </>
-      )}
 
-      {/* Service Provider Info */}
+          {/* Active & Featured Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Is Active</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      {/* Additional fields for Service Provider */}
       {formData.registration_type === "service_provider" && (
         <>
           <div className="bg-purple-50/50 border border-purple-200 rounded-xl p-3">
@@ -670,6 +704,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, logo: file }));
+                          if (onLogoFileChange) onLogoFileChange(file); 
                   }
                 }}
               />
@@ -682,6 +717,7 @@ export default function CompanyForm({
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, logo: null }));
+                      if (onLogoFileChange) onLogoFileChange(null);  
                       const fileInput = document.getElementById("logo-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -719,6 +755,7 @@ export default function CompanyForm({
                       return;
                     }
                     setFormData((prev) => ({ ...prev, cover_image: file }));
+                          if (onCoverFileChange) onCoverFileChange(file);   
                   }
                 }}
               />
@@ -731,6 +768,7 @@ export default function CompanyForm({
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, cover_image: null }));
+                          if (onCoverFileChange) onCoverFileChange(null);  
                       const fileInput = document.getElementById("cover-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -754,53 +792,77 @@ export default function CompanyForm({
         </div>
       </div>
 
-      {/* License & Tax Information - Only for Vendor */}
-      {formData.registration_type === "vendor" && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-            <h3 className="text-sm font-bold text-secondary">License & Tax Information</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                License Number <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Enter business license number"
-                  value={formData.license_number || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, license_number: e.target.value }))}
-                  className={`w-full border rounded-xl p-3 text-sm pl-10 ${
-                    formErrors.license_number ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-                />
-              </div>
-              {formErrors.license_number && <p className="text-red-500 text-xs mt-1">{formErrors.license_number}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                TIN Number <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Enter TIN number"
-                  value={formData.tin_number || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, tin_number: e.target.value }))}
-                  className={`w-full border rounded-xl p-3 text-sm pl-10 ${
-                    formErrors.tin_number ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-                />
-              </div>
-              {formErrors.tin_number && <p className="text-red-500 text-xs mt-1">{formErrors.tin_number}</p>}
-            </div>
-          </div>
+{/* License & Tax Information - for Vendor and Service Provider */}
+{(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
+  <div>
+    <div className="flex items-center gap-2 mb-3">
+      <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
+      <h3 className="text-sm font-bold text-secondary">License & Tax Information</h3>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      
+      {/* TIN NUMBER - MODIFIED: Added placeholder hint */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          TIN Number <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Enter TIN number (e.g. 1234567890)"
+            value={formData.tin_number || ""}
+            onChange={(e) => setFormData((prev) => ({ ...prev, tin_number: e.target.value }))}
+            className={`w-full border rounded-xl p-3 text-sm pl-10 ${
+              formErrors.tin_number ? "border-red-500" : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+          />
         </div>
-      )}
+        {formErrors.tin_number && <p className="text-red-500 text-xs mt-1">{formErrors.tin_number}</p>}
+        <p className="text-[10px] text-gray-400 mt-1">10-digit Tax Identification Number</p>
+      </div>
+
+      {/* VAT REGISTRATION NUMBER  */}
+      {/*  VAT Registration Number 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          VAT Registration Number
+        </label>
+        <div className="relative">
+          <FileCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Enter VAT registration number"
+            value={formData.vat_registration_number || ""}
+            onChange={(e) => setFormData((prev) => ({ ...prev, vat_registration_number: e.target.value }))}
+            className="w-full border border-gray-300 rounded-xl p-3 text-sm pl-10 focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+          />
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">Optional: VAT registration number</p>
+      </div>
+      */}
+
+      {/*  TAX TYPE DROPDOWN  */}
+      <div className="md:col-span-3">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Tax Type
+        </label>
+        <select
+          value={formData.tax_type || "none"}
+          onChange={(e) => setFormData((prev) => ({ ...prev, tax_type: e.target.value }))}
+          className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white"
+        >
+          <option value="none">None - Not Registered for Tax</option>
+          <option value="vat">VAT Registered</option>
+          <option value="turnover">Turnover Tax</option>
+          <option value="withholding">Withholding Tax</option>
+        </select>
+        <p className="text-[10px] text-gray-400 mt-1">Select the applicable tax regime for this business</p>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Verification Documents */}
       <div>
@@ -809,8 +871,8 @@ export default function CompanyForm({
           <h3 className="text-sm font-bold text-secondary">Verification Documents</h3>
         </div>
 
-        {/* Vendor Documents */}
-        {formData.registration_type === "vendor" && (
+        {/* Vendor Documents - for Vendor and Service Provider */}
+        {(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
           <div className="space-y-4">
             <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-3">
               <div className="flex items-center gap-2 text-blue-700">
@@ -1230,8 +1292,22 @@ export default function CompanyForm({
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Slug</p><p className="text-xs font-mono text-gray-700 truncate">{formData.slug || '—'}</p></div>
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Business Type</p><p className="text-xs font-semibold text-gray-800 capitalize truncate">{formData.business_type || '—'}</p></div>
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Category</p><p className="text-xs font-semibold text-gray-800 truncate">{categories.find(c => c.id === formData.category)?.name || '—'}</p></div>
-          </div>
-        )}
+    {/*  TIN Number in Review */}
+    <div>
+      <p className="text-[9px] text-gray-400 uppercase tracking-wider">TIN Number</p>
+      <p className="text-xs font-semibold text-gray-800 truncate">{formData.tin_number || '—'}</p>
+    </div>
+    {/*  Tax Type in Review */}
+    <div>
+      <p className="text-[9px] text-gray-400 uppercase tracking-wider">Tax Type</p>
+      <p className="text-xs font-semibold text-gray-800 truncate">
+        {formData.tax_type === 'vat' ? 'VAT Registered' :
+         formData.tax_type === 'turnover' ? 'Turnover Tax' :
+         formData.tax_type === 'withholding' ? 'Withholding Tax' : 'None'}
+      </p>
+    </div>
+  </div>
+)}
         {formData.registration_type === "service_provider" && (
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Full Name</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.full_name || '—'}</p></div>
@@ -1297,7 +1373,7 @@ export default function CompanyForm({
       onSubmit={onSubmit}
       className="flex flex-col lg:flex-row lg:divide-x lg:divide-gray-100"
     >
-      <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-thin max-h-[calc(100vh-160px)]">
+      <div className="flex-1 p-3 space-y-3">
         {currentStep === 0 && renderStep1()}
         {currentStep === 1 && renderStep2()}
         {currentStep === 2 && renderStep3()}

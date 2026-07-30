@@ -22,6 +22,9 @@ import {
   Bell,
   Settings as SettingsIcon,
     Banknote,
+    ClipboardList,
+     Target,
+      CalendarIcon,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -54,9 +57,17 @@ import BillingPage from "./subscriptions/BillingPage";
 import SuperadminSubscriptions from "./subscriptions/SuperadminSubscriptions";
 import MarketingOverview from "./overview/MarketingOverview";
 import MarketingAgentsManagement from "./UserManagement/MarketingAgentsManagement";
+import LeadsManagement from "../marketing/LeadsManagement";
+import TasksManagement from "../marketing/TasksManagement";
+import TargetsManagement from "../marketing/TargetsManagement";
+import CalendarManagement from "../marketing/CalendarManagement";
 
 type Tab =
   | "overview"
+    | "leads"
+     | "tasks"
+       | "targets"
+        | "calendar"
   | "categories"
   | "subcategories"
   | "headcompanies"
@@ -407,6 +418,16 @@ export default function AdminDashboard() {
           ) : (
             <Overview key={componentKey} onNavigate={navigateFromOverview} />
           );
+  case "leads":
+    return <LeadsManagement key={componentKey} />;
+    case "tasks":
+  return <TasksManagement key={componentKey} />;
+  case "targets":
+  return <TargetsManagement key={componentKey} />;
+  case "calendar":
+  return <CalendarManagement key={componentKey} />;
+
+
         case "products":
           return <CompanyProducts key={componentKey} />;
         case "users":
@@ -525,6 +546,7 @@ export default function AdminDashboard() {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("overview")}
               />
+
               <SidebarItem
                 icon={<Building2 className="h-5 w-5" />}
                 label="Companies"
@@ -532,6 +554,42 @@ export default function AdminDashboard() {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("companies")}
               />
+                            <SidebarItem
+                icon={<CreditCard className="h-5 w-5" />}
+                label="Billing"
+                active={activeTab === "billing"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("billing")}
+              />
+                                <SidebarItem
+      icon={<Users className="h-5 w-5" />}
+      label="Leads"
+      active={activeTab === "leads"}
+      collapsed={sidebarCollapsed}
+      onClick={() => navigate("leads")}
+    />
+    <SidebarItem
+  icon={<ClipboardList className="h-5 w-5" />}
+  label="Tasks"
+  active={activeTab === "tasks"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("tasks")}
+/>
+<SidebarItem
+  icon={<Target className="h-5 w-5" />}
+  label="Targets"
+  active={activeTab === "targets"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("targets")}
+/>
+<SidebarItem
+  icon={<CalendarIcon className="h-5 w-5" />}
+  label="Calendar"
+  active={activeTab === "calendar"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("calendar")}
+/>
+
               <SidebarItem
                 icon={<User className="h-5 w-5" />}
                 label="Profile"
@@ -792,22 +850,23 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-            {isMarketing && (
-              <div className="hidden sm:block">
-                <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 rounded-full border border-emerald-200 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
-                    Role:
-                  </span>
-                  <span className="text-sm font-black bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    Qine Marketing Agent
-                  </span>
-                </div>
-              </div>
-            )}
-            {/* Company name – show for non‑super‑admin (including viewer) */}
-            {company && !isSuperAdmin && (
-              <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
+{isMarketing && (
+  <div className="hidden sm:block">
+    <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2 rounded-full border border-orange-200 shadow-sm">
+      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+      <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+        Role:
+      </span>
+      <span className="text-sm font-black bg-gradient-to-r from-orange-700 to-amber-700 bg-clip-text text-transparent">
+         Elilita Marketing Agent
+      </span>
+    </div>
+  </div>
+)}
+{/* Company name – show for non‑super‑admin and non‑marketing users */}
+{company && !isSuperAdmin && !isMarketing && (
+  <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
+
                 <div className="relative flex-shrink-0 group">
                   {/* Outer glow effect */}
                   <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-secondary-dark via-secondary to-secondary-dark opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>

@@ -1,6 +1,6 @@
 // src/components/admin/SuperAdminView.tsx
 import { useState, useEffect } from "react";
-import { Edit, Trash2, ImageIcon, Filter } from "lucide-react";
+import { Edit, Trash2, ImageIcon, Filter, Mail, Phone, MapPin, Building2, CheckCircle, XCircle } from "lucide-react";
 import { DataTable, type Column } from "../../ui/DataTable";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
@@ -42,6 +42,70 @@ interface SuperAdminViewProps {
     pageSize: number;
   onPageSizeChange: (size: number) => void;
 }
+// ─── Company Hover Preview ──────────────────────────────
+const CompanyHoverPreview: React.FC<{ company: any }> = ({ company }) => {
+  return (
+    <div className="absolute left-full top-0 ml-2 z-50 w-72 p-4 bg-white rounded-2xl shadow-2xl border border-gray-100/50 backdrop-blur-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-2 group-hover:translate-x-0 pointer-events-none">
+      <div className="flex items-start gap-3">
+        {company.logo ? (
+          <img
+            src={company.logo}
+            alt={company.name}
+            className="h-12 w-12 rounded-xl object-cover border border-gray-200"
+          />
+        ) : (
+          <div className="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center">
+            <Building2 className="h-6 w-6 text-gray-400" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-gray-900 text-sm truncate">
+            {company.name}
+          </h4>
+          <p className="text-xs text-gray-500 truncate">@{company.slug}</p>
+          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+              company.is_active
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-gray-100 text-gray-500'
+            }`}>
+              {company.is_active ? (
+                <CheckCircle className="h-2.5 w-2.5" />
+              ) : (
+                <XCircle className="h-2.5 w-2.5" />
+              )}
+              {company.is_active ? 'Active' : 'Inactive'}
+            </span>
+            {company.is_featured && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+                ⭐ Featured
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-1.5 text-xs text-gray-600 border-t border-gray-100 pt-3">
+        <div className="flex items-center gap-2">
+          <Mail className="h-3.5 w-3.5 text-gray-400" />
+          <span className="truncate">{company.email || company.contact_email || '—'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Phone className="h-3.5 w-3.5 text-gray-400" />
+          <span>{company.phone || company.contact_phone || '—'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="h-3.5 w-3.5 text-gray-400" />
+          <span className="truncate">{company.address || '—'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Building2 className="h-3.5 w-3.5 text-gray-400" />
+          <span className="truncate">{company.category_name} · {company.sub_category_name}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function SuperAdminView({
   paginatedItems,
@@ -168,21 +232,95 @@ export default function SuperAdminView({
     </span>
   );
 
-  return (
-    <div className="space-y-4 sm:space-y-5">
+return (
+  <div className="space-y-4 sm:space-y-5">
+{!loading && paginatedItems.length > 0 && (
+  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Total Companies</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">{paginatedItems.length}</p>
+    </div>
+    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl p-4 border border-emerald-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Active</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {paginatedItems.filter(c => c.is_active).length}
+      </p>
+    </div>
+    <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Featured</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {paginatedItems.filter(c => c.is_featured).length}
+      </p>
+    </div>
+    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-200/50 shadow-sm">
+      <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Categories</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">
+        {new Set(paginatedItems.map(c => c.category_name)).size}
+      </p>
+    </div>
+  </div>
+)}
+
       {/* ============ DESKTOP / TABLET ============ */}
-      <div className="hidden md:block">
-        <DataTable
-          data={paginatedItems}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No companies found"
-          onEdit={onEdit}
-          onDelete={onDelete}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSort={onSort}
-        />
+      <div className="hidden md:block overflow-x-auto">
+        {loading ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4 animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-gray-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : paginatedItems.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <ImageIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-gray-500 font-medium">No companies found</h3>
+            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or add a new company</p>
+          </div>
+        ) : (
+<table className="w-full bg-white rounded-xl shadow-sm border border-gray-100">
+            <thead className="bg-gray-50/80 border-b border-gray-200">
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  >
+                    {col.header}
+                  </th>
+                ))}
+                {/* Preview column header – empty */}
+                <th className="w-0 p-0" />
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedItems.map((company) => (
+                <tr
+                  key={company.id}
+                  className="relative group transition-all duration-150 hover:bg-gray-50/60 border-b border-gray-100/80"
+                >
+                  {columns.map((col) => (
+                    <td key={col.key} className="py-3 px-4 text-sm text-gray-700">
+                      {col.render ? col.render(company) : (company as any)[col.key]}
+                    </td>
+                  ))}
+                  {/* Preview column – holds the hover popover */}
+                  <td className="relative w-0 p-0 overflow-visible">
+                    <div className="absolute left-full top-0 ml-2 z-50 translate-x-2 group-hover:translate-x-0 transition-all duration-200">
+                      <CompanyHoverPreview company={company} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* ============ MOBILE LAYOUT ============ */}
