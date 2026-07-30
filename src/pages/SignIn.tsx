@@ -64,7 +64,7 @@ export default function SignIn(): React.JSX.Element {
   };
 
    return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5f4bb6] via-[#6a5acd] to-[#4b3ca7] font-sans p-4 sm:p-6 md:p-8">
+   <div className="signin-page min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5f4bb6] via-[#6a5acd] to-[#4b3ca7] p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden mx-auto">
 
          {/* LEFT SIDE - Responsive (hidden on mobile, visible on md+) */}
