@@ -60,7 +60,7 @@ import LeadsManagement from "../marketing/LeadsManagement";
 import TasksManagement from "../marketing/TasksManagement";
 import TargetsManagement from "../marketing/TargetsManagement";
 import CalendarManagement from "../marketing/CalendarManagement";
-
+import ServiceManagement from "./ServiceManagement";
 type Tab =
   | "overview"
     | "leads"
@@ -84,7 +84,8 @@ type Tab =
   | "settings"
   | "billing"
   | "adminSubscriptions"
-  | "marketingAgents";
+  | "marketingAgents"
+  | "services";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -463,6 +464,8 @@ export default function AdminDashboard() {
           return <NotificationsPage key={componentKey} />;
         case "marketingAgents":
           return <MarketingAgentsManagement key={componentKey} />;
+        case "services":
+          return <ServiceManagement key={componentKey} />;
 
         default:
           return (
@@ -683,7 +686,14 @@ export default function AdminDashboard() {
             active={activeTab === "bankAccounts"}
             collapsed={sidebarCollapsed}
             onClick={() => navigate("bankAccounts")}
-          />
+                />
+                <SidebarItem
+  icon={<Layout className="h-5 w-5" />}
+  label="Services"
+  active={activeTab === "services"}
+  collapsed={sidebarCollapsed}
+  onClick={() => navigate("services")}
+/>
 
           <div
             className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
