@@ -22,11 +22,18 @@ import type {
   AnalyticsOverviewResponse,
   UsersResponse,
   UserRole,
+  ServiceOffering,
+  ServiceOfferingImage,
+  PortfolioItem,
+  PortfolioImage,
+  AvailabilitySlot,
+  ServiceBooking,
+  IntakeFormField,
 } from "../types";
 
-const API_URL = "https://backend-qine.activetechet.com/api/v1";
+// const API_URL = "https://backend-qine.activetechet.com/api/v1";
 
-// const API_URL = "http://localhost:8000/api/v1"; 
+const API_URL = "http://localhost:8000/api/v1"; 
 
 
 const api = axios.create({
@@ -795,5 +802,164 @@ export const getAdminMarketingAgents = () =>
 
 export const getAdminMarketingAgentPerformance = (agentId: number) =>
   api.get(`/users/marketing/admin/agents/${agentId}/performance/`);
+
+// ========== SERVICE PROVIDER MANAGEMENT ==========
+
+export const getManageServiceOfferings = (companySlug: string) =>
+  api.get<ServiceOffering[]>(`/services/manage/${companySlug}/offerings/`);
+
+export const createServiceOffering = (
+  companySlug: string,
+  data: Partial<ServiceOffering>,
+) => api.post<ServiceOffering>(`/services/manage/${companySlug}/offerings/`, data);
+
+export const updateServiceOffering = (
+  companySlug: string,
+  id: number,
+  data: Partial<ServiceOffering>,
+) => api.patch<ServiceOffering>(`/services/manage/${companySlug}/offerings/${id}/`, data);
+
+export const deleteServiceOffering = (companySlug: string, id: number) =>
+  api.delete(`/services/manage/${companySlug}/offerings/${id}/`);
+
+export const getServiceOfferingDetail = (companySlug: string, id: number) =>
+  api.get<ServiceOffering>(`/services/manage/${companySlug}/offerings/${id}/`);
+
+export const getServiceOfferingImages = (companySlug: string, offeringId: number) =>
+  api.get<ServiceOfferingImage[]>(
+    `/services/manage/${companySlug}/offerings/${offeringId}/images/`,
+  );
+
+export const uploadServiceOfferingImage = (
+  companySlug: string,
+  offeringId: number,
+  file: File,
+  isPrimary: boolean = false,
+) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  if (isPrimary) formData.append("is_primary", "true");
+  return api.post<ServiceOfferingImage>(
+    `/services/manage/${companySlug}/offerings/${offeringId}/images/`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+};
+
+export const updateServiceOfferingImage = (
+  companySlug: string,
+  offeringId: number,
+  imageId: number,
+  data: Partial<{ order: number; is_primary: boolean; alt_text: string }>,
+) =>
+  api.patch<ServiceOfferingImage>(
+    `/services/manage/${companySlug}/offerings/${offeringId}/images/${imageId}/`,
+    data,
+  );
+
+export const uploadServiceOfferingImageFormData = (
+  companySlug: string,
+  offeringId: number,
+  data: FormData,
+) =>
+  api.post<ServiceOfferingImage>(
+    `/services/manage/${companySlug}/offerings/${offeringId}/images/`,
+    data,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+
+export const deleteServiceOfferingImage = (
+  companySlug: string,
+  offeringId: number,
+  imageId: number,
+) =>
+  api.delete(
+    `/services/manage/${companySlug}/offerings/${offeringId}/images/${imageId}/`,
+  );
+
+export const getManagePortfolio = (companySlug: string) =>
+  api.get<PortfolioItem[]>(`/services/manage/${companySlug}/portfolio/`);
+
+export const createPortfolioItem = (
+  companySlug: string,
+  data: Partial<PortfolioItem>,
+) => api.post<PortfolioItem>(`/services/manage/${companySlug}/portfolio/`, data);
+
+export const updatePortfolioItem = (
+  companySlug: string,
+  id: number,
+  data: Partial<PortfolioItem>,
+) => api.patch<PortfolioItem>(`/services/manage/${companySlug}/portfolio/${id}/`, data);
+
+export const deletePortfolioItem = (companySlug: string, id: number) =>
+  api.delete(`/services/manage/${companySlug}/portfolio/${id}/`);
+
+export const uploadPortfolioImage = (
+  companySlug: string,
+  portfolioId: number,
+  data: FormData,
+) =>
+  api.post<PortfolioImage>(
+    `/services/manage/${companySlug}/portfolio/${portfolioId}/images/`,
+    data,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+
+export const deletePortfolioImage = (
+  companySlug: string,
+  portfolioId: number,
+  imageId: number,
+) =>
+  api.delete(
+    `/services/manage/${companySlug}/portfolio/${portfolioId}/images/${imageId}/`,
+  );
+
+export const getManageAvailability = (companySlug: string) =>
+  api.get<AvailabilitySlot[]>(`/services/manage/${companySlug}/availability/`);
+
+export const createAvailabilitySlot = (
+  companySlug: string,
+  data: Partial<AvailabilitySlot>,
+) => api.post<AvailabilitySlot>(`/services/manage/${companySlug}/availability/`, data);
+
+export const updateAvailabilitySlot = (
+  companySlug: string,
+  id: number,
+  data: Partial<AvailabilitySlot>,
+) => api.patch<AvailabilitySlot>(`/services/manage/${companySlug}/availability/${id}/`, data);
+
+export const deleteAvailabilitySlot = (companySlug: string, id: number) =>
+  api.delete(`/services/manage/${companySlug}/availability/${id}/`);
+
+export const getManageBlackouts = (companySlug: string) =>
+  api.get(`/services/manage/${companySlug}/blackouts/`);
+
+export const createBlackoutDate = (companySlug: string, data: any) =>
+  api.post(`/services/manage/${companySlug}/blackouts/`, data);
+
+export const deleteBlackoutDate = (companySlug: string, id: number) =>
+  api.delete(`/services/manage/${companySlug}/blackouts/${id}/`);
+
+export const getManageServiceBookings = (
+  companySlug: string,
+  params?: { status?: string; date?: string },
+) =>
+  api.get<ServiceBooking[]>(`/services/manage/${companySlug}/bookings/`, { params });
+
+export const updateServiceBookingStatus = (
+  companySlug: string,
+  bookingId: number,
+  data: {
+    status: ServiceBooking["status"];
+    company_notes?: string;
+    final_price?: string | number;
+  },
+) =>
+  api.patch<ServiceBooking>(
+    `/services/manage/${companySlug}/bookings/${bookingId}/status/`,
+    data,
+  );
+
+export type { IntakeFormField };
 
 export default api;

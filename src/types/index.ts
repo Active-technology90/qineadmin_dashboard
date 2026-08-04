@@ -503,6 +503,111 @@ export interface Service {
   is_featured: boolean;
 }
 
+// ── Service Provider Management ──
+
+export interface IntakeFormField {
+  name: string;
+  type: "text" | "textarea" | "select" | "number" | "date" | "checkbox";
+  label: string;
+  label_am?: string;
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
+}
+
+export interface ServiceOfferingImage {
+  id: number;
+  image: string;
+  alt_text?: string;
+  order?: number;
+  is_primary?: boolean;
+}
+
+export interface ServiceOffering {
+  id: number;
+  company?: number;
+  company_name?: string;
+  company_slug?: string;
+  title: string;
+  title_am?: string;
+  description?: string;
+  description_am?: string;
+  slug: string;
+  pricing_type: "fixed" | "starting_at" | "hourly" | "custom";
+  price?: string | null;
+  currency: string;
+  duration_minutes?: number | null;
+  booking_mode: "direct" | "inquiry" | "contact";
+  payment_policy: "upfront" | "deposit" | "post_service";
+  deposit_percentage?: string;
+  service_category?: string;
+  tags?: string[];
+  intake_form_schema?: IntakeFormField[];
+  is_active: boolean;
+  is_featured: boolean;
+  order?: number;
+  average_rating?: string | number;
+  total_reviews?: number;
+  total_bookings?: number;
+  images?: ServiceOfferingImage[];
+  primary_image?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PortfolioImage {
+  id: number;
+  image: string;
+  caption?: string;
+  is_before: boolean;
+  order: number;
+}
+
+export interface PortfolioItem {
+  id: number;
+  title: string;
+  title_am?: string;
+  description?: string;
+  description_am?: string;
+  service_offering?: number | null;
+  is_active: boolean;
+  order?: number;
+  images: PortfolioImage[];
+  created_at: string;
+}
+
+export interface AvailabilitySlot {
+  id: number;
+  day_of_week: number;
+  day_name?: string;
+  start_time: string;
+  end_time: string;
+  max_bookings: number;
+  is_active: boolean;
+}
+
+export interface ServiceBooking {
+  id: number;
+  customer: number;
+  customer_name?: string;
+  customer_phone?: string;
+  company?: CompanyListItem;
+  offering?: ServiceOffering;
+  scheduled_date: string;
+  scheduled_time: string;
+  estimated_duration?: number;
+  quoted_price: string;
+  final_price?: string | null;
+  currency: string;
+  intake_data: Record<string, unknown>;
+  customer_notes?: string;
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
+  company_notes?: string;
+  master_order?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ── Bank Management ──
 
 export interface BankInfo {

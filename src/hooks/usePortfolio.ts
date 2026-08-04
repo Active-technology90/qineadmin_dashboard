@@ -1,0 +1,65 @@
+import { useState, useEffect, useCallback } from "react";
+import {
+  getManagePortfolio,
+  createPortfolioItem,
+  updatePortfolioItem,
+  deletePortfolioItem,
+} from "../services/api";
+import type { PortfolioItem } from "../types";
+import { normalizeListResponse } from "../utils/normalizeListResponse";
+
+export function usePortfolio(companySlug: string | null) {
+  const [items, setItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [refetchCounter, setRefetchCounter] = useState(0);
+
+  useEffect(() => {
+    if (!companySlug) {
+      setItems([]);
+      return;
+    }
+
+    let active = true;
+    const fetch = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getManagePortfolio(companySlug);
+        if (active) setItems(normalizeListResponse(res.data));
+      } catch {
+        if (active) setError("Failed to load portfolio");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetch();
+    return () => {
+      active = false;
+    };
+  }, [companySlug, refetchCounter]);
+
+  const refetch = useCallback(() => setRefetchCounter((c) => c + 1), []);
+
+  const create = async (data: Partial<PortfolioItem>) => {
+    if (!companySlug) throw new Error("No company selected");
+    const res = await createPortfolioItem(companySlug, data);
+    refetch();
+    return res.data;
+  };
+
+  const update = async (id: number, data: Partial<PortfolioItem>) => {
+    if (!companySlug) throw new Error("No company selected");
+    const res = await updatePortfolioItem(companySlug, id, data);
+    refetch();
+    return res.data;
+  };
+
+  const remove = async (id: number) => {
+    if (!companySlug) throw new Error("No company selected");
+    await deletePortfolioItem(companySlug, id);
+    refetch();
+  };
+
+  return { items, loading, error, refetch, create, update, remove };
+}

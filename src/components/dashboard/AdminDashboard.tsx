@@ -25,6 +25,10 @@ import {
     ClipboardList,
      Target,
       CalendarIcon,
+  Wrench,
+  CalendarDays,
+  Images,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -60,6 +64,10 @@ import LeadsManagement from "../marketing/LeadsManagement";
 import TasksManagement from "../marketing/TasksManagement";
 import TargetsManagement from "../marketing/TargetsManagement";
 import CalendarManagement from "../marketing/CalendarManagement";
+import CompanyServices from "./services/CompanyServices";
+import ServiceBookings from "./services/ServiceBookings";
+import PortfolioManagement from "./services/PortfolioManagement";
+import AvailabilityManagement from "./services/AvailabilityManagement";
 
 type Tab =
   | "overview"
@@ -84,7 +92,11 @@ type Tab =
   | "settings"
   | "billing"
   | "adminSubscriptions"
-  | "marketingAgents";
+  | "marketingAgents"
+  | "serviceOfferings"
+  | "serviceBookings"
+  | "portfolio"
+  | "availability";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -299,6 +311,16 @@ export default function AdminDashboard() {
   // Hide "Company Users" only for staff (not for viewers)
   // const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
 
+  const currentCompanyMeta = companiesList.find((c: any) => c.slug === company?.slug);
+  const showServiceMenu =
+    isSuperAdmin ||
+    currentCompanyMeta?.business_type === "service" ||
+    user?.memberships?.some(
+      (m: any) =>
+        m.company_slug === company?.slug &&
+        companiesList.find((c: any) => c.slug === m.company_slug)?.business_type === "service",
+    );
+
   const navigate = (tab: Tab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
@@ -463,6 +485,14 @@ export default function AdminDashboard() {
           return <NotificationsPage key={componentKey} />;
         case "marketingAgents":
           return <MarketingAgentsManagement key={componentKey} />;
+        case "serviceOfferings":
+          return <CompanyServices key={componentKey} />;
+        case "serviceBookings":
+          return <ServiceBookings key={componentKey} />;
+        // case "portfolio":
+        //   return <PortfolioManagement key={componentKey} />;
+        case "availability":
+          return <AvailabilityManagement key={componentKey} />;
 
         default:
           return (
@@ -716,6 +746,44 @@ export default function AdminDashboard() {
             collapsed={sidebarCollapsed}
             onClick={() => navigate("products")}
           />
+
+          {showServiceMenu && (
+            <>
+              <div
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
+              >
+                Services
+              </div>
+              <SidebarItem
+                icon={<Wrench className="h-5 w-5" />}
+                label="My Services"
+                active={activeTab === "serviceOfferings"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("serviceOfferings")}
+              />
+              <SidebarItem
+                icon={<CalendarDays className="h-5 w-5" />}
+                label="Bookings"
+                active={activeTab === "serviceBookings"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("serviceBookings")}
+              />
+             {/* <SidebarItem
+                icon={<Images className="h-5 w-5" />}
+                label="Portfolio"
+                active={activeTab === "portfolio"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("portfolio")}
+              />*/}
+              <SidebarItem
+                icon={<Clock className="h-5 w-5" />}
+                label="Availability"
+                active={activeTab === "availability"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("availability")}
+              />
+            </>
+          )}
           {/* Only for super admin (not viewer) */}
 
           {/* {!hideUsersSidebar && ( */}
