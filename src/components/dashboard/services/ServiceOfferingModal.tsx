@@ -283,7 +283,7 @@ export function ServiceOfferingModal({
                 >
                   <option value="direct">Direct Booking</option>
                   <option value="inquiry">Inquiry / Lead</option>
-                  <option value="contact">Contact Only</option>
+                  {/* <option value="contact">Contact Only</option> */}
                 </select>
               </div>
               <div>
@@ -299,7 +299,7 @@ export function ServiceOfferingModal({
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 >
                   <option value="upfront">Pay Upfront</option>
-                  <option value="deposit">Deposit Required</option>
+                  {/* <option value="deposit">Deposit Required</option> */}
                   <option value="post_service">Pay After Service</option>
                 </select>
               </div>
