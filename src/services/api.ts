@@ -33,8 +33,8 @@ import type {
 
 // const API_URL = "https://backend-qine.activetechet.com/api/v1";
 
-const API_URL = "http://localhost:8000/api/v1"; 
-
+// const API_URL = "http://localhost:8000/api/v1"; 
+const API_URL = "https://backend.elilitapp.com/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -822,6 +822,7 @@ export const updateServiceOffering = (
 export const deleteServiceOffering = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/offerings/${id}/`);
 
+
 export const getServiceOfferingDetail = (companySlug: string, id: number) =>
   api.get<ServiceOffering>(`/services/manage/${companySlug}/offerings/${id}/`);
 
@@ -955,6 +956,8 @@ export const getManageServiceBookings = (
 ) =>
   api.get<ServiceBooking[]>(`/services/manage/${companySlug}/bookings/`, { params });
 
+export const getServiceBookingDetail = (companySlug: string, id: number) =>
+  api.get<ServiceBooking>(`/services/bookings/${id}/`);
 export const updateServiceBookingStatus = (
   companySlug: string,
   bookingId: number,

@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { getManageServiceBookings, updateServiceBookingStatus } from "../services/api";
+import {
+  getManageServiceBookings,
+  updateServiceBookingStatus,
+  getServiceBookingDetail,   // ← new import
+} from "../services/api";
 import type { ServiceBooking } from "../types";
 import { normalizeListResponse } from "../utils/normalizeListResponse";
 
@@ -12,6 +16,7 @@ export function useServiceBookings(
   const [error, setError] = useState<string | null>(null);
   const [refetchCounter, setRefetchCounter] = useState(0);
 
+  // ── Fetch list (existing) ──────────────────────────
   useEffect(() => {
     if (!companySlug) {
       setBookings([]);
@@ -39,6 +44,7 @@ export function useServiceBookings(
 
   const refetch = useCallback(() => setRefetchCounter((c) => c + 1), []);
 
+  // ── Update status (existing) ──────────────────────
   const updateStatus = async (
     bookingId: number,
     data: {
@@ -53,5 +59,15 @@ export function useServiceBookings(
     return res.data;
   };
 
-  return { bookings, loading, error, refetch, updateStatus };
+  // ── NEW: Fetch a single booking detail ─────────────
+  const getBookingDetail = useCallback(
+    async (bookingId: number): Promise<ServiceBooking> => {
+      if (!companySlug) throw new Error("No company selected");
+      const res = await getServiceBookingDetail(companySlug, bookingId);
+      return res.data;
+    },
+    [companySlug],
+  );
+
+  return { bookings, loading, error, refetch, updateStatus, getBookingDetail };
 }
