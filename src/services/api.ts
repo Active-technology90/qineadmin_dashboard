@@ -940,6 +940,15 @@ export const createBlackoutDate = (companySlug: string, data: any) =>
 export const deleteBlackoutDate = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/blackouts/${id}/`);
 
+export const getManageStaff = (companySlug: string) =>
+  api.get<ServiceStaff[]>(`/services/manage/${companySlug}/staff/`);
+
+export const createStaff = (companySlug: string, data: any) =>
+  api.post<ServiceStaff>(`/services/manage/${companySlug}/staff/`, data);
+
+export const deleteStaff = (companySlug: string, id: number) =>
+  api.delete(`/services/manage/${companySlug}/staff/${id}/`);
+
 export const getManageServiceBookings = (
   companySlug: string,
   params?: { status?: string; date?: string },

@@ -586,6 +586,34 @@ export interface AvailabilitySlot {
   is_active: boolean;
 }
 
+export interface ServiceStaff {
+  id: number;
+  company: number;
+  name: string;
+  name_am?: string;
+  avatar?: string | null;
+  role_title?: string;
+  assigned_service_ids?: number[];
+  is_online?: boolean;
+  is_active: boolean;
+  working_days?: number[];
+  start_time?: string;
+  end_time?: string;
+  average_rating?: number | string;
+  review_count?: number;
+  order?: number;
+}
+
+export interface ServiceAddon {
+  id: number;
+  service_offering: number;
+  name: string;
+  name_am?: string;
+  price: string;
+  duration_minutes: number;
+  is_active: boolean;
+}
+
 export interface ServiceBooking {
   id: number;
   customer: number;
@@ -593,12 +621,22 @@ export interface ServiceBooking {
   customer_phone?: string;
   company?: CompanyListItem;
   offering?: ServiceOffering;
+  assigned_staff?: ServiceStaff | null;
+  selected_addons?: ServiceAddon[];
+  location_type?: "provider_location" | "customer_location";
+  service_address_text?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   scheduled_date: string;
   scheduled_time: string;
   estimated_duration?: number;
   quoted_price: string;
   final_price?: string | null;
   currency: string;
+  payable_amount?: string;
+  payment_status?: string;
+  payment_method?: string;
+  checkout_url?: string | null;
   intake_data: Record<string, unknown>;
   customer_notes?: string;
   status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";

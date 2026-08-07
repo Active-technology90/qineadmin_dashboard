@@ -68,6 +68,7 @@ import CompanyServices from "./services/CompanyServices";
 import ServiceBookings from "./services/ServiceBookings";
 import PortfolioManagement from "./services/PortfolioManagement";
 import AvailabilityManagement from "./services/AvailabilityManagement";
+import StaffManagement from "./services/StaffManagement";
 
 type Tab =
   | "overview"
@@ -96,7 +97,8 @@ type Tab =
   | "serviceOfferings"
   | "serviceBookings"
   | "portfolio"
-  | "availability";
+  | "availability"
+  | "serviceStaff";
 
 // ─────────────────────────────────────────────────────────────
 // Read‑only Context – tells child components if they are in viewer mode
@@ -493,6 +495,8 @@ export default function AdminDashboard() {
         //   return <PortfolioManagement key={componentKey} />;
         case "availability":
           return <AvailabilityManagement key={componentKey} />;
+        case "serviceStaff":
+          return <StaffManagement key={componentKey} />;
 
         default:
           return (
@@ -781,6 +785,13 @@ export default function AdminDashboard() {
                 active={activeTab === "availability"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("availability")}
+              />
+              <SidebarItem
+                icon={<Users className="h-5 w-5" />}
+                label="Staff & Specialists"
+                active={activeTab === "serviceStaff"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("serviceStaff")}
               />
             </>
           )}

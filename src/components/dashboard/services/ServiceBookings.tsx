@@ -253,6 +253,25 @@ export default function ServiceBookings() {
                 {selectedBooking.scheduled_date} at{" "}
                 {String(selectedBooking.scheduled_time).slice(0, 5)}
               </p>
+              {/* Location is not yet implemented */}
+              {/* <p>
+                <span className="text-gray-500">Location:</span>{" "}
+                {selectedBooking.location_type === "customer_location" ? (
+                  <span className="font-semibold text-purple-700">
+                    🏠 On-Site ({selectedBooking.service_address_text || "Customer Address"})
+                  </span>
+                ) : (
+                  <span>🏬 At Provider Studio</span>
+                )}
+              </p> */}
+              {selectedBooking.assigned_staff && (
+                <p>
+                  <span className="text-gray-500">Assigned Specialist:</span>{" "}
+                  <span className="font-semibold text-gray-900">
+                    👤 {selectedBooking.assigned_staff.name} ({selectedBooking.assigned_staff.role_title || "Specialist"})
+                  </span>
+                </p>
+              )}
               {selectedBooking.customer_notes && (
                 <p>
                   <span className="text-gray-500">Notes:</span>{" "}
