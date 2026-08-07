@@ -129,7 +129,164 @@ export interface Company {
   registered_by?: number;
   registered_by_username?: string;
 }
+// ─── types/validation.ts ───────────────────────────────
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+}
+// ── Lightweight list item (existing) ──
+export interface ServiceBooking {
+  id: number;
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
+  scheduled_date: string;
+  scheduled_time: string;
+  quoted_price: string;
+  final_price: string;
+  currency: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_notes: string;
+  company_notes: string;
+  offering?: {
+    id: number;
+    title: string;
+    duration_minutes?: number;
+    primary_image?: string;
+    service_category?: string;
+  };
+  intake_data?: Record<string, any>;
+  company_slug: string; // needed for API call
+}
 
+// ── Full detail (fetched on open) ──
+export interface FullServiceBooking {
+  booking: BookingDetail;
+  customer: CustomerDetail;
+  company: CompanyDetail;
+  service: ServiceDetail;
+  staff: StaffDetail | null;
+  payment: PaymentDetail | null;
+  timeline: TimelineEntry[];
+  attachments: Attachment[];
+  intake_answers: IntakeAnswer[];
+  allowed_actions: BookingAction[];
+  notifications: NotificationSummary;
+  audit: AuditTrail;
+}
+
+export interface BookingDetail {
+  id: number;
+  reference: string;                 // e.g. “SHA-20260805-0010”
+  source: "app" | "web" | "admin" | "widget";
+  type: "standard" | "recurring" | "course" | "workshop";
+  status: string;
+  scheduled_date: string;
+  scheduled_time: string;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+  confirmed_at: string | null;
+  cancelled_at: string | null;
+  completed_at: string | null;
+  reminder_status: "none" | "sent" | "failed";
+  customer_notes: string;
+  company_notes: string;
+  internal_notes: string;
+}
+
+export interface CustomerDetail {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  avatar: string | null;
+  address: string;
+  gender: "Male" | "Female" | "Other" | null;
+  date_of_birth: string | null;
+  age: number | null;
+  loyalty_status: string;
+  total_bookings: number;
+  total_spent: string;
+  last_booking: string | null;
+  notes: string;
+}
+
+export interface CompanyDetail {
+  id: number;
+  name: string;
+  logo: string | null;
+  branch: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+export interface ServiceDetail {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  duration_minutes: number;
+  preparation_time_minutes: number;
+  cleanup_time_minutes: number;
+  primary_image: string | null;
+  tags: string[];
+}
+
+export interface StaffDetail {
+  id: number;
+  full_name: string;
+  avatar: string | null;
+  phone: string;
+  specialization: string;
+}
+
+export interface PaymentDetail {
+  status: "pending" | "paid" | "partially_paid" | "refunded" | "failed";
+  method: string;
+  reference: string;
+  transaction_id: string | null;
+  date: string | null;
+  refund_status: "none" | "partial" | "full";
+  refund_amount: string;
+}
+
+export interface TimelineEntry {
+  status: string;
+  created_at: string;
+  updated_by: string | null;
+  note: string | null;
+}
+
+export interface Attachment {
+  id: number;
+  file_url: string;
+  file_name: string;
+  type: "image" | "document";
+  uploaded_at: string;
+}
+
+export interface IntakeAnswer {
+  question: string;
+  answer: string;
+  file_url: string | null;      // uploaded file
+  signature_url: string | null; // signature if needed
+}
+
+export interface NotificationSummary {
+  reminder_sent: boolean;
+  sms_sent: boolean;
+  email_sent: boolean;
+  push_sent: boolean;
+}
+
+export interface AuditTrail {
+  created_by: string | null;
+  updated_by: string | null;
+  last_updated_by: string | null;
+}
+
+export type BookingAction = "confirm" | "start" | "complete" | "cancel" | "no_show";
 export interface CompanyListItem {
   id: number;
   name: string;

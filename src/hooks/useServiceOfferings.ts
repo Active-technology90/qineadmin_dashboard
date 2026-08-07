@@ -1,6 +1,8 @@
+// useServiceOfferings.ts
 import { useState, useEffect, useCallback } from "react";
 import {
   getManageServiceOfferings,
+  getServiceOfferingDetail, // you'll need to import this from your api
   createServiceOffering,
   updateServiceOffering,
   deleteServiceOffering,
@@ -19,7 +21,6 @@ export function useServiceOfferings(companySlug: string | null) {
       setOfferings([]);
       return;
     }
-
     let active = true;
     const fetch = async () => {
       setLoading(true);
@@ -61,5 +62,15 @@ export function useServiceOfferings(companySlug: string | null) {
     refetch();
   };
 
-  return { offerings, loading, error, refetch, create, update, remove };
+  // 👇 New function – fetches full detail
+  const getDetail = useCallback(
+    async (id: number): Promise<ServiceOffering> => {
+      if (!companySlug) throw new Error("No company selected");
+      const res = await getServiceOfferingDetail(companySlug, id);
+      return res.data;
+    },
+    [companySlug]
+  );
+
+  return { offerings, loading, error, refetch, create, update, remove, getDetail };
 }

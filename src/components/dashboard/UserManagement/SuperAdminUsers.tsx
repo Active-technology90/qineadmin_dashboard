@@ -34,7 +34,7 @@ import {
   updateUserCompanyRole,
 } from "../../../services/api";
 import type { User, UserRole, Membership } from "../../../types";
-
+import ReactDOM from 'react-dom';
 // Import shared UI components
 import { Pagination } from "../../ui/Pagination";
 import EditUserModal from "./EditUserModal";
@@ -326,7 +326,6 @@ interface ActionsDropdownProps {
   onRemove: (user: User) => void;
   onManageMemberships: (user: User) => void;
 }
-
 const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   user,
   onView,
@@ -336,52 +335,59 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [isAbove, setIsAbove] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // ── Click outside / Escape to close ──
+  // ── Close on click outside & Escape ──
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node) &&
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
       }
     };
-
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleEscape);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
 
-  // ── Check if dropdown fits below ──
+  // ── Determine placement using getBoundingClientRect ──
   useEffect(() => {
     if (open && buttonRef.current && menuRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
-      const menuHeight = 200; // approximate menu height (adjust if needed)
+      const menuHeight = 200; // adjust to actual menu height
       const spaceBelow = window.innerHeight - buttonRect.bottom;
       const spaceAbove = buttonRect.top;
-
-      // If there's less space below than the menu height, and more space above, flip upward
-      if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
-        setIsAbove(true);
-      } else {
-        setIsAbove(false);
-      }
+      setIsAbove(spaceBelow < menuHeight && spaceAbove > spaceBelow);
     }
   }, [open]);
+
+  // ── Position styles for the portal ──
+  const buttonRect = buttonRef.current?.getBoundingClientRect() ?? {
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 0,
+  };
+  const portalStyle: React.CSSProperties = {
+    position: "fixed",
+    top: isAbove ? buttonRect.top - 8 : buttonRect.bottom + 8,
+    right: window.innerWidth - buttonRect.right,
+    width: 224,
+    zIndex: 99999,
+  };
 
   const menuItems = [
     {
@@ -419,138 +425,52 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     },
   ];
 
+  // ── Button stays where it was ──
   return (
-    <div
-      ref={dropdownRef}
-      className="relative flex items-center justify-center z-50 "
-    >
-      {/* Trigger Button */}
+    <>
       <button
         ref={buttonRef}
         onClick={() => setOpen((prev) => !prev)}
-        className={`
-          group
-          relative
-          flex items-center justify-center
-          h-8 w-8
-          rounded-xl  z-50
-          bg-white/80
-          backdrop-blur-sm
-          border border-gray-200/70
-          hover:border-indigo-300
-          hover:shadow-lg
-          hover:shadow-indigo-100/40
-          active:scale-95
-          transition-all duration-300
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-indigo-400
-          focus-visible:ring-offset-2
-          ${open ? "border-indigo-300 shadow-lg shadow-indigo-100/40 bg-indigo-50/40" : ""}
-        `}
+        className="group relative flex items-center justify-center h-8 w-8 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/70 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-100/40 active:scale-95 transition-all"
       >
-        {open && (
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 opacity-20 -z-10 blur-sm" />
-        )}
-
-        <MoreVertical
-          className={`
-            h-4 w-4
-            transition-all duration-300
-            ${open ? "text-indigo-600 rotate-90" : "text-gray-500 group-hover:text-indigo-500 group-hover:scale-110"}
-          `}
-        />
+        <MoreVertical className="h-4 w-4 text-gray-500 group-hover:text-indigo-500" />
       </button>
 
-      {/* Dropdown – Glassmorphism with dynamic vertical placement */}
-      <div
-        ref={menuRef}
-        className={`
-          absolute
-          ${isAbove ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"}
-          right-0
-          w-56
-           z-50
-          origin-top-right
-          rounded-2xl
-          bg-white/90
-          backdrop-blur-xl
-          shadow-[0_20px_60px_rgba(79,70,229,0.12)]
-          border border-white/30
-          overflow-hidden
-          z-[999]
-          transition-all duration-300 ease-out
-          ${
-            open
-              ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-          }
-        `}
-      >
-        {/* Menu Items */}
-        <div className="py-1.5">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.label}
-                onClick={() => {
-                  item.action();
-                  setOpen(false);
-                }}
-                className={`
-                  group
-                  flex items-center gap-3
-                  w-full
-                  px-4
-                  py-2.5
-                  text-xs
-                  font-medium
-                  text-gray-700
-                  transition-all duration-200
-                  hover:pl-5
-                  ${item.hover}
-                  ${item.textColor || ""}
-                  ${index > 0 ? "border-t border-gray-100/40" : ""}
-                `}
-              >
-                <div
-                  className={`
-                    flex items-center justify-center
-                    h-7 w-7
-                    rounded-xl
-                    ${item.iconBg}
-                    transition-all duration-200
-                    group-hover:scale-105
-                    group-hover:shadow-sm
-                  `}
-                >
-                  <Icon className={`h-3.5 w-3.5 ${item.iconColor}`} />
-                </div>
-
-                <span className="flex-1 text-left text-[13px] font-medium">
-                  {item.label}
-                </span>
-
-                <ChevronRight
-                  className="
-                    h-3.5 w-3.5
-                    text-gray-300
-                    transition-all duration-200
-                    group-hover:translate-x-1
-                    group-hover:text-indigo-400
-                  "
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Bottom gradient bar */}
-        <div className="h-[2px] bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 opacity-60" />
-      </div>
-    </div>
+      {/* Portal the dropdown to document.body */}
+      {open &&
+        ReactDOM.createPortal(
+          <div
+            ref={menuRef}
+            style={portalStyle}
+           className="absolute rounded-2xl bg-white/90 backdrop-blur-xl shadow-[0_20px_60px_rgba(79,70,229,0.12)] border border-white/30 overflow-hidden transition-all max-h-64 overflow-y-auto"  // ← add these
+>
+            {/* ... menu items ... */}
+            <div className="py-1.5">
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      item.action();
+                      setOpen(false);
+                    }}
+                    className={`group flex items-center gap-3 w-full px-4 py-2.5 text-xs font-medium text-gray-700 transition-all duration-200 hover:pl-5 ${item.hover} ${item.textColor || ""} ${index > 0 ? "border-t border-gray-100/40" : ""}`}
+                  >
+                    <div className={`flex items-center justify-center h-7 w-7 rounded-xl ${item.iconBg} transition-all duration-200 group-hover:scale-105 group-hover:shadow-sm`}>
+                      <Icon className={`h-3.5 w-3.5 ${item.iconColor}`} />
+                    </div>
+                    <span className="flex-1 text-left text-[13px] font-medium">{item.label}</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-300 transition-all duration-200 group-hover:translate-x-1 group-hover:text-indigo-400" />
+                  </button>
+                );
+              })}
+            </div>
+            <div className="h-[2px] bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 opacity-60" />
+          </div>,
+          document.body,
+        )}
+    </>
   );
 };
 
@@ -596,7 +516,7 @@ const UserTable: React.FC<UserTableProps> = ({
   ...actionProps
 }) => (
   <div className="hidden lg:block overflow-x-auto">
-    <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-visible">
       <table className="w-full">
         <thead>
           <tr className="bg-gradient-to-r from-gray-50/80 to-gray-100/50 border-b border-gray-200/60">
@@ -794,7 +714,7 @@ const UserTable: React.FC<UserTableProps> = ({
                   )}
                 </span>
               </td>
-              <td className="py-3.5 px-5 text-right">
+              <td className="relative overflow-visible py-3.5 px-5 text-right">
                 <ActionsDropdown user={user} {...actionProps} />
               </td>
             </tr>
