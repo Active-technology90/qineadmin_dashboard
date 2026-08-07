@@ -1182,7 +1182,7 @@ const ReceiptReviewCard = ({
       {/* KEEP SECOND IMAGE VIEWER */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 border border-blac"
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 border border-black"
           onClick={() => setPreviewImage(null)}
         >
           <div

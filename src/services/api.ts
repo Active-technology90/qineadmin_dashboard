@@ -29,6 +29,7 @@ import type {
   AvailabilitySlot,
   ServiceBooking,
   IntakeFormField,
+  ServiceStaff,
 } from "../types";
 
 // const API_URL = "https://backend-qine.activetechet.com/api/v1";
@@ -61,14 +62,20 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 // Request interceptor: attach token
+// Request interceptor: attach token & fix FormData Content-Type
 api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem("access");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Let the browser set the correct multipart boundary for FormData
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
+
   return config;
 });
-
 // Response interceptor: handle 401 and refresh token
 api.interceptors.response.use(
   (response) => response,
@@ -279,8 +286,31 @@ export const getCompanies = async (params?: {
 // ========== MEMBERSHIP MANAGEMENT ==========
 // Get all companies for assignment (reuse existing getCompanies)
 export const getAvailableCompanies = async () => {
-  const response = await getCompanies({ page_size: 100 }); // adjust page size as needed
-  return response.data.results.map(c => ({ id: c.id, name: c.name, slug: c.slug }));
+  const pageSize = 100;
+  let page = 1;
+  let companies: any[] = [];
+  let hasNext = true;
+
+  while (hasNext) {
+    const response = await getCompanies({
+      page,
+      page_size: pageSize,
+    });
+
+    const data = response.data;
+
+    companies.push(...(data.results || []));
+
+    // Django REST Framework pagination
+    hasNext = !!data.next;
+    page++;
+  }
+
+  return companies.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+  }));
 };
 
 // Update user's role in a specific company
@@ -748,6 +778,9 @@ export const prepareVendorOrder = async (companySlug: string, orderId: number) =
 
 export const confirmCODPayment = async (companySlug: string, orderId: number) =>
   api.post(`/orders/company/${companySlug}/${orderId}/confirm-cod/`);
+// ========== SERVICE BOOKINGS ==========services/manage/<slug:slug>/bookings/<int:pk>/confirm-cod/
+export const confirmCODServiceBookingPayment = async (companySlug: string, bookingId: number) =>
+  api.post(`/services/manage/${companySlug}/bookings/${bookingId}/confirm-cod/`);
 
 // ========== NOTIFICATIONS (FCM) ==========
 export const registerDevice = (
@@ -945,11 +978,13 @@ export const getManageStaff = (companySlug: string) =>
   api.get<ServiceStaff[]>(`/services/manage/${companySlug}/staff/`);
 
 export const createStaff = (companySlug: string, data: any) =>
-  api.post<ServiceStaff>(`/services/manage/${companySlug}/staff/`, data);
+  api.post<ServiceStaff>(`/services/manage/${companySlug}/staff/`, data,);
 
 export const deleteStaff = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/staff/${id}/`);
-
+//update staff
+export const updateStaff = (companySlug: string, id: number, data: any) =>
+  api.patch<ServiceStaff>(`/services/manage/${companySlug}/staff/${id}/`, data);
 export const getManageServiceBookings = (
   companySlug: string,
   params?: { status?: string; date?: string },

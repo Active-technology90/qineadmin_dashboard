@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { Wrench, Plus, Edit, Trash2, Repeat } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Wrench, Plus, Edit, Trash2, Repeat, Search, RefreshCw } from "lucide-react";
 import { useAuth } from "../../../context/authContext";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
@@ -9,9 +9,18 @@ import { ServiceOfferingModal } from "./ServiceOfferingModal";
 import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
 import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
-import { SearchInput } from "../../ui/SearchInput";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import type { ServiceOffering } from "../../../types";
+
+/* ---------- custom debounce hook ---------- */
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 const BOOKING_LABELS: Record<string, string> = {
   direct: "Direct",
@@ -39,7 +48,6 @@ export default function CompanyServices() {
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
 
-  // Filter only service companies for the selector
   const serviceCompanies = useMemo(
     () => companies.filter((c) => c.business_type === "service"),
     [companies],
@@ -48,7 +56,6 @@ export default function CompanyServices() {
   const selectedCompany = companies.find((c) => c.slug === companySlug);
   const isServiceCompany = selectedCompany?.business_type === "service";
 
-  // Fetch offerings only when a valid service company is selected
   const {
     offerings,
     loading,
@@ -60,20 +67,22 @@ export default function CompanyServices() {
     getDetail,
   } = useServiceOfferings(isServiceCompany ? companySlug : null);
 
-  // Local search & pagination
-  const [search, setSearch] = useState("");
+  // ---------- search with debounce ----------
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 300);
+
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredOfferings = useMemo(() => {
-    if (!search.trim()) return offerings;
-    const term = search.toLowerCase();
+    if (!debouncedSearch.trim()) return offerings;
+    const term = debouncedSearch.toLowerCase();
     return offerings.filter(
       (o) =>
         o.title.toLowerCase().includes(term) ||
         (o.service_category && o.service_category.toLowerCase().includes(term)),
     );
-  }, [offerings, search]);
+  }, [offerings, debouncedSearch]);
 
   const totalItems = filteredOfferings.length;
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -82,28 +91,24 @@ export default function CompanyServices() {
     return filteredOfferings.slice(start, start + pageSize);
   }, [filteredOfferings, currentPage, pageSize]);
 
-  // Reset page when search or pageSize changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, pageSize]);
+  }, [debouncedSearch, pageSize]);
 
-  // Modal & toast states
+  // ---------- modal & toast ----------
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceOffering | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ServiceOffering | null>(
-    null,
+  const [deleteTarget, setDeleteTarget] = useState<ServiceOffering | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const showToast = useCallback(
+    (type: "success" | "error", message: string) => {
+      setToast({ type, message });
+      setTimeout(() => setToast(null), 3000);
+    },
+    [],
   );
-  const [toast, setToast] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
 
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  // Handlers
   const handleSave = async (
     data: Partial<ServiceOffering>,
     existingId?: number,
@@ -125,9 +130,10 @@ export default function CompanyServices() {
       refetch();
     }
   };
+
   const handleEdit = async (offering: ServiceOffering) => {
     try {
-      const fullOffering = await getDetail(offering.id); // fetch complete data
+      const fullOffering = await getDetail(offering.id);
       setEditing(fullOffering);
       setModalOpen(true);
     } catch {
@@ -148,7 +154,7 @@ export default function CompanyServices() {
     }
   };
 
-  // Show company selector for super admin
+  // ---------- early returns ----------
   if (showSelector) {
     return (
       <CompanySelector
@@ -157,9 +163,7 @@ export default function CompanyServices() {
         title="Service Management"
         searchPlaceholder="Search service companies..."
         onSelect={(slug, name) => {
-          const membership = user?.memberships?.find(
-            (m: any) => m.company_slug === slug,
-          );
+          const membership = user?.memberships?.find((m: any) => m.company_slug === slug);
           const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
           switchCompany({ slug, name, role });
         }}
@@ -168,7 +172,6 @@ export default function CompanyServices() {
     );
   }
 
-  // Fallback when no company slug
   if (!companySlug) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-gray-500">
@@ -178,32 +181,27 @@ export default function CompanyServices() {
     );
   }
 
-  // Not a service company view
   if (!isServiceCompany) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
         <Wrench className="h-12 w-12 text-gray-300 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-700">
-          Not a Service Company
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-700">Not a Service Company</h3>
         <p className="text-sm text-gray-500 mt-2 max-w-md">
-          {companyName} is a product vendor. Service management is only
-          available for companies with business type "service".
+          {companyName} is a product vendor. Service management is only available for companies with business type "service".
         </p>
         {isSuperAdmin && (
           <button
             onClick={clearCompany}
             className="mt-4 inline-flex items-center gap-1.5 text-sm text-purple-700 font-medium hover:underline"
           >
-            <Repeat className="h-4 w-4" />
-            Choose another company
+            <Repeat className="h-4 w-4" /> Choose another company
           </button>
         )}
       </div>
     );
   }
 
-  // Main content
+  // ---------- main content ----------
   return (
     <>
       <Toast toast={toast} />
@@ -214,7 +212,7 @@ export default function CompanyServices() {
         onCancel={() => setDeleteTarget(null)}
       />
       <ServiceOfferingModal
-        key={editing?.id ?? "new"} 
+        key={editing?.id ?? "new"}
         isOpen={modalOpen}
         offering={editing}
         companySlug={companySlug}
@@ -233,11 +231,10 @@ export default function CompanyServices() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h1 className="text-xl font-bold text-secondary">My Services</h1>
-           <div className="flex items-center gap-1 mt-1"> <p className="text-sm text-gray-500 ">
-              Manage service offerings for
-            </p>
+            <div className="flex items-center gap-1 mt-1">
+              <p className="text-sm text-gray-500">Manage service offerings for</p>
               <span className="text-sm text-secondary font-bold">{companyName}</span>
-              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {isSuperAdmin && (
@@ -245,8 +242,7 @@ export default function CompanyServices() {
                 onClick={clearCompany}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-secondary border border-secondary rounded-xl hover:bg-purple-50 transition"
               >
-                <Repeat className="h-4 w-4" />
-                Switch
+                <Repeat className="h-4 w-4" /> Switch
               </button>
             )}
             <button
@@ -256,43 +252,36 @@ export default function CompanyServices() {
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-secondary transition shadow-sm"
             >
-              <Plus className="h-4 w-4" />
-              Add Service
+              <Plus className="h-4 w-4" /> Add Service
             </button>
           </div>
         </div>
 
-        {/* Search & Page Size (Desktop) */}
-        <div className="hidden lg:flex items-center justify-between gap-3 mb-4">
-          <div className="flex-1 max-w-sm">
-            <SearchInput
-              value={search}
-              onChange={(val) => setSearch(val)}
-              placeholder="Search services..."
-              loading={loading}
-            />
+        {/* Search + Refresh (inline) & Page Size */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 w-full lg:max-w-sm">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-gray-50
+                           focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/20
+                           outline-none transition text-sm"
+              />
+            </div>
+            <button
+              onClick={refetch}
+              className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
+                         hover:bg-white hover:border-secondary transition-all duration-200 group flex-shrink-0"
+              title="Refresh services"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-secondary group-hover:rotate-180 transition-all duration-300" />
+            </button>
           </div>
-          <div className="w-28">
-            <CustomSelect
-              value={String(pageSize)}
-              onChange={(val) => setPageSize(Number(val))}
-              options={PAGE_SIZE_OPTIONS}
-              placeholder="10"
-            />
-          </div>
-        </div>
-
-        {/* Search & Page Size (Mobile) */}
-        <div className="flex lg:hidden items-center gap-2 mb-4">
-          <div className="flex-1">
-            <SearchInput
-              value={search}
-              onChange={(val) => setSearch(val)}
-              placeholder="Search..."
-              loading={loading}
-            />
-          </div>
-          <div className="w-24 flex-shrink-0">
+          <div className="w-24 lg:w-28">
             <CustomSelect
               value={String(pageSize)}
               onChange={(val) => setPageSize(Number(val))}
@@ -306,17 +295,13 @@ export default function CompanyServices() {
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">
             {error}{" "}
-            <button onClick={refetch} className="underline ml-1">
-              Retry
-            </button>
+            <button onClick={refetch} className="underline ml-1">Retry</button>
           </div>
         )}
 
         {/* Table */}
         {loading ? (
-          <div className="py-12 text-center text-gray-400">
-            Loading services...
-          </div>
+          <div className="py-12 text-center text-gray-400">Loading services...</div>
         ) : paginatedOfferings.length === 0 ? (
           <div className="py-16 text-center">
             <Wrench className="h-10 w-10 text-gray-300 mx-auto mb-3" />
@@ -344,10 +329,7 @@ export default function CompanyServices() {
                 </thead>
                 <tbody>
                   {paginatedOfferings.map((o) => (
-                    <tr
-                      key={o.id}
-                      className="border-b border-gray-50 hover:bg-gray-50/50"
-                    >
+                    <tr key={o.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                       <td className="py-3 pr-4">
                         {o.primary_image ? (
                           <img
@@ -364,9 +346,7 @@ export default function CompanyServices() {
                       <td className="py-3 pr-4">
                         <p className="font-medium text-gray-900">{o.title}</p>
                         {o.service_category && (
-                          <p className="text-xs text-gray-400">
-                            {o.service_category}
-                          </p>
+                          <p className="text-xs text-gray-400">{o.service_category}</p>
                         )}
                       </td>
                       <td className="py-3 pr-4 text-gray-700">
@@ -385,17 +365,13 @@ export default function CompanyServices() {
                       <td className="py-3 pr-4">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
-                            o.is_active
-                              ? "bg-green-50 text-green-700"
-                              : "bg-gray-100 text-gray-500"
+                            o.is_active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                           }`}
                         >
                           {o.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 text-gray-600">
-                        {o.total_bookings ?? 0}
-                      </td>
+                      <td className="py-3 pr-4 text-gray-600">{o.total_bookings ?? 0}</td>
                       <td className="py-3">
                         <div className="flex items-center gap-1">
                           <button
@@ -417,7 +393,6 @@ export default function CompanyServices() {
                 </tbody>
               </table>
             </div>
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6">
                 <Pagination
