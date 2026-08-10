@@ -5,11 +5,10 @@ import {
   Clock,
   CheckSquare,
   ToggleRight,
-  Upload,
-  ImagePlus,
-  X,
-  ChevronDown,
   Loader2,
+  X,
+  Upload,
+  ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createStaff, updateStaff } from "../../../services/api";
@@ -29,20 +28,18 @@ const WEEKDAYS = [
   { value: 6, label: "Sun" },
 ];
 
-/* ─── Reusable Input Component (Typed) ────────────────── */
+/* ─── Reusable Input Component ─────────────────────────── */
 const InputWithIcon = ({
   icon: Icon,
   id,
   ...props
 }: { icon: React.ElementType; id?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
   <div className="relative">
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <Icon className="h-4 w-4 text-gray-400" />
-    </div>
+    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
     <input
-      id={id}
       {...props}
-      className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all duration-200"
+      id={id}
+      className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all"
     />
   </div>
 );
@@ -77,7 +74,6 @@ const AvatarUpload = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file && !validateFile(file)) {
-      // reset input
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -101,76 +97,57 @@ const AvatarUpload = ({
       reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     } else if (file) {
-      // invalid file during drop
       onError?.("Invalid image file.");
     }
   };
 
   const imageSrc = preview || currentImage || null;
-
   const triggerFileInput = () => fileInputRef.current?.click();
 
   return (
-    <div className="flex flex-col items-center">
-      <div
-        className={`relative w-24 h-24 rounded-full border-2 border-dashed overflow-hidden transition-all ${
-          isDragging
-            ? "border-[#6750A4] bg-purple-50"
-            : "border-gray-300 bg-gray-50"
-        }`}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-      >
+    <div
+      className={`relative w-24 h-24 rounded-full border-2 border-dashed overflow-hidden transition-all ${
+        isDragging
+          ? "border-[#6750A4] bg-purple-50"
+          : "border-gray-300 bg-gray-50"
+      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+    >
+      {imageSrc ? (
+        <img src={imageSrc} alt="Avatar preview" className="w-full h-full object-cover" />
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full">
+          <Upload className="h-6 w-6 text-gray-400" />
+          <span className="text-[10px] text-gray-400">Upload</span>
+        </div>
+      )}
+
+      {imageSrc && (
         <button
           type="button"
-          onClick={triggerFileInput}
-          className="absolute inset-0 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#6750A4] focus:ring-inset"
-          aria-label="Upload avatar"
+          onClick={() => {
+            setPreview(null);
+            onFileSelect(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+          }}
+          className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-red-500 hover:text-red-700"
         >
-          {imageSrc ? (
-            <img src={imageSrc} alt="Avatar preview" className="w-full h-full object-cover" />
-          ) : (
-            <ImagePlus className="h-8 w-8 text-gray-400" />
-          )}
+          <X className="h-3 w-3" />
         </button>
-        {imageSrc && (
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
-            <Upload className="h-5 w-5 text-white" />
-          </div>
-        )}
-      </div>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        className="hidden"
         onChange={handleFileChange}
-        id="avatar-upload"
-        aria-label="Choose avatar image"
+        className="hidden"
       />
-      <div className="mt-2 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={triggerFileInput}
-          className="text-xs font-medium text-[#6750A4] hover:text-[#6750A4]/80"
-        >
-          Upload Photo
-        </button>
-        {imageSrc && (
-          <button
-            type="button"
-            onClick={() => {
-              setPreview(null);
-              onFileSelect(null);
-              if (fileInputRef.current) fileInputRef.current.value = "";
-            }}
-            className="text-xs text-red-500 hover:text-red-700"
-          >
-            Remove
-          </button>
-        )}
-      </div>
     </div>
   );
 };
@@ -194,7 +171,7 @@ const WorkingDaysPicker = ({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1.5 mb-2">
+      <div className="flex flex-wrap gap-2">
         {WEEKDAYS.map((day) => {
           const active = selected.includes(day.value);
           return (
@@ -217,11 +194,11 @@ const WorkingDaysPicker = ({
           );
         })}
       </div>
-      <div className="flex gap-2 text-xs">
-        <button type="button" onClick={selectWeekdays} className="text-[#6750A4] hover:underline">
+      <div className="mt-2 flex items-center gap-2">
+        <button type="button" onClick={selectWeekdays} className="text-xs text-[#6750A4] hover:underline">
           Weekdays
         </button>
-        <button type="button" onClick={selectAll} className="text-[#6750A4] hover:underline">
+        <button type="button" onClick={selectAll} className="text-xs text-[#6750A4] hover:underline">
           All days
         </button>
         {selected.length > 0 && (
@@ -277,7 +254,7 @@ const ServiceMultiSelect = ({
   const clearAll = () => onChange([]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative" ref={containerRef}>
       {/* Trigger */}
       <button
         type="button"
@@ -373,7 +350,6 @@ const ServiceMultiSelect = ({
           )}
         </div>
       )}
-
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
@@ -443,25 +419,33 @@ export function StaffForm({
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Sync initialData changes (edit mode) without overriding user edits
+  // Track previous staff ID to detect when editing a different member
+  const prevStaffId = useRef<number | null>(null);
+
+  // Sync form when initialData changes (i.e., different staff selected)
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.name);
-      setNameAm(initialData.name_am || "");
-      setRoleTitle(initialData.role_title || "");
-      setAssignedServiceIds(initialData.assigned_service_ids || []);
+    const staffId = initialData?.id ?? null;
+    if (staffId !== prevStaffId.current) {
+      prevStaffId.current = staffId;
+      // Reset form to new staff's data
+      setName(initialData?.name || "");
+      setNameAm(initialData?.name_am || "");
+      setRoleTitle(initialData?.role_title || "");
+      setAssignedServiceIds(initialData?.assigned_service_ids || []);
       setWorkingDays(
-        Array.isArray(initialData.working_days)
-          ? initialData.working_days
-          : initialData.working_days != null
-          ? [initialData.working_days]
+        initialData?.working_days
+          ? Array.isArray(initialData.working_days)
+            ? initialData.working_days
+            : [initialData.working_days]
           : [0, 1, 2, 3, 4]
       );
-      setStartTime(initialData.start_time?.slice(0, 5) || "09:00");
-      setEndTime(initialData.end_time?.slice(0, 5) || "17:00");
-      setIsOnline(initialData.is_online ?? true);
-      setIsActive(initialData.is_active ?? true);
-      // avatar is handled via currentImage prop; don't reset file
+      setStartTime(initialData?.start_time?.slice(0, 5) || "09:00");
+      setEndTime(initialData?.end_time?.slice(0, 5) || "17:00");
+      setIsOnline(initialData?.is_online ?? true);
+      setIsActive(initialData?.is_active ?? true);
+      setAvatarFile(null); // reset file input
+      setFieldErrors({});
+      setToast(null);
     }
   }, [initialData]);
 
@@ -492,7 +476,7 @@ export function StaffForm({
       formData.append("name_am", nameAm.trim());
       formData.append("role_title", roleTitle.trim());
       assignedServiceIds.forEach((id) => formData.append("assigned_service_ids", String(id)));
-      workingDays.forEach((day) => formData.append("working_days", String(day)));
+     formData.append("working_days", JSON.stringify(workingDays));
       formData.append("start_time", startTime ? `${startTime}:00` : "09:00:00");
       formData.append("end_time", endTime ? `${endTime}:00` : "17:00:00");
       formData.append("is_online", isOnline ? "true" : "false");
@@ -505,9 +489,7 @@ export function StaffForm({
       } else {
         await createStaff(companySlug, formData);
         setToast({ type: "success", message: "Specialist added successfully." });
-      }
-      if (!isEditing) {
-        // reset form after creation
+        // Reset form after creation (except toast)
         setName("");
         setNameAm("");
         setRoleTitle("");
@@ -516,6 +498,7 @@ export function StaffForm({
         setIsOnline(true);
         setIsActive(true);
         setAvatarFile(null);
+        prevStaffId.current = null;
       }
       onSuccess();
     } catch (err: any) {
@@ -528,29 +511,18 @@ export function StaffForm({
     }
   };
 
-  const SectionTitle = ({
-    icon: Icon,
-    title,
-  }: {
-    icon: React.ElementType;
-    title: string;
-  }) => (
-    <div className="flex items-center gap-2 mb-3">
+  const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
+    <div className="flex items-center gap-2 mb-4">
       <Icon className="h-4 w-4" style={{ color: PRIMARY_COLOR }} />
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
     </div>
   );
 
   return (
     <div>
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
-
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-        {/* Form Header */}
         <div className="mb-4">
-          {/* <h2 className="text-lg font-semibold text-gray-900">
-            {isEditing ? "Edit Specialist" : ""}
-          </h2> */}
           <p className="text-sm text-gray-500 mt-0.5">
             {isEditing
               ? "Update specialist profile, availability, and booking settings."
@@ -586,9 +558,7 @@ export function StaffForm({
                 aria-describedby={fieldErrors.name ? "name-error" : undefined}
               />
               {fieldErrors.name && (
-                <p id="name-error" className="text-xs text-red-500 mt-1">
-                  {fieldErrors.name}
-                </p>
+                <p id="name-error" className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>
               )}
             </div>
             <div>
@@ -652,9 +622,7 @@ export function StaffForm({
             </div>
           </div>
           {fieldErrors.time && (
-            <p id="time-error" className="text-xs text-red-500 mt-1">
-              {fieldErrors.time}
-            </p>
+            <p id="time-error" className="text-xs text-red-500 mt-1">{fieldErrors.time}</p>
           )}
           <div className="mt-4">
             <label className="block text-xs font-medium text-gray-700 mb-2">
@@ -677,9 +645,7 @@ export function StaffForm({
             onChange={setAssignedServiceIds}
             error={fieldErrors.services}
           />
-          <p className="text-xs text-gray-400 mt-1">
-            Leave empty to assign all services.
-          </p>
+          <p className="text-xs text-gray-400 mt-1">Leave empty to assign all services.</p>
         </section>
 
         {/* Booking Status */}
@@ -689,18 +655,14 @@ export function StaffForm({
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium text-gray-700">Online & Booking</span>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Customers can book this specialist
-                </p>
+                <p className="text-xs text-gray-400 mt-0.5">Customers can book this specialist</p>
               </div>
               <ToggleSwitch checked={isOnline} onChange={setIsOnline} label="Online & Booking" />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium text-gray-700">Active</span>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Visible to customers
-                </p>
+                <p className="text-xs text-gray-400 mt-0.5">Visible to customers</p>
               </div>
               <ToggleSwitch checked={isActive} onChange={setIsActive} label="Active" />
             </div>
