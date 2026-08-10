@@ -7,20 +7,16 @@ import {
   Calendar,
   Search,
   RefreshCw,
-
   Filter,
   List,
   LayoutGrid,
- 
   Repeat,
   CheckSquare,
   X,
   Edit,
   Building2,
-
   ArrowUp,
   ArrowDown,
-
   AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,54 +70,127 @@ const PageHeader = ({
   onSwitchCompany: () => void;
   onAddSpecialist: () => void;
 }) => (
-  <div className="flex flex-col gap-4">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-secondary">
-          Staff & Specialists
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Manage your team, schedules, and service assignments
+  <div className="mb-5 sm:mb-6">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* Page heading */}
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-secondary">
+            Staff & Specialists
+          </h1>
+
+          {/* Company badge */}
+          {companyName && (
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+
+              <span className="truncate max-w-[180px] sm:max-w-[260px]">
+                {companyName}
+              </span>
+            </span>
+          )}
+        </div>
+
+        <p className="mt-1.5 text-sm text-gray-500">
+          Manage your team, schedules, and service assignments.
         </p>
+
+        {/* Staff count */}
+        {companyName && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
+            <Building2 className="h-3.5 w-3.5 text-gray-400" />
+            <span>
+              {staffCount} staff member{staffCount !== 1 ? "s" : ""}
+            </span>
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-2">
+
+      {/* Actions */}
+      <div className="flex w-full items-center gap-2 sm:w-auto">
+        {/* Refresh */}
         <button
+          type="button"
           onClick={onRefresh}
-          className="p-2 text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors"
-          aria-label="Refresh data"
+          className="
+          inline-flex min-h-10 min-w-10
+          items-center justify-center
+          rounded-xl border border-gray-200
+          bg-white
+          text-gray-500
+          shadow-sm
+          transition-all duration-200
+          hover:border-gray-300
+          hover:bg-gray-50
+          hover:text-gray-700
+          active:scale-[0.97]
+          focus:outline-none
+          focus:ring-2
+          focus:ring-[#6750A4]/20
+        "
+          aria-label="Refresh staff data"
+          title="Refresh staff data"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
+
+        {/* Switch Company */}
         {isSuperAdmin && (
           <button
+            type="button"
             onClick={onSwitchCompany}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-secondary border border-secondary rounded-xl hover:bg-purple-50 transition"
+            className="
+            inline-flex min-h-10 flex-1 sm:flex-none
+            items-center justify-center gap-2
+            rounded-xl border border-gray-200
+            bg-white px-3.5 py-2
+            text-sm font-medium text-gray-700
+            shadow-sm
+            transition-all duration-200
+            hover:border-[#6750A4]/30
+            hover:bg-[#6750A4]/5
+            hover:text-[#6750A4]
+            active:scale-[0.98]
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#6750A4]/20
+          "
             aria-label="Switch company"
           >
-            <Repeat className="h-4 w-4" />
-            <span className="hidden sm:inline">Switch</span>
+            <Repeat className="h-4 w-4 shrink-0" />
+            <span>Switch Company</span>
           </button>
         )}
+
+        {/* Add Specialist */}
         <button
+          type="button"
           onClick={onAddSpecialist}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-white rounded-xl text-sm font-medium hover:bg-[#5B46A0] shadow-sm transition-all"
-          style={{ backgroundColor: PRIMARY_COLOR }}
+          className="
+          inline-flex min-h-10 flex-1 sm:flex-none
+          items-center justify-center gap-2
+          rounded-xl
+          bg-[#6750A4]
+          px-4 py-2
+          text-sm font-semibold text-white
+          shadow-sm shadow-[#6750A4]/20
+          transition-all duration-200
+          hover:bg-[#5B4592]
+          hover:shadow-md hover:shadow-[#6750A4]/20
+          active:scale-[0.98]
+          focus:outline-none
+          focus:ring-2
+          focus:ring-[#6750A4]/30
+        "
         >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add Specialist</span>
+          <Plus className="h-4 w-4 shrink-0" />
+          <span>Add Specialist</span>
         </button>
       </div>
     </div>
-    {companyName && (
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <Building2 className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
-        <span className="font-bold text-sm md:text-xl text-secondary">{companyName}</span>
-        <span className="text-gray-300">·</span>
-        <span>
-          {staffCount} staff member{staffCount !== 1 ? "s" : ""}
-        </span>
-      </div>
-    )}
+
+    {/* Header divider */}
+    <div className="mt-5 border-b border-gray-100" />
   </div>
 );
 
@@ -383,7 +452,10 @@ const BulkDeleteModal = ({
           <AlertCircle className="h-5 w-5 text-red-600" />
         </div>
         <div className="flex-1">
-          <h3 id="bulk-delete-title" className="text-lg font-bold text-gray-900">
+          <h3
+            id="bulk-delete-title"
+            className="text-lg font-bold text-gray-900"
+          >
             Delete {selectedStaff.length} specialists?
           </h3>
           <p className="text-sm text-gray-500 mt-1">

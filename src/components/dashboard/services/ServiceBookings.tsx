@@ -26,7 +26,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 const StatusBadge = ({ status }: { status: string }) => {
   const normalized = status?.toLowerCase();
-  const color = STATUS_COLORS[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
+  const color =
+    STATUS_COLORS[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}
@@ -61,7 +62,6 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
   { value: "50", label: "50 / page" },
 ];
 
-
 export default function ServiceBookings() {
   /* -------------------- context & hooks -------------------- */
   const { user } = useAuth();
@@ -75,7 +75,7 @@ export default function ServiceBookings() {
 
   const serviceCompanies = useMemo(
     () => companies.filter((c) => c.business_type === "service"),
-    [companies]
+    [companies],
   );
   const selectedCompany = companies.find((c) => c.slug === companySlug);
   const isServiceCompany = selectedCompany?.business_type === "service";
@@ -89,10 +89,15 @@ export default function ServiceBookings() {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [selectedBooking, setSelectedBooking] = useState<ServiceBooking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<ServiceBooking | null>(
+    null,
+  );
   const [companyNotes, setCompanyNotes] = useState("");
   const [finalPrice, setFinalPrice] = useState("");
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
   // refresh trigger – pass to hook if it supports a third parameter (or use a key)
@@ -104,10 +109,8 @@ export default function ServiceBookings() {
     date: dateFilter || undefined,
   };
 
-  const { bookings, loading, updateStatus, getBookingDetail } = useServiceBookings(
-    isServiceCompany ? companySlug : null,
-    filters
-  );
+  const { bookings, loading, updateStatus, getBookingDetail } =
+    useServiceBookings(isServiceCompany ? companySlug : null, filters);
 
   /* -------------------- derived data & pagination -------------------- */
   const searchedBookings = useMemo(() => {
@@ -118,7 +121,7 @@ export default function ServiceBookings() {
         String(b.id).includes(term) ||
         b.customer_name?.toLowerCase().includes(term) ||
         b.offering?.title?.toLowerCase().includes(term) ||
-        (b.customer_phone && b.customer_phone.includes(term))
+        (b.customer_phone && b.customer_phone.includes(term)),
     );
   }, [bookings, search]);
 
@@ -138,13 +141,20 @@ export default function ServiceBookings() {
   const totalPages = Math.ceil(totalItems / pageSize);
   const paginatedBookings = filteredBookings.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   // reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, dateFilter, search, paymentStatusFilter, paymentMethodFilter, pageSize]);
+  }, [
+    statusFilter,
+    dateFilter,
+    search,
+    paymentStatusFilter,
+    paymentMethodFilter,
+    pageSize,
+  ]);
 
   /* -------------------- helpers -------------------- */
   const showToast = (type: "success" | "error", message: string) => {
@@ -177,7 +187,7 @@ export default function ServiceBookings() {
 
   const handleStatusUpdate = async (
     booking: ServiceBooking,
-    status: ServiceBooking["status"]
+    status: ServiceBooking["status"],
   ) => {
     try {
       await updateStatus(booking.id, {
@@ -217,7 +227,13 @@ export default function ServiceBookings() {
     if (paymentStatusFilter) count++;
     if (paymentMethodFilter) count++;
     return count;
-  }, [search, statusFilter, dateFilter, paymentStatusFilter, paymentMethodFilter]);
+  }, [
+    search,
+    statusFilter,
+    dateFilter,
+    paymentStatusFilter,
+    paymentMethodFilter,
+  ]);
 
   /* -------------------- early returns -------------------- */
   if (showSelector) {
@@ -228,7 +244,9 @@ export default function ServiceBookings() {
         title="Service Bookings"
         searchPlaceholder="Search service companies..."
         onSelect={(slug, name) => {
-          const membership = user?.memberships?.find((m: any) => m.company_slug === slug);
+          const membership = user?.memberships?.find(
+            (m: any) => m.company_slug === slug,
+          );
           const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
           switchCompany({ slug, name, role });
         }}
@@ -251,22 +269,62 @@ export default function ServiceBookings() {
       <Toast toast={toast} />
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-secondary">Bookings</h1>
-            <div className="flex items-center gap-1 mt-1">
-              <p className="text-sm md:text-lg text-gray-500">Incoming appointments for</p>
-              <span className="text-sm md:text-lg text-secondary font-bold">{companyName}</span>
+        <div className="mb-5 sm:mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {/* Page heading */}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-secondary">
+                  Bookings
+                </h1>
+
+                {/* Company badge */}
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                  <span className="truncate max-w-[180px] sm:max-w-[280px]">
+                    {companyName}
+                  </span>
+                </span>
+              </div>
+
+              <p className="mt-1.5 text-sm text-gray-500">
+                Review, manage, and track incoming customer appointments.
+              </p>
             </div>
+
+            {/* Actions */}
+            {isSuperAdmin && (
+              <div className="w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={clearCompany}
+                  className="
+            inline-flex min-h-10 w-full sm:w-auto
+            items-center justify-center gap-2
+            rounded-xl border border-gray-200
+            bg-white px-3.5 py-2
+            text-sm font-medium text-gray-700
+            shadow-sm
+            transition-all duration-200
+            hover:border-[#6750A4]/30
+            hover:bg-[#6750A4]/5
+            hover:text-[#6750A4]
+            active:scale-[0.98]
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#6750A4]/20
+          "
+                  aria-label={`Switch company from ${companyName}`}
+                >
+                  <Repeat className="h-4 w-4 shrink-0" />
+                  <span>Switch Company</span>
+                </button>
+              </div>
+            )}
           </div>
-          {isSuperAdmin && (
-            <button
-              onClick={clearCompany}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-secondary border border-secondary rounded-xl hover:bg-purple-50 transition"
-            >
-              <Repeat className="h-4 w-4" /> Switch Company
-            </button>
-          )}
+
+          {/* Header divider */}
+          <div className="mt-5 border-b border-gray-100" />
         </div>
 
         {/* Mobile search bar with filter button and page size (hidden on desktop) */}
@@ -323,12 +381,16 @@ export default function ServiceBookings() {
 
         {/* Table / empty states */}
         {loading ? (
-          <div className="py-12 text-center text-gray-400">Loading bookings...</div>
+          <div className="py-12 text-center text-gray-400">
+            Loading bookings...
+          </div>
         ) : paginatedBookings.length === 0 ? (
           <div className="py-16 text-center">
             <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">
-              {bookings.length === 0 ? "No bookings found." : "No matching bookings."}
+              {bookings.length === 0
+                ? "No bookings found."
+                : "No matching bookings."}
             </p>
           </div>
         ) : (
@@ -348,7 +410,10 @@ export default function ServiceBookings() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {paginatedBookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr
+                      key={b.id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <p className="font-medium text-gray-900">#{b.id}</p>
                       </td>
@@ -357,7 +422,9 @@ export default function ServiceBookings() {
                           {b.customer_name || `#${b.customer}`}
                         </p>
                         {b.customer_phone && (
-                          <p className="text-xs text-gray-400">{b.customer_phone}</p>
+                          <p className="text-xs text-gray-400">
+                            {b.customer_phone}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">
@@ -370,7 +437,9 @@ export default function ServiceBookings() {
                         <StatusBadge status={b.status} />
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <p className="font-medium text-gray-900">{b.scheduled_date}</p>
+                        <p className="font-medium text-gray-900">
+                          {b.scheduled_date}
+                        </p>
                         <p className="text-xs text-gray-500">
                           {String(b.scheduled_time).slice(0, 5)}
                         </p>
@@ -428,7 +497,9 @@ export default function ServiceBookings() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-                <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
+                <h3 className="text-lg font-extrabold text-secondary">
+                  Filters
+                </h3>
                 <button
                   onClick={() => setShowMobileFilterModal(false)}
                   className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -489,8 +560,8 @@ export default function ServiceBookings() {
                   </select> */}
                   <CustomSelect
                     value={paymentMethodFilter}
-                    onChange={(val) => setPaymentMethodFilter(val)}   
-                  options={[  
+                    onChange={(val) => setPaymentMethodFilter(val)}
+                    options={[
                       { label: "Chapa", value: "chapa" },
                       { label: "Bank Transfer", value: "bank_transfer" },
                       { label: "COD", value: "cod" },
