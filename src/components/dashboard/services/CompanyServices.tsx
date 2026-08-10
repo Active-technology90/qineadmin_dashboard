@@ -247,34 +247,91 @@ export default function CompanyServices() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-secondary">My Services</h1>
-            <div className="flex items-center gap-1 mt-1">
-              <p className="text-sm text-gray-500">Manage service offerings for</p>
-              <span className="text-sm text-secondary font-bold">{companyName}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isSuperAdmin && (
-              <button
-                onClick={clearCompany}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-secondary border border-secondary rounded-xl hover:bg-purple-50 transition"
-              >
-                <Repeat className="h-4 w-4" /> Switch
-              </button>
-            )}
-            <button
-              onClick={() => {
-                setEditing(null);
-                setModalOpen(true);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-secondary transition shadow-sm"
-            >
-              <Plus className="h-4 w-4" /> Add Service
-            </button>
-          </div>
-        </div>
+      <div className="mb-5 sm:mb-6">
+  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    {/* Title / Company */}
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-secondary">
+          My Services
+        </h1>
+
+        {/* Company badge */}
+        <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+          <span className="truncate max-w-[180px] sm:max-w-[260px]">
+            {companyName}
+          </span>
+        </span>
+      </div>
+
+      <p className="mt-1.5 text-sm text-gray-500">
+        Manage your service offerings, pricing, availability, and booking
+        settings.
+      </p>
+    </div>
+
+    {/* Actions */}
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+      {isSuperAdmin && (
+        <button
+          type="button"
+          onClick={clearCompany}
+          className="
+            inline-flex min-h-10 w-full sm:w-auto
+            items-center justify-center gap-2
+            rounded-xl border border-gray-200
+            bg-white px-3.5 py-2
+            text-sm font-medium text-gray-700
+            shadow-sm
+            transition-all duration-200
+            hover:border-[#6750A4]/30
+            hover:bg-[#6750A4]/5
+            hover:text-[#6750A4]
+            active:scale-[0.98]
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#6750A4]/20
+          "
+          aria-label="Switch company"
+        >
+          <Repeat className="h-4 w-4 shrink-0" />
+          <span>Switch Company</span>
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => {
+          setEditing(null);
+          setModalOpen(true);
+        }}
+        className="
+          inline-flex min-h-10 w-full sm:w-auto
+          items-center justify-center gap-2
+          rounded-xl
+          bg-[#6750A4]
+          px-4 py-2
+          text-sm font-semibold text-white
+          shadow-sm shadow-[#6750A4]/20
+          transition-all duration-200
+          hover:bg-[#5B4592]
+          hover:shadow-md hover:shadow-[#6750A4]/20
+          active:scale-[0.98]
+          focus:outline-none
+          focus:ring-2
+          focus:ring-[#6750A4]/30
+        "
+      >
+        <Plus className="h-4 w-4 shrink-0" />
+        <span>Add Service</span>
+      </button>
+    </div>
+  </div>
+
+  {/* Optional subtle divider */}
+  <div className="mt-5 border-b border-gray-100" />
+</div>
 
         {/* Search + Refresh & Page Size */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 mb-4">
