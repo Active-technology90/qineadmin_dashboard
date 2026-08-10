@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { getManageStaff, deleteStaff, updateStaff, getManageServiceOfferings } from "../../../services/api";
-import type { ServiceStaff, ServiceOffering } from "../../../types";
-import { extractErrorMessage } from "../../../utils/extractErrorMessage";
+import { getManageStaff, deleteStaff, updateStaff, getManageServiceOfferings } from "../services/api";
+import type { ServiceStaff, ServiceOffering } from "../types";
+import { extractErrorMessage } from "../utils/extractErrorMessage";
+// import { extractErrorMessage } from "../../../utils/extractErrorMessage";
 
 export const useStaffData = (companySlug: string | null) => {
   const [staff, setStaff] = useState<ServiceStaff[]>([]);

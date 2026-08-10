@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Pencil,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "../../../context/authContext";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
@@ -20,19 +20,16 @@ import {
   getManageBlackouts,
   createBlackoutDate,
   deleteBlackoutDate,
+  updateBlackoutDate,
 } from "../../../services/api";
 import { CompanySelector } from "../company-products/CompanySelector";
 import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
 import { Toast } from "../../ui/Toast";
 import { extractErrorMessage } from "../../../utils/extractErrorMessage";
-
-// import { validateBlackout } from "../../../validators/blackoutValidator";
-// import type { ValidationResult } from "../../../validators/types";
 import type { AvailabilitySlot } from "../../../types";
 import { validateAvailabilitySlot } from "../../../utils/availabilityValidator";
 import { validateBlackout } from "../../../utils/blackoutValidator";
 import type { ValidationResult } from "../../../types/validation";
-
 
 // ---------------------------------------------------------------------------
 //  Constants
@@ -202,7 +199,7 @@ const DayCard = ({
 };
 
 // ---------------------------------------------------------------------------
-//  Slot Form Modal (Add / Edit) – with field‑level validation
+//  Slot Form Modal (unchanged)
 // ---------------------------------------------------------------------------
 const SlotFormModal = ({
   isOpen,
@@ -257,19 +254,19 @@ const SlotFormModal = ({
     }
   };
 
- const validate = (): boolean => {
-  const result: ValidationResult = validateAvailabilitySlot(
-    { ...form, id: initialData?.id },
-    existingSlots.map((s) => ({
-      id: s.id,
-      day_of_week: s.day_of_week,
-      start_time: s.start_time,
-      end_time: s.end_time,
-    }))
-  );
-  setFieldErrors(result.errors);
-  return result.isValid;
-};
+  const validate = (): boolean => {
+    const result: ValidationResult = validateAvailabilitySlot(
+      { ...form, id: initialData?.id },
+      existingSlots.map((s) => ({
+        id: s.id,
+        day_of_week: s.day_of_week,
+        start_time: s.start_time,
+        end_time: s.end_time,
+      }))
+    );
+    setFieldErrors(result.errors);
+    return result.isValid;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -459,6 +456,7 @@ export default function AvailabilityManagement() {
   const [blackoutLoading, setBlackoutLoading] = useState(false);
   const [blackoutSubmitting, setBlackoutSubmitting] = useState(false);
   const [blackoutErrors, setBlackoutErrors] = useState<Record<string, string>>({});
+  const [editingBlackoutId, setEditingBlackoutId] = useState<number | null>(null);
 
   const [blackoutForm, setBlackoutForm] = useState({
     title: "Public Holiday",
@@ -473,7 +471,6 @@ export default function AvailabilityManagement() {
   // Slot modal (add/edit) state
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | undefined>(undefined);
-  const [slotModalDay, setSlotModalDay] = useState<number | undefined>(undefined);
 
   // Delete target & toast
   const [deleteTarget, setDeleteTarget] = useState<AvailabilitySlot | null>(null);
@@ -582,22 +579,19 @@ export default function AvailabilityManagement() {
     }
   };
 
-  const openAddModalForDay = (day: number) => {
+  const openAddModalForDay = () => {
     setEditingSlot(undefined);
-    setSlotModalDay(day);
     setIsSlotModalOpen(true);
   };
 
   const openEditModal = (slot: AvailabilitySlot) => {
     setEditingSlot(slot);
-    setSlotModalDay(undefined);
     setIsSlotModalOpen(true);
   };
 
   const closeSlotModal = () => {
     setIsSlotModalOpen(false);
     setEditingSlot(undefined);
-    setSlotModalDay(undefined);
   };
 
   const handleDeleteSlot = (slot: AvailabilitySlot) => {
@@ -617,6 +611,7 @@ export default function AvailabilityManagement() {
     }
   };
 
+  // ---------- Blackout handlers with edit support ----------
   const handleBlackoutFormChange = (field: string, value: string | boolean) => {
     setBlackoutForm((prev) => ({ ...prev, [field]: value }));
     if (blackoutErrors[field]) {
@@ -628,14 +623,42 @@ export default function AvailabilityManagement() {
     }
   };
 
-  const handleCreateBlackout = async (e: React.FormEvent) => {
+  const startEditBlackout = (blackout: Blackout) => {
+    setEditingBlackoutId(blackout.id);
+    setBlackoutForm({
+      title: blackout.title,
+      date: blackout.date,
+      is_full_day: blackout.is_full_day,
+      start_time: blackout.start_time || "09:00",
+      end_time: blackout.end_time || "17:00",
+    });
+    setBlackoutErrors({});
+  };
+
+  const cancelEditBlackout = () => {
+    setEditingBlackoutId(null);
+    setBlackoutForm({
+      title: "Public Holiday",
+      date: "",
+      is_full_day: true,
+      start_time: "09:00",
+      end_time: "17:00",
+    });
+    setBlackoutErrors({});
+  };
+
+  const handleSubmitBlackout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companySlug) return;
 
-    // Validate with our reusable function
+    // Filter out the current blackout when editing, so validation doesn't flag it as duplicate
+    const blackoutsForValidation = editingBlackoutId
+      ? blackouts.filter((b) => b.id !== editingBlackoutId)
+      : blackouts;
+
     const result = validateBlackout(
       { ...blackoutForm },
-      blackouts.map((b) => ({
+      blackoutsForValidation.map((b) => ({
         id: b.id,
         date: b.date,
         is_full_day: b.is_full_day,
@@ -657,8 +680,16 @@ export default function AvailabilityManagement() {
         payload.start_time = blackoutForm.start_time;
         payload.end_time = blackoutForm.end_time;
       }
-      await createBlackoutDate(companySlug, payload);
-      showToast("success", "Blackout added");
+
+      if (editingBlackoutId) {
+        await updateBlackoutDate(companySlug, editingBlackoutId, payload);
+        showToast("success", "Closure updated");
+        setEditingBlackoutId(null);
+      } else {
+        await createBlackoutDate(companySlug, payload);
+        showToast("success", "Closure added");
+      }
+
       setBlackoutForm({
         title: "Public Holiday",
         date: "",
@@ -669,7 +700,7 @@ export default function AvailabilityManagement() {
       setBlackoutErrors({});
       fetchBlackouts();
     } catch (err: any) {
-      showToast("error", extractErrorMessage(err, "Failed to add blackout"));
+      showToast("error", extractErrorMessage(err, "Failed to save closure"));
     } finally {
       setBlackoutSubmitting(false);
     }
@@ -759,7 +790,6 @@ export default function AvailabilityManagement() {
             <button
               onClick={() => {
                 setEditingSlot(undefined);
-                setSlotModalDay(undefined);
                 setIsSlotModalOpen(true);
               }}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-purple-800 transition shadow-sm"
@@ -802,7 +832,7 @@ export default function AvailabilityManagement() {
           </div>
 
           <form
-            onSubmit={handleCreateBlackout}
+            onSubmit={handleSubmitBlackout}
             className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end"
           >
             <div>
@@ -889,19 +919,30 @@ export default function AvailabilityManagement() {
                 </div>
               </div>
             )}
-            <button
-              type="submit"
-              disabled={blackoutSubmitting}
-              className="w-full py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {blackoutSubmitting && (
-                <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={blackoutSubmitting}
+                className="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {blackoutSubmitting && (
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {editingBlackoutId ? "Update" : "Add"}
+              </button>
+              {editingBlackoutId && (
+                <button
+                  type="button"
+                  onClick={cancelEditBlackout}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
               )}
-              Add Closure
-            </button>
+            </div>
           </form>
 
           {blackoutLoading ? (
@@ -939,12 +980,22 @@ export default function AvailabilityManagement() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setBlackoutDeleteTarget(b.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => startEditBlackout(b)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      title="Edit closure"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setBlackoutDeleteTarget(b.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Delete closure"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

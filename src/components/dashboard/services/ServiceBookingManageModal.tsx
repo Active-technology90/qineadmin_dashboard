@@ -20,8 +20,7 @@ import {
   ShieldCheck,
   Banknote,
   Eye,
-  Building2,
-  Star,
+ 
   ZoomIn,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -587,10 +586,9 @@ export function ServiceBookingManageModal({
   booking: initialBooking,
   onClose,
   onStatusUpdate,
-  companyNotes,
-  setCompanyNotes,
+ 
   finalPrice,
-  setFinalPrice,
+
   allBookings = [],
   onRefresh,
 }: {

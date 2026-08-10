@@ -7,6 +7,7 @@ import { useServiceBookings } from "../../../hooks/useServiceBookings";
 import { CompanySelector } from "../company-products/CompanySelector";
 import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
+import { SearchInput } from "../../ui/SearchInput";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { ServiceBookingAdvancedFilters } from "./ServiceBookingFilters";
 import { ServiceBookingManageModal } from "./ServiceBookingManageModal";
@@ -45,7 +46,13 @@ const STATUS_OPTIONS: SelectOption[] = [
   { value: "cancelled", label: "Cancelled" },
   { value: "no_show", label: "No Show" },
 ];
-
+const PAYMENT_STATUS_OPTIONS: SelectOption[] = [
+  { value: "", label: "All Payment Status" },
+  { value: "not_required", label: "Not Required" },
+  { value: "pending", label: "Pending" },
+  { value: "paid", label: "Paid" },
+  { value: "failed", label: "Failed" },
+];
 const PAGE_SIZE_OPTIONS: SelectOption[] = [
   { value: "10", label: "10 / page" },
   { value: "15", label: "15 / page" },
@@ -53,6 +60,7 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
   { value: "30", label: "30 / page" },
   { value: "50", label: "50 / page" },
 ];
+
 
 export default function ServiceBookings() {
   /* -------------------- context & hooks -------------------- */
@@ -85,7 +93,7 @@ export default function ServiceBookings() {
   const [companyNotes, setCompanyNotes] = useState("");
   const [finalPrice, setFinalPrice] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
   // refresh trigger – pass to hook if it supports a third parameter (or use a key)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -98,8 +106,7 @@ export default function ServiceBookings() {
 
   const { bookings, loading, updateStatus, getBookingDetail } = useServiceBookings(
     isServiceCompany ? companySlug : null,
-    filters,
-    refreshTrigger // if the hook accepts an extra refetch key
+    filters
   );
 
   /* -------------------- derived data & pagination -------------------- */
@@ -168,24 +175,22 @@ export default function ServiceBookings() {
     }
   };
 
-const handleStatusUpdate = async (
-  booking: ServiceBooking,
-  status: ServiceBooking["status"]
-) => {
-  try {
-    await updateStatus(booking.id, {
-      status,
-      company_notes: companyNotes || undefined,
-      final_price: finalPrice || undefined,
-    });
-    showToast("success", `Booking marked as ${status.replace("_", " ")}`);
-
-    // ✅ Refresh the booking data – modal stays open
-    await handleRefreshBooking();   // <-- re‑fetches the booking & updates state
-  } catch (err: any) {
-    showToast("error", extractErrorMessage(err, "Failed to update booking"));
-  }
-};
+  const handleStatusUpdate = async (
+    booking: ServiceBooking,
+    status: ServiceBooking["status"]
+  ) => {
+    try {
+      await updateStatus(booking.id, {
+        status,
+        company_notes: companyNotes || undefined,
+        final_price: finalPrice || undefined,
+      });
+      showToast("success", `Booking marked as ${status.replace("_", " ")}`);
+      await handleRefreshBooking();
+    } catch (err: any) {
+      showToast("error", extractErrorMessage(err, "Failed to update booking"));
+    }
+  };
 
   const clearAllFilters = () => {
     setStatusFilter("all");
@@ -202,6 +207,17 @@ const handleStatusUpdate = async (
     !!search ||
     !!paymentStatusFilter ||
     !!paymentMethodFilter;
+
+  // Active filter count for mobile badge (includes search term)
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (search.trim()) count++;
+    if (statusFilter !== "all") count++;
+    if (dateFilter) count++;
+    if (paymentStatusFilter) count++;
+    if (paymentMethodFilter) count++;
+    return count;
+  }, [search, statusFilter, dateFilter, paymentStatusFilter, paymentMethodFilter]);
 
   /* -------------------- early returns -------------------- */
   if (showSelector) {
@@ -253,22 +269,35 @@ const handleStatusUpdate = async (
           )}
         </div>
 
-        {/* Mobile trigger (only shows on smaller screens) */}
-        <div className="lg:hidden mb-4">
-          <button
-            onClick={() => setShowMobileFilter(true)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700"
-          >
-            <span className="font-medium">Filters & Search</span>
-            {hasActiveFilters && (
-              <span className="bg-secondary/10 text-secondary text-xs px-2 py-0.5 rounded-full">
-                Active
-              </span>
-            )}
-          </button>
+        {/* Mobile search bar with filter button and page size (hidden on desktop) */}
+        <div className="mb-4 lg:hidden">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder="Search by ID, customer or service..."
+                loading={loading}
+                showMobileFilter={true}
+                onMobileFilterClick={() => setShowMobileFilterModal(true)}
+                activeFilterCount={activeFilterCount}
+              />
+            </div>
+            <div className="w-24 flex-shrink-0">
+              <CustomSelect
+                value={String(pageSize)}
+                onChange={(val) => {
+                  setPageSize(Number(val));
+                  setCurrentPage(1);
+                }}
+                options={PAGE_SIZE_OPTIONS}
+                placeholder="10"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Desktop filters */}
+        {/* Desktop filters (hidden on mobile) */}
         <div className="hidden lg:block mb-6">
           <ServiceBookingAdvancedFilters
             search={search}
@@ -387,11 +416,11 @@ const handleStatusUpdate = async (
           />
         )}
 
-        {/* Mobile filter bottom sheet */}
-        {showMobileFilter && (
+        {/* Mobile filter bottom sheet (only filter selects, no search) */}
+        {showMobileFilterModal && (
           <div
             className="fixed inset-0 z-50 lg:hidden"
-            onClick={() => setShowMobileFilter(false)}
+            onClick={() => setShowMobileFilterModal(false)}
           >
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <div
@@ -401,45 +430,94 @@ const handleStatusUpdate = async (
               <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
                 <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
                 <button
-                  onClick={() => setShowMobileFilter(false)}
+                  onClick={() => setShowMobileFilterModal(false)}
                   className="p-2 rounded-full hover:bg-gray-100 transition"
                 >
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
-              <div className="p-4">
-                {/* Use the same advanced filters, stacked vertically */}
-                <ServiceBookingAdvancedFilters
-                  search={search}
-                  onSearchChange={setSearch}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  paymentStatusFilter={paymentStatusFilter}
-                  onPaymentStatusChange={setPaymentStatusFilter}
-                  paymentMethodFilter={paymentMethodFilter}
-                  onPaymentMethodChange={setPaymentMethodFilter}
-                  pageSize={pageSize}
-                  onPageSizeChange={(size) => {
-                    setPageSize(size);
-                    setCurrentPage(1);
-                  }}
-                  hasActiveFilters={hasActiveFilters}
-                  onClear={() => {
-                    clearAllFilters();
-                    setShowMobileFilter(false);
-                  }}
-                  onRefresh={() => setRefreshTrigger((t) => t + 1)}
-                  statusOptions={STATUS_OPTIONS}
-                  pageSizeOptions={PAGE_SIZE_OPTIONS}
-                  // optional: add className to override flex direction
-                  // but the component itself is already responsive, so we may not need extra styling.
-                />
+              <div className="p-4 space-y-4">
+                {/* Status filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Status
+                  </label>
+                  <CustomSelect
+                    value={statusFilter}
+                    onChange={(val) => setStatusFilter(val)}
+                    options={STATUS_OPTIONS}
+                    placeholder="All Statuses"
+                  />
+                </div>
+                {/* Payment Status filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Payment Status
+                  </label>
+                  {/* <select
+                    value={paymentStatusFilter}
+                    onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  >
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="partially_paid">Partially Paid</option>
+                    <option value="refunded">Refunded</option>
+                  </select> */}
+                  <CustomSelect
+                    value={paymentStatusFilter}
+                    onChange={(val) => setPaymentStatusFilter(val)}
+                    options={PAYMENT_STATUS_OPTIONS}
+                    placeholder="All Payment Status"
+                  />
+                </div>
+                {/* Payment Method filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Payment Method
+                  </label>
+                  {/* <select
+                    value={paymentMethodFilter}
+                    onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  >
+                    <option value="">All</option>
+                    <option value="chapa">Chapa</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="cod">COD</option>
+                  </select> */}
+                  <CustomSelect
+                    value={paymentMethodFilter}
+                    onChange={(val) => setPaymentMethodFilter(val)}   
+                  options={[  
+                      { label: "Chapa", value: "chapa" },
+                      { label: "Bank Transfer", value: "bank_transfer" },
+                      { label: "COD", value: "cod" },
+                    ]}
+                    placeholder="All Payment Methods"
+                  />
+                </div>
+                {/* Date filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  />
+                </div>
+
+                {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
                   {hasActiveFilters && (
                     <button
                       onClick={() => {
                         clearAllFilters();
-                        setShowMobileFilter(false);
+                        setShowMobileFilterModal(false);
                       }}
                       className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
                     >
@@ -447,7 +525,7 @@ const handleStatusUpdate = async (
                     </button>
                   )}
                   <button
-                    onClick={() => setShowMobileFilter(false)}
+                    onClick={() => setShowMobileFilterModal(false)}
                     className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
                   >
                     Apply Filters

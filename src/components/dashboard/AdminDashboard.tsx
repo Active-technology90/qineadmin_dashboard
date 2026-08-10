@@ -27,7 +27,6 @@ import {
       CalendarIcon,
   Wrench,
   CalendarDays,
-  Images,
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -66,7 +65,7 @@ import TargetsManagement from "../marketing/TargetsManagement";
 import CalendarManagement from "../marketing/CalendarManagement";
 import CompanyServices from "./services/CompanyServices";
 import ServiceBookings from "./services/ServiceBookings";
-import PortfolioManagement from "./services/PortfolioManagement";
+// import PortfolioManagement from "./services/PortfolioManagement";
 import AvailabilityManagement from "./services/AvailabilityManagement";
 import StaffManagement from "./services/StaffManagement";
 
@@ -819,7 +818,11 @@ useEffect(() => {
             </>
           )}
           {/* Only for super admin (not viewer) */}
-
+  <div
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
+              >
+               Platform
+              </div>
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
             icon={<Users className="h-5 w-5" />}

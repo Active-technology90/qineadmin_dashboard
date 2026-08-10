@@ -1,6 +1,6 @@
 // validators/availabilityValidator.ts
-import type { AvailabilitySlot } from "../../types";
-import type { ValidationResult } from "./types";
+
+import type { AvailabilitySlot, ValidationResult } from "../types";
 import {
   normaliseTime,
   isValidTimeFormat,

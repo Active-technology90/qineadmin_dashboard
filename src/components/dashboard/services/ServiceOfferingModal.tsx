@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   X,
   Loader2,
@@ -10,68 +10,47 @@ import {
   Calendar,
   Settings,
   ClipboardList,
+  AlertTriangle,
 } from "lucide-react";
 import { IntakeFormBuilder } from "./IntakeFormBuilder";
 import { ServiceOfferingImageGallery } from "./ServiceOfferingImageGallery";
 import { CustomSelect } from "../../ui/CustomSelect";
 import type { IntakeFormField, ServiceOffering } from "../../../types";
 
-// ----- Types & Props (unchanged) -----
-interface ServiceOfferingModalProps {
-  isOpen: boolean;
-  offering: ServiceOffering | null;
-  companySlug: string;
-  onClose: () => void;
-  onSave: (
-    data: Partial<ServiceOffering>,
-    existingId?: number,
-  ) => Promise<ServiceOffering>;
-  onSaved?: () => void;
-  onShowToast?: (type: "success" | "error", message: string) => void;
+/* -------------------------------------------------------------------------- */
+/*  Utility                                                                   */
+/* -------------------------------------------------------------------------- */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "Something went wrong";
 }
 
-// ----- Default form (unchanged) -----
-const defaultForm = {
-  title: "",
-  title_am: "",
-  description: "",
-  description_am: "",
-  pricing_type: "fixed" as const,
-  price: "",
-  currency: "ETB",
-  duration_minutes: 30,
-  booking_mode: "inquiry" as const,
-  payment_policy: "upfront" as const,
-  deposit_percentage: "0",
-  service_category: "",
-  is_active: true,
-  is_featured: false,
-  order: 0,
-  intake_form_schema: [] as IntakeFormField[],
-};
+/* -------------------------------------------------------------------------- */
+/*  Form State Interface (for explicit typing)                               */
+/* -------------------------------------------------------------------------- */
+interface ServiceFormState {
+  title: string;
+  title_am: string;
+  description: string;
+  description_am: string;
+  pricing_type: "fixed" | "starting_at" | "hourly" | "custom";
+  price: string;
+  currency: string;
+  duration_minutes: number;
+  booking_mode: "direct" | "inquiry" | "contact";
+  payment_policy: "upfront" | "deposit" | "post_service";
+  deposit_percentage: string;
+  service_category: string;
+  is_active: boolean;
+  is_featured: boolean;
+  order: number;
+  intake_form_schema: IntakeFormField[];
+}
 
-// ----- Dropdown options -----
-const pricingOptions = [
-  { value: "fixed", label: "Fixed" },
-  { value: "starting_at", label: "Starting At" },
-  { value: "hourly", label: "Hourly" },
-  { value: "custom", label: "Quote Based" },
-];
-
-const bookingOptions = [
-  { value: "direct", label: "Direct Booking" },
-  { value: "inquiry", label: "Inquiry / Lead" },
-];
-
-const paymentOptions = [
-  { value: "upfront", label: "Pay Upfront" },
-  { value: "post_service", label: "Pay After Service" },
-  // { value: "deposit", label: "Deposit Required" },
-];
-
-// =============================================================================
-// Reusable UI primitive
-// =============================================================================
+/* -------------------------------------------------------------------------- */
+/*  Reusable Card                                                             */
+/* -------------------------------------------------------------------------- */
 const Card: React.FC<{
   icon: React.ReactNode;
   title: string;
@@ -79,34 +58,73 @@ const Card: React.FC<{
   className?: string;
 }> = ({ icon, title, children, className = "" }) => (
   <div
-    className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 ${className}`}
+    className={` rounded-2xl p-5 ${className}`}
   >
     <div className="flex items-center gap-2 mb-4">
-      <span className="text-[#6750A4] ">{icon}</span>
+      <span className="text-[#6750A4]">{icon}</span>
       <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
     </div>
     {children}
   </div>
 );
 
-// =============================================================================
-// Input / Label helpers
-// =============================================================================
-const inputClass = (fieldError: string) =>
-  `w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200
-   focus:outline-none focus:ring-2 focus:ring-[#6750A4]  min-h-[44px]
-   ${
-     fieldError
-       ? "border-red-500 bg-red-50 focus:border-red-500"
-       : "border-gray-200 bg-gray-50/80 focus:border-[#6750A4]  focus:bg-white"
-   }`;
+/* -------------------------------------------------------------------------- */
+/*  Unsaved Changes Confirmation Dialog                                       */
+/* -------------------------------------------------------------------------- */
+function ConfirmDiscardDialog({
+  open,
+  onKeep,
+  onDiscard,
+}: {
+  open: boolean;
+  onKeep: () => void;
+  onDiscard: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Discard changes?"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+    >
+      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Discard changes?
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              You have unsaved changes that will be lost.
+            </p>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                onClick={onKeep}
+                className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-xl hover:bg-gray-50"
+                autoFocus
+              >
+                Keep editing
+              </button>
+              <button
+                onClick={onDiscard}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-xl hover:bg-red-700"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const labelClass =
-  "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5";
-
-// =============================================================================
-// Main Component
-// =============================================================================
+/* -------------------------------------------------------------------------- */
+/*  Main Component                                                            */
+/* -------------------------------------------------------------------------- */
 export function ServiceOfferingModal({
   isOpen,
   offering,
@@ -115,62 +133,184 @@ export function ServiceOfferingModal({
   onSave,
   onSaved,
   onShowToast,
-}: ServiceOfferingModalProps) {
+}: {
+  isOpen: boolean;
+  offering: ServiceOffering | null;
+  companySlug: string;
+  onClose: () => void;
+  onSave: (
+    data: Partial<ServiceOffering>,
+    existingId?: number
+  ) => Promise<ServiceOffering>;
+  onSaved?: () => void;
+  onShowToast?: (type: "success" | "error", message: string) => void;
+}) {
+  /* ── State ────────────────────────────────────────────────────────────── */
   const [step, setStep] = useState<"details" | "gallery">("details");
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState<ServiceFormState>({
+    title: "",
+    title_am: "",
+    description: "",
+    description_am: "",
+    pricing_type: "fixed",
+    price: "",
+    currency: "ETB",
+    duration_minutes: 30,
+    booking_mode: "inquiry",
+    payment_policy: "upfront",
+    deposit_percentage: "0",
+    service_category: "",
+    is_active: true,
+    is_featured: false,
+    order: 0,
+    intake_form_schema: [] as IntakeFormField[],
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedOfferingId, setSavedOfferingId] = useState<number | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const pendingCloseRef = useRef(false);
+  const initialValuesRef = useRef<ServiceFormState>(form);
 
+  /* ── Reset on open/close ────────────────────────────────────────────────── */
   useEffect(() => {
     if (!isOpen) return;
-    if (offering) {
-      setForm({
-        title: offering.title,
-        title_am: offering.title_am || "",
-        description: offering.description || "",
-        description_am: offering.description_am || "",
-        pricing_type: offering.pricing_type,
-        price: offering.price || "",
-        currency: offering.currency || "ETB",
-        duration_minutes: offering.duration_minutes || 30,
-        booking_mode: offering.booking_mode,
-        payment_policy: offering.payment_policy,
-        deposit_percentage: offering.deposit_percentage || "0",
-        service_category: offering.service_category || "",
-        is_active: offering.is_active,
-        is_featured: offering.is_featured,
-        order: offering.order || 0,
-        intake_form_schema: offering.intake_form_schema || [],
-      });
-      setSavedOfferingId(offering.id);
-      setStep("details");
-    } else {
-      setForm(defaultForm);
-      setSavedOfferingId(null);
-      setStep("details");
-    }
+    const initial: ServiceFormState = offering
+      ? {
+          title: offering.title,
+          title_am: offering.title_am || "",
+          description: offering.description || "",
+          description_am: offering.description_am || "",
+          pricing_type: offering.pricing_type,
+          price: offering.price || "",
+          currency: offering.currency || "ETB",
+          duration_minutes: offering.duration_minutes || 30,
+          booking_mode: offering.booking_mode,
+          payment_policy: offering.payment_policy,
+          deposit_percentage: offering.deposit_percentage || "0",
+          service_category: offering.service_category || "",
+          is_active: offering.is_active,
+          is_featured: offering.is_featured,
+          order: offering.order || 0,
+          intake_form_schema: offering.intake_form_schema || [],
+        }
+      : {
+          title: "",
+          title_am: "",
+          description: "",
+          description_am: "",
+          pricing_type: "fixed",
+          price: "",
+          currency: "ETB",
+          duration_minutes: 30,
+          booking_mode: "inquiry",
+          payment_policy: "upfront",
+          deposit_percentage: "0",
+          service_category: "",
+          is_active: true,
+          is_featured: false,
+          order: 0,
+          intake_form_schema: [] as IntakeFormField[],
+        };
+    setForm(initial);
+    initialValuesRef.current = initial;
+    setSavedOfferingId(offering?.id ?? null);
+    setStep("details");
     setError("");
+    setIsDirty(false);
   }, [isOpen, offering]);
 
+  /* ── Track dirty state ──────────────────────────────────────────────────── */
   useEffect(() => {
-    if (!isOpen) {
-      setStep("details");
-      setSavedOfferingId(null);
+    const currentJson = JSON.stringify(form);
+    const initialJson = JSON.stringify(initialValuesRef.current);
+    setIsDirty(currentJson !== initialJson);
+  }, [form]);
+
+  /* ── Body scroll lock ──────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  /* ── Close handling (with unsaved changes guard) ────────────────────────── */
+  const handleClose = useCallback(() => {
+    if (isDirty && step === "details") {
+      setShowDiscardDialog(true);
+      pendingCloseRef.current = true;
+    } else {
+      onClose();
+    }
+  }, [isDirty, step, onClose]);
 
-  // ----- Handlers (unchanged) -----
+  const confirmDiscard = () => {
+    setShowDiscardDialog(false);
+    onClose();
+  };
+
+  /* ── Escape key ─────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showDiscardDialog) {
+          setShowDiscardDialog(false);
+        } else {
+          handleClose();
+        }
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    }
+  }, [isOpen, handleClose, showDiscardDialog]);
+
+  /* ── Form update helper ─────────────────────────────────────────────────── */
+  const updateForm = useCallback(
+    <K extends keyof ServiceFormState>(key: K, value: ServiceFormState[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  /* ── Validation ─────────────────────────────────────────────────────────── */
+  const validateDetails = useCallback((): string[] => {
+    const errors: string[] = [];
+    if (!form.title.trim()) errors.push("Title is required.");
+    if (form.title.length > 200) errors.push("Title must be under 200 characters.");
+    if (form.description.length > 500) errors.push("Description must be under 500 characters.");
+    if (form.pricing_type !== "custom") {
+      const priceVal = Number(form.price);
+      if (isNaN(priceVal) || priceVal < 0) errors.push("Price must be a valid non‑negative number.");
+    }
+    if (form.duration_minutes < 1) errors.push("Duration must be at least 1 minute.");
+    if (form.payment_policy === "deposit") {
+      const deposit = Number(form.deposit_percentage);
+      if (isNaN(deposit) || deposit < 0 || deposit > 100) {
+        errors.push("Deposit percentage must be between 0 and 100.");
+      }
+    }
+    return errors;
+  }, [form]);
+
+  /* ── Submit details ─────────────────────────────────────────────────────── */
   const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) {
-      setError("Title is required");
+    const validationErrors = validateDetails();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(" "));
+      // Focus first invalid field
+      const firstInvalid = document.querySelector("[data-invalid]") as HTMLElement | null;
+      firstInvalid?.focus();
       return;
     }
-    setSaving(true);
     setError("");
+    setSaving(true);
     try {
       const payload = {
         ...form,
@@ -179,457 +319,463 @@ export function ServiceOfferingModal({
         deposit_percentage: form.deposit_percentage || "0",
         order: Number(form.order) || 0,
       };
-
       const existingId = savedOfferingId ?? offering?.id;
       const saved = await onSave(payload, existingId ?? undefined);
       setSavedOfferingId(saved.id);
+      initialValuesRef.current = { ...form, price: saved.price ?? "" }; // update baseline
+      setIsDirty(false);
       setStep("gallery");
       onShowToast?.("success", existingId ? "Service updated" : "Service created");
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.title?.[0] ||
-        "Failed to save service";
-      setError(typeof msg === "string" ? msg : "Failed to save service");
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      setError(msg);
     } finally {
       setSaving(false);
     }
   };
 
+  /* ── Finish (from gallery step) ─────────────────────────────────────────── */
   const handleFinish = () => {
     onSaved?.();
     onClose();
   };
 
-  const offeringId = savedOfferingId ?? offering?.id;
+  /* ── Options ────────────────────────────────────────────────────────────── */
+  const pricingOptions = [
+    { value: "fixed", label: "Fixed" },
+    { value: "starting_at", label: "Starting At" },
+    { value: "hourly", label: "Hourly" },
+    { value: "custom", label: "Quote Based" },
+  ];
+  const bookingOptions = [
+    { value: "direct", label: "Direct Booking" },
+    { value: "inquiry", label: "Inquiry / Lead" },
+  ];
+  const paymentOptions = [
+    { value: "upfront", label: "Pay Upfront" },
+    { value: "post_service", label: "Pay After Service" },
+    { value: "deposit", label: "Deposit Required" },
+  ];
 
-  // ==========================================================================
-  // Render
-  // ==========================================================================
+  /* ── Render ─────────────────────────────────────────────────────────────── */
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* ── Header ── */}
-        <div className="sticky top-0 bg-white z-20 px-6 py-5 border-b border-gray-100 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#6750A4] ">
-                <Wrench className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">
-                  {offering || savedOfferingId ? "Edit Service" : "Add Service"}
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Fill in the details and upload images
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Professional Stepper */}
-          <div className="mt-6">
-            <div className="flex items-center justify-center">
-              {/* Step 1 */}
+    <>
+      {/* Modal backdrop + dialog */}
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={offering ? "Edit service" : "Add service"}
+          className="bg-white m-6 md:w-full max-w-4xl max-h-[90vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col overflow-hidden animate-fade-in-up"
+        >
+          {/* ── Header ── */}
+          <div className="sticky top-0 bg-white z-20 px-6 py-5 border-b border-gray-100 rounded-t-2xl">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#6750A4]">
+                  <Wrench className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {offering || savedOfferingId ? "Edit Service" : "Add Service"}
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {offering
+                      ? "Update your service offering"
+                      : "Create a new service offering"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition"
+                aria-label="Close service editor"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {/* Stepper */}
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <div className="flex items-center gap-2">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all
-                    ${
-                      step === "details"
-                        ? "bg-[#6750A4]  text-white"
-                        : step === "gallery"
-                        ? "bg-purple-100 text-[#6750A4] "
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
+                    step === "details"
+                      ? "bg-[#6750A4] text-white"
+                      : step === "gallery"
+                      ? "bg-purple-100 text-[#6750A4]"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
                 >
-                  {step === "gallery" ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    1
-                  )}
+                  {step === "gallery" ? <CheckCircle className="h-4 w-4" /> : 1}
                 </div>
                 <span
-                  className={`text-sm font-medium ${
-                    step === "details" ? "text-[#6750A4] " : "text-gray-500"
+                  className={`text-sm font-medium hidden sm:inline ${
+                    step === "details" ? "text-[#6750A4]" : "text-gray-500"
                   }`}
                 >
                   Service Details
                 </span>
+                <span className="sm:hidden text-xs text-gray-500">Details</span>
               </div>
-
-              <div className="flex-1 mx-4 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 mx-2 h-0.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full bg-[#6750A4]  transition-all duration-500 ${
+                  className={`h-full bg-[#6750A4] transition-all duration-500 ${
                     step === "gallery" ? "w-full" : "w-0"
                   }`}
                 />
               </div>
-
-              {/* Step 2 */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all
-                    ${
-                      step === "gallery"
-                        ? "bg-[#6750A4]  text-white"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
+                    step === "gallery"
+                      ? "bg-[#6750A4] text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
                 >
                   2
                 </div>
                 <span
-                  className={`text-sm font-medium ${
-                    step === "gallery" ? "text-[#6750A4] " : "text-gray-500"
+                  className={`text-sm font-medium hidden sm:inline ${
+                    step === "gallery" ? "text-[#6750A4]" : "text-gray-500"
                   }`}
                 >
                   Gallery
                 </span>
+                <span className="sm:hidden text-xs text-gray-500">Gallery</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-6 space-y-6">
-          {step === "details" ? (
-            <form id="service-form" onSubmit={handleSubmitDetails}>
-              {/* Error message */}
-              {error && (
-                <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3 border border-red-200 mb-5">
-                  {error}
-                </div>
-              )}
-
-              {/* Grid of cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Card 1: Basic Information */}
-                <Card icon={<FileText size={18} />} title="Basic Information">
-                  <div className="space-y-4">
-                    <div>
-                      <label className={labelClass}>
-                        Title <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={form.title}
-                        onChange={(e) =>
-                          setForm({ ...form, title: e.target.value })
-                        }
-                        className={inputClass(
-                          error && !form.title.trim() ? error : "",
-                        )}
-                        placeholder="e.g. Premium Haircut"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Title (Amharic)</label>
-                      <input
-                        type="text"
-                        value={form.title_am}
-                        onChange={(e) =>
-                          setForm({ ...form, title_am: e.target.value })
-                        }
-                        className={inputClass("")}
-                        placeholder="ሙሉ ፀጉር መቁረጥ"
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Description</label>
-                      <textarea
-                        value={form.description}
-                        onChange={(e) =>
-                          setForm({ ...form, description: e.target.value })
-                        }
-                        rows={3}
-                        className={`${inputClass("")} resize-none`}
-                        placeholder="Describe the service..."
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>
-                        Description (Amharic)
-                      </label>
-                      <textarea
-                        value={form.description_am}
-                        onChange={(e) =>
-                          setForm({ ...form, description_am: e.target.value })
-                        }
-                        rows={2}
-                        className={`${inputClass("")} resize-none`}
-                        placeholder="የአገልግሎት መግለጫ..."
-                      />
-                    </div>
+          {/* ── Content ── */}
+          <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:p-6 space-y-6">
+            {step === "details" ? (
+              <form id="service-form" onSubmit={handleSubmitDetails}>
+                {error && (
+                  <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3 border border-red-200 mb-4">
+                    {error}
                   </div>
-                </Card>
-
-                {/* Card 2: Pricing */}
-                <Card icon={<DollarSign size={18} />} title="Pricing">
-                  <div className="space-y-3">
-                    <div>
-                      <label className={labelClass}>Pricing Type</label>
-                      <CustomSelect
-                        value={form.pricing_type}
-                        onChange={(val) =>
-                          setForm({
-                            ...form,
-                            pricing_type: val as typeof form.pricing_type,
-                          })
-                        }
-                        options={pricingOptions}
-                        placeholder="Select..."
-                        className="w-full"
-                      />
-                    </div>
-                    {form.pricing_type !== "custom" && (
+                )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Basic Info */}
+                  <Card icon={<FileText size={18} />} title="Basic Information">
+                    <div className="space-y-4">
                       <div>
-                        <label className={labelClass}>Price (ETB)</label>
+                        <label
+                          htmlFor="service-title"
+                          className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+                        >
+                          Title <span className="text-red-500">*</span>
+                        </label>
                         <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.price}
-                          onChange={(e) =>
-                            setForm({ ...form, price: e.target.value })
-                          }
-                          className={inputClass("")}
-                          placeholder="0.00"
+                          id="service-title"
+                          type="text"
+                          value={form.title}
+                          onChange={(e) => updateForm("title", e.target.value)}
+                          placeholder="e.g. Premium Haircut"
+                          required
+                          data-invalid={error && !form.title.trim() ? true : undefined}
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
                         />
                       </div>
-                    )}
-                    <div>
-                      <label className={labelClass}>Duration (minutes)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={form.duration_minutes}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            duration_minutes: Number(e.target.value),
-                          })
-                        }
-                        className={inputClass("")}
-                        placeholder="30"
-                      />
-                    </div>
-                    {/* Currency hidden but kept */}
-                    <input type="hidden" value={form.currency} />
-                  </div>
-                </Card>
-
-                {/* Card 3: Booking */}
-                <Card icon={<Calendar size={18} />} title="Booking">
-                  <div className="space-y-4">
-                    <div>
-                      <label className={labelClass}>Booking Mode</label>
-                      <CustomSelect
-                        value={form.booking_mode}
-                        onChange={(val) =>
-                          setForm({
-                            ...form,
-                            booking_mode: val as typeof form.booking_mode,
-                          })
-                        }
-                        options={bookingOptions}
-                        placeholder="Select..."
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Payment Policy</label>
-                      <CustomSelect
-                        value={form.payment_policy}
-                        onChange={(val) =>
-                          setForm({
-                            ...form,
-                            payment_policy:
-                              val as typeof form.payment_policy,
-                          })
-                        }
-                        options={paymentOptions}
-                        placeholder="Select..."
-                        className="w-full"
-                      />
-                    </div>
-                    {form.payment_policy === "deposit" && (
                       <div>
-                        <label className={labelClass}>
-                          Deposit Percentage
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Title (Amharic)
+                        </label>
+                        <input
+                          type="text"
+                          value={form.title_am}
+                          onChange={(e) => updateForm("title_am", e.target.value)}
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          placeholder="ሙሉ ፀጉር መቁረጥ"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Description{" "}
+                          <span className="text-gray-400 font-normal">
+                            ({form.description.length}/500)
+                          </span>
+                        </label>
+                        <textarea
+                          value={form.description}
+                          onChange={(e) => updateForm("description", e.target.value)}
+                          rows={3}
+                          maxLength={500}
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          placeholder="Describe the service..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Description (Amharic){" "}
+                          <span className="text-gray-400 font-normal">
+                            ({form.description_am.length}/500)
+                          </span>
+                        </label>
+                        <textarea
+                          value={form.description_am}
+                          onChange={(e) => updateForm("description_am", e.target.value)}
+                          rows={2}
+                          maxLength={500}
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          placeholder="የአገልግሎት መግለጫ..."
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Pricing */}
+                  <Card icon={<DollarSign size={18} />} title="Pricing">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Pricing Type
+                        </label>
+                        <CustomSelect
+                          value={form.pricing_type}
+                          onChange={(val) =>
+                            updateForm("pricing_type", val as ServiceFormState["pricing_type"])
+                          }
+                          options={pricingOptions}
+                          placeholder="Select..."
+                        />
+                      </div>
+                      {form.pricing_type !== "custom" && (
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                            Price (ETB)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                              ETB
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={form.price}
+                              onChange={(e) => updateForm("price", e.target.value)}
+                              className="w-full border-2 rounded-xl pl-14 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Duration (minutes)
                         </label>
                         <input
                           type="number"
-                          min="0"
-                          max="100"
-                          value={form.deposit_percentage}
+                          min={1}
+                          value={form.duration_minutes}
                           onChange={(e) =>
-                            setForm({
-                              ...form,
-                              deposit_percentage: e.target.value,
-                            })
+                            updateForm("duration_minutes", Number(e.target.value) || 0)
                           }
-                          className={inputClass("")}
-                          placeholder="20"
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          placeholder="30"
                         />
                       </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Card 4: Category & Settings */}
-                <Card icon={<Settings size={18} />} title="Category & Settings">
-                  <div className="space-y-4">
-                    {/* <div>
-                      <label className={labelClass}>Service Category</label>
-                      <input
-                        type="text"
-                        value={form.service_category}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            service_category: e.target.value,
-                          })
-                        }
-                        className={inputClass("")}
-                        placeholder="e.g. Haircuts"
-                      />
-                    </div> */}
-                    <div>
-                      <label className={labelClass}>Display Order</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.order}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            order: Number(e.target.value) || 0,
-                          })
-                        }
-                        className={inputClass("")}
-                        placeholder="0"
-                      />
                     </div>
+                  </Card>
 
-                 <div className="flex flex-col gap-3">
-  <label className="flex items-center gap-3">
-    <input
-      type="checkbox"
-      checked={form.is_active}
-      onChange={(e) =>
-        setForm({ ...form, is_active: e.target.checked })
-      }
-      className="h-4 w-4 rounded border-gray-300 text-[#6750A4]  focus:ring-[#6750A4] "
-    />
-    <span className="text-sm font-medium text-gray-700">
-      Active Service
-    </span>
-  </label>
+                  {/* Booking */}
+                  <Card icon={<Calendar size={18} />} title="Booking">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Booking Mode
+                        </label>
+                        <CustomSelect
+                          value={form.booking_mode}
+                          onChange={(val) =>
+                            updateForm("booking_mode", val as ServiceFormState["booking_mode"])
+                          }
+                          options={bookingOptions}
+                          placeholder="Select..."
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          {form.booking_mode === "direct"
+                            ? "Customers choose a time and book instantly."
+                            : "Customers submit a request; provider confirms availability."}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Payment Policy
+                        </label>
+                        <CustomSelect
+                          value={form.payment_policy}
+                          onChange={(val) =>
+                            updateForm("payment_policy", val as ServiceFormState["payment_policy"])
+                          }
+                          options={paymentOptions}
+                          placeholder="Select..."
+                        />
+                      </div>
+                      {form.payment_policy === "deposit" && (
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                            Deposit Percentage
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={form.deposit_percentage}
+                              onChange={(e) =>
+                                updateForm("deposit_percentage", e.target.value)
+                              }
+                              className="w-full border-2 rounded-xl pl-4 pr-12 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                              placeholder="20"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                              %
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
 
-  <label className="flex items-center gap-3">
-    <input
-      type="checkbox"
-      checked={form.is_featured}
-      onChange={(e) =>
-        setForm({ ...form, is_featured: e.target.checked })
-      }
-      className="h-4 w-4 rounded border-gray-300 text-[#6750A4]  focus:ring-[#6750A4] "
-    />
-    <span className="text-sm font-medium text-gray-700">
-      Featured Service
-    </span>
-  </label>
-</div>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Card 5: Intake Form (full width) */}
-              <div className="mt-6">
-                <Card
-                  icon={<ClipboardList size={18} />}
-                  title="Custom Intake Form"
-                >
-                  <IntakeFormBuilder
-                    fields={form.intake_form_schema}
-                    onChange={(fields) =>
-                      setForm({ ...form, intake_form_schema: fields })
-                    }
-                  />
-                </Card>
-              </div>
-            </form>
-          ) : (
-            /* Gallery step */
-            <Card
-              icon={<FileText size={18} />}
-              title="Service Images"
-              className="h-full"
-            >
-              {offeringId ? (
-                <ServiceOfferingImageGallery
-                  companySlug={companySlug}
-                  offeringId={offeringId}
-                  onShowToast={onShowToast}
-                />
-              ) : (
-                <div className="py-12 text-center text-gray-400">
-                  Service must be saved first to manage images.
+                  {/* Category & Settings */}
+                  <Card icon={<Settings size={18} />} title="Category & Settings">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Display Order
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={form.order}
+                          onChange={(e) =>
+                            updateForm("order", Number(e.target.value) || 0)
+                          }
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          placeholder="0"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Lower numbers appear first.
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={form.is_active}
+                            onChange={(e) => updateForm("is_active", e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            Active Service
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={form.is_featured}
+                            onChange={(e) => updateForm("is_featured", e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            Featured Service
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              )}
-            </Card>
-          )}
-        </div>
 
-        {/* ── Sticky Footer ── */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-between rounded-b-2xl">
-          {step === "details" ? (
-            <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+                {/* Intake Form Builder */}
+                <div className="mt-6">
+                  <Card
+                    icon={<ClipboardList size={18} />}
+                    title="Custom Intake Form"
+                    className="col-span-full"
+                  >
+                    <IntakeFormBuilder
+                      fields={form.intake_form_schema}
+                      onChange={(fields) => updateForm("intake_form_schema", fields)}
+                    />
+                  </Card>
+                </div>
+              </form>
+            ) : (
+              <Card
+                icon={<FileText size={18} />}
+                title="Service Images"
+                className="h-full"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="service-form"
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#6750A4] disabled:opacity-50 transition shadow-sm"
-              >
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                Continue to Images
-                <ChevronLeft className="h-4 w-4 rotate-180" />
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setStep("details")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back to Details
-              </button>
-              <button
-                type="button"
-                onClick={handleFinish}
-                className="px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#6750A4] transition shadow-sm"
-              >
-                Done
-              </button>
-            </>
-          )}
+                {savedOfferingId ? (
+                  <ServiceOfferingImageGallery
+                    companySlug={companySlug}
+                    offeringId={savedOfferingId}
+                    onShowToast={onShowToast}
+                  />
+                ) : (
+                  <div className="py-12 text-center text-gray-400">
+                    Service must be saved first to manage images.
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
+
+          {/* ── Footer ── */}
+          <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-between rounded-b-2xl">
+            {step === "details" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="service-form"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] disabled:opacity-50 transition shadow-sm"
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {saving ? "Saving…" : "Continue to Images"}
+                  <ChevronLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStep("details")}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back to Details
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  className="px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] transition shadow-sm"
+                >
+                  Done
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Discard confirmation */}
+      <ConfirmDiscardDialog
+        open={showDiscardDialog}
+        onKeep={() => setShowDiscardDialog(false)}
+        onDiscard={confirmDiscard}
+      />
+    </>
   );
 }

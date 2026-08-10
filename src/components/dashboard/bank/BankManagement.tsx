@@ -107,6 +107,7 @@ export default function BankManagement() {
     isSuperAdmin || company?.role === "owner" || company?.role === "admin";
 
   console.log("ddddd", deleting)
+  console.log("ddddd", company?.slug)
   const fetchBanks = useCallback(async () => {
     try {
       setLoading(true);

@@ -588,7 +588,9 @@ export const createCompanyBankAccount = async (
   companySlug: string,
   data: FormData | Record<string, unknown>
 ) => {
+    console.log("Creating company bank account with FormData", data);
   if (data instanceof FormData) {
+    console.log("Creating company bank account with FormData", data);
     return api.post(`/payments/company/${companySlug}/bank-accounts/`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -973,6 +975,8 @@ export const createBlackoutDate = (companySlug: string, data: any) =>
 
 export const deleteBlackoutDate = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/blackouts/${id}/`);
+export const updateBlackoutDate = (companySlug: string, id: number, data: any) =>
+  api.patch(`/services/manage/${companySlug}/blackouts/${id}/`, data);
 
 export const getManageStaff = (companySlug: string) =>
   api.get<ServiceStaff[]>(`/services/manage/${companySlug}/staff/`);
@@ -991,7 +995,7 @@ export const getManageServiceBookings = (
 ) =>
   api.get<ServiceBooking[]>(`/services/manage/${companySlug}/bookings/`, { params });
 
-export const getServiceBookingDetail = (companySlug: string, id: number) =>
+export const getServiceBookingDetail = ( id: number) =>
   api.get<ServiceBooking>(`/services/bookings/${id}/`);
 export const updateServiceBookingStatus = (
   companySlug: string,
