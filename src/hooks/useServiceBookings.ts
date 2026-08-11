@@ -63,7 +63,7 @@ export function useServiceBookings(
   const getBookingDetail = useCallback(
     async (bookingId: number): Promise<ServiceBooking> => {
       if (!companySlug) throw new Error("No company selected");
-      const res = await getServiceBookingDetail(companySlug, bookingId);
+      const res = await getServiceBookingDetail(bookingId);
       return res.data;
     },
     [companySlug],

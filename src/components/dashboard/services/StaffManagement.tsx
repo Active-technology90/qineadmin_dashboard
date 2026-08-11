@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Plus,
   Users,
@@ -503,7 +503,7 @@ export default function StaffManagement() {
   const { user } = useAuth();
   const { company, switchCompany, clearCompany } = useCurrentCompany();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
-
+  const formPanelRef = useRef<HTMLDivElement>(null);
   const companySlug = company?.slug ?? null;
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -533,7 +533,19 @@ export default function StaffManagement() {
     ServiceStaff[] | null
   >(null);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const goToStaffForm = useCallback(
+    (staffMember: ServiceStaff | null = null) => {
+      setEditingStaff(staffMember);
 
+      requestAnimationFrame(() => {
+        formPanelRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    },
+    [],
+  );
   // ── Data fetching ──────────────────────────────────────
   const fetchData = useCallback(async () => {
     if (!companySlug) return;
@@ -633,13 +645,21 @@ export default function StaffManagement() {
     setSelectedIds([]);
     fetchData();
   };
-
-  const handleEditStart = (member: ServiceStaff) => setEditingStaff(member);
-  const handleEditCancel = () => setEditingStaff(null);
-  const handleEditSuccess = () => {
-    setEditingStaff(null);
-    fetchData();
+  const handleCreateSuccess = async () => {
+    await fetchData();
   };
+const handleEditSuccess = async () => {
+  setEditingStaff(null);
+  await fetchData();
+};
+  const handleEditStart = (member: ServiceStaff) => {
+    goToStaffForm(member);
+  };
+  const handleEditCancel = () => setEditingStaff(null);
+  // const handleEditSuccess = () => {
+  //   setEditingStaff(null);
+  //   fetchData();
+  // };
 
   // ── Derived data ───────────────────────────────────────
   const today = new Date().getDay();
@@ -780,10 +800,7 @@ export default function StaffManagement() {
         isSuperAdmin={isSuperAdmin}
         onRefresh={fetchData}
         onSwitchCompany={clearCompany}
-        onAddSpecialist={() => {
-          setEditingStaff(null);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
+        onAddSpecialist={() => goToStaffForm(null)}
       />
 
       {/* Stats section */}
@@ -833,7 +850,10 @@ export default function StaffManagement() {
       {/* Main two‑column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6">
         {/* Form panel */}
-        <div className="lg:sticky lg:top-6 self-start">
+        <div
+          ref={formPanelRef}
+          className="lg:sticky lg:top-6 self-start scroll-mt-6"
+        >
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-xl bg-[#6750A4]/10 flex items-center justify-center">
@@ -858,7 +878,7 @@ export default function StaffManagement() {
               key={editingStaff ? `edit-${editingStaff.id}` : "create"}
               companySlug={companySlug!}
               offerings={offerings}
-              onSuccess={editingStaff ? handleEditSuccess : fetchData}
+              onSuccess={editingStaff ? handleEditSuccess : handleCreateSuccess}
               onCancel={editingStaff ? handleEditCancel : undefined}
               initialData={editingStaff}
             />

@@ -44,7 +44,8 @@ const InputWithIcon = ({
   </div>
 );
 
-/* ─── Avatar Upload ───────────────────────────────────── */
+
+
 const AvatarUpload = ({
   currentImage,
   onFileSelect,
@@ -56,101 +57,267 @@ const AvatarUpload = ({
 }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setPreview(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [currentImage]);
+
   const validateFile = (file: File): boolean => {
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
     if (!allowedTypes.includes(file.type)) {
       onError?.("Please upload a JPG, PNG, or WEBP image.");
       return false;
     }
+
     if (file.size > 5 * 1024 * 1024) {
       onError?.("Image must be under 5 MB.");
       return false;
     }
+
     return true;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file && !validateFile(file)) {
-      if (fileInputRef.current) fileInputRef.current.value = "";
+  const createPreview = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const handleFile = (file: File | null) => {
+    if (!file) return;
+
+    if (!validateFile(file)) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
+
     onFileSelect(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
+    createPreview(file);
+  };
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0] || null;
+    handleFile(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && validateFile(file)) {
-      onFileSelect(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else if (file) {
-      onError?.("Invalid image file.");
+
+    const file = e.dataTransfer.files?.[0] || null;
+
+    handleFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // VERY IMPORTANT:
+    // Prevent the click from triggering the upload area
+    e.preventDefault();
+    e.stopPropagation();
+
+    setPreview(null);
+    onFileSelect(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   const imageSrc = preview || currentImage || null;
-  const triggerFileInput = () => fileInputRef.current?.click();
+  const hasImage = Boolean(imageSrc);
 
   return (
-    <div
-      className={`relative w-24 h-24 rounded-full border-2 border-dashed overflow-hidden transition-all ${
-        isDragging
-          ? "border-[#6750A4] bg-purple-50"
-          : "border-gray-300 bg-gray-50"
-      }`}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setIsDragging(true);
-      }}
-      onDragLeave={() => setIsDragging(false)}
-      onDrop={handleDrop}
-    >
-      {imageSrc ? (
-        <img src={imageSrc} alt="Avatar preview" className="w-full h-full object-cover" />
-      ) : (
-        <div className="flex flex-col items-center justify-center h-full">
-          <Upload className="h-6 w-6 text-gray-400" />
-          <span className="text-[10px] text-gray-400">Upload</span>
+    <div className="flex flex-col items-center">
+      {/* Upload Area */}
+      <div
+        onClick={triggerFileInput}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`
+          group relative h-28 w-28 cursor-pointer
+          overflow-visible rounded-full
+          border-2 border-dashed
+          transition-all duration-200
+          focus-within:ring-4 focus-within:ring-[#6750A4]/20
+          ${
+            isDragging
+              ? "scale-105 border-[#6750A4] bg-purple-50"
+              : hasImage
+              ? "border-gray-200 bg-gray-100 hover:border-[#6750A4]"
+              : "border-gray-300 bg-gray-50 hover:border-[#6750A4] hover:bg-purple-50"
+          }
+        `}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            triggerFileInput();
+          }
+        }}
+        aria-label={
+          hasImage
+            ? "Change profile photo"
+            : "Upload profile photo"
+        }
+      >
+        {/* Image Container */}
+        <div className="relative h-full w-full overflow-hidden rounded-full">
+          {imageSrc ? (
+            <>
+              <img
+                src={imageSrc}
+                alt="Profile preview"
+                className="h-full w-full object-cover"
+              />
+
+              {/* Hover Overlay */}
+              <div
+                className="
+                  absolute inset-0
+                  flex flex-col items-center justify-center
+                  bg-black/50
+                  opacity-0
+                  transition-opacity
+                  duration-200
+                  group-hover:opacity-100
+                "
+              >
+                <Upload className="h-5 w-5 text-white" />
+
+                <span className="mt-1 text-[10px] font-medium text-white">
+                  Change photo
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center">
+              <div
+                className="
+                  flex h-10 w-10 items-center justify-center
+                  rounded-full bg-[#6750A4]/10
+                "
+              >
+                <Upload
+                  className="h-5 w-5"
+                  style={{ color: PRIMARY_COLOR }}
+                />
+              </div>
+
+              <span className="mt-1.5 text-[10px] font-medium text-gray-500">
+                Upload photo
+              </span>
+            </div>
+          )}
         </div>
-      )}
 
-      {imageSrc && (
-        <button
-          type="button"
-          onClick={() => {
-            setPreview(null);
-            onFileSelect(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-          }}
-          className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-red-500 hover:text-red-700"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      )}
+        {/* Remove Button */}
+        {hasImage && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="
+              absolute
+              -right-1
+              -top-1
+              z-30
+              flex
+              h-7
+              w-7
+              items-center
+              justify-center
+              rounded-full
+              border-2
+              border-white
+              bg-white
+              text-gray-500
+              shadow-md
+              transition-all
+              duration-150
+              hover:scale-110
+              hover:bg-red-50
+              hover:text-red-600
+              focus:outline-none
+              focus:ring-2
+              focus:ring-red-500/30
+            "
+            aria-label="Remove profile photo"
+            title="Remove photo"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+
+      {/* Helper Text */}
+      <div className="mt-3 text-center">
+        <p className="text-xs font-medium text-gray-700">
+          {hasImage
+            ? "Profile photo"
+            : "Add profile photo"}
+        </p>
+
+        <p className="mt-0.5 text-[10px] text-gray-400">
+          JPG, PNG or WEBP · Max 5 MB
+        </p>
+
+        {!hasImage && (
+          <p className="mt-1 text-[10px] text-gray-400">
+            Click or drag & drop
+          </p>
+        )}
+      </div>
     </div>
   );
 };
+
 
 /* ─── Working Days Picker ─────────────────────────────── */
 const WorkingDaysPicker = ({

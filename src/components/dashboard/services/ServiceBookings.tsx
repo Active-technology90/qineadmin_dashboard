@@ -356,7 +356,7 @@ export default function ServiceBookings() {
         </div>
 
         {/* Desktop filters (hidden on mobile) */}
-        <div className="hidden lg:block mb-6">
+        <div className="hidden lg:block mb-4">
           <ServiceBookingAdvancedFilters
             search={search}
             onSearchChange={setSearch}
@@ -507,7 +507,7 @@ export default function ServiceBookings() {
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-3">
                 {/* Status filter */}
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">

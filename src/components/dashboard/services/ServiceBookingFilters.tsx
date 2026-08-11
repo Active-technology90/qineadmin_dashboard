@@ -55,9 +55,9 @@ export function ServiceBookingAdvancedFilters({
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 sm:px-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-3 sm:px-4  border-gray-100">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-gray-700">Filters</h2>
+          <h2 className="text-sm font-semibold text-secondary">Filters</h2>
           {hasActiveFilters && (
             <span className="text-xs bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-medium">
               Active
@@ -79,7 +79,7 @@ export function ServiceBookingAdvancedFilters({
       </div>
 
       {/* Body */}
-      <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
+      <div className="p-3 sm:p-5 space-y-3 sm:space-y-3">
         {/* Search + Refresh */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
