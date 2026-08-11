@@ -4,6 +4,7 @@
 // User & Membership (matching backend serializer)
 // ─────────────────────────────────────────────────────────────
 export type UserRole = "owner" | "admin" | "staff" | "viewer" | "delivery";
+
 export interface Membership {
   company_id: number;
   company_name: string;
@@ -28,12 +29,14 @@ export interface User {
   daily_target?: number;
   weekly_target?: number;
 }
+
 export interface UsersResponse {
   count: number;
   next: string | null;
   previous: string | null;
   results: User[];
 }
+
 // ─────────────────────────────────────────────────────────────
 // Categories & SubCategories
 // ─────────────────────────────────────────────────────────────
@@ -67,7 +70,9 @@ export interface SubCategory {
   company_count?: number;
 }
 
-// ── Head Companies (umbrella grouping) ──
+// ─────────────────────────────────────────────────────────────
+// Head Companies (umbrella grouping)
+// ─────────────────────────────────────────────────────────────
 export interface HeadCompany {
   id: number;
   name: string;
@@ -80,7 +85,6 @@ export interface HeadCompany {
   created_at?: string;
 }
 
-// Nested parent-company info attached to a branch (head_company_detail)
 export interface HeadCompanyMini {
   id: number;
   name: string;
@@ -89,7 +93,9 @@ export interface HeadCompanyMini {
   logo?: string | null;
 }
 
-// ── Companies ──
+// ─────────────────────────────────────────────────────────────
+// Companies
+// ─────────────────────────────────────────────────────────────
 export interface Company {
   id: number;
   name: string;
@@ -164,135 +170,6 @@ export interface ServiceBooking {
   payment_method?: string;
 }
 
-// ── Full detail (fetched on open) ──
-export interface FullServiceBooking {
-  booking: BookingDetail;
-  customer: CustomerDetail;
-  company: CompanyDetail;
-  service: ServiceDetail;
-  staff: StaffDetail | null;
-  payment: PaymentDetail | null;
-  timeline: TimelineEntry[];
-  attachments: Attachment[];
-  intake_answers: IntakeAnswer[];
-  allowed_actions: BookingAction[];
-  notifications: NotificationSummary;
-  audit: AuditTrail;
-}
-
-export interface BookingDetail {
-  id: number;
-  reference: string;                 // e.g. “SHA-20260805-0010”
-  source: "app" | "web" | "admin" | "widget";
-  type: "standard" | "recurring" | "course" | "workshop";
-  status: string;
-  scheduled_date: string;
-  scheduled_time: string;
-  timezone: string;
-  created_at: string;
-  updated_at: string;
-  confirmed_at: string | null;
-  cancelled_at: string | null;
-  completed_at: string | null;
-  reminder_status: "none" | "sent" | "failed";
-  customer_notes: string;
-  company_notes: string;
-  internal_notes: string;
-}
-
-export interface CustomerDetail {
-  id: number;
-  full_name: string;
-  email: string;
-  phone: string;
-  avatar: string | null;
-  address: string;
-  gender: "Male" | "Female" | "Other" | null;
-  date_of_birth: string | null;
-  age: number | null;
-  loyalty_status: string;
-  total_bookings: number;
-  total_spent: string;
-  last_booking: string | null;
-  notes: string;
-}
-
-export interface CompanyDetail {
-  id: number;
-  name: string;
-  logo: string | null;
-  branch: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
-export interface ServiceDetail {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  duration_minutes: number;
-  preparation_time_minutes: number;
-  cleanup_time_minutes: number;
-  primary_image: string | null;
-  tags: string[];
-}
-
-export interface StaffDetail {
-  id: number;
-  full_name: string;
-  avatar: string | null;
-  phone: string;
-  specialization: string;
-}
-
-export interface PaymentDetail {
-  status: "pending" | "paid" | "partially_paid" | "refunded" | "failed";
-  method: string;
-  reference: string;
-  transaction_id: string | null;
-  date: string | null;
-  refund_status: "none" | "partial" | "full";
-  refund_amount: string;
-}
-
-export interface TimelineEntry {
-  status: string;
-  created_at: string;
-  updated_by: string | null;
-  note: string | null;
-}
-
-export interface Attachment {
-  id: number;
-  file_url: string;
-  file_name: string;
-  type: "image" | "document";
-  uploaded_at: string;
-}
-
-export interface IntakeAnswer {
-  question: string;
-  answer: string;
-  file_url: string | null;      // uploaded file
-  signature_url: string | null; // signature if needed
-}
-
-export interface NotificationSummary {
-  reminder_sent: boolean;
-  sms_sent: boolean;
-  email_sent: boolean;
-  push_sent: boolean;
-}
-
-export interface AuditTrail {
-  created_by: string | null;
-  updated_by: string | null;
-  last_updated_by: string | null;
-}
-
-export type BookingAction = "confirm" | "start" | "complete" | "cancel" | "no_show";
 export interface CompanyListItem {
   id: number;
   name: string;
@@ -330,7 +207,9 @@ export interface CompanyListItem {
   registered_by_username?: string;
 }
 
-// ── Products ──
+// ─────────────────────────────────────────────────────────────
+// Products
+// ─────────────────────────────────────────────────────────────
 export interface ProductImage {
   id: number;
   image: string;
@@ -374,7 +253,6 @@ export interface CompanyProduct {
   is_featured: boolean;
   images: ProductImage[];
   primary_image?: ProductImage | null;
-  // ── View-Only Stats ──
   sales_count?: number;
   average_rating?: string | null;
   total_reviews?: number;
@@ -399,13 +277,14 @@ export interface CompanyProductListItem {
   is_active: boolean;
   is_featured: boolean;
   primary_image?: string | null;
-  // ── View-Only Stats ──
   sales_count?: number;
   average_rating?: string | null;
   total_reviews?: number;
 }
 
-// ── Cart & Orders ──
+// ─────────────────────────────────────────────────────────────
+// Cart & Orders
+// ─────────────────────────────────────────────────────────────
 export interface CartItem {
   id: number;
   company_product: number;
@@ -521,7 +400,7 @@ export interface VendorOrder {
   shipping_address_text?: string;
   delivery?: Delivery;
   master_order_id?: number;
-  fulfillment_type?: string
+  fulfillment_type?: string;
 }
 
 export interface MasterOrder {
@@ -575,102 +454,192 @@ export interface CheckoutResponse {
   payment_mode: string;
 }
 
-// ── Pagination ──
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
-
-// ── Analytics ──
-export interface AnalyticsCompanyOption {
+// ─────────────────────────────────────────────────────────────
+// Service Bookings (deduplicated)
+// ─────────────────────────────────────────────────────────────
+export interface ServiceBooking {
   id: number;
-  name: string;
-  slug: string;
-}
-
-export interface AnalyticsSummary {
-  company_total_count: number;
-  company_active_count: number;
-  products: number;
-  users: number;
-  orders: number;
-  payments_total: number;
-  avg_order_value: number;
-  success_rate: number;
-  active_categories: number;
-}
-
-export interface AnalyticsRevenuePoint {
-  label: string;
-  revenue: number;
-  prevRevenue: number;
-}
-
-export interface AnalyticsCategoryTrendPoint {
-  month: string;
-  [key: string]: string | number;
-}
-
-export interface AnalyticsRecentOrder {
-  id: string;
-  customer: string;
-  amount: number;
-  status: string;
-  paymentStatus: string;
-  date: string;
-  vendors: number;
-}
-
-export interface AnalyticsOverviewResponse {
-  scope: "platform" | "company";
-  selected_company: AnalyticsCompanyOption | null;
-  available_companies: AnalyticsCompanyOption[];
-  summary: AnalyticsSummary;
-  revenue_series: AnalyticsRevenuePoint[];
-  order_status: { name: string; value: number }[];
-  top_products: { name: string; sales: number; company_name: string }[];
-  product_sales_trend: AnalyticsCategoryTrendPoint[];
-  recent_orders: AnalyticsRecentOrder[];
-}
-
-// ── Legacy / Deprecated (keep if needed) ──
-export interface Product {
-  id: number;
-  company: number;
-  title: string;
-  price: string;
-  stock: number;
-  primary_image?: string | null;
-  is_active: boolean;
-  is_featured: boolean;
+  customer: number;
+  customer_name?: string;
+  customer_phone?: string;
+  company?: CompanyListItem;
+  offering?: ServiceOffering;
+  assigned_staff?: ServiceStaff | null;
+  selected_addons?: ServiceAddon[];
+  location_type?: "provider_location" | "customer_location";
+  service_address_text?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  scheduled_date: string;
+  scheduled_time: string;
+  estimated_duration?: number;
+  quoted_price: string;
+  final_price?: string | null;
+  currency: string;
+  payable_amount?: string;
+  payment_status?: string;
+  payment_method?: string;
+  checkout_url?: string | null;
+  intake_data: Record<string, unknown>;
+  customer_notes?: string;
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
+  company_notes?: string;
+  master_order?: number | null;
   created_at: string;
   updated_at: string;
+  receipt?: any; 
+   receipt_history?: any[]; 
 }
 
-export interface Service {
+export interface FullServiceBooking {
+  booking: BookingDetail;
+  customer: CustomerDetail;
+  company: CompanyDetail;
+  service: ServiceDetail;
+  staff: StaffDetail | null;
+  payment: PaymentDetail | null;
+  timeline: TimelineEntry[];
+  attachments: Attachment[];
+  intake_answers: IntakeAnswer[];
+  allowed_actions: BookingAction[];
+  notifications: NotificationSummary;
+  audit: AuditTrail;
+}
+
+export interface BookingDetail {
+  id: number;
+  reference: string;
+  source: "app" | "web" | "admin" | "widget";
+  type: "standard" | "recurring" | "course" | "workshop";
+  status: string;
+  scheduled_date: string;
+  scheduled_time: string;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+  confirmed_at: string | null;
+  cancelled_at: string | null;
+  completed_at: string | null;
+  reminder_status: "none" | "sent" | "failed";
+  customer_notes: string;
+  company_notes: string;
+  internal_notes: string;
+}
+
+export interface CustomerDetail {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  avatar: string | null;
+  address: string;
+  gender: "Male" | "Female" | "Other" | null;
+  date_of_birth: string | null;
+  age: number | null;
+  loyalty_status: string;
+  total_bookings: number;
+  total_spent: string;
+  last_booking: string | null;
+  notes: string;
+}
+
+export interface CompanyDetail {
   id: number;
   name: string;
-  name_am: string;
-  slug: string;
-  address: string;
-  business_type: "service";
-  category: number;
-  category_name: string;
-  sub_category: number;
-  sub_category_name: string;
   logo: string | null;
-  cover_image: string | null;
-  is_active: boolean;
-  is_featured: boolean;
+  branch: string;
+  address: string;
+  phone: string;
+  email: string;
 }
 
-// ── Service Provider Management ──
+export interface ServiceDetail {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  duration_minutes: number;
+  preparation_time_minutes: number;
+  cleanup_time_minutes: number;
+  primary_image: string | null;
+  tags: string[];
+}
 
+export interface StaffDetail {
+  id: number;
+  full_name: string;
+  avatar: string | null;
+  phone: string;
+  specialization: string;
+}
+
+export interface PaymentDetail {
+  status: "pending" | "paid" | "partially_paid" | "refunded" | "failed";
+  method: string;
+  reference: string;
+  transaction_id: string | null;
+  date: string | null;
+  refund_status: "none" | "partial" | "full";
+  refund_amount: string;
+}
+
+export interface TimelineEntry {
+  status: string;
+  created_at: string;
+  updated_by: string | null;
+  note: string | null;
+}
+
+export interface Attachment {
+  id: number;
+  file_url: string;
+  file_name: string;
+  type: "image" | "document";
+  uploaded_at: string;
+}
+
+export interface IntakeAnswer {
+  question: string;
+  answer: string;
+  file_url: string | null;
+  signature_url: string | null;
+}
+
+export interface NotificationSummary {
+  reminder_sent: boolean;
+  sms_sent: boolean;
+  email_sent: boolean;
+  push_sent: boolean;
+}
+
+export interface AuditTrail {
+  created_by: string | null;
+  updated_by: string | null;
+  last_updated_by: string | null;
+}
+
+export type BookingAction = "confirm" | "start" | "complete" | "cancel" | "no_show";
+
+// ─────────────────────────────────────────────────────────────
+// Service Provider Management
+// ─────────────────────────────────────────────────────────────
 export interface IntakeFormField {
   name: string;
-  type: "text" | "textarea" | "select" | "number" | "date" | "checkbox";
+  type:
+    | "text"
+    | "textarea"
+    | "email"
+    | "phone"
+    | "number"
+    | "date"
+    | "time"
+    | "datetime"
+    | "select"
+    | "multiselect"
+    | "radio"
+    | "checkbox"
+    | "file"
+    | "url";
   label: string;
   label_am?: string;
   required?: boolean;
@@ -896,4 +865,103 @@ export interface StaffScheduleResponse {
   is_working_day: boolean;
   booked_appointments: StaffScheduleAppointment[];
   vacant_slots: string[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// Analytics
+// ─────────────────────────────────────────────────────────────
+export interface AnalyticsCompanyOption {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface AnalyticsSummary {
+  company_total_count: number;
+  company_active_count: number;
+  products: number;
+  users: number;
+  orders: number;
+  payments_total: number;
+  avg_order_value: number;
+  success_rate: number;
+  active_categories: number;
+}
+
+export interface AnalyticsRevenuePoint {
+  label: string;
+  revenue: number;
+  prevRevenue: number;
+}
+
+export interface AnalyticsCategoryTrendPoint {
+  month: string;
+  [key: string]: string | number;
+}
+
+export interface AnalyticsRecentOrder {
+  id: string;
+  customer: string;
+  amount: number;
+  status: string;
+  paymentStatus: string;
+  date: string;
+  vendors: number;
+}
+
+export interface AnalyticsOverviewResponse {
+  scope: "platform" | "company";
+  selected_company: AnalyticsCompanyOption | null;
+  available_companies: AnalyticsCompanyOption[];
+  summary: AnalyticsSummary;
+  revenue_series: AnalyticsRevenuePoint[];
+  order_status: { name: string; value: number }[];
+  top_products: { name: string; sales: number; company_name: string }[];
+  product_sales_trend: AnalyticsCategoryTrendPoint[];
+  recent_orders: AnalyticsRecentOrder[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// General & Deprecated (retained for backward compatibility)
+// ─────────────────────────────────────────────────────────────
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+}
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface Product {
+  id: number;
+  company: number;
+  title: string;
+  price: string;
+  stock: number;
+  primary_image?: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Service {
+  id: number;
+  name: string;
+  name_am: string;
+  slug: string;
+  address: string;
+  business_type: "service";
+  category: number;
+  category_name: string;
+  sub_category: number;
+  sub_category_name: string;
+  logo: string | null;
+  cover_image: string | null;
+  is_active: boolean;
+  is_featured: boolean;
 }

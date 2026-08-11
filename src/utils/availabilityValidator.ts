@@ -1,3 +1,4 @@
+// validators/availabilityValidator.ts
 import type { AvailabilitySlot, ValidationResult } from "../types";
 import {
   normaliseTime,

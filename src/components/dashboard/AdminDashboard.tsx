@@ -67,6 +67,7 @@ import CalendarManagement from "../marketing/CalendarManagement";
 import CompanyServices from "./services/CompanyServices";
 import ServiceBookings from "./services/ServiceBookings";
 import ServiceSubscriptions from "./services/ServiceSubscriptions";
+// import PortfolioManagement from "./services/PortfolioManagement";
 import AvailabilityManagement from "./services/AvailabilityManagement";
 import StaffManagement from "./services/StaffManagement";
 
@@ -302,6 +303,7 @@ export default function AdminDashboard() {
       setActiveTab("billing");
     }
   }, []);
+
   // ── Core identity flags ────────────────────────────────
   const isMarketing = !!user?.is_marketing;
   const isSuperAdmin = !user?.memberships?.length && !isMarketing;
@@ -323,7 +325,10 @@ export default function AdminDashboard() {
         m.company_slug === company?.slug &&
         companiesList.find((c: any) => c.slug === m.company_slug)?.business_type === "service",
     );
-
+  console.log("user:", user);
+console.log("company", company);
+console.log("companiesList", companiesList);
+console.log("currentCompanyMeta", currentCompanyMeta);
   const navigate = (tab: Tab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
@@ -387,18 +392,37 @@ export default function AdminDashboard() {
   };
 
   // Fetch companies list to get company logo
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const { getCompanies } = await import("../../services/api");
-        const response = await getCompanies({ page_size: 100 });
-        setCompaniesList(response.data.results || []);
-      } catch (error) {
-        console.error("Failed to fetch companies:", error);
+useEffect(() => {
+  const fetchCompanies = async () => {
+    try {
+      const { getCompanies } = await import("../../services/api");
+
+      let page = 1;
+      let hasNext = true;
+      const allCompanies: any[] = [];
+
+      while (hasNext) {
+        const response = await getCompanies({
+          page,
+          page_size: 100,
+        });
+
+        const data = response.data;
+
+        allCompanies.push(...(data.results || []));
+
+        hasNext = !!data.next; // DRF pagination
+        page++;
       }
-    };
-    fetchCompanies();
-  }, []);
+
+      setCompaniesList(allCompanies);
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+    }
+  };
+
+  fetchCompanies();
+}, []);
 
   // Update company logo when company changes
   useEffect(() => {
@@ -806,7 +830,11 @@ export default function AdminDashboard() {
             </>
           )}
           {/* Only for super admin (not viewer) */}
-
+  <div
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
+              >
+               Platform
+              </div>
           {/* {!hideUsersSidebar && ( */}
           <SidebarItem
             icon={<Users className="h-5 w-5" />}

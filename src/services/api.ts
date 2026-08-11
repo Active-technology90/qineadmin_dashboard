@@ -34,6 +34,7 @@ import type {
   ServiceSessionLog,
   StaffScheduleResponse,
   IntakeFormField,
+  ServiceStaff,
 } from "../types";
 
 // const API_URL = "https://backend-qine.activetechet.com/api/v1";
@@ -66,14 +67,20 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 // Request interceptor: attach token
+// Request interceptor: attach token & fix FormData Content-Type
 api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem("access");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Let the browser set the correct multipart boundary for FormData
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
+
   return config;
 });
-
 // Response interceptor: handle 401 and refresh token
 api.interceptors.response.use(
   (response) => response,
@@ -284,8 +291,31 @@ export const getCompanies = async (params?: {
 // ========== MEMBERSHIP MANAGEMENT ==========
 // Get all companies for assignment (reuse existing getCompanies)
 export const getAvailableCompanies = async () => {
-  const response = await getCompanies({ page_size: 100 }); // adjust page size as needed
-  return response.data.results.map(c => ({ id: c.id, name: c.name, slug: c.slug }));
+  const pageSize = 100;
+  let page = 1;
+  let companies: any[] = [];
+  let hasNext = true;
+
+  while (hasNext) {
+    const response = await getCompanies({
+      page,
+      page_size: pageSize,
+    });
+
+    const data = response.data;
+
+    companies.push(...(data.results || []));
+
+    // Django REST Framework pagination
+    hasNext = !!data.next;
+    page++;
+  }
+
+  return companies.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+  }));
 };
 
 // Update user's role in a specific company
@@ -563,7 +593,9 @@ export const createCompanyBankAccount = async (
   companySlug: string,
   data: FormData | Record<string, unknown>
 ) => {
+    console.log("Creating company bank account with FormData", data);
   if (data instanceof FormData) {
+    console.log("Creating company bank account with FormData", data);
     return api.post(`/payments/company/${companySlug}/bank-accounts/`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -753,6 +785,9 @@ export const prepareVendorOrder = async (companySlug: string, orderId: number) =
 
 export const confirmCODPayment = async (companySlug: string, orderId: number) =>
   api.post(`/orders/company/${companySlug}/${orderId}/confirm-cod/`);
+// ========== SERVICE BOOKINGS ==========services/manage/<slug:slug>/bookings/<int:pk>/confirm-cod/
+export const confirmCODServiceBookingPayment = async (companySlug: string, bookingId: number) =>
+  api.post(`/services/manage/${companySlug}/bookings/${bookingId}/confirm-cod/`);
 
 // ========== NOTIFICATIONS (FCM) ==========
 export const registerDevice = (
@@ -945,15 +980,20 @@ export const createBlackoutDate = (companySlug: string, data: any) =>
 
 export const deleteBlackoutDate = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/blackouts/${id}/`);
+export const updateBlackoutDate = (companySlug: string, id: number, data: any) =>
+  api.patch(`/services/manage/${companySlug}/blackouts/${id}/`, data);
 
 export const getManageStaff = (companySlug: string) =>
   api.get<ServiceStaff[]>(`/services/manage/${companySlug}/staff/`);
 
 export const createStaff = (companySlug: string, data: any) =>
-  api.post<ServiceStaff>(`/services/manage/${companySlug}/staff/`, data);
+  api.post<ServiceStaff>(`/services/manage/${companySlug}/staff/`, data,);
 
 export const deleteStaff = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/staff/${id}/`);
+
+export const updateStaff = (companySlug: string, id: number, data: any) =>
+  api.patch<ServiceStaff>(`/services/manage/${companySlug}/staff/${id}/`, data);
 
 export const getManageStaffSchedule = (
   companySlug: string,
@@ -968,8 +1008,10 @@ export const getManageServiceBookings = (
 ) =>
   api.get<ServiceBooking[]>(`/services/manage/${companySlug}/bookings/`, { params });
 
-export const getServiceBookingDetail = (_companySlug: string, id: number) =>
-  api.get<ServiceBooking>(`/services/bookings/${id}/`);
+export const getServiceBookingDetail = (_companySlugOrId: string | number, maybeId?: number) => {
+  const bookingId = maybeId !== undefined ? maybeId : _companySlugOrId;
+  return api.get<ServiceBooking>(`/services/bookings/${bookingId}/`);
+};
 export const updateServiceBookingStatus = (
   companySlug: string,
   bookingId: number,

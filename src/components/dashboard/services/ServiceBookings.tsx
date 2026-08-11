@@ -9,12 +9,12 @@ import { Toast } from "../../ui/Toast";
 import { Pagination } from "../../ui/Pagination";
 import { SearchInput } from "../../ui/SearchInput";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
-import { ServiceBookingFilters } from "./ServiceBookingFilters";
+import { ServiceBookingAdvancedFilters } from "./ServiceBookingFilters";
 import { ServiceBookingManageModal } from "./ServiceBookingManageModal";
 import { extractErrorMessage } from "../../../utils/extractErrorMessage";
-import { confirmServiceBookingCOD, getManageStaff } from "../../../services/api";
-import type { ServiceBooking, ServiceStaff } from "../../../types";
+import type { ServiceBooking } from "../../../types";
 
+/* -------------------- constants -------------------- */
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
   confirmed: "bg-green-50 text-green-700 border-green-200",
@@ -26,9 +26,12 @@ const STATUS_COLORS: Record<string, string> = {
 
 const StatusBadge = ({ status }: { status: string }) => {
   const normalized = status?.toLowerCase();
-  const color = STATUS_COLORS[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
+  const color =
+    STATUS_COLORS[normalized] || "bg-gray-100 text-gray-600 border-gray-200";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${color}`}
+    >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {normalized.replace(/_/g, " ")}
     </span>
@@ -44,7 +47,13 @@ const STATUS_OPTIONS: SelectOption[] = [
   { value: "cancelled", label: "Cancelled" },
   { value: "no_show", label: "No Show" },
 ];
-
+const PAYMENT_STATUS_OPTIONS: SelectOption[] = [
+  { value: "", label: "All Payment Status" },
+  { value: "not_required", label: "Not Required" },
+  { value: "pending", label: "Pending" },
+  { value: "paid", label: "Paid" },
+  { value: "failed", label: "Failed" },
+];
 const PAGE_SIZE_OPTIONS: SelectOption[] = [
   { value: "10", label: "10 / page" },
   { value: "15", label: "15 / page" },
@@ -54,6 +63,7 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
 ];
 
 export default function ServiceBookings() {
+  /* -------------------- context & hooks -------------------- */
   const { user } = useAuth();
   const { company, switchCompany, clearCompany } = useCurrentCompany();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesList();
@@ -70,93 +80,99 @@ export default function ServiceBookings() {
   const selectedCompany = companies.find((c) => c.slug === companySlug);
   const isServiceCompany = selectedCompany?.business_type === "service";
 
+  /* -------------------- filter states -------------------- */
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
-  const [staffFilter, setStaffFilter] = useState("all");
-  const [staffList, setStaffList] = useState<ServiceStaff[]>([]);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [selectedBooking, setSelectedBooking] = useState<ServiceBooking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<ServiceBooking | null>(
+    null,
+  );
   const [companyNotes, setCompanyNotes] = useState("");
   const [finalPrice, setFinalPrice] = useState("");
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
-  useEffect(() => {
-    if (companySlug && isServiceCompany) {
-      getManageStaff(companySlug)
-        .then((res) => setStaffList(res.data || []))
-        .catch(() => setStaffList([]));
-    }
-  }, [companySlug, isServiceCompany]);
+  // refresh trigger – pass to hook if it supports a third parameter (or use a key)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const staffOptions: SelectOption[] = useMemo(
-    () => [
-      { value: "all", label: "All Specialists" },
-      ...staffList.map((s) => ({ value: String(s.id), label: s.name })),
-    ],
-    [staffList],
-  );
-
+  /* -------------------- data fetching -------------------- */
   const filters = {
     status: statusFilter === "all" ? undefined : statusFilter,
     date: dateFilter || undefined,
   };
 
-  const { bookings, loading, updateStatus, getBookingDetail } = useServiceBookings(
-    isServiceCompany ? companySlug : null,
-    filters,
-  );
+  const { bookings, loading, updateStatus, getBookingDetail } =
+    useServiceBookings(isServiceCompany ? companySlug : null, filters);
 
+  /* -------------------- derived data & pagination -------------------- */
   const searchedBookings = useMemo(() => {
-    let result = bookings;
-    if (staffFilter !== "all") {
-      const sId = Number(staffFilter);
-      result = result.filter(
-        (b) => (b.assigned_staff as any)?.id === sId || (b as any).assigned_staff_id === sId
-      );
-    }
-    if (!search.trim()) return result;
+    if (!search.trim()) return bookings;
     const term = search.toLowerCase();
-    return result.filter(
+    return bookings.filter(
       (b) =>
         String(b.id).includes(term) ||
         b.customer_name?.toLowerCase().includes(term) ||
         b.offering?.title?.toLowerCase().includes(term) ||
-        ((b.assigned_staff as any)?.name?.toLowerCase() || "").includes(term) ||
         (b.customer_phone && b.customer_phone.includes(term)),
     );
-  }, [bookings, search, staffFilter]);
+  }, [bookings, search]);
 
-  const totalItems = searchedBookings.length;
+  // apply payment & any other local filters
+  const filteredBookings = useMemo(() => {
+    let result = searchedBookings;
+    if (paymentStatusFilter) {
+      result = result.filter((b) => b.payment_status === paymentStatusFilter);
+    }
+    if (paymentMethodFilter) {
+      result = result.filter((b) => b.payment_method === paymentMethodFilter);
+    }
+    return result;
+  }, [searchedBookings, paymentStatusFilter, paymentMethodFilter]);
+
+  const totalItems = filteredBookings.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedBookings = searchedBookings.slice(
+  const paginatedBookings = filteredBookings.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
 
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, dateFilter, staffFilter, search, pageSize]);
+  // reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    statusFilter,
+    dateFilter,
+    search,
+    paymentStatusFilter,
+    paymentMethodFilter,
+    pageSize,
+  ]);
 
+  /* -------------------- helpers -------------------- */
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ── Fetch full booking detail before opening the modal ──
   const handleOpenBooking = async (bookingId: number) => {
     try {
       const fullBooking = await getBookingDetail(bookingId);
       setSelectedBooking(fullBooking);
       setCompanyNotes(fullBooking.company_notes || "");
       setFinalPrice(fullBooking.final_price || fullBooking.quoted_price || "");
-    } catch (err) {
+    } catch {
       showToast("error", "Could not load booking details");
     }
   };
 
-  // ── Refresh the currently viewed booking ──
   const handleRefreshBooking = async () => {
     if (!selectedBooking) return;
     try {
@@ -164,7 +180,7 @@ export default function ServiceBookings() {
       setSelectedBooking(updated);
       setCompanyNotes(updated.company_notes || "");
       setFinalPrice(updated.final_price || updated.quoted_price || "");
-    } catch (err) {
+    } catch {
       showToast("error", "Could not refresh booking");
     }
   };
@@ -180,33 +196,46 @@ export default function ServiceBookings() {
         final_price: finalPrice || undefined,
       });
       showToast("success", `Booking marked as ${status.replace("_", " ")}`);
-      setSelectedBooking(null);
-      setCompanyNotes("");
-      setFinalPrice("");
+      await handleRefreshBooking();
     } catch (err: any) {
       showToast("error", extractErrorMessage(err, "Failed to update booking"));
     }
   };
 
-  const handleConfirmCOD = async (bookingId: number) => {
-    if (!companySlug) return;
-    try {
-      await confirmServiceBookingCOD(companySlug, bookingId);
-      showToast("success", "Cash payment (COD) confirmed and booking completed!");
-      setSelectedBooking(null);
-      handleRefreshBooking();
-    } catch (err: any) {
-      showToast("error", extractErrorMessage(err, "Failed to confirm COD payment"));
-    }
-  };
-
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     setStatusFilter("all");
     setDateFilter("");
     setSearch("");
+    setPaymentStatusFilter("");
+    setPaymentMethodFilter("");
     setCurrentPage(1);
   };
 
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    !!dateFilter ||
+    !!search ||
+    !!paymentStatusFilter ||
+    !!paymentMethodFilter;
+
+  // Active filter count for mobile badge (includes search term)
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (search.trim()) count++;
+    if (statusFilter !== "all") count++;
+    if (dateFilter) count++;
+    if (paymentStatusFilter) count++;
+    if (paymentMethodFilter) count++;
+    return count;
+  }, [
+    search,
+    statusFilter,
+    dateFilter,
+    paymentStatusFilter,
+    paymentMethodFilter,
+  ]);
+
+  /* -------------------- early returns -------------------- */
   if (showSelector) {
     return (
       <CompanySelector
@@ -215,7 +244,9 @@ export default function ServiceBookings() {
         title="Service Bookings"
         searchPlaceholder="Search service companies..."
         onSelect={(slug, name) => {
-          const membership = user?.memberships?.find((m: any) => m.company_slug === slug);
+          const membership = user?.memberships?.find(
+            (m: any) => m.company_slug === slug,
+          );
           const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
           switchCompany({ slug, name, role });
         }}
@@ -232,67 +263,135 @@ export default function ServiceBookings() {
     );
   }
 
-  const hasActiveFilters = statusFilter !== "all" || !!dateFilter || !!search;
-
+  /* -------------------- main view -------------------- */
   return (
     <>
       <Toast toast={toast} />
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-secondary">Bookings</h1>
-            <div className="flex items-center gap-1 mt-1">
-              <p className="text-sm md:text-lg text-gray-500">Incoming appointments for</p>
-              <span className="text-sm md:text-lg text-secondary font-bold">{companyName}</span>
+        <div className="mb-5 sm:mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {/* Page heading */}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-secondary">
+                  Bookings
+                </h1>
+
+                {/* Company badge */}
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                  <span className="truncate max-w-[180px] sm:max-w-[280px]">
+                    {companyName}
+                  </span>
+                </span>
+              </div>
+
+              <p className="mt-1.5 text-sm text-gray-500">
+                Review, manage, and track incoming customer appointments.
+              </p>
+            </div>
+
+            {/* Actions */}
+            {isSuperAdmin && (
+              <div className="w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={clearCompany}
+                  className="
+            inline-flex min-h-10 w-full sm:w-auto
+            items-center justify-center gap-2
+            rounded-xl border border-gray-200
+            bg-white px-3.5 py-2
+            text-sm font-medium text-gray-700
+            shadow-sm
+            transition-all duration-200
+            hover:border-[#6750A4]/30
+            hover:bg-[#6750A4]/5
+            hover:text-[#6750A4]
+            active:scale-[0.98]
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[#6750A4]/20
+          "
+                  aria-label={`Switch company from ${companyName}`}
+                >
+                  <Repeat className="h-4 w-4 shrink-0" />
+                  <span>Switch Company</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Header divider */}
+          <div className="mt-5 border-b border-gray-100" />
+        </div>
+
+        {/* Mobile search bar with filter button and page size (hidden on desktop) */}
+        <div className="mb-4 lg:hidden">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder="Search by ID, customer or service..."
+                loading={loading}
+                showMobileFilter={true}
+                onMobileFilterClick={() => setShowMobileFilterModal(true)}
+                activeFilterCount={activeFilterCount}
+              />
+            </div>
+            <div className="w-24 flex-shrink-0">
+              <CustomSelect
+                value={String(pageSize)}
+                onChange={(val) => {
+                  setPageSize(Number(val));
+                  setCurrentPage(1);
+                }}
+                options={PAGE_SIZE_OPTIONS}
+                placeholder="10"
+              />
             </div>
           </div>
-          {isSuperAdmin && (
-            <button onClick={clearCompany} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-secondary border border-secondary rounded-xl hover:bg-purple-50 transition">
-              <Repeat className="h-4 w-4" /> Switch Company
-            </button>
-          )}
         </div>
 
-        {/* Mobile search & page size */}
-        <div className="flex lg:hidden items-center gap-2 mb-4">
-          <div className="flex-1">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search bookings..."
-              showMobileFilter={true}
-              onMobileFilterClick={() => setShowMobileFilter(true)}
-              activeFilterCount={hasActiveFilters ? 1 : 0}
-            />
-          </div>
-          <div className="w-24 flex-shrink-0">
-            <CustomSelect value={String(pageSize)} onChange={(val) => setPageSize(Number(val))} options={PAGE_SIZE_OPTIONS} placeholder="10" />
-          </div>
-        </div>
-
-        {/* Desktop filters */}
-        <div className="hidden lg:flex items-center gap-3 mb-4">
-          <div className="flex-1 max-w-lg">
-            <SearchInput value={search} onChange={setSearch} placeholder="Search bookings..." />
-          </div>
-          <ServiceBookingFilters
-            statusFilter={statusFilter} onStatusChange={setStatusFilter}
-            dateFilter={dateFilter} onDateChange={setDateFilter}
-            staffFilter={staffFilter} onStaffChange={setStaffFilter} staffOptions={staffOptions}
-            pageSize={pageSize} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-            hasActiveFilters={hasActiveFilters} onClear={clearFilters}
-            statusOptions={STATUS_OPTIONS} pageSizeOptions={PAGE_SIZE_OPTIONS}
+        {/* Desktop filters (hidden on mobile) */}
+        <div className="hidden lg:block mb-4">
+          <ServiceBookingAdvancedFilters
+            search={search}
+            onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            paymentStatusFilter={paymentStatusFilter}
+            onPaymentStatusChange={setPaymentStatusFilter}
+            paymentMethodFilter={paymentMethodFilter}
+            onPaymentMethodChange={setPaymentMethodFilter}
+            pageSize={pageSize}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearAllFilters}
+            onRefresh={() => setRefreshTrigger((t) => t + 1)}
+            statusOptions={STATUS_OPTIONS}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
           />
         </div>
 
-        {/* Table */}
+        {/* Table / empty states */}
         {loading ? (
-          <div className="py-12 text-center text-gray-400">Loading bookings...</div>
+          <div className="py-12 text-center text-gray-400">
+            Loading bookings...
+          </div>
         ) : paginatedBookings.length === 0 ? (
           <div className="py-16 text-center">
             <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">{bookings.length === 0 ? "No bookings found." : "No matching bookings."}</p>
+            <p className="text-gray-500">
+              {bookings.length === 0
+                ? "No bookings found."
+                : "No matching bookings."}
+            </p>
           </div>
         ) : (
           <>
@@ -312,14 +411,22 @@ export default function ServiceBookings() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {paginatedBookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr
+                      key={b.id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <p className="font-medium text-gray-900">#{b.id}</p>
-                        <p className="text-xs text-gray-500">{String(b.scheduled_time).slice(0, 5)}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-gray-900 font-medium">{b.customer_name || `Customer #${b.id}`}</p>
-                        {b.customer_phone && <p className="text-xs text-gray-400">{b.customer_phone}</p>}
+                        <p className="text-gray-900 font-medium">
+                          {b.customer_name || `Customer #${b.id}`}
+                        </p>
+                        {b.customer_phone && (
+                          <p className="text-xs text-gray-400">
+                            {b.customer_phone}
+                          </p>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {b.assigned_staff ? (
@@ -333,12 +440,22 @@ export default function ServiceBookings() {
                           <span className="text-xs text-gray-400 font-medium">Any Specialist</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{b.offering?.title || "—"}</td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">{Number(b.quoted_price).toLocaleString()} {b.currency}</td>
-                      <td className="px-4 py-3"><StatusBadge status={b.status} /></td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {b.offering?.title || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 font-medium">
+                        {Number(b.quoted_price).toLocaleString()} {b.currency}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={b.status} />
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <p className="font-medium text-gray-900">{b.scheduled_date}</p>
-                        <p className="text-xs text-gray-500">{String(b.scheduled_time).slice(0, 5)}</p>
+                        <p className="font-medium text-gray-900">
+                          {b.scheduled_date}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {String(b.scheduled_time).slice(0, 5)}
+                        </p>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -353,15 +470,20 @@ export default function ServiceBookings() {
                 </tbody>
               </table>
             </div>
+
             {totalPages > 1 && (
               <div className="mt-6">
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </>
         )}
 
-        {/* Manage Booking Modal */}
+        {/* Booking detail modal */}
         {selectedBooking && (
           <ServiceBookingManageModal
             booking={selectedBooking}
@@ -371,41 +493,125 @@ export default function ServiceBookings() {
             setCompanyNotes={setCompanyNotes}
             finalPrice={finalPrice}
             setFinalPrice={setFinalPrice}
-            allBookings={bookings}  // optionally pass all bookings for history
+            allBookings={bookings}
             onRefresh={handleRefreshBooking}
-            onConfirmCOD={() => handleConfirmCOD(selectedBooking.id)}
           />
         )}
 
-        {/* Mobile Filter Bottom Sheet */}
-        {showMobileFilter && (
-          <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setShowMobileFilter(false)}>
+        {/* Mobile filter bottom sheet (only filter selects, no search) */}
+        {showMobileFilterModal && (
+          <div
+            className="fixed inset-0 z-50 lg:hidden"
+            onClick={() => setShowMobileFilterModal(false)}
+          >
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-                <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
-                <button onClick={() => setShowMobileFilter(false)} className="p-2 rounded-full hover:bg-gray-100 transition">
+                <h3 className="text-lg font-extrabold text-secondary">
+                  Filters
+                </h3>
+                <button
+                  onClick={() => setShowMobileFilterModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition"
+                >
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
-              <div className="p-4 space-y-4">
-                <ServiceBookingFilters
-                  statusFilter={statusFilter} onStatusChange={setStatusFilter}
-                  dateFilter={dateFilter} onDateChange={setDateFilter}
-                  staffFilter={staffFilter} onStaffChange={setStaffFilter} staffOptions={staffOptions}
-                  pageSize={pageSize} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-                  hasActiveFilters={hasActiveFilters}
-                  onClear={() => { clearFilters(); setShowMobileFilter(false); }}
-                  statusOptions={STATUS_OPTIONS} pageSizeOptions={PAGE_SIZE_OPTIONS}
-                  className="flex-col space-y-4"
-                />
-                <div className="flex gap-3 pt-2">
+              <div className="p-4 space-y-3">
+                {/* Status filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Status
+                  </label>
+                  <CustomSelect
+                    value={statusFilter}
+                    onChange={(val) => setStatusFilter(val)}
+                    options={STATUS_OPTIONS}
+                    placeholder="All Statuses"
+                  />
+                </div>
+                {/* Payment Status filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Payment Status
+                  </label>
+                  {/* <select
+                    value={paymentStatusFilter}
+                    onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  >
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="partially_paid">Partially Paid</option>
+                    <option value="refunded">Refunded</option>
+                  </select> */}
+                  <CustomSelect
+                    value={paymentStatusFilter}
+                    onChange={(val) => setPaymentStatusFilter(val)}
+                    options={PAYMENT_STATUS_OPTIONS}
+                    placeholder="All Payment Status"
+                  />
+                </div>
+                {/* Payment Method filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Payment Method
+                  </label>
+                  {/* <select
+                    value={paymentMethodFilter}
+                    onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  >
+                    <option value="">All</option>
+                    <option value="chapa">Chapa</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="cod">COD</option>
+                  </select> */}
+                  <CustomSelect
+                    value={paymentMethodFilter}
+                    onChange={(val) => setPaymentMethodFilter(val)}
+                    options={[
+                      { label: "Chapa", value: "chapa" },
+                      { label: "Bank Transfer", value: "bank_transfer" },
+                      { label: "COD", value: "cod" },
+                    ]}
+                    placeholder="All Payment Methods"
+                  />
+                </div>
+                {/* Date filter */}
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
                   {hasActiveFilters && (
-                    <button onClick={() => { clearFilters(); setShowMobileFilter(false); }} className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition">
+                    <button
+                      onClick={() => {
+                        clearAllFilters();
+                        setShowMobileFilterModal(false);
+                      }}
+                      className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                    >
                       Clear all
                     </button>
                   )}
-                  <button onClick={() => setShowMobileFilter(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm">
+                  <button
+                    onClick={() => setShowMobileFilterModal(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+                  >
                     Apply Filters
                   </button>
                 </div>
@@ -414,111 +620,6 @@ export default function ServiceBookings() {
           </div>
         )}
       </div>
-
-
-      {/* {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Booking #{selectedBooking.id}
-            </h3>
-
-            <div className="space-y-3 text-sm mb-4">
-              <p>
-                <span className="text-gray-500">Customer:</span>{" "}
-                {selectedBooking.customer_name}
-              </p>
-              <p>
-                <span className="text-gray-500">Service:</span>{" "}
-                {selectedBooking.offering?.title}
-              </p>
-              <p>
-                <span className="text-gray-500">When:</span>{" "}
-                {selectedBooking.scheduled_date} at{" "}
-                {String(selectedBooking.scheduled_time).slice(0, 5)}
-              </p>
-              
-              <p>
-                <span className="text-gray-500">Location:</span>{" "}
-                {selectedBooking.location_type === "customer_location" ? (
-                  <span className="font-semibold text-purple-700">
-                    🏠 On-Site ({selectedBooking.service_address_text || "Customer Address"})
-                  </span>
-                ) : (
-                  <span>🏬 At Provider Studio</span>
-                )}
-              </p> 
-              {selectedBooking.assigned_staff && (
-                <p>
-                  <span className="text-gray-500">Assigned Specialist:</span>{" "}
-                  <span className="font-semibold text-gray-900">
-                    👤 {selectedBooking.assigned_staff.name} ({selectedBooking.assigned_staff.role_title || "Specialist"})
-                  </span>
-                </p>
-              )}
-              {selectedBooking.customer_notes && (
-                <p>
-                  <span className="text-gray-500">Notes:</span>{" "}
-                  {selectedBooking.customer_notes}
-                </p>
-              )}
-              {Object.keys(selectedBooking.intake_data || {}).length > 0 && (
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-2">
-                    Intake Form Responses
-                  </p>
-                  {Object.entries(selectedBooking.intake_data).map(([k, v]) => (
-                    <p key={k}>
-                      <span className="text-gray-500 capitalize">{k.replace(/_/g, " ")}:</span>{" "}
-                      {String(v)}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3 mb-4">
-              <textarea
-                value={companyNotes}
-                onChange={(e) => setCompanyNotes(e.target.value)}
-                placeholder="Message to customer (quote details, instructions...)"
-                rows={2}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="number"
-                value={finalPrice}
-                onChange={(e) => setFinalPrice(e.target.value)}
-                placeholder="Final price"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {(["confirmed", "in_progress", "completed", "cancelled", "no_show"] as const).map(
-                (status) => (
-                  <button
-                    key={status}
-                    onClick={() => handleStatusUpdate(selectedBooking, status)}
-                    disabled={selectedBooking.status === status}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-40 capitalize"
-                  >
-                    {status.replace("_", " ")}
-                  </button>
-                ),
-              )}
-            </div>
-
-            <button
-              onClick={() => setSelectedBooking(null)}
-              className="mt-4 text-sm text-gray-500 hover:text-gray-700"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )} */}
-
     </>
   );
 }
