@@ -27,8 +27,8 @@ import {
       CalendarIcon,
   Wrench,
   CalendarDays,
-  Images,
   Clock,
+  Repeat,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -66,7 +66,7 @@ import TargetsManagement from "../marketing/TargetsManagement";
 import CalendarManagement from "../marketing/CalendarManagement";
 import CompanyServices from "./services/CompanyServices";
 import ServiceBookings from "./services/ServiceBookings";
-import PortfolioManagement from "./services/PortfolioManagement";
+import ServiceSubscriptions from "./services/ServiceSubscriptions";
 import AvailabilityManagement from "./services/AvailabilityManagement";
 import StaffManagement from "./services/StaffManagement";
 
@@ -96,6 +96,7 @@ type Tab =
   | "marketingAgents"
   | "serviceOfferings"
   | "serviceBookings"
+  | "serviceSubscriptions"
   | "portfolio"
   | "availability"
   | "serviceStaff";
@@ -491,6 +492,8 @@ export default function AdminDashboard() {
           return <CompanyServices key={componentKey} />;
         case "serviceBookings":
           return <ServiceBookings key={componentKey} />;
+        case "serviceSubscriptions":
+          return <ServiceSubscriptions key={componentKey} />;
         // case "portfolio":
         //   return <PortfolioManagement key={componentKey} />;
         case "availability":
@@ -771,6 +774,13 @@ export default function AdminDashboard() {
                 active={activeTab === "serviceBookings"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("serviceBookings")}
+              />
+              <SidebarItem
+                icon={<Repeat className="h-5 w-5" />}
+                label="Recurring Contracts"
+                active={activeTab === "serviceSubscriptions"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("serviceSubscriptions")}
               />
              {/* <SidebarItem
                 icon={<Images className="h-5 w-5" />}

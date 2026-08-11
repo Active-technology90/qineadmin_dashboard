@@ -12,7 +12,8 @@ import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { ServiceBookingFilters } from "./ServiceBookingFilters";
 import { ServiceBookingManageModal } from "./ServiceBookingManageModal";
 import { extractErrorMessage } from "../../../utils/extractErrorMessage";
-import type { ServiceBooking } from "../../../types";
+import { confirmServiceBookingCOD, getManageStaff } from "../../../services/api";
+import type { ServiceBooking, ServiceStaff } from "../../../types";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -71,6 +72,8 @@ export default function ServiceBookings() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+  const [staffFilter, setStaffFilter] = useState("all");
+  const [staffList, setStaffList] = useState<ServiceStaff[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -80,6 +83,22 @@ export default function ServiceBookings() {
   const [finalPrice, setFinalPrice] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+
+  useEffect(() => {
+    if (companySlug && isServiceCompany) {
+      getManageStaff(companySlug)
+        .then((res) => setStaffList(res.data || []))
+        .catch(() => setStaffList([]));
+    }
+  }, [companySlug, isServiceCompany]);
+
+  const staffOptions: SelectOption[] = useMemo(
+    () => [
+      { value: "all", label: "All Specialists" },
+      ...staffList.map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [staffList],
+  );
 
   const filters = {
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -92,16 +111,24 @@ export default function ServiceBookings() {
   );
 
   const searchedBookings = useMemo(() => {
-    if (!search.trim()) return bookings;
+    let result = bookings;
+    if (staffFilter !== "all") {
+      const sId = Number(staffFilter);
+      result = result.filter(
+        (b) => (b.assigned_staff as any)?.id === sId || (b as any).assigned_staff_id === sId
+      );
+    }
+    if (!search.trim()) return result;
     const term = search.toLowerCase();
-    return bookings.filter(
+    return result.filter(
       (b) =>
         String(b.id).includes(term) ||
         b.customer_name?.toLowerCase().includes(term) ||
         b.offering?.title?.toLowerCase().includes(term) ||
+        ((b.assigned_staff as any)?.name?.toLowerCase() || "").includes(term) ||
         (b.customer_phone && b.customer_phone.includes(term)),
     );
-  }, [bookings, search]);
+  }, [bookings, search, staffFilter]);
 
   const totalItems = searchedBookings.length;
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -110,7 +137,7 @@ export default function ServiceBookings() {
     currentPage * pageSize,
   );
 
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, dateFilter, search, pageSize]);
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, dateFilter, staffFilter, search, pageSize]);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -158,6 +185,18 @@ export default function ServiceBookings() {
       setFinalPrice("");
     } catch (err: any) {
       showToast("error", extractErrorMessage(err, "Failed to update booking"));
+    }
+  };
+
+  const handleConfirmCOD = async (bookingId: number) => {
+    if (!companySlug) return;
+    try {
+      await confirmServiceBookingCOD(companySlug, bookingId);
+      showToast("success", "Cash payment (COD) confirmed and booking completed!");
+      setSelectedBooking(null);
+      handleRefreshBooking();
+    } catch (err: any) {
+      showToast("error", extractErrorMessage(err, "Failed to confirm COD payment"));
     }
   };
 
@@ -240,6 +279,7 @@ export default function ServiceBookings() {
           <ServiceBookingFilters
             statusFilter={statusFilter} onStatusChange={setStatusFilter}
             dateFilter={dateFilter} onDateChange={setDateFilter}
+            staffFilter={staffFilter} onStaffChange={setStaffFilter} staffOptions={staffOptions}
             pageSize={pageSize} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
             hasActiveFilters={hasActiveFilters} onClear={clearFilters}
             statusOptions={STATUS_OPTIONS} pageSizeOptions={PAGE_SIZE_OPTIONS}
@@ -262,6 +302,7 @@ export default function ServiceBookings() {
                   <tr className="text-left text-xs font-semibold text-secondary uppercase tracking-wider">
                     <th className="px-4 py-3">Booking Id</th>
                     <th className="px-4 py-3">Customer</th>
+                    <th className="px-4 py-3">Specialist</th>
                     <th className="px-4 py-3">Service</th>
                     <th className="px-4 py-3">Price</th>
                     <th className="px-4 py-3">Status</th>
@@ -277,8 +318,20 @@ export default function ServiceBookings() {
                         <p className="text-xs text-gray-500">{String(b.scheduled_time).slice(0, 5)}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-gray-900 font-medium">{b.customer_name || `#${b.customer}`}</p>
+                        <p className="text-gray-900 font-medium">{b.customer_name || `Customer #${b.id}`}</p>
                         {b.customer_phone && <p className="text-xs text-gray-400">{b.customer_phone}</p>}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {b.assigned_staff ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-6 h-6 rounded-full bg-purple-100 text-[#6750A4] font-bold text-[10px] flex items-center justify-center">
+                              {b.assigned_staff.name.charAt(0)}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-800">{b.assigned_staff.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 font-medium">Any Specialist</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">{b.offering?.title || "—"}</td>
                       <td className="px-4 py-3 text-gray-700 font-medium">{Number(b.quoted_price).toLocaleString()} {b.currency}</td>
@@ -320,7 +373,7 @@ export default function ServiceBookings() {
             setFinalPrice={setFinalPrice}
             allBookings={bookings}  // optionally pass all bookings for history
             onRefresh={handleRefreshBooking}
-            
+            onConfirmCOD={() => handleConfirmCOD(selectedBooking.id)}
           />
         )}
 
@@ -339,6 +392,7 @@ export default function ServiceBookings() {
                 <ServiceBookingFilters
                   statusFilter={statusFilter} onStatusChange={setStatusFilter}
                   dateFilter={dateFilter} onDateChange={setDateFilter}
+                  staffFilter={staffFilter} onStaffChange={setStaffFilter} staffOptions={staffOptions}
                   pageSize={pageSize} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
                   hasActiveFilters={hasActiveFilters}
                   onClear={() => { clearFilters(); setShowMobileFilter(false); }}

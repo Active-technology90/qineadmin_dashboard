@@ -7,6 +7,9 @@ interface ServiceBookingFiltersProps {
   onStatusChange: (val: string) => void;
   dateFilter: string;
   onDateChange: (val: string) => void;
+  staffFilter?: string;
+  onStaffChange?: (val: string) => void;
+  staffOptions?: SelectOption[];
   pageSize: number;
   onPageSizeChange: (size: number) => void;
   hasActiveFilters: boolean;
@@ -22,6 +25,9 @@ export function ServiceBookingFilters({
   onStatusChange,
   dateFilter,
   onDateChange,
+  staffFilter = "all",
+  onStaffChange,
+  staffOptions = [],
   pageSize,
   onPageSizeChange,
   hasActiveFilters,
@@ -31,7 +37,7 @@ export function ServiceBookingFilters({
   pageSizeOptions,
 }: ServiceBookingFiltersProps) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       <CustomSelect
         value={statusFilter}
         onChange={onStatusChange}
@@ -39,6 +45,15 @@ export function ServiceBookingFilters({
         placeholder="All Statuses"
         className="w-40"
       />
+      {staffOptions.length > 0 && onStaffChange && (
+        <CustomSelect
+          value={staffFilter}
+          onChange={onStaffChange}
+          options={staffOptions}
+          placeholder="All Specialists"
+          className="w-44"
+        />
+      )}
       <input
         type="date"
         value={dateFilter}

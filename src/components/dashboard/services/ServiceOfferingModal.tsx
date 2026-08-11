@@ -30,27 +30,59 @@ interface ServiceOfferingModalProps {
   onShowToast?: (type: "success" | "error", message: string) => void;
 }
 
-// ----- Default form (unchanged) -----
-const defaultForm = {
+const defaultForm: {
+  title: string;
+  title_am: string;
+  description: string;
+  description_am: string;
+  pricing_type: "fixed" | "starting_at" | "hourly" | "custom";
+  price: string;
+  currency: string;
+  service_type: "one_off" | "recurring";
+  billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly";
+  duration_minutes: number;
+  booking_mode: "direct" | "inquiry" | "contact";
+  payment_policy: "upfront" | "post_service" | "deposit";
+  deposit_percentage: string;
+  service_category: string;
+  is_active: boolean;
+  is_featured: boolean;
+  order: number;
+  intake_form_schema: IntakeFormField[];
+} = {
   title: "",
   title_am: "",
   description: "",
   description_am: "",
-  pricing_type: "fixed" as const,
+  pricing_type: "fixed",
   price: "",
   currency: "ETB",
+  service_type: "one_off",
+  billing_cycle: "monthly",
   duration_minutes: 30,
-  booking_mode: "inquiry" as const,
-  payment_policy: "upfront" as const,
+  booking_mode: "inquiry",
+  payment_policy: "upfront",
   deposit_percentage: "0",
   service_category: "",
   is_active: true,
   is_featured: false,
   order: 0,
-  intake_form_schema: [] as IntakeFormField[],
+  intake_form_schema: [],
 };
 
 // ----- Dropdown options -----
+const serviceTypeOptions = [
+  { value: "one_off", label: "One-Off Service (e.g. Haircut, Plumbing, Auto)" },
+  { value: "recurring", label: "Recurring Subscription (e.g. Tutoring, Cleaning)" },
+];
+
+const billingCycleOptions = [
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "yearly", label: "Yearly" },
+];
+
 const pricingOptions = [
   { value: "fixed", label: "Fixed" },
   { value: "starting_at", label: "Starting At" },
@@ -133,6 +165,8 @@ export function ServiceOfferingModal({
         pricing_type: offering.pricing_type,
         price: offering.price || "",
         currency: offering.currency || "ETB",
+        service_type: (offering.service_type as any) || "one_off",
+        billing_cycle: (offering.billing_cycle as any) || "monthly",
         duration_minutes: offering.duration_minutes || 30,
         booking_mode: offering.booking_mode,
         payment_policy: offering.payment_policy,
@@ -424,9 +458,41 @@ export function ServiceOfferingModal({
                   </div>
                 </Card>
 
-                {/* Card 3: Booking */}
-                <Card icon={<Calendar size={18} />} title="Booking">
+                {/* Card 3: Booking & Contract Type */}
+                <Card icon={<Calendar size={18} />} title="Booking & Contract Type">
                   <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Service Type</label>
+                      <CustomSelect
+                        value={form.service_type}
+                        onChange={(val) =>
+                          setForm({
+                            ...form,
+                            service_type: val as typeof form.service_type,
+                          })
+                        }
+                        options={serviceTypeOptions}
+                        placeholder="Select service type..."
+                        className="w-full"
+                      />
+                    </div>
+                    {form.service_type === "recurring" && (
+                      <div>
+                        <label className={labelClass}>Billing Cycle</label>
+                        <CustomSelect
+                          value={form.billing_cycle}
+                          onChange={(val) =>
+                            setForm({
+                              ...form,
+                              billing_cycle: val as typeof form.billing_cycle,
+                            })
+                          }
+                          options={billingCycleOptions}
+                          placeholder="Select cycle..."
+                          className="w-full"
+                        />
+                      </div>
+                    )}
                     <div>
                       <label className={labelClass}>Booking Mode</label>
                       <CustomSelect

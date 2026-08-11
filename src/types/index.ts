@@ -156,6 +156,12 @@ export interface ServiceBooking {
   };
   intake_data?: Record<string, any>;
   company_slug: string; // needed for API call
+  created_at?: string;
+  updated_at?: string;
+  assigned_staff?: ServiceStaff | null;
+  company?: Company;
+  payment_status?: string;
+  payment_method?: string;
 }
 
 // ── Full detail (fetched on open) ──
@@ -693,6 +699,8 @@ export interface ServiceOffering {
   pricing_type: "fixed" | "starting_at" | "hourly" | "custom";
   price?: string | null;
   currency: string;
+  service_type?: "one_off" | "recurring";
+  billing_cycle?: "weekly" | "monthly" | "quarterly" | "yearly";
   duration_minutes?: number | null;
   booking_mode: "direct" | "inquiry" | "contact";
   payment_policy: "upfront" | "deposit" | "post_service";
@@ -771,7 +779,38 @@ export interface ServiceAddon {
   is_active: boolean;
 }
 
-export interface ServiceBooking {
+// ── Subscriptions & Recurring Contracts ──
+
+export interface ServiceSubscriptionInvoice {
+  id: number;
+  subscription: number;
+  master_order?: number | null;
+  billing_period_start: string;
+  billing_period_end: string;
+  due_date: string;
+  paid_at?: string | null;
+  amount: string;
+  currency: string;
+  status: "pending" | "paid" | "overdue" | "cancelled";
+  payment_method?: string;
+  checkout_url?: string | null;
+  receipt?: any;
+  created_at: string;
+}
+
+export interface ServiceSessionLog {
+  id: number;
+  subscription: number;
+  scheduled_date: string;
+  scheduled_time?: string | null;
+  tutor_or_staff?: number | null;
+  tutor_or_staff_name?: string;
+  status: "scheduled" | "attended" | "missed" | "cancelled_by_student" | "cancelled_by_tutor" | "rescheduled";
+  session_notes?: string;
+  created_at: string;
+}
+
+export interface ServiceSubscription {
   id: number;
   customer: number;
   customer_name?: string;
@@ -779,26 +818,20 @@ export interface ServiceBooking {
   company?: CompanyListItem;
   offering?: ServiceOffering;
   assigned_staff?: ServiceStaff | null;
-  selected_addons?: ServiceAddon[];
-  location_type?: "provider_location" | "customer_location";
-  service_address_text?: string;
-  latitude?: number | string | null;
-  longitude?: number | string | null;
-  scheduled_date: string;
-  scheduled_time: string;
-  estimated_duration?: number;
-  quoted_price: string;
-  final_price?: string | null;
+  status: "active" | "paused" | "completed" | "cancelled";
+  billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly";
+  cycle_amount: string;
   currency: string;
-  payable_amount?: string;
-  payment_status?: string;
-  payment_method?: string;
-  checkout_url?: string | null;
-  intake_data: Record<string, unknown>;
+  start_date: string;
+  end_date?: string | null;
+  next_billing_date?: string | null;
+  last_billing_date?: string | null;
+  intake_data?: Record<string, unknown>;
   customer_notes?: string;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
-  company_notes?: string;
-  master_order?: number | null;
+  admin_notes?: string;
+  invoices?: ServiceSubscriptionInvoice[];
+  latest_invoice?: ServiceSubscriptionInvoice | null;
+  session_logs?: ServiceSessionLog[];
   created_at: string;
   updated_at: string;
 }
@@ -831,4 +864,36 @@ export interface BankAccount extends BankInfo {
   verified_at?: string | null;
   created_by?: string;
   created_by_name?: string;
+}
+
+// ── Specialist Schedule & Tracking ──
+
+export interface StaffScheduleAppointment {
+  booking_id: number;
+  customer_name: string;
+  customer_phone: string;
+  service_title: string;
+  scheduled_time: string;
+  duration_minutes: number;
+  quoted_price: string;
+  currency: string;
+  status: string;
+  payment_status?: string;
+}
+
+export interface StaffScheduleResponse {
+  staff: {
+    id: number;
+    name: string;
+    role_title?: string;
+    is_online?: boolean;
+    working_days?: number[];
+    start_time?: string;
+    end_time?: string;
+  };
+  date: string;
+  weekday: number;
+  is_working_day: boolean;
+  booked_appointments: StaffScheduleAppointment[];
+  vacant_slots: string[];
 }

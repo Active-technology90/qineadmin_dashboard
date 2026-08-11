@@ -3,9 +3,9 @@ import {
   X, User, Calendar, Clock, Briefcase, FileText, CheckCircle,
   XCircle, AlertCircle, Loader2, PhoneCall, Building, Copy,
   Tag, CreditCard, History, RefreshCw, ShieldCheck, Banknote,
-  Eye, Building2,
+  Eye,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ServiceBooking, BookingAction } from "../../../types";
 
 // ─── Props (extended) ─────────────────────────────
@@ -35,6 +35,8 @@ interface ServiceBookingManageModalProps {
     receiptId: number,
     data: { status: "approved" | "rejected"; admin_notes?: string }
   ) => Promise<void>;
+  // Callback to confirm COD cash payment
+  onConfirmCOD?: () => Promise<void>;
 }
 
 // ─── Status config ────────────────────────────────
@@ -144,11 +146,13 @@ const PaymentSection = ({
   paymentStatus,
   receipt,
   onReceiptReview,
+  onConfirmCOD,
 }: {
   paymentMethod: string;
   paymentStatus: string;
   receipt?: ServiceBookingManageModalProps["receipt"];
   onReceiptReview?: ServiceBookingManageModalProps["onReceiptReview"];
+  onConfirmCOD?: ServiceBookingManageModalProps["onConfirmCOD"];
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -223,9 +227,8 @@ const PaymentSection = ({
           {/* Status badge */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Status:</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
-              paymentStatus === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
-            }`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${paymentStatus === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}>
               {paymentStatus === "paid" ? "Confirmed" : "Pending Verification"}
             </span>
           </div>
@@ -299,6 +302,23 @@ const PaymentSection = ({
       <div className="space-y-2">
         <InfoRow label="Method" value={paymentMethod} />
         <InfoRow label="Status" value={paymentStatus} />
+        {onConfirmCOD && paymentStatus !== "paid" && (
+          <button
+            onClick={async () => {
+              setSubmitting(true);
+              try {
+                await onConfirmCOD();
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+            disabled={submitting}
+            className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
+            Confirm Cash Received (COD)
+          </button>
+        )}
       </div>
     </Card>
   );
@@ -317,6 +337,7 @@ export function ServiceBookingManageModal({
   onRefresh,
   receipt = null,
   onReceiptReview,
+  onConfirmCOD,
 }: ServiceBookingManageModalProps) {
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<BookingAction | null>(null);
@@ -477,7 +498,7 @@ export function ServiceBookingManageModal({
                 </div>
                 <div className="relative pl-6 space-y-4">
                   <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200" />
-                  {timeline.map((entry, idx) => (
+                  {timeline.map((entry) => (
                     <div key={entry.id} className="relative flex items-start gap-4">
                       <div className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${entry.status === "completed" ? "bg-emerald-500 border-emerald-500" : "bg-amber-500 border-amber-500 animate-pulse"}`} />
                       <div className="flex-1">
@@ -548,13 +569,19 @@ export function ServiceBookingManageModal({
               paymentStatus={paymentStatus}
               receipt={receipt}
               onReceiptReview={onReceiptReview}
+              onConfirmCOD={onConfirmCOD}
             />
 
             {staff && (
-              <Card title="Assigned Staff" icon={User}>
+              <Card title="Assigned Specialist" icon={User}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner">{getInitials(staff.full_name || staff.username)}</div>
-                  <div><p className="font-semibold text-gray-800">{staff.full_name || staff.username}</p><p className="text-xs text-gray-500">{staff.specialization || "Staff"}</p></div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner">
+                    {getInitials(staff.name || (staff as any).username || "Staff")}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{staff.name || (staff as any).username}</p>
+                    <p className="text-xs text-gray-500">{staff.role_title || (staff as any).role || "Specialist"}</p>
+                  </div>
                 </div>
               </Card>
             )}

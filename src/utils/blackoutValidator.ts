@@ -1,5 +1,4 @@
-// ─── validators/blackoutValidator.ts ────────────────────
-import type { ValidationResult } from "./types";
+import type { ValidationResult } from "../types";
 import {
   normaliseTime,
   isValidTimeFormat,

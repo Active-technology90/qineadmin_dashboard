@@ -27,14 +27,19 @@ import type {
   PortfolioItem,
   PortfolioImage,
   AvailabilitySlot,
+  ServiceStaff,
   ServiceBooking,
+  ServiceSubscription,
+  ServiceSubscriptionInvoice,
+  ServiceSessionLog,
+  StaffScheduleResponse,
   IntakeFormField,
 } from "../types";
 
 // const API_URL = "https://backend-qine.activetechet.com/api/v1";
 
-// const API_URL = "http://localhost:8000/api/v1"; 
-const API_URL = "https://backend.elilitapp.com/api/v1";
+const API_URL = "http://localhost:8000/api/v1";
+// const API_URL = "https://backend.elilitapp.com/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -950,13 +955,20 @@ export const createStaff = (companySlug: string, data: any) =>
 export const deleteStaff = (companySlug: string, id: number) =>
   api.delete(`/services/manage/${companySlug}/staff/${id}/`);
 
+export const getManageStaffSchedule = (
+  companySlug: string,
+  staffId: number,
+  params?: { date?: string }
+) =>
+  api.get<StaffScheduleResponse>(`/services/manage/${companySlug}/staff/${staffId}/schedule/`, { params });
+
 export const getManageServiceBookings = (
   companySlug: string,
   params?: { status?: string; date?: string },
 ) =>
   api.get<ServiceBooking[]>(`/services/manage/${companySlug}/bookings/`, { params });
 
-export const getServiceBookingDetail = (companySlug: string, id: number) =>
+export const getServiceBookingDetail = (_companySlug: string, id: number) =>
   api.get<ServiceBooking>(`/services/bookings/${id}/`);
 export const updateServiceBookingStatus = (
   companySlug: string,
@@ -969,6 +981,64 @@ export const updateServiceBookingStatus = (
 ) =>
   api.patch<ServiceBooking>(
     `/services/manage/${companySlug}/bookings/${bookingId}/status/`,
+    data,
+  );
+
+export const confirmServiceBookingCOD = (companySlug: string, bookingId: number) =>
+  api.post<ServiceBooking>(`/services/manage/${companySlug}/bookings/${bookingId}/confirm-cod/`);
+
+// ── Subscriptions & Contracts Management ──
+
+export const getManageServiceSubscriptions = (
+  companySlug: string,
+  params?: { status?: string },
+) =>
+  api.get<ServiceSubscription[]>(`/services/manage/${companySlug}/subscriptions/`, { params });
+
+export const updateManageSubscriptionStatus = (
+  companySlug: string,
+  subscriptionId: number,
+  data: {
+    status: ServiceSubscription["status"];
+    admin_notes?: string;
+  },
+) =>
+  api.patch<ServiceSubscription>(
+    `/services/manage/${companySlug}/subscriptions/${subscriptionId}/status/`,
+    data,
+  );
+
+export const generateSubscriptionInvoice = (
+  companySlug: string,
+  subscriptionId: number,
+  payment_method: string = "chapa",
+) =>
+  api.post<ServiceSubscriptionInvoice>(
+    `/services/manage/${companySlug}/subscriptions/${subscriptionId}/generate-invoice/`,
+    { payment_method },
+  );
+
+export const getSubscriptionSessionLogs = (
+  companySlug: string,
+  subscriptionId: number,
+) =>
+  api.get<ServiceSessionLog[]>(
+    `/services/manage/${companySlug}/subscriptions/${subscriptionId}/sessions/`,
+  );
+
+export const createSubscriptionSessionLog = (
+  companySlug: string,
+  subscriptionId: number,
+  data: {
+    scheduled_date: string;
+    scheduled_time?: string;
+    tutor_or_staff?: number | null;
+    status: ServiceSessionLog["status"];
+    session_notes?: string;
+  },
+) =>
+  api.post<ServiceSessionLog>(
+    `/services/manage/${companySlug}/subscriptions/${subscriptionId}/sessions/`,
     data,
   );
 

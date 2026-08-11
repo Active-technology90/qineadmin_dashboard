@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Trash2, Users, UserCheck, Star, Clock, Calendar, CheckSquare } from "lucide-react";
+import { Plus, Trash2, Users, UserCheck, Star, Clock, Calendar, CheckSquare, CalendarDays } from "lucide-react";
 import { useAuth } from "../../../context/authContext";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { getManageStaff, createStaff, deleteStaff, getManageServiceOfferings } from "../../../services/api";
 import { CompanySelector } from "../company-products/CompanySelector";
+import { StaffScheduleModal } from "./StaffScheduleModal";
 import { Toast } from "../../ui/Toast";
 import { extractErrorMessage } from "../../../utils/extractErrorMessage";
 import type { ServiceStaff, ServiceOffering } from "../../../types";
@@ -43,11 +44,14 @@ export default function StaffManagement() {
   const [nameAm, setNameAm] = useState("");
   const [roleTitle, setRoleTitle] = useState("");
   const [assignedServiceIds, setAssignedServiceIds] = useState<number[]>([]);
-  const [workingDays, setWorkingDays] = useState<number[]>([0, 1, 2, 3, 4]); // Default Mon-Fri
+  const [workingDays, setWorkingDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]); // Default All 7 days
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [isOnline, setIsOnline] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Schedule modal state
+  const [scheduleStaff, setScheduleStaff] = useState<ServiceStaff | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!companySlug) return;
@@ -103,7 +107,7 @@ export default function StaffManagement() {
       setNameAm("");
       setRoleTitle("");
       setAssignedServiceIds([]);
-      setWorkingDays([0, 1, 2, 3, 4]);
+      setWorkingDays([0, 1, 2, 3, 4, 5, 6]);
       setToast({ type: "success", message: "Specialist added successfully!" });
       fetchData();
     } catch (err: any) {
@@ -131,7 +135,14 @@ export default function StaffManagement() {
         <CompanySelector
           companies={serviceCompanies}
           isLoading={isLoadingCompanies}
-          onSelectCompany={(c) => switchCompany(c.slug)}
+          onSelect={(slug: string, name: string) => {
+            const membership = user?.memberships?.find(
+              (m: any) => m.company_slug === slug,
+            );
+            const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+            switchCompany({ slug, name, role });
+          }}
+          onBack={clearCompany}
         />
       </div>
     );
@@ -139,7 +150,7 @@ export default function StaffManagement() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      <Toast toast={toast} />
 
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -361,19 +372,39 @@ export default function StaffManagement() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleDelete(member.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors self-end md:self-center"
-                    title="Remove staff member"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2 self-end md:self-center">
+                    <button
+                      onClick={() => setScheduleStaff(member)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-purple-50 text-[#6750A4] hover:bg-[#6750A4] hover:text-white rounded-lg transition-all shadow-sm"
+                      title="View daily schedule & bookings"
+                    >
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      Schedule & Bookings
+                    </button>
+                    <button
+                      onClick={() => handleDelete(member.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Remove staff member"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Staff Daily Schedule Modal */}
+      {scheduleStaff && (
+        <StaffScheduleModal
+          isOpen={!!scheduleStaff}
+          staff={scheduleStaff}
+          companySlug={companySlug!}
+          onClose={() => setScheduleStaff(null)}
+        />
+      )}
     </div>
   );
 }
