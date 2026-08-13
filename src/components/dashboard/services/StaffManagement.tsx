@@ -844,7 +844,7 @@ const handleEditSuccess = async () => {
       ) : null}
 
       {/* Main two‑column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] gap-6">
         {/* Form panel */}
         <div
           ref={formPanelRef}
