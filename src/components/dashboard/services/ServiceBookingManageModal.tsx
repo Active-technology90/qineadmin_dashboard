@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Banknote,
   Eye,
- 
   ZoomIn,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -586,9 +585,10 @@ export function ServiceBookingManageModal({
   booking: initialBooking,
   onClose,
   onStatusUpdate,
- 
+  companyNotes,
+  setCompanyNotes,
   finalPrice,
-
+  setFinalPrice,
   allBookings = [],
   onRefresh,
 }: {
@@ -626,29 +626,29 @@ export function ServiceBookingManageModal({
 
   const timeline = buildBookingTimeline(initialBooking);
 
- const allowedActions: BookingAction[] = useMemo(() => {
-  const statusToAction: Record<string, BookingAction> = {
-    confirmed: "confirm",
-    in_progress: "start",
-    completed: "complete",
-    cancelled: "cancel",
-    no_show: "no_show",
-  };
-  let actions = (ALLOWED_TRANSITIONS[initialBooking.status] || [])
-    .map((s) => statusToAction[s])
-    .filter(Boolean) as BookingAction[];
+  const allowedActions: BookingAction[] = useMemo(() => {
+    const statusToAction: Record<string, BookingAction> = {
+      confirmed: "confirm",
+      in_progress: "start",
+      completed: "complete",
+      cancelled: "cancel",
+      no_show: "no_show",
+    };
+    let actions = (ALLOWED_TRANSITIONS[initialBooking.status] || [])
+      .map((s) => statusToAction[s])
+      .filter(Boolean) as BookingAction[];
 
-  // HIDE the manual "Complete" button for COD that isn't paid yet
-  if (
-    paymentMethod === "cod" &&
-    paymentStatus !== "paid" &&
-    initialBooking.status === "in_progress"
-  ) {
-    actions = actions.filter((a) => a !== "complete");
-  }
+    // HIDE the manual "Complete" button for COD that isn't paid yet
+    if (
+      paymentMethod === "cod" &&
+      paymentStatus !== "paid" &&
+      initialBooking.status === "in_progress"
+    ) {
+      actions = actions.filter((a) => a !== "complete");
+    }
 
-  return actions;
-}, [initialBooking.status, paymentMethod, paymentStatus]); // ← only one ");" here);
+    return actions;
+  }, [initialBooking.status, paymentMethod, paymentStatus]);
 
   const previousBookings = useMemo(() => {
     if (!allBookings.length || !customerPhone || !company?.id) return [];
@@ -707,12 +707,11 @@ export function ServiceBookingManageModal({
       setConfirmAction(null);
     }
   }, [confirmAction, onStatusUpdate, initialBooking]);
-const handleCODComplete = useCallback(async () => {
-  // The COD payment is already confirmed, now complete the booking
-  await onStatusUpdate(initialBooking, "completed");
-}, [onStatusUpdate, initialBooking]);
 
-
+  const handleCODComplete = useCallback(async () => {
+    // The COD payment is already confirmed, now complete the booking
+    await onStatusUpdate(initialBooking, "completed");
+  }, [onStatusUpdate, initialBooking]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -732,7 +731,7 @@ const handleCODComplete = useCallback(async () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -746,13 +745,13 @@ const handleCODComplete = useCallback(async () => {
         initial="hidden"
         animate="visible"
         exit="hidden"
-        className="relative bg-gradient-to-br from-white via-white to-gray-50/50 w-full max-w-7xl max-h-[90vh] rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white/20"
+        className="relative bg-gradient-to-br from-white via-white to-gray-50/50 w-full max-w-7xl max-h-[92vh] rounded-2xl sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#6750A4]/10 backdrop-blur-md border-b border-[#6750A4]/15 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-20 shadow-sm">
+        <div className="bg-[#6750A4]/10 backdrop-blur-md border-b border-[#6750A4]/15 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-20 shadow-sm">
           <div className="flex justify-between items-start gap-2">
-            <div className="mt-1.5">
+            <div className="mt-1.5 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#6750A4] bg-clip-text text-transparent tracking-tight">
                   Booking #{initialBooking.id}
@@ -786,27 +785,31 @@ const handleCODComplete = useCallback(async () => {
                 </span>
                 <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
                   <Building className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />{" "}
-                  <span className="font-medium text-[10px] sm:text-sm">
+                  <span className="font-medium text-[10px] sm:text-sm truncate max-w-[120px] sm:max-w-[250px]">
                     {company?.name}
                   </span>
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="group flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 transition disabled:opacity-60 shadow-sm"
+                className="group flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 transition disabled:opacity-60 shadow-sm"
+                aria-label="Refresh"
+                title="Refresh booking data"
               >
                 {refreshing ? (
                   <Loader2 className="h-4 w-4 text-[#6750A4] animate-spin" />
                 ) : (
                   <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4]" />
                 )}
+                <span className="hidden sm:inline text-sm font-medium text-gray-700 ml-1">Refresh</span>
               </button>
               <button
                 onClick={onClose}
                 className="p-2 sm:p-3 rounded-xl bg-white border shadow-sm hover:bg-rose-50 hover:border-rose-200 transition"
+                aria-label="Close modal"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               </button>
@@ -815,7 +818,7 @@ const handleCODComplete = useCallback(async () => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -824,11 +827,11 @@ const handleCODComplete = useCallback(async () => {
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner">
                     {getInitials(customer)}
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{customer}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">{customer}</p>
                     <div className="flex items-center gap-2 mt-1 bg-green-50 text-green-700 px-2 py-1 rounded-lg text-sm">
-                      <PhoneCall className="h-3.5 w-3.5" />
-                      <span>{customerPhone}</span>
+                      <PhoneCall className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{customerPhone}</span>
                       <CopyButton text={customerPhone} />
                     </div>
                   </div>
@@ -839,13 +842,13 @@ const handleCODComplete = useCallback(async () => {
                   {company?.logo && (
                     <img
                       src={company.logo}
-                      className="w-10 h-10 rounded-lg object-cover border border-gray-100"
+                      className="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
                     />
                   )}
-                  <div>
-                    <p className="font-bold text-gray-900">{company?.name}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">{company?.name}</p>
                     {company?.sub_category_name && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 truncate">
                         {company.sub_category_name}
                       </p>
                     )}
@@ -859,12 +862,12 @@ const handleCODComplete = useCallback(async () => {
                   {offering.primary_image && (
                     <img
                       src={offering.primary_image}
-                      className="w-20 h-20 rounded-xl object-cover border shadow-sm"
+                      className="w-20 h-20 rounded-xl object-cover border shadow-sm shrink-0"
                     />
                   )}
-                  <div>
-                    <p className="font-bold text-gray-900">{offering.title}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">{offering.title}</p>
+                    <p className="text-sm text-gray-500 truncate">
                       {offering.service_category || "Uncategorized"}
                     </p>
                     <div className="flex gap-3 mt-2 text-xs">
@@ -943,12 +946,12 @@ const handleCODComplete = useCallback(async () => {
                   {Object.entries(intakeData).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex justify-between py-2 text-sm"
+                      className="flex justify-between py-2 text-sm gap-4"
                     >
                       <span className="text-gray-500 capitalize">
                         {key.replace(/_/g, " ")}
                       </span>
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 text-right break-words">
                         {String(value)}
                       </span>
                     </div>
@@ -984,7 +987,7 @@ const handleCODComplete = useCallback(async () => {
                           #{b.id}
                         </span>
                         {b.company?.name && (
-                          <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
+                          <span className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[200px]">
                             {b.company.name}
                           </span>
                         )}
@@ -996,7 +999,7 @@ const handleCODComplete = useCallback(async () => {
                           })}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 shrink-0">
                         <StatusBadge status={b.status} />
                         <span className="text-xs text-[#6750A4] opacity-0 group-hover:opacity-100 transition">
                           View →
@@ -1043,22 +1046,50 @@ const handleCODComplete = useCallback(async () => {
                     </span>
                   </div>
                 </div>
+                {/* Editable Final Price */}
+                {/* <div className="mt-4">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1">
+                    Update Final Price
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={finalPrice}
+                      onChange={(e) => setFinalPrice(e.target.value)}
+                      className="flex-1 min-w-0 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm font-semibold text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div> */}
               </div>
             </motion.div>
 
+            {/* Company Notes */}
+            {/* <Card title="Company Notes" icon={FileText}>
+              <textarea
+                value={companyNotes}
+                onChange={(e) => setCompanyNotes(e.target.value)}
+                rows={3}
+                placeholder="Add internal notes about this booking..."
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4]/30 transition resize-none bg-gray-50/50"
+              />
+            </Card> */}
+
             {/* Payment & Receipt Review (Enhanced with COD support) */}
-          <ReceiptReviewCard
-  receipt={receipt}
-  paymentMethod={paymentMethod}
-  paymentStatus={paymentStatus}
-  onUpdate={async () => { if (onRefresh) await onRefresh(); }}
-  receiptHistory={receiptHistory}
-  onPreviewImage={setPreviewImage}
-  bookingStatus={initialBooking.status}
-  bookingId={initialBooking.id}
-  companySlug={company?.slug || ""}
-  onCODComplete={handleCODComplete}   // <<< NEW
-/>
+            <ReceiptReviewCard
+              receipt={receipt}
+              paymentMethod={paymentMethod}
+              paymentStatus={paymentStatus}
+              onUpdate={async () => {
+                if (onRefresh) await onRefresh();
+              }}
+              receiptHistory={receiptHistory}
+              onPreviewImage={setPreviewImage}
+              bookingStatus={initialBooking.status}
+              bookingId={initialBooking.id}
+              companySlug={company?.slug || ""}
+              onCODComplete={handleCODComplete} // <<< NEW
+            />
 
             {/* Assigned Staff (fixed to use `name` and `role_title`) */}
             {staff && (
@@ -1067,16 +1098,16 @@ const handleCODComplete = useCallback(async () => {
                   {staff.avatar ? (
                     <img
                       src={staff.avatar}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-100 shadow-sm"
+                      className="w-10 h-10 rounded-full object-cover border border-gray-100 shadow-sm shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner shrink-0">
                       {getInitials(staff.name)}
                     </div>
                   )}
-                  <div>
-                    <p className="font-semibold text-gray-800">{staff.name}</p>
-                    <p className="text-xs text-gray-500">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-800 truncate">{staff.name}</p>
+                    <p className="text-xs text-gray-500 truncate">
                       {staff.role_title || "Staff"}
                     </p>
                   </div>
@@ -1107,7 +1138,9 @@ const handleCODComplete = useCallback(async () => {
                     {action === "no_show" && (
                       <AlertCircle className="h-4 w-4" />
                     )}
-                    {action.replace(/_/g, " ")}
+                    <span className="capitalize whitespace-nowrap">
+                      {action.replace(/_/g, " ")}
+                    </span>
                   </motion.button>
                 ))}
                 {allowedActions.length === 0 && (
