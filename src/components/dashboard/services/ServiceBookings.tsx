@@ -294,15 +294,15 @@ export default function ServiceBookings() {
 
             {/* Actions */}
             {isSuperAdmin && (
-              <div className="w-full sm:w-auto">
+              <div className="flex w-full justify-start sm:w-auto sm:justify-end">
                 <button
                   type="button"
                   onClick={clearCompany}
+                  aria-label={`Switch company from ${companyName}`}
                   className="
-            inline-flex min-h-10 w-full sm:w-auto
-            items-center justify-center gap-2
-            rounded-xl border border-gray-200
-            bg-white px-3.5 py-2
+            inline-flex min-h-10 w-auto items-center justify-center gap-2
+            rounded-xl border border-gray-200 bg-white
+            px-3.5 py-2
             text-sm font-medium text-gray-700
             shadow-sm
             transition-all duration-200
@@ -313,8 +313,8 @@ export default function ServiceBookings() {
             focus:outline-none
             focus:ring-2
             focus:ring-[#6750A4]/20
+            whitespace-nowrap
           "
-                  aria-label={`Switch company from ${companyName}`}
                 >
                   <Repeat className="h-4 w-4 shrink-0" />
                   <span>Switch Company</span>
@@ -434,10 +434,14 @@ export default function ServiceBookings() {
                             <span className="w-6 h-6 rounded-full bg-purple-100 text-[#6750A4] font-bold text-[10px] flex items-center justify-center">
                               {b.assigned_staff.name.charAt(0)}
                             </span>
-                            <span className="text-xs font-semibold text-gray-800">{b.assigned_staff.name}</span>
+                            <span className="text-xs font-semibold text-gray-800">
+                              {b.assigned_staff.name}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 font-medium">Any Specialist</span>
+                          <span className="text-xs text-gray-400 font-medium">
+                            Any Specialist
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">

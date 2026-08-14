@@ -121,20 +121,32 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-function generateFieldName(label: string, existingNames: Set<string>): string {
+function generateFieldName(
+  label: string,
+  existingNames: Set<string>
+): string {
   let base = label
-    .toLowerCase()
     .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^\w]/g, "")
+    .toLowerCase()
+    .replace(/['’]/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
     .replace(/_+/g, "_");
-  if (!base || /^\d/.test(base)) base = "field";
+
+  if (!base || /^\d/.test(base)) {
+    base = "field";
+  }
+
   let candidate = base;
   let counter = 1;
+
   while (existingNames.has(candidate)) {
     candidate = `${base}_${counter}`;
     counter++;
   }
+
+  existingNames.add(candidate);
+
   return candidate;
 }
 

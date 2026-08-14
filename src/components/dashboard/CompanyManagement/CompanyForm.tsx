@@ -49,6 +49,9 @@ export interface CompanyFormData {
   insurance_document_file?: File | null;
   phone?: string;
   email?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  license?: string | null;
 }
 
 interface CompanyFormProps {
@@ -83,6 +86,7 @@ export default function CompanyForm({
   editingSlug,
   currentStep = 0,
   onSubmit,
+  headCompanyName,
 }: CompanyFormProps) {
   const filteredSubcategories = subcategories.filter(
     (sub) => sub.category === formData.category,
@@ -104,6 +108,16 @@ export default function CompanyForm({
       setFormData(prev => ({ ...prev, registration_type: regType }));
     }
   }, [formData.business_type, formData.registration_type, setFormData]);
+
+  // Map legacy phone/email to contact_phone/contact_email for API compatibility
+  useEffect(() => {
+    if (!formData.contact_phone && formData.phone) {
+      setFormData(prev => ({ ...prev, contact_phone: prev.phone }));
+    }
+    if (!formData.contact_email && formData.email) {
+      setFormData(prev => ({ ...prev, contact_email: prev.email }));
+    }
+  }, [formData.phone, formData.email, formData.contact_phone, formData.contact_email, setFormData]);
 
   // const fileToBase64 = (file: File): Promise<string> => {
   //   return new Promise((resolve, reject) => {
@@ -354,6 +368,28 @@ export default function CompanyForm({
           </div>
         </div>
 
+        {/* Head Company (Optional) */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Head Company (Optional)
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="Enter head company ID"
+              value={formData.head_company ?? ""}
+              onChange={(e) => setFormData({ ...formData, head_company: e.target.value ? Number(e.target.value) : null })}
+              className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+            />
+            {headCompanyName && (
+              <span className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg whitespace-nowrap">
+               {headCompanyName}
+              </span>
+            )}
+          </div>
+          {formErrors.head_company && <p className="text-red-500 text-xs mt-1">{formErrors.head_company}</p>}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -408,6 +444,20 @@ export default function CompanyForm({
           />
         </div>
 
+        {/* Amharic Description */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description (Amharic)
+          </label>
+          <textarea
+            placeholder="Enter company description in Amharic"
+            value={formData.description_am}
+            onChange={(e) => setFormData({ ...formData, description_am: e.target.value })}
+            rows={3}
+            className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
+          />
+        </div>
+
         {/* Active & Featured Toggles */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
           <div className="flex items-center gap-3">
@@ -434,6 +484,20 @@ export default function CompanyForm({
               <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
             </label>
           </div>
+        </div>
+
+        {/* Supports Table Service Toggle */}
+        <div className="flex items-center gap-3 mt-2">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={formData.supports_table_service}
+              onChange={(e) => setFormData({ ...formData, supports_table_service: e.target.checked })}
+            />
+            <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+            <span className="ml-3 text-sm font-medium text-gray-700">Supports Table Service</span>
+          </label>
         </div>
       </div>
 
@@ -589,6 +653,20 @@ export default function CompanyForm({
         {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
       </div>
 
+      {/* Amharic Address */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Address (Amharic)
+        </label>
+        <input
+          type="text"
+          placeholder="Enter address in Amharic"
+          value={formData.address_am}
+          onChange={(e) => setFormData({ ...formData, address_am: e.target.value })}
+          className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -597,12 +675,12 @@ export default function CompanyForm({
           <input
             type="tel"
             placeholder="+251 911 234 567"
-            value={formData.phone || ""}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.phone ? "border-red-500" : "border-gray-300"
+            value={formData.contact_phone || formData.phone || ""}
+            onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value, phone: e.target.value })}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.contact_phone || formErrors.phone ? "border-red-500" : "border-gray-300"
               } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
+          {(formErrors.contact_phone || formErrors.phone) && <p className="text-red-500 text-xs mt-1">{formErrors.contact_phone || formErrors.phone}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -611,12 +689,44 @@ export default function CompanyForm({
           <input
             type="email"
             placeholder="info@company.com"
-            value={formData.email || ""}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.email ? "border-red-500" : "border-gray-300"
+            value={formData.contact_email || formData.email || ""}
+            onChange={(e) => setFormData({ ...formData, contact_email: e.target.value, email: e.target.value })}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.contact_email || formErrors.email ? "border-red-500" : "border-gray-300"
               } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
+          {(formErrors.contact_email || formErrors.email) && <p className="text-red-500 text-xs mt-1">{formErrors.contact_email || formErrors.email}</p>}
+        </div>
+      </div>
+
+      {/* Minimum Order Total & Delivery Fee Per KM */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Minimum Order Total
+          </label>
+          <input
+            type="text"
+            placeholder="0.00"
+            value={formData.minimum_order_total}
+            onChange={(e) => setFormData({ ...formData, minimum_order_total: e.target.value })}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.minimum_order_total ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+          />
+          {formErrors.minimum_order_total && <p className="text-red-500 text-xs mt-1">{formErrors.minimum_order_total}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Delivery Fee Per KM
+          </label>
+          <input
+            type="text"
+            placeholder="0.00"
+            value={formData.delivery_fee_per_km}
+            onChange={(e) => setFormData({ ...formData, delivery_fee_per_km: e.target.value })}
+            className={`w-full border rounded-xl p-3 text-sm ${formErrors.delivery_fee_per_km ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+          />
+          {formErrors.delivery_fee_per_km && <p className="text-red-500 text-xs mt-1">{formErrors.delivery_fee_per_km}</p>}
         </div>
       </div>
 
@@ -869,6 +979,26 @@ export default function CompanyForm({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   License Document <span className="text-red-500">*</span>
                 </label>
+                {/* Existing license URL display */}
+                {formData.license && !formData.license_document && (
+                  <div className="bg-blue-50 border border-blue-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">Existing license</p>
+                      <a href={formData.license} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">View file</a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, license: null }))}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      title="Remove existing license"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
                 {formData.license_document ? (
                   <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
                     <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -1211,8 +1341,8 @@ export default function CompanyForm({
             </span>
             {formData.registration_type === "vendor" && (
               <>
-                <span className={`flex items-center gap-1 ${formData.license_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.license_document ? '✅' : '⬜'} License
+                <span className={`flex items-center gap-1 ${formData.license_document || formData.license ? 'text-emerald-600' : 'text-gray-400'}`}>
+                  {formData.license_document || formData.license ? '✅' : '⬜'} License
                 </span>
                 <span className={`flex items-center gap-1 ${formData.tin_document ? 'text-emerald-600' : 'text-gray-400'}`}>
                   {formData.tin_document ? '✅' : '⬜'} TIN
@@ -1310,8 +1440,8 @@ export default function CompanyForm({
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="col-span-2"><p className="text-[9px] text-gray-400 uppercase tracking-wider">Address</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.address || '—'}</p></div>
-          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Phone</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.phone || '—'}</p></div>
-          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Email</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.email || '—'}</p></div>
+          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Phone</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.contact_phone || formData.phone || '—'}</p></div>
+          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Email</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.contact_email || formData.email || '—'}</p></div>
         </div>
       </div>
 
