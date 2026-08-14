@@ -103,6 +103,7 @@ export default function SuperadminSubscriptions() {
     can_ad_companies_list: false,
     can_ad_home_page: false,
     max_featured_products: 0,
+    max_products: 15,
     is_active: true,
   });
 
@@ -186,6 +187,7 @@ export default function SuperadminSubscriptions() {
       can_ad_companies_list: plan.can_ad_companies_list,
       can_ad_home_page: plan.can_ad_home_page,
       max_featured_products: plan.max_featured_products,
+      max_products: plan.max_products !== undefined ? plan.max_products : 15,
       is_active: plan.is_active,
     });
     setIsModalOpen(true);
@@ -201,6 +203,7 @@ export default function SuperadminSubscriptions() {
       can_ad_companies_list: false,
       can_ad_home_page: false,
       max_featured_products: 0,
+      max_products: 15,
       is_active: true,
     });
     setIsModalOpen(true);
@@ -269,10 +272,11 @@ export default function SuperadminSubscriptions() {
             <button
               onClick={() => {
                 // Export plans data
-                const headers = ['Plan Name', 'Price', 'Featured Limit', 'Detail Ad', 'List Ad', 'Home Ad', 'Status', 'Subscribers'];
+                const headers = ['Plan Name', 'Price', 'Public Products Limit', 'Featured Limit', 'Detail Ad', 'List Ad', 'Home Ad', 'Status', 'Subscribers'];
                 const rows = plans.map(p => [
                   p.name,
                   p.price,
+                  p.max_products === -1 ? 'Unlimited' : (p.max_products ?? 15),
                   p.max_featured_products === -1 ? 'Unlimited' : p.max_featured_products,
                   p.can_ad_company_detail ? 'Yes' : 'No',
                   p.can_ad_companies_list ? 'Yes' : 'No',
@@ -325,6 +329,12 @@ export default function SuperadminSubscriptions() {
                 <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden xs:table-cell">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Public Limit
+                  </span>
+                </th>
+                <th className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-left text-[9px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap hidden xs:table-cell">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                     Featured Limit
                   </span>
                 </th>
@@ -365,7 +375,7 @@ export default function SuperadminSubscriptions() {
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : plans.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-12 text-center">
+                  <td colSpan={9} className="p-12 text-center">
                     <div className="flex flex-col items-center">
                       <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                         <CreditCard className="h-8 w-8 text-gray-400" />
@@ -381,12 +391,10 @@ export default function SuperadminSubscriptions() {
                     <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-bold text-gray-900">
                       <div className="flex items-center gap-2">
                         {plan.name}
-                        {/* <span className="text-[10px] bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-300 shadow-sm">
-                        {companySubscriptions.filter(s => s.plan?.id === plan.id).length}
-                      </span> */}
                       </div>
                     </td>
                     <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 font-medium">{plan.price}</td>
+                    <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell font-medium text-secondary">{plan.max_products === -1 ? 'Unlimited' : (plan.max_products ?? 15)}</td>
                     <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 hidden xs:table-cell">{plan.max_featured_products === -1 ? 'Unlimited' : plan.max_featured_products}</td>
                     <td className="p-4 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 text-center hidden sm:table-cell">
                       {plan.can_ad_company_detail ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto" /> : <XCircle className="w-4 h-4 text-gray-300 mx-auto" />}
@@ -644,20 +652,32 @@ export default function SuperadminSubscriptions() {
                 </div>
                 </div>
                
-<div className="flex flex-row" >
-   <div className="flex-1 mr-2">
-                  <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Max Featured Products</label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.max_featured_products}
-                    onChange={(e) => setFormData({ ...formData, max_featured_products: parseInt(e.target.value, 10) })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
-                    help-text="Use -1 for unlimited"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Use 0 for none</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Max Public Products</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.max_products}
+                      onChange={(e) => setFormData({ ...formData, max_products: parseInt(e.target.value, 10) })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Use -1 for unlimited</p>
                   </div>
-                   <div className=" flex-1 ml-2 pt-4 border-t mt-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-secondary/80 mb-1">Max Featured Products</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.max_featured_products}
+                      onChange={(e) => setFormData({ ...formData, max_featured_products: parseInt(e.target.value, 10) })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Use 0 for none, -1 for unlimited</p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -668,7 +688,6 @@ export default function SuperadminSubscriptions() {
                     <span className="text-xs sm:text-sm font-bold text-secondary">Plan is Active</span>
                   </label>
                 </div>
-</div>
                
 
                 <div className="space-y-3 pt-2">

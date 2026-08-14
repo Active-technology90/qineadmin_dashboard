@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Loader2, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Star, MessageSquare } from 'lucide-react';
+import { X, Loader2, AlertCircle, AlertTriangle, ChevronRight, ChevronLeft, CheckCircle, Star, MessageSquare } from 'lucide-react';
 import { ImageGallery } from './ImageGallery';
 import { getCompanyProductDetail, getMySubscription } from '../../../services/api';
 import type { ProductImage } from '../../../types';
@@ -102,7 +102,12 @@ export function ProductModal({
 
   const maxFeatured = activeSub?.allowed_max_featured_products || 0;
   const currentFeatured = activeSub?.current_featured_products || 0;
-  const canFeatureMore = currentFeatured < maxFeatured;
+  const canFeatureMore = maxFeatured === -1 || currentFeatured < maxFeatured;
+
+  const maxProducts = activeSub?.allowed_max_products ?? 15;
+  const currentProducts = activeSub?.current_products || 0;
+  const canAddMoreActive = maxProducts === -1 || currentProducts < maxProducts;
+  const isProductLimitReached = !editingProduct && !canAddMoreActive;
 
 
   const {
@@ -334,6 +339,15 @@ export function ProductModal({
           <div className="transition-all duration-300 ease-out">
             {step === 'details' ? (
               <form id="product-details-form" onSubmit={handleSubmit(onSubmitDetails)} className="space-y-4 sm:space-y-5">
+                {isProductLimitReached && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs sm:text-sm text-amber-800 flex items-start gap-2.5 shadow-sm">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold text-amber-900">Public Product Quota Reached:</span> You have used <strong>{currentProducts}/{maxProducts}</strong> active products allowed by your subscription plan. You can still save this product as an inactive draft, or upgrade your plan in <strong>Billing & Subscriptions</strong> to publish more.
+                    </div>
+                  </div>
+                )}
+
                 {/* SKU – disabled when editing or basic read-only */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -518,8 +532,32 @@ export function ProductModal({
                   </select>
                 </div>
 
+                {/* Active / Public Status */}
+                <div className="flex flex-col pt-2 border-t border-gray-100">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_active"
+                      {...register('is_active')}
+                      disabled={isSubmitting || isReadOnlyBasic || (!canAddMoreActive && !editingProduct?.is_active)}
+                      className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary focus:ring-2 disabled:opacity-50"
+                    />
+                    <label htmlFor="is_active" className="ml-2 text-sm font-medium text-gray-900 disabled:opacity-50 flex items-center gap-2">
+                      Active (Publicly listed in catalog)
+                      {!canAddMoreActive && !editingProduct?.is_active && (
+                        <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">Quota Reached ({currentProducts}/{maxProducts})</span>
+                      )}
+                    </label>
+                  </div>
+                  {activeSub && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Active public products: {currentProducts} / {maxProducts === -1 ? 'Unlimited' : maxProducts} used
+                    </p>
+                  )}
+                </div>
+
                 {/* Featured */}
-                <div className="flex flex-col pt-2">
+                <div className="flex flex-col pt-1">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -531,13 +569,13 @@ export function ProductModal({
                     <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-gray-900 disabled:opacity-50 flex items-center gap-2">
                       Featured Product
                       {!canFeatureMore && !editingProduct?.is_featured && (
-                        <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Limit Reached ({currentFeatured}/{maxFeatured})</span>
+                        <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">Limit Reached ({currentFeatured}/{maxFeatured})</span>
                       )}
                     </label>
                   </div>
                   {activeSub && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Featured products: {currentFeatured} / {maxFeatured} used
+                      Featured products: {currentFeatured} / {maxFeatured === -1 ? 'Unlimited' : maxFeatured} used
                     </p>
                   )}
                 </div>

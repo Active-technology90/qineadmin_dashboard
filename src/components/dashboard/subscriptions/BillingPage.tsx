@@ -59,6 +59,7 @@ interface SubscriptionPlan {
   can_ad_companies_list: boolean;
   can_ad_home_page: boolean;
   max_featured_products: number;
+  max_products: number;
 }
 
 interface ActiveSubscription {
@@ -70,7 +71,9 @@ interface ActiveSubscription {
   is_expired: boolean;
   days_remaining: number | null;
   allowed_max_featured_products: number;
+  allowed_max_products: number;
   current_featured_products?: number;
+  current_products?: number;
 }
 
 type PlanAction = "current" | "upgrade" | "downgrade" | "free_locked" | "subscribe";
@@ -314,26 +317,57 @@ export default function BillingPage() {
             )}
           </div>
           
-          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 min-w-[250px]">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                <Package className="w-4 h-4" /> Featured Products
-              </span>
-              <span className="text-sm font-bold text-gray-900">
-                {activeSub?.current_featured_products || 0} / {activeSub?.allowed_max_featured_products || 0}
-              </span>
+          <div className="grid sm:grid-cols-2 gap-4 w-full md:w-auto">
+            {/* Public / Active Products Limit */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 min-w-[220px]">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <Package className="w-4 h-4" /> Public Products
+                </span>
+                <span className="text-sm font-bold text-gray-900">
+                  {activeSub?.current_products || 0} / {activeSub?.allowed_max_products === -1 ? 'Unlimited' : (activeSub?.allowed_max_products || 0)}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-2 rounded-full ${
+                    activeSub?.allowed_max_products !== -1 && (activeSub?.current_products || 0) >= (activeSub?.allowed_max_products || 0) 
+                      ? 'bg-red-500' 
+                      : 'bg-secondary'
+                  }`}
+                  style={{ 
+                    width: activeSub?.allowed_max_products === -1 
+                      ? '100%' 
+                      : `${Math.min(100, ((activeSub?.current_products || 0) / Math.max(1, activeSub?.allowed_max_products || 1)) * 100)}%` 
+                  }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div 
-                className={`h-2 rounded-full ${
-                  (activeSub?.current_featured_products || 0) >= (activeSub?.allowed_max_featured_products || 0) 
-                    ? 'bg-red-500' 
-                    : 'bg-secondary'
-                }`}
-                style={{ 
-                  width: `${Math.min(100, ((activeSub?.current_featured_products || 0) / Math.max(1, activeSub?.allowed_max_featured_products || 1)) * 100)}%` 
-                }}
-              ></div>
+
+            {/* Featured Products Limit */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 min-w-[220px]">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" /> Featured Products
+                </span>
+                <span className="text-sm font-bold text-gray-900">
+                  {activeSub?.current_featured_products || 0} / {activeSub?.allowed_max_featured_products === -1 ? 'Unlimited' : (activeSub?.allowed_max_featured_products || 0)}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-2 rounded-full ${
+                    activeSub?.allowed_max_featured_products !== -1 && (activeSub?.current_featured_products || 0) >= (activeSub?.allowed_max_featured_products || 0) 
+                      ? 'bg-red-500' 
+                      : 'bg-amber-500'
+                  }`}
+                  style={{ 
+                    width: activeSub?.allowed_max_featured_products === -1 
+                      ? '100%' 
+                      : `${Math.min(100, ((activeSub?.current_featured_products || 0) / Math.max(1, activeSub?.allowed_max_featured_products || 1)) * 100)}%` 
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -409,6 +443,14 @@ export default function BillingPage() {
                 </div>
 
                 <ul className="space-y-4 mb-8 flex-1">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span className="text-sm text-gray-700">
+                      {plan.max_products === -1 
+                        ? "Unlimited public products" 
+                        : `Post up to ${plan.max_products ?? 15} public products`}
+                    </span>
+                  </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <span className="text-sm text-gray-700">
