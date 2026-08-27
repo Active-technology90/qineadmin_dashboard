@@ -40,6 +40,9 @@ import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 // ----------------------------------------------------------------------
 interface Ad {
   id: number;
+  company: number;
+  company_name: string;
+  company_slug: string;
   title: string;
   image: string;
   target_link?: string;
@@ -156,35 +159,35 @@ const Button: React.FC<{
   className = "",
   disabled = false,
 }) => {
-  const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
-  const variants = {
-    primary:
-      "bg-secondary  text-white shadow-md hover:shadow-lg focus:ring-[#674FA3]",
-    secondary:
-      "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
-    outline:
-      "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
-    ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    const base =
+      "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed";
+    const variants = {
+      primary:
+        "bg-secondary  text-white shadow-md hover:shadow-lg focus:ring-[#674FA3]",
+      secondary:
+        "bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500",
+      outline:
+        "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+      ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
+      danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    };
+    const sizes = {
+      sm: "px-3 py-1.5 text-sm",
+      md: "px-4 py-2 text-sm",
+      lg: "px-5 py-2.5 text-base",
+    };
+    return (
+      <button
+        type={type}
+        onClick={onClick}
+        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+        disabled={disabled || isLoading}
+      >
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {children}
+      </button>
+    );
   };
-  const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-5 py-2.5 text-base",
-  };
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
-    >
-      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-      {children}
-    </button>
-  );
-};
 
 const Input: React.FC<{
   label?: string;
@@ -203,23 +206,22 @@ const Input: React.FC<{
   required,
   error,
 }) => (
-  <div className="space-y-1.5">
-    {label && (
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-    )}
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={required}
-      className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary  transition-all ${
-        error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
-      }`}
-    />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-  </div>
-);
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">{label}</label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className={`w-full px-4 py-2.5 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary  transition-all ${error ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+          }`}
+      />
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
 
 const Badge: React.FC<{
   children: React.ReactNode;
@@ -276,13 +278,13 @@ const ImageUploader: React.FC<{
 }> = ({ onFileChange, previewUrl, existingImage }) => {
   const [preview, setPreview] = useState<string | null>(
     previewUrl ||
-      (existingImage
-        ? existingImage.startsWith("http") || existingImage.startsWith("blob:")
-          ? existingImage
-          : existingImage.startsWith("/")
-            ? `https://backend-qine.activetechet.com${existingImage}`
-            : `https://backend-qine.activetechet.com/media/${existingImage}`
-        : null),
+    (existingImage
+      ? existingImage.startsWith("http") || existingImage.startsWith("blob:")
+        ? existingImage
+        : existingImage.startsWith("/")
+          ? `https://backend.elilitapp.com${existingImage}`
+          : `https://backend.elilitapp.com/media/${existingImage}`
+      : null),
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -297,10 +299,10 @@ const ImageUploader: React.FC<{
       ) {
         setPreview(existingImage);
       } else if (existingImage.startsWith("/")) {
-        setPreview(`https://backend-qine.activetechet.com${existingImage}`);
+        setPreview(`https://backend.elilitapp.com${existingImage}`);
       } else {
         setPreview(
-          `https://backend-qine.activetechet.com/media/${existingImage}`,
+          `https://backend.elilitapp.com/media/${existingImage}`,
         );
       }
     } else {
@@ -345,9 +347,8 @@ const ImageUploader: React.FC<{
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${
-          isDragging ? "ring-2 ring-secondary  ring-offset-2 bg-[#674FA3]/5" : ""
-        }`}
+        className={`relative w-full rounded-xl overflow-hidden transition-all duration-200 ${isDragging ? "ring-2 ring-secondary  ring-offset-2 bg-[#674FA3]/5" : ""
+          }`}
       >
         <input
           ref={fileInputRef}
@@ -363,9 +364,8 @@ const ImageUploader: React.FC<{
         />
         {!preview ? (
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${
-              isDragging ? "border-secondary  bg-[#674FA3]/5" : "border-gray-200"
-            }`}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${isDragging ? "border-secondary  bg-[#674FA3]/5" : "border-gray-200"
+              }`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="mx-auto h-10 w-10 text-gray-400" />
@@ -415,7 +415,8 @@ const AdCard: React.FC<{
   onDelete: (ad: Ad) => void;
   getImageUrl: (url: string) => string;
   isReadOnly: boolean;
-}> = ({ ad, onEdit, onDelete, getImageUrl, isReadOnly }) => {
+  isSuperAdmin: boolean;
+}> = ({ ad, onEdit, onDelete, getImageUrl, isReadOnly, isSuperAdmin }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -440,6 +441,9 @@ const AdCard: React.FC<{
         <h3 className="font-semibold text-xl text-gray-900 mb-1 truncate">
           {ad.title}
         </h3>
+        {isSuperAdmin && <h3 className="font-semibold text-sm text-gray-900 mb-1 truncate">
+          {ad?.company_name}
+        </h3>}
         {ad.target_link && (
           <a
             href={ad.target_link}
@@ -594,7 +598,7 @@ const SearchFilterBar: React.FC<{
   filterStatus: "all" | "active" | "inactive";
   onFilterChange: (status: "all" | "active" | "inactive") => void;
 }> = ({ searchQuery, onSearchChange, filterStatus, onFilterChange }) => (
-  <div className="sticky top-20 z-10 bg-gray-50/80 backdrop-blur-sm py-4 -mt-2 mb-4 rounded-2xl">
+  <div className="sticky -top-8 z-10 bg-gray-50/80 backdrop-blur-sm py-4 -mt-2 mb-4 rounded-2xl">
     <div className="flex flex-col sm:flex-row gap-4">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -612,11 +616,10 @@ const SearchFilterBar: React.FC<{
             key={status}
             whileTap={{ scale: 0.97 }}
             onClick={() => onFilterChange(status)}
-            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${
-              filterStatus === status
-                ? "bg-secondary  text-white shadow-md"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
+            className={`px-5 py-2 rounded-full capitalize text-sm font-medium transition-all ${filterStatus === status
+              ? "bg-secondary  text-white shadow-md"
+              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+              }`}
           >
             {status === "all"
               ? "All"
@@ -824,13 +827,14 @@ export default function AdManagement() {
             ? ad.image.startsWith("http") || ad.image.startsWith("blob:")
               ? ad.image
               : ad.image.startsWith("/")
-                ? `https://backend-qine.activetechet.com${ad.image}`
-                : `https://backend-qine.activetechet.com/media/${ad.image}`
+                ? `https://backend.elilitapp.com${ad.image}`
+                : `https://backend.elilitapp.com/media/${ad.image}`
             : "",
         })),
       );
 
       setAds(adsList);
+      console.log("adsList", adsList);
     } catch (error) {
       showToast("error", "Failed to load advertisements");
     } finally {
@@ -975,9 +979,9 @@ export default function AdManagement() {
     if (!image) return "";
     if (image.startsWith("http") || image.startsWith("blob:")) return image;
     if (image.startsWith("/")) {
-      return `https://backend-qine.activetechet.com${image}`;
+      return `https://backend.elilitapp.com${image}`;
     }
-    return `https://backend-qine.activetechet.com/media/${image}`;
+    return `https://backend.elilitapp.com/media/${image}`;
   };
 
   // ------------------------------------------------------------
@@ -1064,6 +1068,7 @@ export default function AdManagement() {
                   onDelete={handleDeleteClick}
                   getImageUrl={getImageUrl}
                   isReadOnly={isReadOnly}
+                  isSuperAdmin={isSuperAdmin}
                 />
               ))}
             </div>
@@ -1141,9 +1146,8 @@ export default function AdManagement() {
             </label>
             <div className="space-y-2">
               <label
-                className={`flex items-center gap-2 ${
-                  !activeSub?.plan?.can_ad_home_page ? "opacity-50" : ""
-                }`}
+                className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_home_page ? "opacity-50" : ""
+                  }`}
               >
                 <input
                   type="checkbox"
@@ -1166,9 +1170,8 @@ export default function AdManagement() {
               </label>
 
               <label
-                className={`flex items-center gap-2 ${
-                  !activeSub?.plan?.can_ad_companies_list ? "opacity-50" : ""
-                }`}
+                className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_companies_list ? "opacity-50" : ""
+                  }`}
               >
                 <input
                   type="checkbox"
@@ -1193,9 +1196,8 @@ export default function AdManagement() {
               </label>
 
               <label
-                className={`flex items-center gap-2 ${
-                  !activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""
-                }`}
+                className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""
+                  }`}
               >
                 <input
                   type="checkbox"

@@ -30,7 +30,7 @@ import { extractErrorMessage } from "../../../utils/extractErrorMessage";
 import type { AvailabilitySlot } from "../../../types";
 import { validateAvailabilitySlot } from "../../../utils/availabilityValidator";
 import { validateBlackout } from "../../../utils/blackoutValidator";
-import type { ValidationResult } from "../../../types/validation";
+// import type { ValidationResult } from "../../../types/validation";
 
 // ---------------------------------------------------------------------------
 //  Constants
