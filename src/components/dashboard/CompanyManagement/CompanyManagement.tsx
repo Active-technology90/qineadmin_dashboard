@@ -512,11 +512,10 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => (
           <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-              comp.is_active
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${comp.is_active
                 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                 : "bg-red-100 text-red-700 border-red-200"
-            }`}
+              }`}
           >
             {comp.is_active ? "Yes" : "No"}
           </span>
@@ -528,11 +527,10 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => (
           <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-              comp.is_featured
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${comp.is_featured
                 ? "bg-amber-100 text-amber-700 border-amber-200"
                 : "bg-red-100 text-red-700 border-red-200"
-            }`}
+              }`}
           >
             {comp.is_featured ? "Yes" : "No"}
           </span>
@@ -1087,7 +1085,7 @@ export default function CompanyManagement() {
             setFormData={setFormData}
             formErrors={formErrors}
             categories={categories}
-            headCompanies={headCompanies} 
+            headCompanies={headCompanies}
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
@@ -1118,7 +1116,7 @@ export default function CompanyManagement() {
             categories={categories}
             subcategories={subcategories}
             logoPreview={logoPreview}
-            headCompanies={headCompanies} 
+            headCompanies={headCompanies}
             coverPreview={coverPreview}
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
@@ -1148,7 +1146,7 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
-            headCompanies={headCompanies} 
+            headCompanies={headCompanies}
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
@@ -1177,7 +1175,7 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
-            headCompanies={headCompanies} 
+            headCompanies={headCompanies}
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
@@ -1282,7 +1280,7 @@ export default function CompanyManagement() {
   const closeInlineEdit = useCallback(() => {
     setEditingSlug(null);
     setIsEditingActive(false);
-    resetForm();
+    // resetForm();
   }, []);
 
   const handleDeleteClick = useCallback((company: CompanyListItem) => {
@@ -1428,8 +1426,8 @@ export default function CompanyManagement() {
               userCompanyRole={currentCompanyRole}
               onEdit={openEdit}
               loading={loading}
-                formData={formData}
-                    headCompanies={headCompanies} 
+              formData={formData}
+              headCompanies={headCompanies}
               setFormData={setFormData}
               formErrors={formErrors}
               categories={categories}
