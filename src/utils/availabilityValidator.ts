@@ -1,4 +1,5 @@
 // validators/availabilityValidator.ts
+
 import type { AvailabilitySlot, ValidationResult } from "../types";
 import {
   normaliseTime,
@@ -29,37 +30,106 @@ const DEFAULT_CONFIG: AvailabilityConfig = {
   allowOvernight: false,
 };
 
-export const validateAvailabilitySlot = (
-  data: AvailabilitySlotInput,
-  existingSlots: Pick<AvailabilitySlot, "id" | "day_of_week" | "start_time" | "end_time">[],
-  config: Partial<AvailabilityConfig> = {},
-): ValidationResult => {
-  const cfg = { ...DEFAULT_CONFIG, ...config };
-  const errors: Record<string, string> = {};
+/**
+ * Convert HH:mm or HH:mm:ss into minutes from midnight.
+ */
+const timeToMinutes = (time: string): number => {
+  if (!time) return NaN;
 
-  // 1. day_of_week
-  if (data.day_of_week === undefined || data.day_of_week === null) {
-    errors.day_of_week = "Day is required.";
-  } else if (!Number.isInteger(data.day_of_week) || data.day_of_week < 0 || data.day_of_week > 6) {
-    errors.day_of_week = "Day must be between Monday (0) and Sunday (6).";
+  const [hours, minutes] = time.split(":").map(Number);
+
+  if (
+    !Number.isFinite(hours) ||
+    !Number.isFinite(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return NaN;
   }
 
-  // 2. start_time
+  return hours * 60 + minutes;
+};
+
+/**
+ * Normalize API/UI time values to HH:mm.
+ *
+ * Examples:
+ * 09:00      -> 09:00
+ * 09:00:00   -> 09:00
+ */
+const normalizeTimeSafe = (time: string): string => {
+  if (!time) return "";
+
+  const [hours = "", minutes = ""] = time.split(":");
+
+  if (hours === "" || minutes === "") {
+    return "";
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+};
+
+export const validateAvailabilitySlot = (
+  data: AvailabilitySlotInput,
+  existingSlots: Pick<
+    AvailabilitySlot,
+    "id" | "day_of_week" | "start_time" | "end_time"
+  >[],
+  config: Partial<AvailabilityConfig> = {},
+): ValidationResult => {
+  const cfg = {
+    ...DEFAULT_CONFIG,
+    ...config,
+  };
+
+  const errors: Record<string, string> = {};
+
+  // ---------------------------------------------------------
+  // 1. Day
+  // ---------------------------------------------------------
+
+  if (data.day_of_week === undefined || data.day_of_week === null) {
+    errors.day_of_week = "Day is required.";
+  } else if (
+    !Number.isInteger(data.day_of_week) ||
+    data.day_of_week < 0 ||
+    data.day_of_week > 6
+  ) {
+    errors.day_of_week =
+      "Day must be between Monday (0) and Sunday (6).";
+  }
+
+  // ---------------------------------------------------------
+  // 2. Start time
+  // ---------------------------------------------------------
+
   if (!data.start_time) {
     errors.start_time = "Start time is required.";
   } else if (!isValidTimeFormat(data.start_time)) {
     errors.start_time = "Start time must be in HH:mm format.";
   }
 
-  // 3. end_time
+  // ---------------------------------------------------------
+  // 3. End time
+  // ---------------------------------------------------------
+
   if (!data.end_time) {
     errors.end_time = "End time is required.";
   } else if (!isValidTimeFormat(data.end_time)) {
     errors.end_time = "End time must be in HH:mm format.";
   }
 
-  // 4. max_bookings
-  if (data.max_bookings === undefined || data.max_bookings === null) {
+  // ---------------------------------------------------------
+  // 4. Max bookings
+  // ---------------------------------------------------------
+
+  if (
+    data.max_bookings === undefined ||
+    data.max_bookings === null ||
+    Number.isNaN(data.max_bookings)
+  ) {
     errors.max_bookings = "Max bookings is required.";
   } else if (!Number.isInteger(data.max_bookings)) {
     errors.max_bookings = "Max bookings must be a whole number.";
@@ -69,49 +139,122 @@ export const validateAvailabilitySlot = (
     errors.max_bookings = `Max bookings cannot exceed ${cfg.maxBookingsPerSlot}.`;
   }
 
-  // Return early if required fields are missing
-  if (Object.keys(errors).length > 0) return { isValid: false, errors };
+  // ---------------------------------------------------------
+  // Required-field validation
+  // ---------------------------------------------------------
 
-  // Normalise times
-  const start = normaliseTime(data.start_time);
-  const end = normaliseTime(data.end_time);
+  if (Object.keys(errors).length > 0) {
+    return {
+      isValid: false,
+      errors,
+    };
+  }
 
-  // 5. Time order (only if overnight is not allowed)
-  if (!cfg.allowOvernight && start >= end) {
+  // ---------------------------------------------------------
+  // Normalize times
+  // ---------------------------------------------------------
+
+  const start = normalizeTimeSafe(data.start_time);
+  const end = normalizeTimeSafe(data.end_time);
+
+  const startMinutes = timeToMinutes(start);
+  const endMinutes = timeToMinutes(end);
+
+  if (!Number.isFinite(startMinutes)) {
+    errors.start_time = "Invalid start time.";
+  }
+
+  if (!Number.isFinite(endMinutes)) {
+    errors.end_time = "Invalid end time.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      isValid: false,
+      errors,
+    };
+  }
+
+  // ---------------------------------------------------------
+  // 5. Time order
+  // ---------------------------------------------------------
+
+  if (!cfg.allowOvernight && startMinutes >= endMinutes) {
     errors.end_time = "End time must be after start time.";
-    return { isValid: false, errors };
+
+    return {
+      isValid: false,
+      errors,
+    };
   }
 
-  // 6. Duration checks
-  const duration = getDurationMinutes(start, end);
+  // ---------------------------------------------------------
+  // 6. Duration
+  // ---------------------------------------------------------
+
+  let duration = getDurationMinutes(start, end);
+
+  // Extra protection if utility implementation behaves
+  // differently for HH:mm / HH:mm:ss.
+  if (!Number.isFinite(duration)) {
+    duration = endMinutes - startMinutes;
+
+    if (cfg.allowOvernight && duration <= 0) {
+      duration += 24 * 60;
+    }
+  }
+
   if (duration < cfg.minSlotDurationMinutes) {
-    errors.end_time = `Minimum slot duration is ${cfg.minSlotDurationMinutes} minutes.`;
+    errors.end_time =
+      `Minimum slot duration is ${cfg.minSlotDurationMinutes} minutes.`;
   } else if (duration > cfg.maxSlotDurationMinutes) {
-    errors.end_time = `Maximum slot duration is ${cfg.maxSlotDurationMinutes} minutes.`;
+    errors.end_time =
+      `Maximum slot duration is ${cfg.maxSlotDurationMinutes} minutes.`;
   }
 
-  // 7. Duplicate check (exact same start/end on same day, excluding self)
-  const duplicate = existingSlots.some(
-    (s) =>
-      s.day_of_week === data.day_of_week &&
-      s.id !== data.id &&
-      s.start_time === start &&
-      s.end_time === end,
+  // ---------------------------------------------------------
+  // 7. Duplicate / overlap
+  // ---------------------------------------------------------
+
+  const sameDaySlots = existingSlots.filter(
+    (slot) =>
+      slot.day_of_week === data.day_of_week &&
+      slot.id !== data.id,
   );
-  if (duplicate) {
-    errors.start_time = "An identical slot already exists for this day.";
+
+  for (const slot of sameDaySlots) {
+    const existingStart = normalizeTimeSafe(slot.start_time);
+    const existingEnd = normalizeTimeSafe(slot.end_time);
+
+    // Exact duplicate
+    if (
+      existingStart === start &&
+      existingEnd === end
+    ) {
+      errors.start_time =
+        "An identical slot already exists for this day.";
+
+      break;
+    }
+
+    // Overlap
+    if (
+      isTimeOverlap(
+        start,
+        end,
+        existingStart,
+        existingEnd,
+      )
+    ) {
+      errors.start_time =
+        "This time slot overlaps with an existing slot on the same day.";
+
+      break;
+    }
   }
 
-  // 8. Overlap check (any overlapping slot on same day, excluding self)
-  const overlap = existingSlots.some(
-    (s) =>
-      s.day_of_week === data.day_of_week &&
-      s.id !== data.id &&
-      isTimeOverlap(start, end, s.start_time, s.end_time),
-  );
-  if (overlap) {
-    errors.start_time = "This time slot overlaps with an existing slot on the same day.";
-  }
-
-  return { isValid: Object.keys(errors).length === 0, errors };
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
 };

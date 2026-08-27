@@ -21,14 +21,15 @@ import {
   Proportions,
   Bell,
   Settings as SettingsIcon,
-    Banknote,
-    ClipboardList,
-     Target,
-      CalendarIcon,
+  Banknote,
+  ClipboardList,
+  Target,
+  CalendarIcon,
   Wrench,
   CalendarDays,
   Clock,
   Repeat,
+  // Images,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
@@ -71,12 +72,17 @@ import ServiceSubscriptions from "./services/ServiceSubscriptions";
 import AvailabilityManagement from "./services/AvailabilityManagement";
 import StaffManagement from "./services/StaffManagement";
 
+import {
+  getAdminVendorOrders,
+  getCompanyVendorOrders,
+} from "../../services/api";
+import { VendorOrderDetailModal } from "./vedorOrders/VendorOrderDetailModal";
 type Tab =
   | "overview"
-    | "leads"
-     | "tasks"
-       | "targets"
-        | "calendar"
+  | "leads"
+  | "tasks"
+  | "targets"
+  | "calendar"
   | "categories"
   | "subcategories"
   | "headcompanies"
@@ -132,10 +138,11 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${activeTab === "companyOrders"
+          className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+            activeTab === "companyOrders"
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
+          }`}
         >
           <ShoppingBag className="h-5 w-5" />
           <span>All Orders</span>
@@ -145,10 +152,11 @@ function OrdersMenu({
       return (
         <button
           onClick={() => onNavigate("companyOrders")}
-          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "companyOrders"
+          className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+            activeTab === "companyOrders"
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
+          }`}
         >
           <ShoppingBag className="h-5 w-5" />
         </button>
@@ -180,10 +188,11 @@ function OrdersMenu({
       <div>
         <button
           onClick={onToggleOrdersMenu}
-          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
+          className={`flex items-center justify-between w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+            isActive
               ? "bg-white/40 text-white shadow-lg"
               : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
+          }`}
         >
           <div className="flex items-center gap-3.5">
             <ShoppingBag className="h-5 w-5" />
@@ -201,10 +210,11 @@ function OrdersMenu({
             {showMasterOrders && (
               <button
                 onClick={() => onNavigate("masterOrders")}
-                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "masterOrders"
+                className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
+                  activeTab === "masterOrders"
                     ? "bg-white/20 text-white font-semibold"
                     : "text-gray-300 hover:bg-white/5 hover:text-white"
-                  }`}
+                }`}
               >
                 <FileText className="h-4 w-4" />
                 Master Orders
@@ -212,10 +222,11 @@ function OrdersMenu({
             )}
             <button
               onClick={() => onNavigate("companyOrders")}
-              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${activeTab === "companyOrders"
+              className={`flex items-center gap-3 w-full px-4 py-2 text-sm rounded-lg transition ${
+                activeTab === "companyOrders"
                   ? "bg-white/20 text-white font-semibold"
                   : "text-gray-300 hover:bg-white/5 hover:text-white"
-                }`}
+              }`}
             >
               <ListOrdered className="h-4 w-4" />
               All Orders
@@ -230,10 +241,11 @@ function OrdersMenu({
     <div className="relative" ref={ordersRef}>
       <button
         onClick={() => setCollapsedOrdersOpen(!collapsedOrdersOpen)}
-        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === "masterOrders" || activeTab === "companyOrders"
+        className={`flex items-center justify-center w-full px-2 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+          activeTab === "masterOrders" || activeTab === "companyOrders"
             ? "bg-white/40 text-white shadow-lg"
             : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
+        }`}
       >
         <ShoppingBag className="h-5 w-5" />
       </button>
@@ -246,10 +258,11 @@ function OrdersMenu({
                 onNavigate("masterOrders");
                 setCollapsedOrdersOpen(false);
               }}
-              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "masterOrders"
+              className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
+                activeTab === "masterOrders"
                   ? "bg-indigo-50 text-indigo-700 font-medium"
                   : "text-gray-700 hover:bg-gray-50"
-                }`}
+              }`}
             >
               <FileText className="h-4 w-4 text-gray-500" />
               Master Orders
@@ -260,10 +273,11 @@ function OrdersMenu({
               onNavigate("companyOrders");
               setCollapsedOrdersOpen(false);
             }}
-            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${activeTab === "companyOrders"
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition ${
+              activeTab === "companyOrders"
                 ? "bg-indigo-50 text-indigo-700 font-medium"
                 : "text-gray-700 hover:bg-gray-50"
-              }`}
+            }`}
           >
             <Building2 className="h-4 w-4 text-gray-500" />
             Company Orders
@@ -291,6 +305,8 @@ export default function AdminDashboard() {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [notificationOrder, setNotificationOrder] = useState<any>(null);
+  const [notificationReceipt, setNotificationReceipt] = useState<any>(null);
   //  const mainContentRef = useRef<HTMLDivElement>(null);
   const scrollableRef = useRef<HTMLDivElement>(null);
 
@@ -316,19 +332,22 @@ export default function AdminDashboard() {
   // Hide "Company Users" only for staff (not for viewers)
   // const hideUsersSidebar = !isSuperAdmin && company?.role === "staff";
 
-  const currentCompanyMeta = companiesList.find((c: any) => c.slug === company?.slug);
+  const currentCompanyMeta = companiesList.find(
+    (c: any) => c.slug === company?.slug,
+  );
   const showServiceMenu =
     isSuperAdmin ||
     currentCompanyMeta?.business_type === "service" ||
     user?.memberships?.some(
       (m: any) =>
         m.company_slug === company?.slug &&
-        companiesList.find((c: any) => c.slug === m.company_slug)?.business_type === "service",
+        companiesList.find((c: any) => c.slug === m.company_slug)
+          ?.business_type === "service",
     );
   console.log("user:", user);
-console.log("company", company);
-console.log("companiesList", companiesList);
-console.log("currentCompanyMeta", currentCompanyMeta);
+  console.log("company", company);
+  console.log("companiesList", companiesList);
+  console.log("currentCompanyMeta", currentCompanyMeta);
   const navigate = (tab: Tab) => {
     setActiveTab(tab);
     setIsSidebarOpen(false);
@@ -392,37 +411,37 @@ console.log("currentCompanyMeta", currentCompanyMeta);
   };
 
   // Fetch companies list to get company logo
-useEffect(() => {
-  const fetchCompanies = async () => {
-    try {
-      const { getCompanies } = await import("../../services/api");
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { getCompanies } = await import("../../services/api");
 
-      let page = 1;
-      let hasNext = true;
-      const allCompanies: any[] = [];
+        let page = 1;
+        let hasNext = true;
+        const allCompanies: any[] = [];
 
-      while (hasNext) {
-        const response = await getCompanies({
-          page,
-          page_size: 100,
-        });
+        while (hasNext) {
+          const response = await getCompanies({
+            page,
+            page_size: 100,
+          });
 
-        const data = response.data;
+          const data = response.data;
 
-        allCompanies.push(...(data.results || []));
+          allCompanies.push(...(data.results || []));
 
-        hasNext = !!data.next; // DRF pagination
-        page++;
+          hasNext = !!data.next; // DRF pagination
+          page++;
+        }
+
+        setCompaniesList(allCompanies);
+      } catch (error) {
+        console.error("Failed to fetch companies:", error);
       }
+    };
 
-      setCompaniesList(allCompanies);
-    } catch (error) {
-      console.error("Failed to fetch companies:", error);
-    }
-  };
-
-  fetchCompanies();
-}, []);
+    fetchCompanies();
+  }, []);
 
   // Update company logo when company changes
   useEffect(() => {
@@ -452,6 +471,49 @@ useEffect(() => {
     scrollableElement.addEventListener("scroll", handleScroll);
     return () => scrollableElement.removeEventListener("scroll", handleScroll);
   }, []);
+  const fetchOrderById = async (orderId: number) => {
+    const token = localStorage.getItem("access");
+    if (!token) return null;
+
+    try {
+      const query = {
+        page: 1,
+        page_size: 1,
+        ordering: "-created_at",
+        search: String(orderId),
+      };
+
+      if (isSuperAdmin || isViewer) {
+        const res = await getAdminVendorOrders(query);
+        return res.data.results[0] || null;
+      } else if (company?.slug) {
+        const res = await getCompanyVendorOrders(company.slug, query);
+        return res.data.results[0] || null;
+      }
+    } catch (error) {
+      console.error("Failed to fetch order by ID", error);
+    }
+    return null;
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    const vendorOrderId = notification.data?.vendor_order_id;
+    if (!vendorOrderId) return;
+
+    const order = await fetchOrderById(vendorOrderId);
+    if (order) {
+      setNotificationOrder(order);
+      setNotificationReceipt(order.receipt || null);
+    }
+  };
+  const handleNotificationOrderUpdate = async () => {
+    if (!notificationOrder) return;
+    const freshOrder = await fetchOrderById(notificationOrder.id);
+    if (freshOrder) {
+      setNotificationOrder(freshOrder);
+      setNotificationReceipt(freshOrder.receipt || null);
+    }
+  };
   const renderContent = () => {
     const companyKey = company?.slug || "super";
     // Create a unique key that changes on refresh to force re-render
@@ -466,15 +528,14 @@ useEffect(() => {
           ) : (
             <Overview key={componentKey} onNavigate={navigateFromOverview} />
           );
-  case "leads":
-    return <LeadsManagement key={componentKey} />;
-    case "tasks":
-  return <TasksManagement key={componentKey} />;
-  case "targets":
-  return <TargetsManagement key={componentKey} />;
-  case "calendar":
-  return <CalendarManagement key={componentKey} />;
-
+        case "leads":
+          return <LeadsManagement key={componentKey} />;
+        case "tasks":
+          return <TasksManagement key={componentKey} />;
+        case "targets":
+          return <TargetsManagement key={componentKey} />;
+        case "calendar":
+          return <CalendarManagement key={componentKey} />;
 
         case "products":
           return <CompanyProducts key={componentKey} />;
@@ -509,7 +570,12 @@ useEffect(() => {
         case "billing":
           return <BillingPage key={componentKey} />;
         case "notifications":
-          return <NotificationsPage key={componentKey} />;
+          return (
+            <NotificationsPage
+              key={componentKey}
+              onNotificationClick={handleNotificationClick}
+            />
+          );
         case "marketingAgents":
           return <MarketingAgentsManagement key={componentKey} />;
         case "serviceOfferings":
@@ -614,41 +680,41 @@ useEffect(() => {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("companies")}
               />
-                            <SidebarItem
+              <SidebarItem
                 icon={<CreditCard className="h-5 w-5" />}
                 label="Billing"
                 active={activeTab === "billing"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("billing")}
               />
-                                <SidebarItem
-      icon={<Users className="h-5 w-5" />}
-      label="Leads"
-      active={activeTab === "leads"}
-      collapsed={sidebarCollapsed}
-      onClick={() => navigate("leads")}
-    />
-    <SidebarItem
-  icon={<ClipboardList className="h-5 w-5" />}
-  label="Tasks"
-  active={activeTab === "tasks"}
-  collapsed={sidebarCollapsed}
-  onClick={() => navigate("tasks")}
-/>
-<SidebarItem
-  icon={<Target className="h-5 w-5" />}
-  label="Targets"
-  active={activeTab === "targets"}
-  collapsed={sidebarCollapsed}
-  onClick={() => navigate("targets")}
-/>
-<SidebarItem
-  icon={<CalendarIcon className="h-5 w-5" />}
-  label="Calendar"
-  active={activeTab === "calendar"}
-  collapsed={sidebarCollapsed}
-  onClick={() => navigate("calendar")}
-/>
+              <SidebarItem
+                icon={<Users className="h-5 w-5" />}
+                label="Leads"
+                active={activeTab === "leads"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("leads")}
+              />
+              <SidebarItem
+                icon={<ClipboardList className="h-5 w-5" />}
+                label="Tasks"
+                active={activeTab === "tasks"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("tasks")}
+              />
+              <SidebarItem
+                icon={<Target className="h-5 w-5" />}
+                label="Targets"
+                active={activeTab === "targets"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("targets")}
+              />
+              <SidebarItem
+                icon={<CalendarIcon className="h-5 w-5" />}
+                label="Calendar"
+                active={activeTab === "calendar"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("calendar")}
+              />
 
               <SidebarItem
                 icon={<User className="h-5 w-5" />}
@@ -668,228 +734,232 @@ useEffect(() => {
                 onClick={() => navigate("overview")}
               />
 
-          {/* Platform Admin section – shown for super admin AND viewer */}
-          {showPlatformAdmin && (
-            <>
+              {/* Platform Admin section – shown for super admin AND viewer */}
+              {showPlatformAdmin && (
+                <>
+                  <div
+                    className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
+                      sidebarCollapsed ? "hidden" : ""
+                    }`}
+                  >
+                    Platform Admin
+                  </div>
+                  <SidebarItem
+                    icon={<Layout className="h-5 w-5" />}
+                    label="Categories"
+                    active={activeTab === "categories"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("categories")}
+                  />
+                  <SidebarItem
+                    icon={<Proportions className="h-5 w-5" />}
+                    label="SubCategories"
+                    active={activeTab === "subcategories"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("subcategories")}
+                  />
+                </>
+              )}
+
+              {isSuperAdmin && (
+                <SidebarItem
+                  icon={<Building2 className="h-5 w-5" />}
+                  label="Head Companies"
+                  active={activeTab === "headcompanies"}
+                  collapsed={sidebarCollapsed}
+                  onClick={() => navigate("headcompanies")}
+                />
+              )}
+              <SidebarItem
+                icon={<Building2 className="h-5 w-5" />}
+                label={
+                  !user?.memberships?.length ? "Companies" : "Company Detail"
+                }
+                active={activeTab === "companies"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("companies")}
+              />
+              {isSuperAdmin && (
+                <SidebarItem
+                  icon={<Users className="h-5 w-5" />}
+                  label="User Management"
+                  active={activeTab === "superUsers"}
+                  collapsed={sidebarCollapsed}
+                  onClick={() => navigate("superUsers")}
+                />
+              )}
+              {isSuperAdmin && (
+                <SidebarItem
+                  icon={<Users className="h-5 w-5" />}
+                  label="Marketing Agents"
+                  active={activeTab === "marketingAgents"}
+                  collapsed={sidebarCollapsed}
+                  onClick={() => navigate("marketingAgents")}
+                />
+              )}
+              {/* {showPlatformAdmin && ( */}
+              <SidebarItem
+                icon={<Users className="h-5 w-5" />}
+                label="Ads Management"
+                active={activeTab === "add advertisment"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("add advertisment")}
+              />
+              {/* // )} */}
+              {/* Bank Accounts - Below Ads Management */}
+              <SidebarItem
+                icon={<Banknote className="h-5 w-5" />}
+                label="Bank Accounts"
+                active={activeTab === "bankAccounts"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("bankAccounts")}
+              />
+
               <div
-                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
-                  }`}
+                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${
+                  sidebarCollapsed ? "hidden" : ""
+                }`}
               >
-                Platform Admin
+                Management
               </div>
-              <SidebarItem
-                icon={<Layout className="h-5 w-5" />}
-                label="Categories"
-                active={activeTab === "categories"}
+
+              <OrdersMenu
                 collapsed={sidebarCollapsed}
-                onClick={() => navigate("categories")}
+                activeTab={activeTab}
+                onNavigate={navigate}
+                showMasterOrders={showMasterOrders}
+                ordersMenuOpen={ordersMenuOpen}
+                onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
               />
+
               <SidebarItem
-                icon={<Proportions className="h-5 w-5" />}
-                label="SubCategories"
-                active={activeTab === "subcategories"}
+                icon={<CreditCard className="h-5 w-5" />}
+                label="Payments"
+                active={activeTab === "payments"}
                 collapsed={sidebarCollapsed}
-                onClick={() => navigate("subcategories")}
+                onClick={() => navigate("payments")}
               />
-            </>
-          )}
 
-          {isSuperAdmin && (
-            <SidebarItem
-              icon={<Building2 className="h-5 w-5" />}
-              label="Head Companies"
-              active={activeTab === "headcompanies"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("headcompanies")}
-            />
-          )}
-          <SidebarItem
-            icon={<Building2 className="h-5 w-5" />}
-            label={!user?.memberships?.length ? "Companies" : "Company Detail"}
-            active={activeTab === "companies"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("companies")}
-          />
-          {isSuperAdmin && (
-            <SidebarItem
-              icon={<Users className="h-5 w-5" />}
-              label="User Management"
-              active={activeTab === "superUsers"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("superUsers")}
-            />
-          )}
-          {isSuperAdmin && (
-            <SidebarItem
-              icon={<Users className="h-5 w-5" />}
-              label="Marketing Agents"
-              active={activeTab === "marketingAgents"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("marketingAgents")}
-            />
-          )}
-          {showPlatformAdmin && (
-            <SidebarItem
-              icon={<Users className="h-5 w-5" />}
-              label="Ads Management"
-              active={activeTab === "add advertisment"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("add advertisment")}
-            />
-          )}
-                    {/* Bank Accounts - Below Ads Management */}
-          <SidebarItem
-            icon={<Banknote className="h-5 w-5" />}
-            label="Bank Accounts"
-            active={activeTab === "bankAccounts"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("bankAccounts")}
-          />
-
-          <div
-            className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-8 ${sidebarCollapsed ? "hidden" : ""
-              }`}
-          >
-            Management
-          </div>
-
-          <OrdersMenu
-            collapsed={sidebarCollapsed}
-            activeTab={activeTab}
-            onNavigate={navigate}
-            showMasterOrders={showMasterOrders}
-            ordersMenuOpen={ordersMenuOpen}
-            onToggleOrdersMenu={() => setOrdersMenuOpen(!ordersMenuOpen)}
-          />
-
-          <SidebarItem
-            icon={<CreditCard className="h-5 w-5" />}
-            label="Payments"
-            active={activeTab === "payments"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("payments")}
-          />
-
-          <SidebarItem
-            icon={<Package className="h-5 w-5" />}
-            label="All Products"
-            active={activeTab === "products"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("products")}
-          />
-
-          {showServiceMenu && (
-            <>
-              <div
-                className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
-              >
-                Services
-              </div>
               <SidebarItem
-                icon={<Wrench className="h-5 w-5" />}
-                label="My Services"
-                active={activeTab === "serviceOfferings"}
+                icon={<Package className="h-5 w-5" />}
+                label="All Products"
+                active={activeTab === "products"}
                 collapsed={sidebarCollapsed}
-                onClick={() => navigate("serviceOfferings")}
+                onClick={() => navigate("products")}
               />
-              <SidebarItem
-                icon={<CalendarDays className="h-5 w-5" />}
-                label="Bookings"
-                active={activeTab === "serviceBookings"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("serviceBookings")}
-              />
-              {/* <SidebarItem
-                icon={<Repeat className="h-5 w-5" />}
-                label="Recurring Contracts"
-                active={activeTab === "serviceSubscriptions"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("serviceSubscriptions")}
-              /> */}
-             {/* <SidebarItem
+
+              {showServiceMenu && (
+                <>
+                  <div
+                    className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
+                  >
+                    Services
+                  </div>
+                  <SidebarItem
+                    icon={<Wrench className="h-5 w-5" />}
+                    label="My Services"
+                    active={activeTab === "serviceOfferings"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("serviceOfferings")}
+                  />
+                  <SidebarItem
+                    icon={<CalendarDays className="h-5 w-5" />}
+                    label="Bookings"
+                    active={activeTab === "serviceBookings"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("serviceBookings")}
+                  />
+                  <SidebarItem
+                    icon={<Repeat className="h-5 w-5" />}
+                    label="Recurring Contracts"
+                    active={activeTab === "serviceSubscriptions"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("serviceSubscriptions")}
+                  />
+                  {/* <SidebarItem
                 icon={<Images className="h-5 w-5" />}
                 label="Portfolio"
                 active={activeTab === "portfolio"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("portfolio")}
-              />*/}
-              <SidebarItem
-                icon={<Clock className="h-5 w-5" />}
-                label="Availability"
-                active={activeTab === "availability"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("availability")}
-              />
-              <SidebarItem
-                icon={<Users className="h-5 w-5" />}
-                label="Staff & Specialists"
-                active={activeTab === "serviceStaff"}
-                collapsed={sidebarCollapsed}
-                onClick={() => navigate("serviceStaff")}
-              />
-            </>
-          )}
-          {/* Only for super admin (not viewer) */}
-  <div
+              /> */}
+                  <SidebarItem
+                    icon={<Clock className="h-5 w-5" />}
+                    label="Availability"
+                    active={activeTab === "availability"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("availability")}
+                  />
+                  <SidebarItem
+                    icon={<Users className="h-5 w-5" />}
+                    label="Staff & Specialists"
+                    active={activeTab === "serviceStaff"}
+                    collapsed={sidebarCollapsed}
+                    onClick={() => navigate("serviceStaff")}
+                  />
+                </>
+              )}
+              {/* Only for super admin (not viewer) */}
+              <div
                 className={`px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-6 ${sidebarCollapsed ? "hidden" : ""}`}
               >
-               Platform
+                Platform
               </div>
-          {/* {!hideUsersSidebar && ( */}
-          <SidebarItem
-            icon={<Users className="h-5 w-5" />}
-            label="All Users"
-            active={activeTab === "users"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("users")}
-          />
-          {/* )} */}
+              {/* {!hideUsersSidebar && ( */}
+              <SidebarItem
+                icon={<Users className="h-5 w-5" />}
+                label="All Users"
+                active={activeTab === "users"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("users")}
+              />
+              {/* )} */}
 
-          <SidebarItem
-            icon={<Bell className="h-5 w-5" />}
-            label="Notifications"
-            active={activeTab === "notifications"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("notifications")}
-          />
+              <SidebarItem
+                icon={<Bell className="h-5 w-5" />}
+                label="Notifications"
+                active={activeTab === "notifications"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("notifications")}
+              />
 
-          <SidebarItem
-            icon={<User className="h-5 w-5" />}
-            label="Profile"
-            active={activeTab === "profile"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("profile")}
-          />
+              <SidebarItem
+                icon={<User className="h-5 w-5" />}
+                label="Profile"
+                active={activeTab === "profile"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("profile")}
+              />
 
-          {isSuperAdmin && (
-            <SidebarItem
-              icon={<CreditCard className="h-5 w-5" />}
-              label="Subscription Plans"
-              active={activeTab === "adminSubscriptions"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("adminSubscriptions")}
-            />
-          )}
+              {isSuperAdmin && (
+                <SidebarItem
+                  icon={<CreditCard className="h-5 w-5" />}
+                  label="Subscription Plans"
+                  active={activeTab === "adminSubscriptions"}
+                  collapsed={sidebarCollapsed}
+                  onClick={() => navigate("adminSubscriptions")}
+                />
+              )}
 
-          <SidebarItem
-            icon={<SettingsIcon className="h-5 w-5" />}
-            label="Settings"
-            active={activeTab === "settings"}
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate("settings")}
-          />
+              <SidebarItem
+                icon={<SettingsIcon className="h-5 w-5" />}
+                label="Settings"
+                active={activeTab === "settings"}
+                collapsed={sidebarCollapsed}
+                onClick={() => navigate("settings")}
+              />
 
-          {!isSuperAdmin && (
-            <SidebarItem
-              icon={<CreditCard className="h-5 w-5" />}
-              label="Billing"
-              active={activeTab === "billing"}
-              collapsed={sidebarCollapsed}
-              onClick={() => navigate("billing")}
-            />
-          )}
+              {!isSuperAdmin && (
+                <SidebarItem
+                  icon={<CreditCard className="h-5 w-5" />}
+                  label="Billing"
+                  active={activeTab === "billing"}
+                  collapsed={sidebarCollapsed}
+                  onClick={() => navigate("billing")}
+                />
+              )}
 
-          {/* <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
+              {/* <div className={`mt-8 px-4 ${sidebarCollapsed ? "hidden" : ""}`}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Account
             </p>
@@ -903,7 +973,7 @@ useEffect(() => {
             <LogOut className="h-5 w-5 text-red-300 group-hover:text-red-200" />
             {!sidebarCollapsed && <span>Logout</span>}
           </button> */}
-          </>
+            </>
           )}
         </nav>
 
@@ -931,10 +1001,11 @@ useEffect(() => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden">
         <header
-          className={`h-14 md:h-20 flex items-center justify-between px-0 md:px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${isScrolled
+          className={`h-14 md:h-20 flex items-center justify-between px-0 md:px-6 lg:px-10 sticky top-0 z-30 transition-all duration-500 flex-shrink-0 ${
+            isScrolled
               ? "bg-secondary/10 shadow-xl border-b border-secondary/20"
               : "bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
-            }`}
+          }`}
         >
           <div className="flex items-center gap-4 flex-1">
             <button
@@ -966,23 +1037,22 @@ useEffect(() => {
                 </div>
               </div>
             )}
-{isMarketing && (
-  <div className="hidden sm:block">
-    <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2 rounded-full border border-orange-200 shadow-sm">
-      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-      <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
-        Role:
-      </span>
-      <span className="text-sm font-black bg-gradient-to-r from-orange-700 to-amber-700 bg-clip-text text-transparent">
-         Elilita Marketing Agent
-      </span>
-    </div>
-  </div>
-)}
-{/* Company name – show for non‑super‑admin and non‑marketing users */}
-{company && !isSuperAdmin && !isMarketing && (
-  <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
-
+            {isMarketing && (
+              <div className="hidden sm:block">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2 rounded-full border border-orange-200 shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                  <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+                    Role:
+                  </span>
+                  <span className="text-sm font-black bg-gradient-to-r from-orange-700 to-amber-700 bg-clip-text text-transparent">
+                    Elilita Marketing Agent
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* Company name – show for non‑super‑admin and non‑marketing users */}
+            {company && !isSuperAdmin && !isMarketing && (
+              <div className="hidden sm:flex sm:items-center sm:gap-3 group cursor-default">
                 <div className="relative flex-shrink-0 group">
                   {/* Outer glow effect */}
                   <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-secondary-dark via-secondary to-secondary-dark opacity-50 blur-lg group-hover:opacity-100 transition duration-500"></div>
@@ -1015,14 +1085,15 @@ useEffect(() => {
                       {company.name}
                     </p>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${company.role === "admin"
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shadow-sm ${
+                        company.role === "admin"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : company.role === "staff"
                             ? "bg-blue-50 text-blue-700 border-blue-200"
                             : company.role === "viewer"
                               ? "bg-amber-50 text-amber-700 border-amber-200"
                               : "bg-gray-50 text-gray-600 border-gray-200"
-                        }`}
+                      }`}
                     >
                       {company.role}
                     </span>
@@ -1199,6 +1270,27 @@ useEffect(() => {
           </div>
         </div>
       )}
+    
+    {notificationOrder && (
+  <VendorOrderDetailModal
+    order={notificationOrder}
+    receipt={notificationReceipt}
+    onClose={() => {
+      setNotificationOrder(null);
+      setNotificationReceipt(null);
+    }}
+    onUpdate={handleNotificationOrderUpdate}
+    readOnly={isViewer}
+    onOpenLiveTracking={() => {
+      // optionally open tracking map, e.g. setShowTrackingMap(true)
+    }}
+    allOrders={[]} // or pass existing orders if available
+    onSelectOrder={(ord) => {
+      setNotificationOrder(ord);
+      setNotificationReceipt(ord.receipt || null);
+    }}
+  />
+      )}
     </div>
   );
 }
@@ -1220,10 +1312,11 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${active
+      className={`flex items-center gap-3.5 w-full px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
+        active
           ? "bg-white/40 text-white shadow-lg"
           : "text-gray-300 hover:bg-white/5 hover:text-white"
-        } ${collapsed ? "justify-center px-2" : ""}`}
+      } ${collapsed ? "justify-center px-2" : ""}`}
     >
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && <span>{label}</span>}

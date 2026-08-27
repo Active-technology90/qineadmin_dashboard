@@ -678,12 +678,15 @@ export const getAdminMasterOrders = async (params?: {
   });
 };
 
+// ========== ADMIN VENDOR ORDERS ==========
 export const getAdminVendorOrders = async (params?: {
   page?: number;
   page_size?: number;
   search?: string;
   company?: string;
   status?: string;
+  delivery_status?: string;
+  payment_method?: string;
   master_order?: number;
   ordering?: string;
   signal?: AbortSignal;
@@ -695,7 +698,7 @@ export const getAdminVendorOrders = async (params?: {
   });
 };
 
-// ========== COMPANY ORDERS (for company admin) ==========
+// ========== COMPANY VENDOR ORDERS ==========
 export const getCompanyVendorOrders = async (
   companySlug: string,
   params?: {
@@ -703,6 +706,8 @@ export const getCompanyVendorOrders = async (
     page_size?: number;
     search?: string;
     status?: string;
+    delivery_status?: string;
+    payment_method?: string;
     ordering?: string;
     signal?: AbortSignal;
   }
@@ -713,7 +718,6 @@ export const getCompanyVendorOrders = async (
     signal,
   });
 };
-
 export const getAdminAnalyticsOverview = async (params?: {
   period?: "week" | "month" | "year";
   company_slug?: string;
@@ -761,6 +765,63 @@ export const reviewReceipt = async (
 ) =>
   api.patch(`/payments/receipts/${receiptId}/review/`, data);
 
+  // ========== COMPANY ADS ==========
+
+// Get all ads for a company
+export const getCompanyAds = async (
+  companySlug: string,
+  params?: {
+    search?: string;
+    is_active?: boolean;
+  }
+) => {
+  return api.get(`/ads/company/${companySlug}/`, {
+    params,
+  });
+};
+
+// Create an ad for a company
+export const createCompanyAd = async (
+  companySlug: string,
+  data: FormData
+) => {
+  return api.post(
+    `/ads/company/${companySlug}/`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+// Update company ad
+export const updateCompanyAd = async (
+  companySlug: string,
+  adId: number,
+  data: FormData
+) => {
+  return api.patch(
+    `/ads/company/${companySlug}/${adId}/`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+// Delete company ad
+export const deleteCompanyAd = async (
+  companySlug: string,
+  adId: number
+) => {
+  return api.delete(
+    `/ads/company/${companySlug}/${adId}/`
+  );
+};
 // ========== ADS MANAGEMENT (SuperAdmin only) ==========
 export const getAds = async (params?: {
   search?: string;

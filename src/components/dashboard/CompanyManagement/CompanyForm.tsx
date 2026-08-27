@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from "react";
-// import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
+import React, { useState } from "react";
 import type { Category, SubCategory } from "../../../types";
 import LocationPickerModal from "./LocationPickerModal";
-import {
-  MapPin, Building2, Shield, Users, Truck, Car, FileText,
-  Award, IdCard, FileCheck, Camera, XCircle
-} from "lucide-react";
+import { MapPin, Building2, FileText, Camera, XCircle } from "lucide-react";
 
 export interface CompanyFormData {
   name: string;
@@ -28,30 +24,16 @@ export interface CompanyFormData {
   supports_table_service: boolean;
   logo: File | null;
   cover_image: File | null;
-  registration_type?: "vendor" | "service_provider" | "delivery_partner";
-  full_name?: string;
-  national_id?: string;
-  skills?: string;
-  experience_years?: number;
-  driver_license?: string;
-  vehicle_registration?: string;
-  vehicle_type?: string;
-  insurance_document?: string;
-  tin_number?: string;
-  vat_registration_number?: string;
-  tax_type?: string;
-  license_document?: File | null;
-  tin_document?: File | null;
-  national_id_document?: File | null;
-  certificate_document?: File | null;
-  driver_license_document?: File | null;
-  vehicle_document?: File | null;
-  insurance_document_file?: File | null;
-  phone?: string;
-  email?: string;
-  contact_phone?: string;
-  contact_email?: string;
-  license?: string | null;
+  chapa_sub_account_id: string;
+  theme_primary: string;
+  theme_dark: string;
+  theme_light: string;
+  tin_number: string;
+  vat_registration_number: string;
+  tax_type: string;
+  license: File | string | null;
+  contact_phone: string;
+  contact_email: string;
 }
 
 interface CompanyFormProps {
@@ -94,193 +76,10 @@ export default function CompanyForm({
 
   const [showMapPicker, setShowMapPicker] = useState(false);
 
-  useEffect(() => {
-    if (!formData.registration_type) {
-      const bizType = formData.business_type;
-      let regType: "vendor" | "service_provider" | "delivery_partner" = "vendor";
-      if (bizType === "brand" || bizType === "store") {
-        regType = "vendor";
-      } else if (bizType === "service") {
-        regType = "service_provider";
-      } else if (bizType === "delivery") {
-        regType = "delivery_partner";
-      }
-      setFormData(prev => ({ ...prev, registration_type: regType }));
-    }
-  }, [formData.business_type, formData.registration_type, setFormData]);
-
-  // Map legacy phone/email to contact_phone/contact_email for API compatibility
-  useEffect(() => {
-    if (!formData.contact_phone && formData.phone) {
-      setFormData(prev => ({ ...prev, contact_phone: prev.phone }));
-    }
-    if (!formData.contact_email && formData.email) {
-      setFormData(prev => ({ ...prev, contact_email: prev.email }));
-    }
-  }, [formData.phone, formData.email, formData.contact_phone, formData.contact_email, setFormData]);
-
-  // const fileToBase64 = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = () => resolve(reader.result as string);
-  //     reader.onerror = (error) => reject(error);
-  //   });
-  // };
-
-
   // ==================== STEP 1: BASIC INFORMATION ====================
   const renderStep1 = () => (
     <div className="space-y-4">
-      {/* Registration Type Selector - Compact Horizontal */}
-      <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-200">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-          <label className="block text-sm font-semibold text-gray-700">
-            Registration Type <span className="text-red-500">*</span>
-          </label>
-        </div>
-
-        {/* COMMENTED OUT - Registration type buttons (Vendor, Service, Delivery) */}
-        {/*
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-    {/* Vendor Option - Compact * /}
-    <button
-      type="button"
-      onClick={() => setFormData(prev => ({ ...prev, registration_type: "vendor" }))}
-      className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
-        formData.registration_type === "vendor"
-          ? "border-secondary bg-secondary/5 shadow-sm"
-          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
-    >
-      <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-        formData.registration_type === "vendor"
-          ? "bg-secondary text-white"
-          : "bg-gray-100 text-gray-500"
-      }`}>
-        <Store className="w-3.5 h-3.5" />
-      </div>
-      <span className={`text-xs font-medium ${
-        formData.registration_type === "vendor" ? "text-secondary" : "text-gray-700"
-      }`}>Vendor</span>
-      <div className="flex gap-0.5 ml-auto">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-      </div>
-      {formData.registration_type === "vendor" && (
-        <Check className="w-3.5 h-3.5 text-secondary ml-1" />
-      )}
-    </button>
-
-    {/* Service Provider Option - Compact * /}
-    <button
-      type="button"
-      onClick={() => setFormData(prev => ({ ...prev, registration_type: "service_provider" }))}
-      className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
-        formData.registration_type === "service_provider"
-          ? "border-secondary bg-secondary/5 shadow-sm"
-          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
-    >
-      <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-        formData.registration_type === "service_provider"
-          ? "bg-secondary text-white"
-          : "bg-gray-100 text-gray-500"
-      }`}>
-        <Users className="w-3.5 h-3.5" />
-      </div>
-      <span className={`text-xs font-medium ${
-        formData.registration_type === "service_provider" ? "text-secondary" : "text-gray-700"
-      }`}>Service</span>
-      <div className="flex gap-0.5 ml-auto">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-      </div>
-      {formData.registration_type === "service_provider" && (
-        <Check className="w-3.5 h-3.5 text-secondary ml-1" />
-      )}
-    </button>
-
-    {/* Delivery Partner Option - Compact * /}
-    <button
-      type="button"
-      onClick={() => setFormData(prev => ({ ...prev, registration_type: "delivery_partner" }))}
-      className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
-        formData.registration_type === "delivery_partner"
-          ? "border-secondary bg-secondary/5 shadow-sm"
-          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
-    >
-      <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-        formData.registration_type === "delivery_partner"
-          ? "bg-secondary text-white"
-          : "bg-gray-100 text-gray-500"
-      }`}>
-        <Truck className="w-3.5 h-3.5" />
-      </div>
-      <span className={`text-xs font-medium ${
-        formData.registration_type === "delivery_partner" ? "text-secondary" : "text-gray-700"
-      }`}>Delivery</span>
-      <div className="flex gap-0.5 ml-auto">
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-      </div>
-      {formData.registration_type === "delivery_partner" && (
-        <Check className="w-3.5 h-3.5 text-secondary ml-1" />
-      )}
-    </button>
-  </div>
-  */}
-
-        {/* Compact tag display - shows selected type's tags */}
-        <div className="mt-2 flex flex-wrap gap-1">
-          {formData.registration_type === "vendor" && (
-            <>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-medium border border-blue-200/50">
-                <Shield className="w-2.5 h-2.5" /> License
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[9px] font-medium border border-purple-200/50">
-                <FileText className="w-2.5 h-2.5" /> TIN
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-medium border border-emerald-200/50">
-                <Building2 className="w-2.5 h-2.5" /> Business
-              </span>
-            </>
-          )}
-          {formData.registration_type === "service_provider" && (
-            <>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] font-medium border border-rose-200/50">
-                <Award className="w-2.5 h-2.5" /> Skills
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-medium border border-indigo-200/50">
-                <FileCheck className="w-2.5 h-2.5" /> Credentials
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md text-[9px] font-medium border border-amber-200/50">
-                <IdCard className="w-2.5 h-2.5" /> National ID
-              </span>
-            </>
-          )}
-          {formData.registration_type === "delivery_partner" && (
-            <>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-[9px] font-medium border border-orange-200/50">
-                <Car className="w-2.5 h-2.5" /> Driver License
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-50 text-cyan-600 rounded-md text-[9px] font-medium border border-cyan-200/50">
-                <Car className="w-2.5 h-2.5" /> Vehicle
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-md text-[9px] font-medium border border-green-200/50">
-                <FileCheck className="w-2.5 h-2.5" /> Insurance
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Business Information ( registration types) */}
+      {/* Business Information */}
       <div>
         <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-3">
           <div className="flex items-center gap-2 text-blue-700">
@@ -297,11 +96,16 @@ export default function CompanyForm({
               type="text"
               placeholder="Enter company name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className={`w-full border rounded-xl p-3 text-sm ${formErrors.name ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className={`w-full border rounded-xl p-3 text-sm ${
+                formErrors.name ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
             />
-            {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+            {formErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -311,7 +115,9 @@ export default function CompanyForm({
               type="text"
               placeholder="Enter company name in Amharic"
               value={formData.name_am}
-              onChange={(e) => setFormData({ ...formData, name_am: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name_am: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
             />
           </div>
@@ -326,12 +132,21 @@ export default function CompanyForm({
               type="text"
               placeholder="e.g., my-company-slug"
               value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, slug: e.target.value })
+              }
               disabled={!!editingSlug}
-              className={`w-full border rounded-xl p-3 text-sm font-mono ${formErrors.slug ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition ${editingSlug ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+              className={`w-full border rounded-xl p-3 text-sm font-mono ${
+                formErrors.slug ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition ${
+                editingSlug
+                  ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                  : ""
+              }`}
             />
-            {formErrors.slug && <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>}
+            {formErrors.slug && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.slug}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -339,32 +154,26 @@ export default function CompanyForm({
             </label>
             <select
               value={formData.business_type}
-              onChange={(e) => {
-                const value = e.target.value;
-                let registrationType = formData.registration_type || "vendor";
-                if (value === "brand" || value === "store") {
-                  registrationType = "vendor";
-                } else if (value === "service") {
-                  registrationType = "service_provider";
-                } else if (value === "delivery") {
-                  registrationType = "delivery_partner";
-                }
-                setFormData({ ...formData, business_type: value, registration_type: registrationType });
-              }}
-              className={`w-full border rounded-xl p-3 text-sm font-medium transition-all duration-200 ${formErrors.business_type ? "border-red-500" :
-                formData.business_type === "brand" || formData.business_type === "store" ? "border-blue-500 bg-blue-50/30 text-blue-700" :
-                  formData.business_type === "service" ? "border-purple-500 bg-purple-50/30 text-purple-700" :
-                    formData.business_type === "delivery" ? "border-orange-500 bg-orange-50/30 text-orange-700" :
-                      "border-gray-300 bg-white"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+              onChange={(e) =>
+                setFormData({ ...formData, business_type: e.target.value })
+              }
+              className={`w-full border rounded-xl p-3 text-sm font-medium transition-all duration-200 ${
+                formErrors.business_type ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
             >
               <option value="">Select Business Type</option>
-              <option value="brand" className="text-blue-600">🏢 Company</option>
-              <option value="store" className="text-blue-600">🏪 Store</option>
-              <option value="service" className="text-purple-600">🛠️ Service</option>
-              <option value="delivery" className="text-orange-600">🚚 Delivery</option>
+              <option value="brand">Brand</option>
+              <option value="store">Store</option>
+              <option value="factory">Factory</option>
+              <option value="service">Service Provider</option>
+              <option value="delivery_service">Delivery Service</option>
+              <option value="other">Other</option>
             </select>
-            {formErrors.business_type && <p className="text-red-500 text-xs mt-1">{formErrors.business_type}</p>}
+            {formErrors.business_type && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.business_type}
+              </p>
+            )}
           </div>
         </div>
 
@@ -378,16 +187,20 @@ export default function CompanyForm({
               type="number"
               placeholder="Enter head company ID"
               value={formData.head_company ?? ""}
-              onChange={(e) => setFormData({ ...formData, head_company: e.target.value ? Number(e.target.value) : null })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  head_company: e.target.value ? Number(e.target.value) : null,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
             />
             {headCompanyName && (
               <span className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg whitespace-nowrap">
-               {headCompanyName}
+                {headCompanyName}
               </span>
             )}
           </div>
-          {formErrors.head_company && <p className="text-red-500 text-xs mt-1">{formErrors.head_company}</p>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -401,15 +214,20 @@ export default function CompanyForm({
                 const catId = Number(e.target.value);
                 setFormData({ ...formData, category: catId, sub_category: 0 });
               }}
-              className={`w-full border rounded-xl p-3 text-sm ${formErrors.category ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
+              className={`w-full border rounded-xl p-3 text-sm ${
+                formErrors.category ? "border-red-500" : "border-gray-300"
+              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
             >
               <option value={0}>Select Category</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
               ))}
             </select>
-            {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+            {formErrors.category && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -417,17 +235,31 @@ export default function CompanyForm({
             </label>
             <select
               value={formData.sub_category}
-              onChange={(e) => setFormData({ ...formData, sub_category: Number(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  sub_category: Number(e.target.value),
+                })
+              }
               disabled={!formData.category}
-              className={`w-full border rounded-xl p-3 text-sm ${!formData.category ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-                } ${formErrors.sub_category ? "border-red-500" : "border-gray-300"} focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+              className={`w-full border rounded-xl p-3 text-sm ${
+                !formData.category
+                  ? "bg-gray-100 cursor-not-allowed"
+                  : "bg-white"
+              } ${formErrors.sub_category ? "border-red-500" : "border-gray-300"} focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
             >
               <option value={0}>Select Subcategory</option>
               {filteredSubcategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
               ))}
             </select>
-            {formErrors.sub_category && <p className="text-red-500 text-xs mt-1">{formErrors.sub_category}</p>}
+            {formErrors.sub_category && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.sub_category}
+              </p>
+            )}
           </div>
         </div>
 
@@ -438,13 +270,14 @@ export default function CompanyForm({
           <textarea
             placeholder="Enter company description"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             rows={3}
             className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
           />
         </div>
 
-        {/* Amharic Description */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Description (Amharic)
@@ -452,7 +285,9 @@ export default function CompanyForm({
           <textarea
             placeholder="Enter company description in Amharic"
             value={formData.description_am}
-            onChange={(e) => setFormData({ ...formData, description_am: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description_am: e.target.value })
+            }
             rows={3}
             className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none"
           />
@@ -466,10 +301,14 @@ export default function CompanyForm({
                 type="checkbox"
                 className="sr-only peer"
                 checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
               />
               <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-              <span className="ml-3 text-sm font-medium text-gray-700">Is Active</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                Is Active
+              </span>
             </label>
           </div>
           <div className="flex items-center gap-3">
@@ -478,10 +317,14 @@ export default function CompanyForm({
                 type="checkbox"
                 className="sr-only peer"
                 checked={formData.is_featured}
-                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_featured: e.target.checked })
+                }
               />
               <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-              <span className="ml-3 text-sm font-medium text-gray-700">Is Featured</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                Is Featured
+              </span>
             </label>
           </div>
         </div>
@@ -493,145 +336,20 @@ export default function CompanyForm({
               type="checkbox"
               className="sr-only peer"
               checked={formData.supports_table_service}
-              onChange={(e) => setFormData({ ...formData, supports_table_service: e.target.checked })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  supports_table_service: e.target.checked,
+                })
+              }
             />
             <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-secondary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-            <span className="ml-3 text-sm font-medium text-gray-700">Supports Table Service</span>
+            <span className="ml-3 text-sm font-medium text-gray-700">
+              Supports Table Service
+            </span>
           </label>
         </div>
       </div>
-
-      {/* Additional fields for Service Provider */}
-      {formData.registration_type === "service_provider" && (
-        <>
-          <div className="bg-purple-50/50 border border-purple-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-purple-700">
-              <Users className="w-4 h-4" />
-              <p className="text-xs font-medium">Service Provider - Personal Information & Skills</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter full name"
-                value={formData.full_name || ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${formErrors.full_name ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              />
-              {formErrors.full_name && <p className="text-red-500 text-xs mt-1">{formErrors.full_name}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                National ID <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter national ID number"
-                value={formData.national_id || ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, national_id: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${formErrors.national_id ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              />
-              {formErrors.national_id && <p className="text-red-500 text-xs mt-1">{formErrors.national_id}</p>}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skills / Services Offered <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              placeholder="List your skills, qualifications, and services"
-              value={formData.skills || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, skills: e.target.value }))}
-              rows={3}
-              className={`w-full border rounded-xl p-3 text-sm ${formErrors.skills ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition resize-none`}
-            />
-            {formErrors.skills && <p className="text-red-500 text-xs mt-1">{formErrors.skills}</p>}
-          </div>
-        </>
-      )}
-
-      {/* Delivery Partner Info */}
-      {formData.registration_type === "delivery_partner" && (
-        <>
-          <div className="bg-orange-50/50 border border-orange-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-orange-700">
-              <Truck className="w-4 h-4" />
-              <p className="text-xs font-medium">Delivery Partner - Driver & Vehicle Information</p>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Enter full name"
-              value={formData.full_name || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
-              className={`w-full border rounded-xl p-3 text-sm ${formErrors.full_name ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-            />
-            {formErrors.full_name && <p className="text-red-500 text-xs mt-1">{formErrors.full_name}</p>}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Driver License <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter driver license number"
-                value={formData.driver_license || ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, driver_license: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${formErrors.driver_license ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              />
-              {formErrors.driver_license && <p className="text-red-500 text-xs mt-1">{formErrors.driver_license}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vehicle Registration <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Enter vehicle registration number"
-                value={formData.vehicle_registration || ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, vehicle_registration: e.target.value }))}
-                className={`w-full border rounded-xl p-3 text-sm ${formErrors.vehicle_registration ? "border-red-500" : "border-gray-300"
-                  } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-              />
-              {formErrors.vehicle_registration && <p className="text-red-500 text-xs mt-1">{formErrors.vehicle_registration}</p>}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Vehicle Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.vehicle_type || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, vehicle_type: e.target.value }))}
-              className={`w-full border rounded-xl p-3 text-sm ${formErrors.vehicle_type ? "border-red-500" : "border-gray-300"
-                } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white`}
-            >
-              <option value="">Select Vehicle Type</option>
-              <option value="car">Car</option>
-              <option value="motorcycle">Motorcycle</option>
-              <option value="bicycle">Bicycle</option>
-              <option value="scooter">Scooter</option>
-              <option value="truck">Truck</option>
-              <option value="van">Van</option>
-            </select>
-            {formErrors.vehicle_type && <p className="text-red-500 text-xs mt-1">{formErrors.vehicle_type}</p>}
-          </div>
-        </>
-      )}
     </div>
   );
 
@@ -646,14 +364,18 @@ export default function CompanyForm({
           type="text"
           placeholder="Street, city, area..."
           value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          className={`w-full border rounded-xl p-3 text-sm ${formErrors.address ? "border-red-500" : "border-gray-300"
-            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+          onChange={(e) =>
+            setFormData({ ...formData, address: e.target.value })
+          }
+          className={`w-full border rounded-xl p-3 text-sm ${
+            formErrors.address ? "border-red-500" : "border-gray-300"
+          } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
         />
-        {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
+        {formErrors.address && (
+          <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>
+        )}
       </div>
 
-      {/* Amharic Address */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Address (Amharic)
@@ -662,7 +384,9 @@ export default function CompanyForm({
           type="text"
           placeholder="Enter address in Amharic"
           value={formData.address_am}
-          onChange={(e) => setFormData({ ...formData, address_am: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, address_am: e.target.value })
+          }
           className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
         />
       </div>
@@ -675,12 +399,19 @@ export default function CompanyForm({
           <input
             type="tel"
             placeholder="+251 911 234 567"
-            value={formData.contact_phone || formData.phone || ""}
-            onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value, phone: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.contact_phone || formErrors.phone ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            value={formData.contact_phone}
+            onChange={(e) =>
+              setFormData({ ...formData, contact_phone: e.target.value })
+            }
+            className={`w-full border rounded-xl p-3 text-sm ${
+              formErrors.contact_phone ? "border-red-500" : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {(formErrors.contact_phone || formErrors.phone) && <p className="text-red-500 text-xs mt-1">{formErrors.contact_phone || formErrors.phone}</p>}
+          {formErrors.contact_phone && (
+            <p className="text-red-500 text-xs mt-1">
+              {formErrors.contact_phone}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -689,16 +420,22 @@ export default function CompanyForm({
           <input
             type="email"
             placeholder="info@company.com"
-            value={formData.contact_email || formData.email || ""}
-            onChange={(e) => setFormData({ ...formData, contact_email: e.target.value, email: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.contact_email || formErrors.email ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            value={formData.contact_email}
+            onChange={(e) =>
+              setFormData({ ...formData, contact_email: e.target.value })
+            }
+            className={`w-full border rounded-xl p-3 text-sm ${
+              formErrors.contact_email ? "border-red-500" : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {(formErrors.contact_email || formErrors.email) && <p className="text-red-500 text-xs mt-1">{formErrors.contact_email || formErrors.email}</p>}
+          {formErrors.contact_email && (
+            <p className="text-red-500 text-xs mt-1">
+              {formErrors.contact_email}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Minimum Order Total & Delivery Fee Per KM */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -708,11 +445,20 @@ export default function CompanyForm({
             type="text"
             placeholder="0.00"
             value={formData.minimum_order_total}
-            onChange={(e) => setFormData({ ...formData, minimum_order_total: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.minimum_order_total ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            onChange={(e) =>
+              setFormData({ ...formData, minimum_order_total: e.target.value })
+            }
+            className={`w-full border rounded-xl p-3 text-sm ${
+              formErrors.minimum_order_total
+                ? "border-red-500"
+                : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {formErrors.minimum_order_total && <p className="text-red-500 text-xs mt-1">{formErrors.minimum_order_total}</p>}
+          {formErrors.minimum_order_total && (
+            <p className="text-red-500 text-xs mt-1">
+              {formErrors.minimum_order_total}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -722,11 +468,107 @@ export default function CompanyForm({
             type="text"
             placeholder="0.00"
             value={formData.delivery_fee_per_km}
-            onChange={(e) => setFormData({ ...formData, delivery_fee_per_km: e.target.value })}
-            className={`w-full border rounded-xl p-3 text-sm ${formErrors.delivery_fee_per_km ? "border-red-500" : "border-gray-300"
-              } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+            onChange={(e) =>
+              setFormData({ ...formData, delivery_fee_per_km: e.target.value })
+            }
+            className={`w-full border rounded-xl p-3 text-sm ${
+              formErrors.delivery_fee_per_km
+                ? "border-red-500"
+                : "border-gray-300"
+            } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
           />
-          {formErrors.delivery_fee_per_km && <p className="text-red-500 text-xs mt-1">{formErrors.delivery_fee_per_km}</p>}
+          {formErrors.delivery_fee_per_km && (
+            <p className="text-red-500 text-xs mt-1">
+              {formErrors.delivery_fee_per_km}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Chapa Sub-account ID
+        </label>
+        <input
+          type="text"
+          placeholder="Enter Chapa sub-account ID"
+          value={formData.chapa_sub_account_id}
+          onChange={(e) =>
+            setFormData({ ...formData, chapa_sub_account_id: e.target.value })
+          }
+          className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Theme Primary
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.theme_primary || "#674FA3"}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_primary: e.target.value })
+              }
+              className="h-10 w-14 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={formData.theme_primary}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_primary: e.target.value })
+              }
+              className="flex-1 border border-gray-300 rounded-xl p-3 text-sm font-mono"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Theme Dark
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.theme_dark || "#6750A4"}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_dark: e.target.value })
+              }
+              className="h-10 w-14 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={formData.theme_dark}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_dark: e.target.value })
+              }
+              className="flex-1 border border-gray-300 rounded-xl p-3 text-sm font-mono"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Theme Light
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.theme_light || "#8B6BB5"}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_light: e.target.value })
+              }
+              className="h-10 w-14 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={formData.theme_light}
+              onChange={(e) =>
+                setFormData({ ...formData, theme_light: e.target.value })
+              }
+              className="flex-1 border border-gray-300 rounded-xl p-3 text-sm font-mono"
+            />
+          </div>
         </div>
       </div>
 
@@ -741,10 +583,14 @@ export default function CompanyForm({
               step="any"
               placeholder="Latitude"
               value={formData.latitude}
-              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, latitude: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-xl p-3 text-sm pr-12 focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">LAT</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">
+              LAT
+            </span>
           </div>
           <div className="relative">
             <input
@@ -752,10 +598,14 @@ export default function CompanyForm({
               step="any"
               placeholder="Longitude"
               value={formData.longitude}
-              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, longitude: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-xl p-3 text-sm pr-12 focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">LON</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">
+              LON
+            </span>
           </div>
         </div>
         <button
@@ -781,7 +631,9 @@ export default function CompanyForm({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Company Logo
+            </label>
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-4 flex flex-col items-center justify-center transition-all hover:border-secondary hover:bg-gray-50/80 min-h-[180px]">
               <input
                 type="file"
@@ -803,7 +655,11 @@ export default function CompanyForm({
               {logoPreview ? (
                 <div className="relative w-full flex flex-col items-center">
                   <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-lg ring-2 ring-secondary/20">
-                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={logoPreview}
+                      alt="Logo Preview"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <button
                     type="button"
@@ -811,7 +667,9 @@ export default function CompanyForm({
                       e.stopPropagation();
                       setFormData((prev) => ({ ...prev, logo: null }));
                       onLogoFileChange?.(null);
-                      const fileInput = document.getElementById("logo-upload") as HTMLInputElement;
+                      const fileInput = document.getElementById(
+                        "logo-upload",
+                      ) as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
                     className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition"
@@ -820,20 +678,31 @@ export default function CompanyForm({
                   </button>
                 </div>
               ) : (
-                <label htmlFor="logo-upload" className="flex flex-col items-center justify-center cursor-pointer w-full py-4 group">
+                <label
+                  htmlFor="logo-upload"
+                  className="flex flex-col items-center justify-center cursor-pointer w-full py-4 group"
+                >
                   <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mb-2 group-hover:bg-secondary/20 transition">
                     <Camera className="w-6 h-6 text-secondary group-hover:scale-110 transition" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-600">Upload Logo</span>
-                  <span className="text-xs text-gray-400">PNG, JPG up to 5MB</span>
-                  <span className="text-xs text-gray-400 mt-1">Square image recommended (1:1)</span>
+                  <span className="text-sm font-semibold text-gray-600">
+                    Upload Logo
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    PNG, JPG up to 5MB
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1">
+                    Square image recommended (1:1)
+                  </span>
                 </label>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cover Image
+            </label>
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-200 p-4 flex flex-col items-center justify-center transition-all hover:border-secondary hover:bg-gray-50/80 min-h-[180px]">
               <input
                 type="file"
@@ -855,16 +724,21 @@ export default function CompanyForm({
               {coverPreview ? (
                 <div className="relative w-full flex flex-col items-center">
                   <div className="w-full max-h-32 overflow-hidden rounded-xl shadow-lg">
-                    <img src={coverPreview} alt="Cover Preview" className="w-full object-cover" />
+                    <img
+                      src={coverPreview}
+                      alt="Cover Preview"
+                      className="w-full object-cover"
+                    />
                   </div>
                   <button
                     type="button"
-
                     onClick={(e) => {
                       e.stopPropagation();
                       setFormData((prev) => ({ ...prev, cover_image: null }));
                       onCoverFileChange?.(null);
-                      const fileInput = document.getElementById("cover-upload") as HTMLInputElement;
+                      const fileInput = document.getElementById(
+                        "cover-upload",
+                      ) as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
                     className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition"
@@ -873,13 +747,22 @@ export default function CompanyForm({
                   </button>
                 </div>
               ) : (
-                <label htmlFor="cover-upload" className="flex flex-col items-center justify-center cursor-pointer w-full py-4 group">
+                <label
+                  htmlFor="cover-upload"
+                  className="flex flex-col items-center justify-center cursor-pointer w-full py-4 group"
+                >
                   <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mb-2 group-hover:bg-secondary/20 transition">
                     <Camera className="w-6 h-6 text-secondary group-hover:scale-110 transition" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-600">Upload Cover Image</span>
-                  <span className="text-xs text-gray-400">PNG, JPG up to 10MB</span>
-                  <span className="text-xs text-gray-400 mt-1">Wide banner recommended (16:9)</span>
+                  <span className="text-sm font-semibold text-gray-600">
+                    Upload Cover Image
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    PNG, JPG up to 10MB
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1">
+                    Wide banner recommended (16:9)
+                  </span>
                 </label>
               )}
             </div>
@@ -887,492 +770,159 @@ export default function CompanyForm({
         </div>
       </div>
 
-      {/* License & Tax Information - for Vendor and Service Provider */}
-      {(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-            <h3 className="text-sm font-bold text-secondary">License & Tax Information</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-
-            {/* TIN NUMBER - MODIFIED: Added placeholder hint */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                TIN Number <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Enter TIN number (e.g. 1234567890)"
-                  value={formData.tin_number || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, tin_number: e.target.value }))}
-                  className={`w-full border rounded-xl p-3 text-sm pl-10 ${formErrors.tin_number ? "border-red-500" : "border-gray-300"
-                    } focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
-                />
-              </div>
-              {formErrors.tin_number && <p className="text-red-500 text-xs mt-1">{formErrors.tin_number}</p>}
-              <p className="text-[10px] text-gray-400 mt-1">10-digit Tax Identification Number</p>
-            </div>
-
-            {/* VAT REGISTRATION NUMBER  */}
-            {/*  VAT Registration Number 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          VAT Registration Number
-        </label>
-        <div className="relative">
-          <FileCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Enter VAT registration number"
-            value={formData.vat_registration_number || ""}
-            onChange={(e) => setFormData((prev) => ({ ...prev, vat_registration_number: e.target.value }))}
-            className="w-full border border-gray-300 rounded-xl p-3 text-sm pl-10 focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
-          />
-        </div>
-        <p className="text-[10px] text-gray-400 mt-1">Optional: VAT registration number</p>
-      </div>
-      */}
-
-            {/*  TAX TYPE DROPDOWN  */}
-            <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tax Type
-              </label>
-              <select
-                value={formData.tax_type || "none"}
-                onChange={(e) => setFormData((prev) => ({ ...prev, tax_type: e.target.value }))}
-                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white"
-              >
-                <option value="none">None - Not Registered for Tax</option>
-                <option value="vat">VAT Registered</option>
-                <option value="turnover">Turnover Tax</option>
-                <option value="withholding">Withholding Tax</option>
-              </select>
-              <p className="text-[10px] text-gray-400 mt-1">Select the applicable tax regime for this business</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Verification Documents */}
+      {/* License & Tax Information */}
       <div>
         <div className="flex items-center gap-2 mb-3">
           <div className="h-5 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/40" />
-          <h3 className="text-sm font-bold text-secondary">Verification Documents</h3>
+          <h3 className="text-sm font-bold text-secondary">
+            License & Tax Information
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              License Document
+            </label>
+            {formData.license && typeof formData.license === "string" ? (
+              <div className="bg-blue-50 border border-blue-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all mb-2">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    Existing license
+                  </p>
+                  <a
+                    href={formData.license}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-blue-600 underline"
+                  >
+                    View file
+                  </a>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, license: null }))
+                  }
+                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                  title="Remove existing license"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            ) : formData.license instanceof File ? (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {formData.license.name}
+                  </p>
+                  <p className="text-xs text-emerald-600">
+                    ✓ Uploaded ({(formData.license.size / 1024).toFixed(1)} KB)
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, license: null }))
+                  }
+                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                  title="Remove file"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  type="file"
+                  id="license-upload"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setFormData((prev) => ({ ...prev, license: file }));
+                  }}
+                  className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${
+                    formErrors.license ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+              </div>
+            )}
+            {formErrors.license && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.license}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              TIN Number
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Enter TIN number"
+                value={formData.tin_number}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    tin_number: e.target.value,
+                  }))
+                }
+                className={`w-full border rounded-xl p-3 text-sm pl-10 ${formErrors.tin_number ? "border-red-500" : "border-gray-300"} focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition`}
+              />
+            </div>
+            {formErrors.tin_number && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.tin_number}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              VAT Registration Number
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Enter VAT registration number"
+                value={formData.vat_registration_number}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    vat_registration_number: e.target.value,
+                  }))
+                }
+                className="w-full border border-gray-300 rounded-xl p-3 text-sm pl-10 focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Vendor Documents - for Vendor and Service Provider */}
-        {(formData.registration_type === "vendor" || formData.registration_type === "service_provider") && (
-          <div className="space-y-4">
-            <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-3">
-              <div className="flex items-center gap-2 text-blue-700">
-                <Shield className="w-4 h-4" />
-                <p className="text-xs font-medium">Vendor Verification Documents</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  License Document <span className="text-red-500">*</span>
-                </label>
-                {/* Existing license URL display */}
-                {formData.license && !formData.license_document && (
-                  <div className="bg-blue-50 border border-blue-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">Existing license</p>
-                      <a href={formData.license} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">View file</a>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, license: null }))}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove existing license"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-                {formData.license_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.license_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.license_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, license_document: null }));
-                        const input = document.getElementById('vendor-license-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="vendor-license-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, license_document: file }));
-                      }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.license_document ? "border-red-500" : "border-gray-300"
-                        }`}
-                    />
-                  </div>
-                )}
-                {formErrors.license_document && <p className="text-red-500 text-xs mt-1">{formErrors.license_document}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  TIN Document <span className="text-red-500">*</span>
-                </label>
-                {formData.tin_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.tin_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.tin_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, tin_document: null }));
-                        const input = document.getElementById('vendor-tin-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="vendor-tin-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, tin_document: file }));
-                      }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.tin_document ? "border-red-500" : "border-gray-300"
-                        }`}
-                    />
-                  </div>
-                )}
-                {formErrors.tin_document && <p className="text-red-500 text-xs mt-1">{formErrors.tin_document}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Service Provider Documents */}
-        {formData.registration_type === "service_provider" && (
-          <div className="space-y-4">
-            <div className="bg-purple-50/50 border border-purple-200 rounded-xl p-3">
-              <div className="flex items-center gap-2 text-purple-700">
-                <IdCard className="w-4 h-4" />
-                <p className="text-xs font-medium">Service Provider Verification Documents</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  National ID Document <span className="text-red-500">*</span>
-                </label>
-                {formData.national_id_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.national_id_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.national_id_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, national_id_document: null }));
-                        const input = document.getElementById('service-national-id-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="service-national-id-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, national_id_document: file }));
-                      }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.national_id_document ? "border-red-500" : "border-gray-300"
-                        }`}
-                    />
-                  </div>
-                )}
-                {formErrors.national_id_document && <p className="text-red-500 text-xs mt-1">{formErrors.national_id_document}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Certificate / Credential
-                </label>
-                {formData.certificate_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.certificate_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.certificate_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, certificate_document: null }));
-                        const input = document.getElementById('service-certificate-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="service-certificate-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, certificate_document: file }));
-                      }}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20"
-                    />
-                  </div>
-                )}
-                <p className="text-xs text-gray-400 mt-1">Upload certificates or credentials (Optional)</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delivery Partner Documents */}
-        {formData.registration_type === "delivery_partner" && (
-          <div className="space-y-4">
-            <div className="bg-orange-50/50 border border-orange-200 rounded-xl p-3">
-              <div className="flex items-center gap-2 text-orange-700">
-                <Car className="w-4 h-4" />
-                <p className="text-xs font-medium">Delivery Partner Verification Documents</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  License Document <span className="text-red-500">*</span>
-                </label>
-                {formData.driver_license_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.driver_license_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.driver_license_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, driver_license_document: null }));
-                        const input = document.getElementById('delivery-license-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="delivery-license-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, driver_license_document: file }));
-                      }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.driver_license_document ? "border-red-500" : "border-gray-300"
-                        }`}
-                    />
-                  </div>
-                )}
-                {formErrors.driver_license_document && <p className="text-red-500 text-xs mt-1">{formErrors.driver_license_document}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vehicle Document <span className="text-red-500">*</span>
-                </label>
-                {formData.vehicle_document ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.vehicle_document.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.vehicle_document.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, vehicle_document: null }));
-                        const input = document.getElementById('delivery-vehicle-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="delivery-vehicle-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, vehicle_document: file }));
-                      }}
-                      className={`w-full border rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 ${formErrors.vehicle_document ? "border-red-500" : "border-gray-300"
-                        }`}
-                    />
-                  </div>
-                )}
-                {formErrors.vehicle_document && <p className="text-red-500 text-xs mt-1">{formErrors.vehicle_document}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Insurance Document
-                </label>
-                {formData.insurance_document_file ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{formData.insurance_document_file.name}</p>
-                      <p className="text-xs text-emerald-600">✓ Uploaded ({(formData.insurance_document_file.size / 1024).toFixed(1)} KB)</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, insurance_document_file: null }));
-                        const input = document.getElementById('delivery-insurance-input') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                      title="Remove file"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="delivery-insurance-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFormData(prev => ({ ...prev, insurance_document_file: file }));
-                      }}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20"
-                    />
-                  </div>
-                )}
-                <p className="text-xs text-gray-400 mt-1">Insurance document (Optional)</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Upload Status Summary */}
-        <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <FileCheck className="w-4 h-4 text-secondary" />
-            <p className="text-xs font-medium text-gray-700">Upload Status</p>
-          </div>
-          <div className="flex flex-wrap gap-3 text-xs">
-            <span className={`flex items-center gap-1 ${logoPreview ? 'text-emerald-600' : 'text-gray-400'}`}>
-              {logoPreview ? '✅' : '⬜'} Logo
-            </span>
-            <span className={`flex items-center gap-1 ${coverPreview ? 'text-emerald-600' : 'text-gray-400'}`}>
-              {coverPreview ? '✅' : '⬜'} Cover
-            </span>
-            {formData.registration_type === "vendor" && (
-              <>
-                <span className={`flex items-center gap-1 ${formData.license_document || formData.license ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.license_document || formData.license ? '✅' : '⬜'} License
-                </span>
-                <span className={`flex items-center gap-1 ${formData.tin_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.tin_document ? '✅' : '⬜'} TIN
-                </span>
-              </>
-            )}
-            {formData.registration_type === "service_provider" && (
-              <>
-                <span className={`flex items-center gap-1 ${formData.national_id_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.national_id_document ? '✅' : '⬜'} National ID
-                </span>
-                <span className={`flex items-center gap-1 ${formData.certificate_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.certificate_document ? '✅' : '⬜'} Certificate
-                </span>
-              </>
-            )}
-            {formData.registration_type === "delivery_partner" && (
-              <>
-                <span className={`flex items-center gap-1 ${formData.driver_license_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.driver_license_document ? '✅' : '⬜'} License
-                </span>
-                <span className={`flex items-center gap-1 ${formData.vehicle_document ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.vehicle_document ? '✅' : '⬜'} Vehicle
-                </span>
-                <span className={`flex items-center gap-1 ${formData.insurance_document_file ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {formData.insurance_document_file ? '✅' : '⬜'} Insurance
-                </span>
-              </>
-            )}
-          </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tax Type
+          </label>
+          <select
+            value={formData.tax_type}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, tax_type: e.target.value }))
+            }
+            className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none transition bg-white"
+          >
+            <option value="none">No Tax</option>
+            <option value="vat">VAT (15%)</option>
+            <option value="turnover_goods">Turnover Tax - Goods (2%)</option>
+            <option value="turnover_services">
+              Turnover Tax - Services (10%)
+            </option>
+          </select>
         </div>
       </div>
     </div>
@@ -1384,8 +934,12 @@ export default function CompanyForm({
       <div className="flex items-center gap-2 mb-0.5">
         <div className="h-6 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary-light" />
         <div>
-          <h2 className="text-sm font-bold text-secondary">Review Your Company Details</h2>
-          <p className="text-[10px] text-secondary/60">Verify all information before registration</p>
+          <h2 className="text-sm font-bold text-secondary">
+            Review Your Company Details
+          </h2>
+          <p className="text-[10px] text-secondary/60">
+            Verify all information before registration
+          </p>
         </div>
       </div>
 
@@ -1395,41 +949,78 @@ export default function CompanyForm({
             <span className="text-sm">📋</span> Information
           </h3>
         </div>
-        {formData.registration_type === "vendor" && (
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Company Name</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.name || '—'}</p></div>
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Slug</p><p className="text-xs font-mono text-gray-700 truncate">{formData.slug || '—'}</p></div>
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Business Type</p><p className="text-xs font-semibold text-gray-800 capitalize truncate">{formData.business_type || '—'}</p></div>
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Category</p><p className="text-xs font-semibold text-gray-800 truncate">{categories.find(c => c.id === formData.category)?.name || '—'}</p></div>
-            {/*  TIN Number in Review */}
-            <div>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">TIN Number</p>
-              <p className="text-xs font-semibold text-gray-800 truncate">{formData.tin_number || '—'}</p>
-            </div>
-            {/*  Tax Type in Review */}
-            <div>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">Tax Type</p>
-              <p className="text-xs font-semibold text-gray-800 truncate">
-                {formData.tax_type === 'vat' ? 'VAT Registered' :
-                  formData.tax_type === 'turnover' ? 'Turnover Tax' :
-                    formData.tax_type === 'withholding' ? 'Withholding Tax' : 'None'}
-              </p>
-            </div>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Company Name
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.name || "—"}
+            </p>
           </div>
-        )}
-        {formData.registration_type === "service_provider" && (
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Full Name</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.full_name || '—'}</p></div>
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">National ID</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.national_id || '—'}</p></div>
-            <div className="col-span-2"><p className="text-[9px] text-gray-400 uppercase tracking-wider">Skills</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.skills || '—'}</p></div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Slug
+            </p>
+            <p className="text-xs font-mono text-gray-700 truncate">
+              {formData.slug || "—"}
+            </p>
           </div>
-        )}
-        {formData.registration_type === "delivery_partner" && (
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Driver License</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.driver_license || '—'}</p></div>
-            <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Vehicle Type</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.vehicle_type || '—'}</p></div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Business Type
+            </p>
+            <p className="text-xs font-semibold text-gray-800 capitalize truncate">
+              {formData.business_type || "—"}
+            </p>
           </div>
-        )}
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Category
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {categories.find((c) => c.id === formData.category)?.name || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              TIN Number
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.tin_number || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Tax Type
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.tax_type === "vat"
+                ? "VAT Registered"
+                : formData.tax_type === "turnover_goods"
+                  ? "Turnover Tax - Goods"
+                  : formData.tax_type === "turnover_services"
+                    ? "Turnover Tax - Services"
+                    : "No Tax"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Chapa ID
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.chapa_sub_account_id || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Theme Primary
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.theme_primary || "—"}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
@@ -1439,9 +1030,30 @@ export default function CompanyForm({
           </h3>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="col-span-2"><p className="text-[9px] text-gray-400 uppercase tracking-wider">Address</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.address || '—'}</p></div>
-          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Phone</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.contact_phone || formData.phone || '—'}</p></div>
-          <div><p className="text-[9px] text-gray-400 uppercase tracking-wider">Email</p><p className="text-xs font-semibold text-gray-800 truncate">{formData.contact_email || formData.email || '—'}</p></div>
+          <div className="col-span-2">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Address
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.address || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Phone
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.contact_phone || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              Email
+            </p>
+            <p className="text-xs font-semibold text-gray-800 truncate">
+              {formData.contact_email || "—"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -1453,12 +1065,36 @@ export default function CompanyForm({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-lg p-3 text-center border-2 border-dashed border-gray-200 min-h-[80px] flex flex-col items-center justify-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Logo</p>
-            {logoPreview ? <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md"><img src={logoPreview} alt="Logo" className="w-full h-full object-cover" /></div> : <p className="text-[10px] text-gray-400">No logo</p>}
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">
+              Logo
+            </p>
+            {logoPreview ? (
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md">
+                <img
+                  src={logoPreview}
+                  alt="Logo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <p className="text-[10px] text-gray-400">No logo</p>
+            )}
           </div>
           <div className="bg-white rounded-lg p-3 text-center border-2 border-dashed border-gray-200 min-h-[80px] flex flex-col items-center justify-center">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Cover</p>
-            {coverPreview ? <div className="relative w-full h-12 rounded-xl overflow-hidden shadow-md"><img src={coverPreview} alt="Cover" className="w-full h-full object-cover" /></div> : <p className="text-[10px] text-gray-400">No cover</p>}
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">
+              Cover
+            </p>
+            {coverPreview ? (
+              <div className="relative w-full h-12 rounded-xl overflow-hidden shadow-md">
+                <img
+                  src={coverPreview}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <p className="text-[10px] text-gray-400">No cover</p>
+            )}
           </div>
         </div>
       </div>
@@ -1466,11 +1102,17 @@ export default function CompanyForm({
       <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-lg p-2.5 border border-emerald-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-emerald-700">✅ Ready</span>
-          <span className="text-[10px] text-emerald-600">4/4 steps complete</span>
+          <span className="text-[10px] text-emerald-600">
+            4/4 steps complete
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-gray-500">{formData.name ? '✅' : '❌'} Name</span>
-          <span className="text-[10px] text-gray-500">{formData.slug ? '✅' : '❌'} Slug</span>
+          <span className="text-[10px] text-gray-500">
+            {formData.name ? "✅" : "❌"} Name
+          </span>
+          <span className="text-[10px] text-gray-500">
+            {formData.slug ? "✅" : "❌"} Slug
+          </span>
         </div>
       </div>
     </div>
@@ -1489,7 +1131,6 @@ export default function CompanyForm({
         {currentStep === 3 && renderStep4()}
       </div>
 
-      {/* Location Picker Modal */}
       {showMapPicker && (
         <LocationPickerModal
           isOpen={showMapPicker}

@@ -21,7 +21,7 @@ import DeliveryTrackingMap from "./DeliveryTrackingMap";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-/* ---------- Reusable sub‑components ---------- */
+/* ---------- Reusable sub-components ---------- */
 const StatusBadge = ({
   status,
   type = "order",
@@ -36,11 +36,11 @@ const StatusBadge = ({
     shipped: "In Transit",
     fulfilled: "Delivered",
     contacted: "Confirmed",
-    pending: "pending", // order status stays pending
+    pending: "pending",
   };
 
   const deliveryStatusLabels: Record<string, string> = {
-    pending: "Assigned", // delivery status mapping
+    pending: "Assigned",
     out_for_delivery: "In Transit",
     delivered: "Completed",
   };
@@ -82,16 +82,16 @@ const StatusBadge = ({
   );
 };
 
-// Helper component for formatted date display
 const OrderDate = ({ dateString }: { dateString?: string }) => {
   if (!dateString) return <span className="text-gray-400 text-xs">—</span>;
 
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  const isYesterday =
-    new Date(now.setDate(now.getDate() - 1)).toDateString() ===
-    date.toDateString();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = yesterday.toDateString() === date.toDateString();
 
   const formatTime = date.toLocaleTimeString("en-US", {
     hour: "2-digit",
@@ -114,7 +114,7 @@ const OrderDate = ({ dateString }: { dateString?: string }) => {
     </div>
   );
 };
-// ─── Helper: Check if date is today ──────────────────────────
+
 const isTodayDate = (dateString?: string): boolean => {
   if (!dateString) return false;
   const date = new Date(dateString);
@@ -140,11 +140,9 @@ const CompanyAvatar = ({
 
 const SkeletonRow = ({ isAdminLike }: { isAdminLike: boolean }) => (
   <tr className="animate-pulse">
-    {/* Order ID */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="h-4 bg-gray-200 rounded w-16" />
     </td>
-    {/* Company column (only for admin) */}
     {isAdminLike && (
       <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -153,30 +151,24 @@ const SkeletonRow = ({ isAdminLike }: { isAdminLike: boolean }) => (
         </div>
       </td>
     )}
-    {/* Amount */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="h-4 bg-gray-200 rounded w-20" />
     </td>
-    {/* Payment Method */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="h-4 bg-gray-200 rounded w-24" />
     </td>
-    {/* Order Status */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="h-6 bg-gray-200 rounded-full w-20" />
     </td>
-    {/* Delivery Status */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="h-6 bg-gray-200 rounded-full w-24" />
     </td>
-    {/* Date & Time */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
       <div className="space-y-1">
         <div className="h-3 bg-gray-200 rounded w-20" />
         <div className="h-2 bg-gray-200 rounded w-16" />
       </div>
     </td>
-    {/* Actions */}
     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 whitespace-nowrap text-right">
       <div className="h-7 w-16 bg-gray-200 rounded-lg ml-auto" />
     </td>
@@ -222,13 +214,10 @@ export default function CompanyOrders() {
 
   const isSuperAdmin = !user?.memberships?.length;
   const isAdminLike = isSuperAdmin || readOnly;
-
-  // Superadmin: global admin API. Viewer: scoped admin API (backend filters by company).
-  // Admin/staff: company-scoped API only.
   const shouldFetchAll = isSuperAdmin || readOnly;
 
   const companySlug = company?.slug ?? null;
-   // Calculate effectiveSlug safely using useMemo (matches CompanyOrders logic)
+
   const effectiveSlug = useMemo(() => {
     if (shouldFetchAll) return null;
     if (user?.memberships?.length) {
@@ -237,31 +226,35 @@ export default function CompanyOrders() {
     return null;
   }, [shouldFetchAll, companySlug, user]);
 
-  // const companyName = company?.name ?? "";
-
-  // const companyLogo = useMemo(() => {
-  //   if (!effectiveSlug || !companies.length) return null;
-  //   const foundCompany = companies.find((c: any) => c.slug === effectiveSlug);
-  //   return foundCompany?.logo || null;
-  // }, [effectiveSlug, companies]);
-
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [allOrders, setAllOrders] = useState<VendorOrder[]>([]);
+  const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
+  const [showTrackingMap, setShowTrackingMap] = useState(false);
+
   const { toast, showToast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
-  // At the top of CompanyOrders component, add:
-  const [showTrackingMap, setShowTrackingMap] = useState(false);
-  // Active filter count for mobile filter badge
+
+  // Search debounce. When the debounced value changes, reset pagination.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (searchTerm) count++;
@@ -278,165 +271,162 @@ export default function CompanyOrders() {
     selectedCompanyId,
   ]);
 
-  const fetchAllOrders = useCallback(async (): Promise<VendorOrder[]> => {
-    const token = localStorage.getItem("access");
-    if (!token) {
-      setError("Please log in to view orders");
-      setLoading(false);
-      return [];
-    }
+  const fetchOrders = useCallback(
+    async (
+      page: number,
+      options?: { silent?: boolean }
+    ): Promise<VendorOrder[]> => {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        setError("Please log in to view orders");
+        if (!options?.silent) setLoading(false);
+        return [];
+      }
 
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-    setLoading(true);
-    setError(null);
+      if (!options?.silent) {
+        setLoading(true);
+      }
+      setError(null);
 
-    try {
-      const fetchPage = async (page: number) => {
-        // Try with a larger page size, but backend may override
-        const params = {
+      try {
+        const queryParams: {
+          page: number;
+          page_size: number;
+          ordering: string;
+          search?: string;
+          company?: string;
+          status?: string;
+          delivery_status?: string;
+          payment_method?: string;
+          signal?: AbortSignal;
+        } = {
           page,
-          page_size: 500,
-          ordering: "-created_at" as const,
+          page_size: pageSize,
+          ordering: "-created_at",
+        };
+
+        if (debouncedSearchTerm) queryParams.search = debouncedSearchTerm;
+        if (orderStatusFilter) queryParams.status = orderStatusFilter;
+        if (deliveryStatusFilter)
+          queryParams.delivery_status = deliveryStatusFilter;
+        if (paymentMethodFilter)
+          queryParams.payment_method = paymentMethodFilter;
+        if (shouldFetchAll && selectedCompanyId) {
+          queryParams.company = selectedCompanyId;
+        }
+        queryParams.signal = controller.signal;
+
+        let response: {
+          data: {
+            results: VendorOrder[];
+            count: number;
+          };
         };
 
         if (shouldFetchAll) {
-          return getAdminVendorOrders(params);
+          response = await getAdminVendorOrders(queryParams);
         } else if (effectiveSlug) {
-          return getCompanyVendorOrders(effectiveSlug, params);
+          response = await getCompanyVendorOrders(effectiveSlug, queryParams);
         } else {
-          return { data: { results: [], count: 0 } };
+          response = { data: { results: [], count: 0 } };
         }
-      };
 
-      const firstResponse = await fetchPage(1);
+        if (controller.signal.aborted) return [];
 
-      if (controller.signal.aborted) return [];
+        setOrders(response.data.results);
+        setTotalCount(response.data.count);
 
-      let allData = [...firstResponse.data.results];
-      console.log("Fetched first page:", allData.length, "orders");
-      const total = firstResponse.data.count;
-      console.log("Total orders reported by API:", total);
-
-      if (total > allData.length) {
-        const actualPageSize = allData.length || 20;
-        const remainingPages = Math.ceil(
-          (total - allData.length) / actualPageSize,
-        );
-        const promises = [];
-        for (let i = 0; i < remainingPages; i++) {
-          promises.push(fetchPage(i + 2));
+        if (!options?.silent) setLoading(false);
+        return response.data.results;
+      } catch (err: any) {
+        if (
+          err.name === "CanceledError" ||
+          err.code === "ERR_CANCELED" ||
+          err.name === "AbortError" ||
+          controller.signal.aborted
+        ) {
+          return [];
         }
-        const results = await Promise.all(promises);
-        results.forEach((res) => {
-          allData = allData.concat(res.data.results);
-        });
-        console.log(" Total orders after fetching all:", allData.length);
-      }
 
-      if (!controller.signal.aborted) {
-        console.log(" Setting allOrders with:", allData.length, "orders");
-        setAllOrders(allData);
-      }
-      return allData;
-    } catch (err: any) {
-      if (err.name === "CanceledError" || err.code === "ERR_CANCELED")
+        const message =
+          err.message === "SESSION_EXPIRED"
+            ? "Your session has expired."
+            : err.response?.data?.detail ||
+              err.message ||
+              "Failed to load orders";
+
+        if (!controller.signal.aborted) {
+          setError(message);
+          showToast("error", message);
+        }
+
         return [];
-      const message =
-        err.message === "SESSION_EXPIRED"
-          ? "Your session has expired."
-          : err.response?.data?.detail ||
-          err.message ||
-          "Failed to load orders";
-      if (!controller.signal.aborted) {
-        setError(message);
-        showToast("error", message);
+      } finally {
+        if (!options?.silent && !controller.signal.aborted) {
+          setLoading(false);
+        }
       }
-      return [];
-    } finally {
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }, [shouldFetchAll, effectiveSlug, showToast]);
-
-  useEffect(() => {
-    fetchAllOrders();
-  }, [fetchAllOrders]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    searchTerm,
-    orderStatusFilter,
-    deliveryStatusFilter,
-    paymentMethodFilter,
-    selectedCompanyId,
-  ]);
-
-  const filteredOrders = useMemo(() => {
-    let result = allOrders;
-
-    if (searchTerm) {
-      const s = searchTerm.toLowerCase();
-      result = result.filter(
-        (o) =>
-          String(o.id).includes(s) ||
-          o.company?.name?.toLowerCase().includes(s) ||
-          o.recipient_name?.toLowerCase().includes(s),
-      );
-    }
-    if (orderStatusFilter) {
-      result = result.filter(
-        (o) => o.status?.toLowerCase() === orderStatusFilter.toLowerCase(),
-      );
-    }
-    if (deliveryStatusFilter) {
-      result = result.filter(
-        (o) =>
-          o.delivery?.status?.toLowerCase() ===
-          deliveryStatusFilter.toLowerCase(),
-      );
-    }
-    if (paymentMethodFilter) {
-      result = result.filter(
-        (o) =>
-          o.payment_method?.toLowerCase() === paymentMethodFilter.toLowerCase(),
-      );
-    }
-    if (selectedCompanyId) {
-      result = result.filter(
-        (o) => o.company?.id === Number(selectedCompanyId),
-      );
-    }
-
-    return result;
-  }, [
-    allOrders,
-    searchTerm,
-    orderStatusFilter,
-    deliveryStatusFilter,
-    paymentMethodFilter,
-    selectedCompanyId,
-  ]);
-
-  const totalFilteredCount = filteredOrders.length;
-  const totalPages = Math.ceil(totalFilteredCount / pageSize);
-
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+    },
+    [
+      debouncedSearchTerm,
+      orderStatusFilter,
+      deliveryStatusFilter,
+      paymentMethodFilter,
+      selectedCompanyId,
+      pageSize,
+      shouldFetchAll,
+      effectiveSlug,
+      showToast,
+    ]
   );
+
+  useEffect(() => {
+    fetchOrders(currentPage);
+  }, [fetchOrders, currentPage]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const goToPage = (page: number) => {
+    if (totalPages === 0) return;
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  };
 
   const clearFilters = () => {
     setSearchTerm("");
+    setDebouncedSearchTerm("");
     setOrderStatusFilter("");
     setDeliveryStatusFilter("");
     setPaymentMethodFilter("");
     setSelectedCompanyId("");
     setCurrentPage(1);
   };
-  // Options for Order Status dropdown (matches existing options)
+
+  const handleOrderStatusChange = (value: string) => {
+    setOrderStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleDeliveryStatusChange = (value: string) => {
+    setDeliveryStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentMethodFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleCompanyChange = (value: string) => {
+    setSelectedCompanyId(value);
+    setCurrentPage(1);
+  };
+
   const orderStatusOptions: SelectOption[] = [
     { value: "", label: "All Order Status" },
     { value: "pending", label: "Pending" },
@@ -448,7 +438,6 @@ export default function CompanyOrders() {
     { value: "cancelled", label: "Cancelled" },
   ];
 
-  // Options for Delivery Status dropdown
   const deliveryStatusOptions: SelectOption[] = [
     { value: "", label: "All Delivery Status" },
     { value: "pending", label: "Assigned" },
@@ -459,7 +448,6 @@ export default function CompanyOrders() {
     { value: "failed", label: "Failed" },
   ];
 
-  // Options for Payment Method dropdown
   const paymentMethodOptions: SelectOption[] = [
     { value: "", label: "All Payment Method" },
     { value: "bank_transfer", label: "Bank Transfer" },
@@ -467,7 +455,6 @@ export default function CompanyOrders() {
     { value: "cod", label: "COD" },
   ];
 
-  // Options for Page Size dropdown
   const pageSizeOptions: SelectOption[] = [
     { value: "5", label: "5 / page" },
     { value: "10", label: "10 / page" },
@@ -476,40 +463,29 @@ export default function CompanyOrders() {
     { value: "60", label: "60 / page" },
   ];
 
-  const goToPage = (page: number) =>
-    setCurrentPage(Math.min(Math.max(1, page), totalPages));
-
   const handleModalUpdate = useCallback(async () => {
-    const freshOrders = await fetchAllOrders();
+    const freshOrders = await fetchOrders(currentPage, { silent: true });
+
     if (selectedOrder) {
-      const updated = freshOrders.find((o) => o.id === selectedOrder.id);
-      if (updated) setSelectedOrder(updated);
+      const updated = freshOrders.find((order) => order.id === selectedOrder.id);
+      if (updated) {
+        setSelectedOrder(updated);
+      }
     }
-  }, [fetchAllOrders, selectedOrder]);
+  }, [fetchOrders, currentPage, selectedOrder]);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <Toast toast={toast} />
 
-      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {!isAdminLike && effectiveSlug ? (
             <>
-              {/* {companyLogo ? (
-                <img
-                  src={companyLogo}
-                  alt={companyName}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                />
-              ) : (
-                <Building2 className="w-8 h-8 text-gray-400" />
-              )} */}
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
-                  {/* {companyName} */} All Orders
+                  All Orders
                 </h2>
-                {/* <p className="text-sm font-medium text-secondary">Orders</p> */}
               </div>
               {readOnly && (
                 <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-[10px] sm:text-xs px-2 py-1 rounded-full">
@@ -529,17 +505,17 @@ export default function CompanyOrders() {
               </p>
             </div>
           )}
-          
         </div>
         <button
-            onClick={() => setShowTrackingMap(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
-          >
-            <Navigation className="h-4 w-4" />
-            <span className=" sm:inline">Live Tracking</span>
-          </button>
+          onClick={() => setShowTrackingMap(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
+        >
+          <Navigation className="h-4 w-4" />
+          <span className="sm:inline">Live Tracking</span>
+        </button>
       </div>
-      {/* Search Bar with Mobile Filter Button Inside - HIDDEN ON DESKTOP, VISIBLE ON MOBILE */}
+
+      {/* Mobile Search Bar with Filter Button */}
       <div className="mb-4 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex-1">
@@ -567,20 +543,17 @@ export default function CompanyOrders() {
         </div>
       </div>
 
-      {/* Filters */}
-
-      {/* Filters */}
       <VendorOrderFilters
         searchTerm={searchTerm}
-        onSearchChange={(v) => setSearchTerm(v)}
+        onSearchChange={setSearchTerm}
         orderStatusFilter={orderStatusFilter}
-        onOrderStatusChange={(v) => setOrderStatusFilter(v)}
+        onOrderStatusChange={handleOrderStatusChange}
         deliveryStatusFilter={deliveryStatusFilter}
-        onDeliveryStatusChange={(v) => setDeliveryStatusFilter(v)}
+        onDeliveryStatusChange={handleDeliveryStatusChange}
         paymentMethodFilter={paymentMethodFilter}
-        onPaymentMethodChange={(v) => setPaymentMethodFilter(v)}
+        onPaymentMethodChange={handlePaymentMethodChange}
         selectedCompanyId={selectedCompanyId}
-        onCompanyChange={(v) => setSelectedCompanyId(v)}
+        onCompanyChange={handleCompanyChange}
         companies={isAdminLike ? companies : []}
         onClear={clearFilters}
         hideCompanyFilter={!isAdminLike}
@@ -589,12 +562,10 @@ export default function CompanyOrders() {
           setPageSize(size);
           setCurrentPage(1);
         }}
-      // onRefresh={fetchAllOrders}
       />
 
-      {/* Orders Table */}
       {error ? (
-        <ErrorState error={error} onRetry={fetchAllOrders} />
+        <ErrorState error={error} onRetry={() => fetchOrders(currentPage)} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-3 -mx-3 sm:mx-0 px-3 sm:px-0">
           <table className="min-w-[600px] lg:min-w-full divide-y divide-gray-200">
@@ -670,25 +641,25 @@ export default function CompanyOrders() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <SkeletonRow key={i} isAdminLike={isAdminLike} />
                 ))
-              ) : paginatedOrders.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <EmptyState />
               ) : (
-                paginatedOrders.map((order) => (
+                orders.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-<td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-secondary min-w-[100px] sm:min-w-0">
-  <div className="flex items-center gap-2 whitespace-nowrap">
-    <span>#{order.id}</span>
-    {isTodayDate(order.created_at) && (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm flex-shrink-0">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        Today
-      </span>
-    )}
-  </div>
-</td>
+                    <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-secondary min-w-[100px] sm:min-w-0">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <span>#{order.id}</span>
+                        {isTodayDate(order.created_at) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm flex-shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Today
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     {isAdminLike && (
                       <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -719,7 +690,6 @@ export default function CompanyOrders() {
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2">
                       <StatusBadge
                         status={
-                          // Pickup orders have no shipping address
                           !order.shipping_address_text
                             ? "self_pickup"
                             : order.delivery?.status || "no assigned"
@@ -727,49 +697,6 @@ export default function CompanyOrders() {
                         type="delivery"
                       />
                     </td>
-                    {/* <td className="px-6 py-4">
-                      <div className="flex flex-col gap-2">
-                        {order.delivery?.delivery_person_name ? (
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-800">
-                              {order.delivery?.delivery_person_name}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">
-                            Not assigned
-                          </span>
-                        )}
-                        <div>
-                          {isChangeAllowed(order) && isAssignAllowed(order) ? (
-                            <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-secondary text-secondary hover:bg-secondary/10">
-                              <DeliveryManager
-                                orderId={order.id}
-                                currentDelivery={order.delivery || null}
-                                companySlug={order.company?.slug || ""}
-                                onUpdate={fetchAllOrders}
-                              />
-                              {order.delivery?.delivery_person_name
-                                ? "Change"
-                                : "Assign"}
-                            </button>
-                          ) : (
-                            <button
-                              disabled
-                              title={getDisabledReason(order)}
-                              className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                            >
-                              {order.delivery?.delivery_person_name
-                                ? "Change"
-                                : "Assign"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    */}
-
                     <td className="px-2 sm:px-2 lg:px-3 py-2 sm:py-2 whitespace-nowrap">
                       <OrderDate dateString={order.created_at} />
                     </td>
@@ -790,8 +717,7 @@ export default function CompanyOrders() {
         </div>
       )}
 
-      {/* Pagination footer */}
-      {!loading && totalFilteredCount > 0 && (
+      {!loading && totalCount > 0 && (
         <div className="mt-4 sm:mt-6">
           <Pagination
             currentPage={currentPage}
@@ -804,7 +730,6 @@ export default function CompanyOrders() {
         </div>
       )}
 
-      {/* Detail modal – read‑only by nature (no edit controls) */}
       <VendorOrderDetailModal
         order={selectedOrder}
         receipt={selectedOrder?.receipt || null}
@@ -812,25 +737,21 @@ export default function CompanyOrders() {
         onUpdate={handleModalUpdate}
         readOnly={readOnly}
         onOpenLiveTracking={() => setShowTrackingMap(true)}
-        allOrders={allOrders}
+        allOrders={orders}
         onSelectOrder={setSelectedOrder}
       />
 
-      {/* Mobile Filter Modal - Bottom Sheet */}
       {showMobileFilterModal && (
         <div
           className="fixed inset-0 z-50 lg:hidden"
           onClick={() => setShowMobileFilterModal(false)}
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
-          {/* Bottom Sheet Content */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center">
               <h3 className="text-lg font-extrabold text-secondary">Filters</h3>
               <button
@@ -841,56 +762,51 @@ export default function CompanyOrders() {
               </button>
             </div>
 
-            {/* Content */}
             <div className="p-4 space-y-4">
-              {/* Order Status Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Order Status
                 </label>
                 <CustomSelect
                   value={orderStatusFilter}
-                  onChange={setOrderStatusFilter}
+                  onChange={handleOrderStatusChange}
                   options={orderStatusOptions}
                   placeholder="All Order Status"
                 />
               </div>
 
-              {/* Delivery Status Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Delivery Status
                 </label>
                 <CustomSelect
                   value={deliveryStatusFilter}
-                  onChange={setDeliveryStatusFilter}
+                  onChange={handleDeliveryStatusChange}
                   options={deliveryStatusOptions}
                   placeholder="All Delivery Status"
                 />
               </div>
 
-              {/* Payment Method Filter */}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-1.5">
                   Payment Method
                 </label>
                 <CustomSelect
                   value={paymentMethodFilter}
-                  onChange={setPaymentMethodFilter}
+                  onChange={handlePaymentMethodChange}
                   options={paymentMethodOptions}
                   placeholder="All Payment Method"
                 />
               </div>
 
-              {/* Company Filter (if admin) */}
-              {!isAdminLike && (
+              {isAdminLike && (
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">
                     Company
                   </label>
                   <select
                     value={selectedCompanyId}
-                    onChange={(e) => setSelectedCompanyId(e.target.value)}
+                    onChange={(e) => handleCompanyChange(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-2 focus:border-secondary focus:shadow-sm transition-all"
                   >
                     <option value="">All Companies</option>
@@ -903,7 +819,6 @@ export default function CompanyOrders() {
                 </div>
               )}
 
-              {/* Action Buttons - Equal width, side by side */}
               <div className="flex items-center gap-3 pt-2">
                 {(searchTerm ||
                   orderStatusFilter ||
@@ -911,14 +826,7 @@ export default function CompanyOrders() {
                   paymentMethodFilter ||
                   selectedCompanyId) && (
                   <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setOrderStatusFilter("");
-                      setDeliveryStatusFilter("");
-                      setPaymentMethodFilter("");
-                      setSelectedCompanyId("");
-                      setCurrentPage(1);
-                    }}
+                    onClick={clearFilters}
                     className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
                   >
                     Clear all
@@ -935,9 +843,10 @@ export default function CompanyOrders() {
           </div>
         </div>
       )}
-     {showTrackingMap && (
-  <DeliveryTrackingMap onClose={() => setShowTrackingMap(false)} />
-)}
+
+      {showTrackingMap && (
+        <DeliveryTrackingMap onClose={() => setShowTrackingMap(false)} />
+      )}
     </div>
   );
 }
