@@ -172,7 +172,10 @@ function ServiceCardSkeleton() {
   return (
     <div className="md:hidden space-y-3 animate-pulse">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-gray-200 p-3.5 shadow-sm">
+        <div
+          key={i}
+          className="bg-white rounded-2xl border border-gray-200 p-3.5 shadow-sm"
+        >
           <div className="flex items-start gap-3">
             <div className="w-16 h-16 rounded-xl bg-gray-200 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -268,7 +271,9 @@ export default function CompanyServices() {
   // ---------- modal & toast ----------
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceOffering | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ServiceOffering | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ServiceOffering | null>(
+    null,
+  );
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -417,8 +422,8 @@ export default function CompanyServices() {
                   </h1>
 
                   {/* Company badge */}
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/5 px-2.5 py-1 text-xs font-semibold text-secondary">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" />
                     <span className="truncate max-w-[180px] sm:max-w-[260px]">
                       {companyName}
                     </span>
@@ -438,7 +443,7 @@ export default function CompanyServices() {
                     type="button"
                     onClick={clearCompany}
                     aria-label="Switch company"
-                    className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-[#6750A4]/30 hover:bg-[#6750A4]/5 hover:text-[#6750A4] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
+                    className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary/20 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
                   >
                     <Repeat className="h-4 w-4 shrink-0" />
                     <span className="truncate">Switch Company</span>
@@ -451,7 +456,7 @@ export default function CompanyServices() {
                     setEditing(null);
                     setModalOpen(true);
                   }}
-                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#6750A4] px-2 py-1.5 text-xs font-semibold text-white shadow-sm shadow-[#6750A4]/20 transition-all duration-200 hover:bg-[#5B4592] hover:shadow-md hover:shadow-[#6750A4]/20 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 sm:flex-none sm:gap-2 sm:px-4 sm:text-sm"
+                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-secondary px-2 py-1.5 text-xs font-semibold text-white shadow-sm shadow-secondary/20 transition-all duration-200 hover:bg-[#5B4592] hover:shadow-md hover:shadow-secondary/20 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary/30 sm:flex-none sm:gap-2 sm:px-4 sm:text-sm"
                 >
                   <Plus className="h-4 w-4 shrink-0" />
                   <span className="truncate">Add Service</span>
@@ -464,26 +469,26 @@ export default function CompanyServices() {
           </div>
 
           {/* Search + Refresh & Page Size */}
-      <div className="mb-4 flex w-full flex-row items-center justify-between gap-2.5">
-  {/* Search + Refresh */}
-  <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
-    {/* Search */}
-    <div className="relative min-w-0 flex-1">
-      <Search
-        className="
+          <div className="mb-4 flex w-full flex-row items-center justify-between gap-2.5">
+            {/* Search + Refresh */}
+            <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
+              {/* Search */}
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="
           pointer-events-none absolute left-3 top-1/2
           h-4 w-4 -translate-y-1/2
           text-gray-400
         "
-      />
+                />
 
-      <input
-        type="text"
-        placeholder="Search services..."
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        aria-label="Search services"
-        className="
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  aria-label="Search services"
+                  className="
           h-10 w-full min-w-0
           rounded-xl
           border border-gray-200
@@ -494,22 +499,22 @@ export default function CompanyServices() {
           outline-none
           transition-all duration-200
           hover:border-gray-300
-          focus:border-[#6750A4]
+          focus:border-secondary
           focus:bg-white
           focus:ring-2
-          focus:ring-[#6750A4]/10
+          focus:ring-secondary/10
         "
-      />
-    </div>
+                />
+              </div>
 
-    {/* Refresh */}
-    <button
-      type="button"
-      onClick={refetch}
-      disabled={loading}
-      title="Refresh services"
-      aria-label="Refresh services"
-      className="
+              {/* Refresh */}
+              <button
+                type="button"
+                onClick={refetch}
+                disabled={loading}
+                title="Refresh services"
+                aria-label="Refresh services"
+                className="
         group
         inline-flex h-10 w-10
         shrink-0
@@ -519,32 +524,32 @@ export default function CompanyServices() {
         bg-gray-50
         text-gray-500
         transition-all duration-200
-        hover:border-[#6750A4]/30
-        hover:bg-[#6750A4]/5
-        hover:text-[#6750A4]
+        hover:border-secondary/30
+        hover:bg-secondary/5
+        hover:text-secondary
         active:scale-95
         disabled:cursor-not-allowed
         disabled:opacity-60
         focus:outline-none
         focus:ring-2
-        focus:ring-[#6750A4]/20
+        focus:ring-secondary/20
       "
-    >
-      <RefreshCw
-        className={`
+              >
+                <RefreshCw
+                  className={`
           h-4 w-4
           transition-transform duration-300
           ${loading ? "animate-spin" : "group-hover:rotate-180"}
         `}
-      />
-    </button>
-  </div>
+                />
+              </button>
+            </div>
 
-  {/* Results + Page Size */}
-  <div className="flex shrink-0 flex-row items-center gap-2">
-    {/* Service Count */}
-    <span
-      className="
+            {/* Results + Page Size */}
+            <div className="flex shrink-0 flex-row items-center gap-2">
+              {/* Service Count */}
+              <span
+                className="
         hidden
         whitespace-nowrap
         text-xs
@@ -552,21 +557,21 @@ export default function CompanyServices() {
         text-gray-400
         sm:inline-flex
       "
-    >
-      {totalItems} {totalItems === 1 ? "service" : "services"}
-    </span>
+              >
+                {totalItems} {totalItems === 1 ? "service" : "services"}
+              </span>
 
-    {/* Page Size */}
-    <div className="w-[82px] sm:w-24 lg:w-28">
-      <CustomSelect
-        value={String(pageSize)}
-        onChange={(val) => setPageSize(Number(val))}
-        options={PAGE_SIZE_OPTIONS}
-        placeholder="10"
-      />
-    </div>
-  </div>
-</div>
+              {/* Page Size */}
+              <div className="w-[82px] sm:w-24 lg:w-28">
+                <CustomSelect
+                  value={String(pageSize)}
+                  onChange={(val) => setPageSize(Number(val))}
+                  options={PAGE_SIZE_OPTIONS}
+                  placeholder="10"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Error */}
           {error && (
@@ -608,7 +613,7 @@ export default function CompanyServices() {
                     setEditing(null);
                     setModalOpen(true);
                   }}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#6750A4] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5B4592] transition"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-[#5B4592] transition"
                 >
                   <Plus className="h-4 w-4" />
                   Add Service
@@ -626,7 +631,7 @@ export default function CompanyServices() {
                 <button
                   type="button"
                   onClick={() => setSearchInput("")}
-                  className="mt-4 text-sm font-semibold text-[#6750A4] hover:underline"
+                  className="mt-4 text-sm font-semibold text-secondary hover:underline"
                 >
                   Clear Search
                 </button>
@@ -678,7 +683,9 @@ export default function CompanyServices() {
                             : `${Number(o.price || 0).toLocaleString()} ${o.currency}`}
                         </td>
                         <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">
-                          {o.duration_minutes ? `${o.duration_minutes} min` : "—"}
+                          {o.duration_minutes
+                            ? `${o.duration_minutes} min`
+                            : "—"}
                         </td>
                         <td className="py-3 pr-4">
                           <BookingBadge mode={o.booking_mode} />
@@ -812,11 +819,8 @@ export default function CompanyServices() {
                 <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <p className="text-sm text-gray-500">
                     Showing{" "}
-                    {Math.min(
-                      (currentPage - 1) * pageSize + 1,
-                      totalItems,
-                    )}{" "}
-                    – {Math.min(currentPage * pageSize, totalItems)} of{" "}
+                    {Math.min((currentPage - 1) * pageSize + 1, totalItems)} –{" "}
+                    {Math.min(currentPage * pageSize, totalItems)} of{" "}
                     {totalItems} services
                   </p>
                   <Pagination

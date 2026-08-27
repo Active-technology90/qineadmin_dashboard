@@ -121,10 +121,7 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-function generateFieldName(
-  label: string,
-  existingNames: Set<string>
-): string {
+function generateFieldName(label: string, existingNames: Set<string>): string {
   let base = label
     .trim()
     .toLowerCase()
@@ -190,7 +187,7 @@ function OptionsEditor({
               type="text"
               value={opt}
               onChange={(e) => updateOption(idx, e.target.value)}
-              className="flex-1 h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 outline-none"
+              className="flex-1 h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
             />
             <button
               type="button"
@@ -212,7 +209,7 @@ function OptionsEditor({
             e.key === "Enter" && (e.preventDefault(), addOption())
           }
           placeholder="New option"
-          className="flex-1 h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 outline-none"
+          className="flex-1 h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
         />
         <button
           type="button"
@@ -286,7 +283,7 @@ function FieldTypeSelect({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-10 px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 hover:bg-white transition w-full focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20"
+        className="flex items-center gap-2 h-10 px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 hover:bg-white transition w-full focus:outline-none focus:ring-2 focus:ring-secondary/20"
       >
         <span className="text-gray-500">{FIELD_ICONS[value]}</span>
         <span className="flex-1 text-left">{FIELD_LABELS[value]}</span>
@@ -309,7 +306,7 @@ function FieldTypeSelect({
                 }}
                 className={`flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 ${
                   value === type
-                    ? "bg-[#6750A4]/5 text-[#6750A4]"
+                    ? "bg-secondary/5 text-secondary"
                     : "text-gray-700"
                 }`}
               >
@@ -318,7 +315,7 @@ function FieldTypeSelect({
               </button>
             ))}
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );
@@ -368,7 +365,8 @@ function DeletePopover({
           aria-label="Delete confirmation"
         >
           <p className="text-sm text-gray-700 mb-2">
-            Delete “{fieldLabel}”?<br />
+            Delete “{fieldLabel}”?
+            <br />
             This field will be permanently removed.
           </p>
           <div className="flex gap-2 justify-end">
@@ -439,7 +437,7 @@ const FieldCard = memo(function FieldCard({
       style={style}
       className={`rounded-xl border bg-white shadow-sm transition ${
         isDragging
-          ? "border-[#6750A4] shadow-lg ring-2 ring-[#6750A4]/10 z-50"
+          ? "border-secondary shadow-lg ring-2 ring-secondary/10 z-50"
           : "border-gray-200 hover:shadow-md"
       }`}
     >
@@ -453,7 +451,9 @@ const FieldCard = memo(function FieldCard({
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <span className="text-gray-500 shrink-0">{FIELD_ICONS[field.type]}</span>
+        <span className="text-gray-500 shrink-0">
+          {FIELD_ICONS[field.type]}
+        </span>
         <span className="text-sm font-medium text-gray-900 truncate flex-1 min-w-0">
           {field.label || "Untitled"}
         </span>
@@ -462,7 +462,7 @@ const FieldCard = memo(function FieldCard({
         </span>
         {field.required && (
           <span
-            className="w-1.5 h-1.5 rounded-full bg-[#6750A4] shrink-0"
+            className="w-1.5 h-1.5 rounded-full bg-secondary shrink-0"
             title="Required"
           />
         )}
@@ -474,7 +474,10 @@ const FieldCard = memo(function FieldCard({
         >
           <Copy className="h-3.5 w-3.5" />
         </button>
-        <DeletePopover onDelete={removeField} fieldLabel={field.label || "Untitled"} />
+        <DeletePopover
+          onDelete={removeField}
+          fieldLabel={field.label || "Untitled"}
+        />
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
@@ -512,7 +515,7 @@ const FieldCard = memo(function FieldCard({
                       updateField({ label });
                     }}
                     placeholder="e.g. Customer name"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 outline-none"
+                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 outline-none"
                   />
                 </div>
                 <div>
@@ -529,8 +532,10 @@ const FieldCard = memo(function FieldCard({
                     <input
                       type="checkbox"
                       checked={field.required}
-                      onChange={(e) => updateField({ required: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                      onChange={(e) =>
+                        updateField({ required: e.target.checked })
+                      }
+                      className="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                     />
                     <span className="text-xs font-medium text-gray-600">
                       Required
@@ -549,7 +554,7 @@ const FieldCard = memo(function FieldCard({
                     value={field.name}
                     onChange={(e) => updateField({ name: e.target.value })}
                     placeholder="e.g. customer_email"
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 outline-none"
+                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 outline-none"
                   />
                 </div>
                 <div>
@@ -559,8 +564,10 @@ const FieldCard = memo(function FieldCard({
                   <input
                     type="text"
                     value={field.placeholder || ""}
-                    onChange={(e) => updateField({ placeholder: e.target.value })}
-                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-[#6750A4] focus:bg-white focus:ring-2 focus:ring-[#6750A4]/20 outline-none"
+                    onChange={(e) =>
+                      updateField({ placeholder: e.target.value })
+                    }
+                    className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:border-secondary focus:bg-white focus:ring-2 focus:ring-secondary/20 outline-none"
                   />
                 </div>
               </div>
@@ -652,7 +659,7 @@ export function IntakeFormBuilder({
   });
 
   const [fieldsWithId, setFieldsWithId] = useState<FieldWithId[]>(() =>
-    fields.map(createFieldWithId)
+    fields.map(createFieldWithId),
   );
 
   useEffect(() => {
@@ -660,13 +667,15 @@ export function IntakeFormBuilder({
       fields.map((field, index) => ({
         ...field,
         _id: current[index]?._id ?? generateId(),
-      }))
+      })),
     );
   }, [fields]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragEnd = useCallback(
@@ -682,7 +691,7 @@ export function IntakeFormBuilder({
       // Emit only plain IntakeFormField (strip _id)
       onChange(reordered.map(({ _id, ...rest }) => rest as IntakeFormField));
     },
-    [fieldsWithId, onChange]
+    [fieldsWithId, onChange],
   );
 
   const addField = useCallback(() => {
@@ -704,11 +713,11 @@ export function IntakeFormBuilder({
   const updateField = useCallback(
     (id: string, patch: Partial<ExtendedIntakeFormField>) => {
       const next = fieldsWithId.map((f) =>
-        f._id === id ? { ...f, ...patch } : f
+        f._id === id ? { ...f, ...patch } : f,
       );
       onChange(next.map(({ _id, ...rest }) => rest as IntakeFormField));
     },
-    [fieldsWithId, onChange]
+    [fieldsWithId, onChange],
   );
 
   const removeField = useCallback(
@@ -716,7 +725,7 @@ export function IntakeFormBuilder({
       const filtered = fieldsWithId.filter((f) => f._id !== id);
       onChange(filtered.map(({ _id, ...rest }) => rest as IntakeFormField));
     },
-    [fieldsWithId, onChange]
+    [fieldsWithId, onChange],
   );
 
   const duplicateField = useCallback(
@@ -735,7 +744,7 @@ export function IntakeFormBuilder({
       next.splice(idx + 1, 0, copy);
       onChange(next.map(({ _id, ...rest }) => rest as IntakeFormField));
     },
-    [fieldsWithId, onChange]
+    [fieldsWithId, onChange],
   );
 
   const fieldCount = fieldsWithId.length;
@@ -750,21 +759,15 @@ export function IntakeFormBuilder({
           <button
             type="button"
             onClick={() => setPreview(false)}
-            className="text-sm text-[#6750A4] hover:underline"
+            className="text-sm text-secondary hover:underline"
           >
             Back to Editor
           </button>
         </div>
         <div className="space-y-4 max-h-96 overflow-y-auto p-4 border border-gray-200 rounded-xl bg-white">
           {fieldsWithId.map((field) => {
-            const {
-              type,
-              label,
-              required,
-              placeholder,
-              options,
-              description,
-            } = field;
+            const { type, label, required, placeholder, options, description } =
+              field;
             const id = `preview-${field._id}`;
             return (
               <div key={field._id}>
@@ -772,8 +775,7 @@ export function IntakeFormBuilder({
                   htmlFor={id}
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {label}{" "}
-                  {required && <span className="text-red-500">*</span>}
+                  {label} {required && <span className="text-red-500">*</span>}
                 </label>
                 {type === "text" && (
                   <input
@@ -853,7 +855,7 @@ export function IntakeFormBuilder({
                       <label key={i} className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-[#6750A4]"
+                          className="h-4 w-4 text-secondary"
                         />
                         <span className="text-sm text-gray-700">{opt}</span>
                       </label>
@@ -867,7 +869,7 @@ export function IntakeFormBuilder({
                         <input
                           type="radio"
                           name={`radio-${field._id}`}
-                          className="h-4 w-4 text-[#6750A4]"
+                          className="h-4 w-4 text-secondary"
                         />
                         <span className="text-sm text-gray-700">{opt}</span>
                       </label>
@@ -880,7 +882,7 @@ export function IntakeFormBuilder({
                       <input
                         id={id}
                         type="checkbox"
-                        className="h-4 w-4 text-[#6750A4]"
+                        className="h-4 w-4 text-secondary"
                       />
                       <span className="text-sm text-gray-700">{label}</span>
                     </label>
@@ -890,7 +892,7 @@ export function IntakeFormBuilder({
                   <input
                     id={id}
                     type="file"
-                    className="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#6750A4] file:text-white hover:file:bg-[#5B46A0]"
+                    className="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-white hover:file:bg-[#5B46A0]"
                   />
                 )}
                 {type === "url" && (
@@ -942,8 +944,8 @@ export function IntakeFormBuilder({
 
       {fieldsWithId.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-10 px-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6750A4]/10">
-            <ClipboardList className="h-6 w-6 text-[#6750A4]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10">
+            <ClipboardList className="h-6 w-6 text-secondary" />
           </div>
           <h3 className="mt-3 text-sm font-semibold text-gray-900">
             No intake fields yet
@@ -955,7 +957,7 @@ export function IntakeFormBuilder({
           <button
             type="button"
             onClick={addField}
-            className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#6750A4] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#5B46A0] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30 focus:ring-offset-1"
+            className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-xl bg-secondary px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#5B46A0] focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:ring-offset-1"
           >
             <Plus className="h-3.5 w-3.5" />
             Add your first field
@@ -992,7 +994,7 @@ export function IntakeFormBuilder({
             <button
               type="button"
               onClick={addField}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#6750A4] px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-[#5B46A0] transition"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-[#5B46A0] transition"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Field

@@ -82,8 +82,8 @@ const PageHeader = ({
 
           {/* Company badge */}
           {companyName && (
-            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/5 px-2.5 py-1 text-xs font-semibold text-secondary">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" />
 
               <span className="truncate max-w-[180px] sm:max-w-[260px]">
                 {companyName}
@@ -127,7 +127,7 @@ const PageHeader = ({
           active:scale-[0.97]
           focus:outline-none
           focus:ring-2
-          focus:ring-[#6750A4]/20
+          focus:ring-secondary/20
         "
           aria-label="Refresh staff data"
           title="Refresh staff data"
@@ -148,13 +148,13 @@ const PageHeader = ({
             text-sm font-medium text-gray-700
             shadow-sm
             transition-all duration-200
-            hover:border-[#6750A4]/30
-            hover:bg-[#6750A4]/5
-            hover:text-[#6750A4]
+            hover:border-secondary/30
+            hover:bg-secondary/5
+            hover:text-secondary
             active:scale-[0.98]
             focus:outline-none
             focus:ring-2
-            focus:ring-[#6750A4]/20
+            focus:ring-secondary/20
           "
             aria-label="Switch company"
           >
@@ -171,17 +171,17 @@ const PageHeader = ({
           inline-flex min-h-10 flex-1 sm:flex-none
           items-center justify-center gap-2
           rounded-xl
-          bg-[#6750A4]
+          bg-secondary
           px-4 py-2
           text-sm font-semibold text-white
-          shadow-sm shadow-[#6750A4]/20
+          shadow-sm shadow-secondary/20
           transition-all duration-200
           hover:bg-[#5B4592]
-          hover:shadow-md hover:shadow-[#6750A4]/20
+          hover:shadow-md hover:shadow-secondary/20
           active:scale-[0.98]
           focus:outline-none
           focus:ring-2
-          focus:ring-[#6750A4]/30
+          focus:ring-secondary/30
         "
         >
           <Plus className="h-4 w-4 shrink-0" />
@@ -294,7 +294,7 @@ const FilterPopover = ({
                 name="availability"
                 checked={filters.availability === opt.value}
                 onChange={() => setFilter("availability", opt.value)}
-                className="text-[#6750A4] focus:ring-[#6750A4]"
+                className="text-secondary focus:ring-secondary"
               />
               <span className="text-sm text-gray-700">{opt.label}</span>
             </label>
@@ -322,7 +322,7 @@ const FilterPopover = ({
                 name="online"
                 checked={filters.online === opt.value}
                 onChange={() => setFilter("online", opt.value)}
-                className="text-[#6750A4] focus:ring-[#6750A4]"
+                className="text-secondary focus:ring-secondary"
               />
               <span className="text-sm text-gray-700">{opt.label}</span>
             </label>
@@ -350,7 +350,7 @@ const FilterPopover = ({
                 name="assignment"
                 checked={filters.assignment === opt.value}
                 onChange={() => setFilter("assignment", opt.value)}
-                className="text-[#6750A4] focus:ring-[#6750A4]"
+                className="text-secondary focus:ring-secondary"
               />
               <span className="text-sm text-gray-700">{opt.label}</span>
             </label>
@@ -367,7 +367,7 @@ const FilterPopover = ({
         onClick={() => setOpen(!open)}
         className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-colors ${
           filterCount > 0
-            ? "bg-[#6750A4]/10 text-[#6750A4] border-[#6750A4]/30"
+            ? "bg-secondary/10 text-secondary border-secondary/30"
             : "border-gray-200 text-gray-600 hover:bg-gray-50"
         }`}
         aria-expanded={open}
@@ -376,7 +376,7 @@ const FilterPopover = ({
         <Filter className="h-4 w-4" />
         <span>Filters</span>
         {filterCount > 0 && (
-          <span className="ml-1 bg-[#6750A4] text-white text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
+          <span className="ml-1 bg-secondary text-white text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
             {filterCount}
           </span>
         )}
@@ -649,10 +649,10 @@ export default function StaffManagement() {
   const handleCreateSuccess = async () => {
     await fetchData();
   };
-const handleEditSuccess = async () => {
-  setEditingStaff(null);
-  await fetchData();
-};
+  const handleEditSuccess = async () => {
+    setEditingStaff(null);
+    await fetchData();
+  };
   const handleEditStart = (member: ServiceStaff) => {
     goToStaffForm(member);
   };
@@ -757,19 +757,17 @@ const handleEditSuccess = async () => {
   if (showSelector) {
     return (
       <CompanySelector
-            companies={serviceCompanies}
-            isLoading={isLoadingCompanies}
-            onSelect={(slug: string, name: string) => {
-              const membership = user?.memberships?.find(
-                (m: any) => m.company_slug === slug,
-              );
-              const role =
-                membership?.role ?? (isSuperAdmin ? "admin" : "staff");
-              switchCompany({ slug, name, role });
-            }}
-            onBack={clearCompany}
-          />
-       
+        companies={serviceCompanies}
+        isLoading={isLoadingCompanies}
+        onSelect={(slug: string, name: string) => {
+          const membership = user?.memberships?.find(
+            (m: any) => m.company_slug === slug,
+          );
+          const role = membership?.role ?? (isSuperAdmin ? "admin" : "staff");
+          switchCompany({ slug, name, role });
+        }}
+        onBack={clearCompany}
+      />
     );
   }
 
@@ -840,11 +838,11 @@ const handleEditSuccess = async () => {
         >
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-xl bg-[#6750A4]/10 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center">
                 {editingStaff ? (
-                  <Edit className="h-5 w-5 text-[#6750A4]" />
+                  <Edit className="h-5 w-5 text-secondary" />
                 ) : (
-                  <Plus className="h-5 w-5 text-[#6750A4]" />
+                  <Plus className="h-5 w-5 text-secondary" />
                 )}
               </div>
               <div>
@@ -875,8 +873,8 @@ const handleEditSuccess = async () => {
           {staff.length > 0 && (
             <>
               {selectedIds.length > 0 ? (
-                <div className="flex items-center justify-between p-3 bg-[#6750A4]/5 rounded-xl border border-[#6750A4]/20">
-                  <span className="text-sm font-medium text-[#6750A4]">
+                <div className="flex items-center justify-between p-3 bg-secondary/5 rounded-xl border border-secondary/20">
+                  <span className="text-sm font-medium text-secondary">
                     {selectedIds.length} specialist
                     {selectedIds.length > 1 ? "s" : ""} selected
                   </span>
@@ -909,7 +907,7 @@ const handleEditSuccess = async () => {
                       placeholder="Search specialists..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4]"
+                      className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                     />
                     {search && (
                       <button
@@ -927,7 +925,7 @@ const handleEditSuccess = async () => {
                     <select
                       value={sortKey}
                       onChange={(e) => setSortKey(e.target.value as SortKey)}
-                      className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20"
+                      className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                       aria-label="Sort by"
                     >
                       <option value="name">Sort by Name</option>

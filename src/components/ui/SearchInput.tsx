@@ -1,5 +1,11 @@
 // src/components/ui/SearchInput.tsx
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  forwardRef,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { Search, X, Loader2, Filter } from "lucide-react";
 
 export interface SearchInputProps {
@@ -101,7 +107,11 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div className={`relative w-full ${className}`}>
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+          {loading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Search className="h-3 w-3" />
+          )}
         </div>
 
         <input
@@ -166,7 +176,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={clearSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-0.5 focus:outline-none focus:ring-2 focus:ring-[#6750A4]"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 rounded-full p-0.5 focus:outline-none focus:ring-2 focus:ring-secondary"
             aria-label="Clear search"
           >
             <X className="h-3 w-3" />

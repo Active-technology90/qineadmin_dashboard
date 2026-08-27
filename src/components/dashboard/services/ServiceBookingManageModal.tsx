@@ -57,7 +57,7 @@ const STATUS_CONFIG: Record<
   completed: {
     label: "Completed",
     icon: <CheckCircle className="h-5 w-5" />,
-    color: "bg-purple-50 text-[#6750A4] border-purple-200",
+    color: "bg-purple-50 text-secondary border-purple-200",
     desc: "Service finished successfully",
   },
   cancelled: {
@@ -143,12 +143,12 @@ const Card = ({ children, title, icon: Icon, className = "" }: any) => (
   >
     <div className="flex items-center gap-2 mb-3 pb-2 relative">
       <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg shadow-inner">
-        <Icon className="h-4 w-4 text-[#6750A4]" />
+        <Icon className="h-4 w-4 text-secondary" />
       </div>
-      <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#6750A4] bg-clip-text text-transparent">
+      <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary bg-clip-text text-transparent">
         {title}
       </h4>
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6750A4] via-[#6750A4] to-transparent rounded-full" />
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary via-secondary to-transparent rounded-full" />
     </div>
     {children}
   </motion.div>
@@ -164,7 +164,7 @@ const CopyButton = ({ text }: { text?: string | null }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="text-gray-400 hover:text-[#6750A4] transition-colors p-1"
+      className="text-gray-400 hover:text-secondary transition-colors p-1"
     >
       {copied ? (
         <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
@@ -283,9 +283,13 @@ const ReceiptReviewCard = ({
 }) => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
+  const [submittingAction, setSubmittingAction] = useState<
+    "approved" | "rejected" | null
+  >(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"approved" | "rejected" | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "approved" | "rejected" | null
+  >(null);
   const [showCODConfirm, setShowCODConfirm] = useState(false);
   const [codConfirming, setCodConfirming] = useState(false);
   const { showToast } = useToast();
@@ -302,7 +306,9 @@ const ReceiptReviewCard = ({
             <p className="text-sm font-semibold text-gray-700">Verified by</p>
             <img src="/chapa.png" alt="Chapa" className="h-8 object-contain" />
           </div>
-          <p className="text-xs text-gray-500 mt-2">Payment automatically confirmed via Chapa</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Payment automatically confirmed via Chapa
+          </p>
         </div>
       </Card>
     );
@@ -367,7 +373,10 @@ const ReceiptReviewCard = ({
             setCodConfirming(true);
             try {
               // Confirm COD payment via API
-              await confirmCODServiceBookingPayment(companySlug, Number(bookingId));
+              await confirmCODServiceBookingPayment(
+                companySlug,
+                Number(bookingId),
+              );
               showToast("success", "COD payment confirmed");
 
               // After payment is confirmed, either mark booking as completed or just refresh
@@ -377,7 +386,10 @@ const ReceiptReviewCard = ({
                 await onUpdate();
               }
             } catch (err: any) {
-              showToast("error", err.response?.data?.detail || "COD confirmation failed");
+              showToast(
+                "error",
+                err.response?.data?.detail || "COD confirmation failed",
+              );
             } finally {
               setCodConfirming(false);
             }
@@ -399,13 +411,16 @@ const ReceiptReviewCard = ({
       <Card title="Payment Receipt" icon={Banknote}>
         <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl">
           <AlertCircle className="h-6 w-6 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">Waiting for customer to upload receipt...</p>
+          <p className="text-gray-500 text-sm">
+            Waiting for customer to upload receipt...
+          </p>
         </div>
       </Card>
     );
   }
 
-  const isAlreadyReviewed = receipt.status === "approved" || receipt.status === "rejected";
+  const isAlreadyReviewed =
+    receipt.status === "approved" || receipt.status === "rejected";
   const canReview = !isAlreadyReviewed;
 
   const handleActionClick = (action: "approved" | "rejected") => {
@@ -453,7 +468,7 @@ const ReceiptReviewCard = ({
           </div>
         )}
         <div className="bg-gradient-to-r from-purple-50/50 to-indigo-50/50 p-4 rounded-xl border border-purple-100">
-          <p className="text-[10px] text-[#6750A4] font-bold uppercase tracking-widest mb-1">
+          <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mb-1">
             Bank Details
           </p>
           <p className="font-semibold text-sm text-gray-900">
@@ -467,15 +482,15 @@ const ReceiptReviewCard = ({
               paymentStatus === "paid"
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : paymentStatus === "payment_failed"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-amber-50 text-amber-700 border-amber-200"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
             }`}
           >
             {paymentStatus === "paid"
               ? "Confirmed"
               : paymentStatus === "payment_failed"
-              ? "Payment Failed"
-              : "Pending Verification"}
+                ? "Payment Failed"
+                : "Pending Verification"}
           </span>
         </div>
         {canReview && (
@@ -485,7 +500,7 @@ const ReceiptReviewCard = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add review notes..."
               rows={2}
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4]/30 transition resize-none"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-secondary/30 transition resize-none"
             />
             <div className="flex gap-2">
               <button
@@ -530,7 +545,9 @@ const ReceiptReviewCard = ({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold text-gray-700">{h.bank_name || "Unknown Bank"}</span>
+                      <span className="text-[10px] font-bold text-gray-700">
+                        {h.bank_name || "Unknown Bank"}
+                      </span>
                       <span
                         className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${
                           h.status === "approved"
@@ -543,7 +560,10 @@ const ReceiptReviewCard = ({
                     </div>
                     {h.admin_notes && (
                       <p className="text-[9px] text-rose-600 bg-rose-50/50 px-2 py-0.5 rounded border border-rose-100 mt-1 italic">
-                        <span className="text-amber-600 font-semibold">Remark:</span> "{h.admin_notes}"
+                        <span className="text-amber-600 font-semibold">
+                          Remark:
+                        </span>{" "}
+                        "{h.admin_notes}"
                       </p>
                     )}
                   </div>
@@ -553,7 +573,11 @@ const ReceiptReviewCard = ({
                       onClick={() => onPreviewImage(h.receipt_image)}
                       className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 hover:opacity-80 transition cursor-zoom-in"
                     >
-                      <img src={h.receipt_image} alt="Prior Receipt" className="w-full h-full object-cover" />
+                      <img
+                        src={h.receipt_image}
+                        alt="Prior Receipt"
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   )}
                 </div>
@@ -570,7 +594,9 @@ const ReceiptReviewCard = ({
           setPendingAction(null);
         }}
         onConfirm={handleConfirm}
-        title={pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"}
+        title={
+          pendingAction === "approved" ? "Approve Receipt" : "Reject Receipt"
+        }
         description="This action will notify the customer and update the order workflow. Are you sure?"
         confirmText={submitting ? "Processing..." : "Confirm Action"}
         confirmVariant={pendingAction === "approved" ? "primary" : "danger"}
@@ -661,7 +687,8 @@ export function ServiceBookingManageModal({
       )
       .sort(
         (a, b) =>
-          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
+          new Date(b.created_at || 0).getTime() -
+          new Date(a.created_at || 0).getTime(),
       )
       .slice(0, 10);
   }, [allBookings, customerPhone, company?.id, initialBooking.id]);
@@ -749,22 +776,22 @@ export function ServiceBookingManageModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#6750A4]/10 backdrop-blur-md border-b border-[#6750A4]/15 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-20 shadow-sm">
+        <div className="bg-secondary/10 backdrop-blur-md border-b border-secondary/15 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-20 shadow-sm">
           <div className="flex justify-between items-start gap-2">
             <div className="mt-1.5 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-[#6750A4] to-[#6750A4] bg-clip-text text-transparent tracking-tight">
+                <h2 className="text-base sm:text-2xl font-black bg-gradient-to-r from-secondary to-secondary bg-clip-text text-transparent tracking-tight">
                   Booking #{initialBooking.id}
                 </h2>
                 <StatusBadge status={initialBooking.status} large />
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[9px] sm:text-xs font-bold">
                 {/* Scheduled date/time */}
-                <span className="flex items-center gap-1.5 sm:gap-2 bg-[#6750A4]/10 px-2 sm:px-4 py-1 sm:py-1.5 rounded-full border border-[#6750A4]/20 shadow-sm">
-                  <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />
+                <span className="flex items-center gap-1.5 sm:gap-2 bg-secondary/10 px-2 sm:px-4 py-1 sm:py-1.5 rounded-full border border-secondary/20 shadow-sm">
+                  <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-secondary" />
                   <span className="font-mono text-[10px] sm:text-[12px] font-semibold text-gray-700">
                     {initialBooking.scheduled_date}{" "}
-                    <span className="text-[#6750A4] mx-0.5">•</span>{" "}
+                    <span className="text-secondary mx-0.5">•</span>{" "}
                     {String(initialBooking.scheduled_time).slice(0, 5)}
                   </span>
                 </span>
@@ -778,7 +805,7 @@ export function ServiceBookingManageModal({
                   </span>
                 </span>
                 <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
-                  <Building className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#6750A4]" />{" "}
+                  <Building className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-secondary" />{" "}
                   <span className="font-medium text-[10px] sm:text-sm truncate max-w-[120px] sm:max-w-[250px]">
                     {company?.name}
                   </span>
@@ -794,11 +821,13 @@ export function ServiceBookingManageModal({
                 title="Refresh booking data"
               >
                 {refreshing ? (
-                  <Loader2 className="h-4 w-4 text-[#6750A4] animate-spin" />
+                  <Loader2 className="h-4 w-4 text-secondary animate-spin" />
                 ) : (
-                  <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-[#6750A4]" />
+                  <RefreshCw className="h-4 w-4 text-gray-500 group-hover:text-secondary" />
                 )}
-                <span className="hidden sm:inline text-sm font-medium text-gray-700 ml-1">Refresh</span>
+                <span className="hidden sm:inline text-sm font-medium text-gray-700 ml-1">
+                  Refresh
+                </span>
               </button>
               <button
                 onClick={onClose}
@@ -818,11 +847,13 @@ export function ServiceBookingManageModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Card title="Customer" icon={User}>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-secondary font-bold border border-purple-100 shadow-inner">
                     {getInitials(customer)}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-gray-900 truncate">{customer}</p>
+                    <p className="font-bold text-gray-900 truncate">
+                      {customer}
+                    </p>
                     <div className="flex items-center gap-2 mt-1 bg-green-50 text-green-700 px-2 py-1 rounded-lg text-sm">
                       <PhoneCall className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">{customerPhone}</span>
@@ -840,7 +871,9 @@ export function ServiceBookingManageModal({
                     />
                   )}
                   <div className="min-w-0">
-                    <p className="font-bold text-gray-900 truncate">{company?.name}</p>
+                    <p className="font-bold text-gray-900 truncate">
+                      {company?.name}
+                    </p>
                     {company?.sub_category_name && (
                       <p className="text-xs text-gray-500 truncate">
                         {company.sub_category_name}
@@ -860,7 +893,9 @@ export function ServiceBookingManageModal({
                     />
                   )}
                   <div className="min-w-0">
-                    <p className="font-bold text-gray-900 truncate">{offering.title}</p>
+                    <p className="font-bold text-gray-900 truncate">
+                      {offering.title}
+                    </p>
                     <p className="text-sm text-gray-500 truncate">
                       {offering.service_category || "Uncategorized"}
                     </p>
@@ -881,10 +916,10 @@ export function ServiceBookingManageModal({
                 className="bg-white rounded-3xl border border-gray-100 p-4 md:p-6 shadow-sm"
               >
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-                  <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#6750A4]/20 rounded-lg shadow-inner">
-                    <History className="h-4 w-4 text-[#6750A4]" />
+                  <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary/20 rounded-lg shadow-inner">
+                    <History className="h-4 w-4 text-secondary" />
                   </div>
-                  <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#6750A4] bg-clip-text text-transparent">
+                  <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary bg-clip-text text-transparent">
                     Booking Timeline
                   </h4>
                   <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
@@ -960,10 +995,10 @@ export function ServiceBookingManageModal({
                 className="bg-white rounded-3xl border border-gray-100 p-4 md:p-6 shadow-sm"
               >
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-                  <div className="p-1.5 bg-gradient-to-br from-[#6750A4]/20 to-[#6750A4]/20 rounded-lg shadow-inner">
-                    <History className="h-4 w-4 text-[#6750A4]" />
+                  <div className="p-1.5 bg-gradient-to-br from-secondary/20 to-secondary/20 rounded-lg shadow-inner">
+                    <History className="h-4 w-4 text-secondary" />
                   </div>
-                  <h4 className="text-sm font-bold bg-gradient-to-r from-[#6750A4] to-[#6750A4] bg-clip-text text-transparent">
+                  <h4 className="text-sm font-bold bg-gradient-to-r from-secondary to-secondary bg-clip-text text-transparent">
                     Customer Booking History
                   </h4>
                   <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
@@ -974,10 +1009,10 @@ export function ServiceBookingManageModal({
                   {previousBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-[#6750A4]/30 transition cursor-pointer group"
+                      className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-secondary/30 transition cursor-pointer group"
                     >
                       <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-[#6750A4]">
+                        <span className="text-sm font-bold text-secondary">
                           #{b.id}
                         </span>
                         {b.company?.name && (
@@ -986,12 +1021,21 @@ export function ServiceBookingManageModal({
                           </span>
                         )}
                         <span className="text-[10px] text-gray-400 font-mono">
-                          {b.created_at ? new Date(b.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                          {b.created_at
+                            ? new Date(b.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )
+                            : "—"}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <StatusBadge status={b.status} />
-                        <span className="text-xs text-[#6750A4] opacity-0 group-hover:opacity-100 transition">
+                        <span className="text-xs text-secondary opacity-0 group-hover:opacity-100 transition">
                           View →
                         </span>
                       </div>
@@ -1007,7 +1051,7 @@ export function ServiceBookingManageModal({
             {/* Price Card */}
             <motion.div
               variants={itemVariants}
-              className="bg-[#6750A4] rounded-[32px] p-5 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
+              className="bg-secondary rounded-[32px] p-5 text-white shadow-2xl shadow-purple-200 relative overflow-hidden group"
             >
               <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
               <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-white/5 rounded-full blur-2xl" />
@@ -1061,7 +1105,7 @@ export function ServiceBookingManageModal({
                 onChange={(e) => setCompanyNotes(e.target.value)}
                 rows={3}
                 placeholder="Add internal notes about this booking..."
-                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#6750A4]/30 transition resize-none bg-gray-50/50"
+                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-secondary/30 transition resize-none bg-gray-50/50"
               />
             </Card> */}
 
@@ -1091,12 +1135,14 @@ export function ServiceBookingManageModal({
                       className="w-10 h-10 rounded-full object-cover border border-gray-100 shadow-sm shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-[#6750A4] font-bold border border-purple-100 shadow-inner shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-secondary font-bold border border-purple-100 shadow-inner shrink-0">
                       {getInitials(staff.name)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-800 truncate">{staff.name}</p>
+                    <p className="font-semibold text-gray-800 truncate">
+                      {staff.name}
+                    </p>
                     <p className="text-xs text-gray-500 truncate">
                       {staff.role_title || "Staff"}
                     </p>
@@ -1115,7 +1161,7 @@ export function ServiceBookingManageModal({
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleAction(action)}
                     disabled={actionLoading}
-                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-50 ${["cancel", "no_show"].includes(action) ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100" : action === "complete" ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100" : "bg-purple-50 text-[#6750A4] border border-purple-200 hover:bg-purple-100"}`}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-50 ${["cancel", "no_show"].includes(action) ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100" : action === "complete" ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100" : "bg-purple-50 text-secondary border border-purple-200 hover:bg-purple-100"}`}
                   >
                     {action === "confirm" && (
                       <CheckCircle className="h-4 w-4" />
@@ -1138,7 +1184,7 @@ export function ServiceBookingManageModal({
                 )}
               </div>
               {actionLoading && (
-                <Loader2 className="h-5 w-5 animate-spin mx-auto mt-3 text-[#6750A4]" />
+                <Loader2 className="h-5 w-5 animate-spin mx-auto mt-3 text-secondary" />
               )}
             </Card>
           </div>

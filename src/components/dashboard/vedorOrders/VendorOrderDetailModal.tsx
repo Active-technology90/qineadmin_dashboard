@@ -35,7 +35,6 @@ import {
   confirmCODPayment,
 } from "../../../services/api";
 
-
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 import { CustomSelect } from "../../ui/CustomSelect";
@@ -87,7 +86,7 @@ const buildOrderTimeline = (order: any) => {
 
   // 2. Payment Approved (from receipt history)
   const approvedReceipt = order.receipt_history?.find(
-    (h: any) => h.status === "approved"
+    (h: any) => h.status === "approved",
   );
   if (approvedReceipt) {
     events.push({
@@ -98,7 +97,10 @@ const buildOrderTimeline = (order: any) => {
       actor: "Admin",
       status: "completed",
     });
-  } else if (order.payment_method === "chapa" && order.payment_status === "paid") {
+  } else if (
+    order.payment_method === "chapa" &&
+    order.payment_status === "paid"
+  ) {
     events.push({
       id: "payment",
       label: "Payment Confirmed",
@@ -110,7 +112,10 @@ const buildOrderTimeline = (order: any) => {
   }
 
   // 3. Order Prepared (if status is processing or fulfilled)
-  if (order.status?.toLowerCase() === "processing" || order.status?.toLowerCase() === "fulfilled") {
+  if (
+    order.status?.toLowerCase() === "processing" ||
+    order.status?.toLowerCase() === "fulfilled"
+  ) {
     events.push({
       id: "prepared",
       label: "Order Prepared",
@@ -161,7 +166,9 @@ const buildOrderTimeline = (order: any) => {
   }
 
   // Sort by time (oldest first)
-  events.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  events.sort(
+    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+  );
 
   return events;
 };
@@ -273,8 +280,9 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
-        }`}
+      className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[11px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${
+        styles[s] || "bg-gray-100 text-gray-600 border-gray-200"
+      }`}
     >
       {displayStatus}
     </span>
@@ -460,12 +468,14 @@ const DeliveryCard = ({
     fetchStaff();
   }, [showAssignForm, order.company?.slug]);
 
-
   const handleAssign = async () => {
     setAssigning(true);
     try {
       if (delivery) {
-        await updateDeliveryPerson(delivery.id.toString(), Number(selectedUserId));
+        await updateDeliveryPerson(
+          delivery.id.toString(),
+          Number(selectedUserId),
+        );
       } else {
         await assignDelivery({
           vendor_order: order.id,
@@ -534,7 +544,7 @@ const DeliveryCard = ({
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
                       {getInitials(
                         usernameMap.get(delivery.delivery_person_phone) ||
-                        delivery.delivery_person_name,
+                          delivery.delivery_person_name,
                       )}
                     </div>
                   )}{" "}
@@ -789,7 +799,9 @@ const ReceiptReviewCard = ({
   // image modal (KEEP SECOND UI)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const [submittingAction, setSubmittingAction] = useState<"approved" | "rejected" | null>(null);
+  const [submittingAction, setSubmittingAction] = useState<
+    "approved" | "rejected" | null
+  >(null);
   // review confirmation
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<
@@ -804,12 +816,12 @@ const ReceiptReviewCard = ({
 
   const displayHistory = receiptHistory
     ? receiptHistory.filter((h: any) => {
-      // Skip the current active receipt only if it is pending review
-      if (h.id === receipt?.id && receipt?.status === "pending") {
-        return false;
-      }
-      return true;
-    })
+        // Skip the current active receipt only if it is pending review
+        if (h.id === receipt?.id && receipt?.status === "pending") {
+          return false;
+        }
+        return true;
+      })
     : [];
 
   // =========================================================
@@ -825,12 +837,13 @@ const ReceiptReviewCard = ({
       setShowCODConfirm(false);
 
       // 👇 Await the parent refresh – this keeps the loading visible
-      await onUpdate();   // <-- THIS IS THE KEY CHANGE
-
+      await onUpdate(); // <-- THIS IS THE KEY CHANGE
     } catch (err: any) {
       showToast(
         "error",
-        err.response?.data?.detail || err.message || "Failed to confirm COD payment"
+        err.response?.data?.detail ||
+          err.message ||
+          "Failed to confirm COD payment",
       );
     } finally {
       setCodConfirming(false);
@@ -920,10 +933,11 @@ const ReceiptReviewCard = ({
                   <button
                     onClick={() => setShowCODConfirm(true)}
                     disabled={!canCollect}
-                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${canCollect
+                    className={`w-full py-3 rounded-2xl text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                      canCollect
                         ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                         : "bg-gray-300 cursor-not-allowed shadow-none"
-                      }`}
+                    }`}
                   >
                     {codConfirming ? (
                       <>
@@ -1016,7 +1030,6 @@ const ReceiptReviewCard = ({
 
       // ✅ Wait for the parent to fully refresh the order data
       await onUpdate();
-
     } catch (err: any) {
       showToast("error", err.response?.data?.detail || "Review failed");
     } finally {
@@ -1192,12 +1205,13 @@ const ReceiptReviewCard = ({
                           {h.bank_name || "Unknown Bank"}
                         </span>
                         <span
-                          className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${h.status === "approved"
+                          className={`text-[9px] px-1.5 py-0.2 rounded-full border font-bold uppercase ${
+                            h.status === "approved"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                               : h.status === "rejected"
                                 ? "bg-rose-50 text-rose-700 border-rose-100"
                                 : "bg-gray-100 text-gray-600 border-gray-200"
-                            }`}
+                          }`}
                         >
                           {h.status}
                         </span>
@@ -1419,11 +1433,11 @@ export function VendorOrderDetailModal({
         (o: any) =>
           o.shipping_phone === customerPhone &&
           o.company?.id === companyId &&
-          o.id !== order.id // exclude current order
+          o.id !== order.id, // exclude current order
       )
       .sort(
         (a: any, b: any) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       )
       .slice(0, 10); // show up to 10 most recent
   }, [order, allOrders]);
@@ -1685,12 +1699,12 @@ export function VendorOrderDetailModal({
                               const roundNum = Number(roundKey);
                               const roundTime = roundItems[0]?.created_at
                                 ? new Date(
-                                  roundItems[0].created_at,
-                                ).toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                })
+                                    roundItems[0].created_at,
+                                  ).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })
                                 : "";
 
                               return (
@@ -1700,7 +1714,7 @@ export function VendorOrderDetailModal({
                                       colSpan={4}
                                       className="px-4 py-2 text-left"
                                     >
-                                      <span className="text-[10px] font-black uppercase tracking-wider text-[#6750A4]">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-secondary">
                                         Round {roundNum}{" "}
                                         {roundTime ? `(${roundTime})` : ""}
                                       </span>
@@ -1783,20 +1797,30 @@ export function VendorOrderDetailModal({
                     <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200" />
 
                     {buildOrderTimeline(order).map((event: any) => (
-                      <div key={event.id} className="relative flex items-start gap-4">
+                      <div
+                        key={event.id}
+                        className="relative flex items-start gap-4"
+                      >
                         {/* Dot */}
                         <div
-                          className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${event.status === "completed"
-                            ? "bg-emerald-500 border-emerald-500"
+                          className={`absolute left-[-20px] top-1 w-4 h-4 rounded-full border-2 ${
+                            event.status === "completed"
+                              ? "bg-emerald-500 border-emerald-500"
                               : "bg-amber-500 border-amber-500 animate-pulse"
-                            }`}
+                          }`}
                         >
                           <div
-                            className={`absolute inset-0 rounded-full ${event.status === "completed"
+                            className={`absolute inset-0 rounded-full ${
+                              event.status === "completed"
                                 ? "bg-emerald-400/30 animate-pulse"
                                 : "bg-amber-400/30 animate-pulse"
-                              }`}
-                            style={{ width: "200%", height: "200%", left: "-50%", top: "-50%" }}
+                            }`}
+                            style={{
+                              width: "200%",
+                              height: "200%",
+                              left: "-50%",
+                              top: "-50%",
+                            }}
                           />
                         </div>
 
@@ -1814,16 +1838,22 @@ export function VendorOrderDetailModal({
                           </div>
                           <div className="flex flex-wrap items-center gap-3 mt-0.5">
                             <span className="text-xs text-gray-400 font-mono">
-                              {new Date(event.time).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}{" "}
+                              {new Date(event.time).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )}{" "}
                               •{" "}
-                              {new Date(event.time).toLocaleTimeString("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {new Date(event.time).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </span>
                             {event.actor && (
                               <span className="text-xs text-gray-500 flex items-center gap-1">
@@ -1878,7 +1908,7 @@ export function VendorOrderDetailModal({
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
-                                }
+                                },
                               )}
                             </span>
                           </div>
@@ -1979,12 +2009,12 @@ export function VendorOrderDetailModal({
                 {(order.status === "confirmed" ||
                   (order.payment_method === "cod" &&
                     order.status === "pending")) && (
-                    <PreparationCard
-                      order={order}
-                      onUpdate={onUpdate}
-                      readOnly={readOnly}
-                    />
-                  )}
+                  <PreparationCard
+                    order={order}
+                    onUpdate={onUpdate}
+                    readOnly={readOnly}
+                  />
+                )}
 
                 {/* 5. Delivery person Assignment Card */}
                 {order.fulfillment_type === "delivery" &&

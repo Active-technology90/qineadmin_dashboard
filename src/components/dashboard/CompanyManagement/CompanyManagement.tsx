@@ -1087,6 +1087,7 @@ export default function CompanyManagement() {
             setFormData={setFormData}
             formErrors={formErrors}
             categories={categories}
+            headCompanies={headCompanies} 
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
@@ -1117,6 +1118,7 @@ export default function CompanyManagement() {
             categories={categories}
             subcategories={subcategories}
             logoPreview={logoPreview}
+            headCompanies={headCompanies} 
             coverPreview={coverPreview}
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
@@ -1146,6 +1148,7 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            headCompanies={headCompanies} 
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
@@ -1174,6 +1177,7 @@ export default function CompanyManagement() {
             subcategories={subcategories}
             logoPreview={logoPreview}
             coverPreview={coverPreview}
+            headCompanies={headCompanies} 
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
@@ -1424,7 +1428,8 @@ export default function CompanyManagement() {
               userCompanyRole={currentCompanyRole}
               onEdit={openEdit}
               loading={loading}
-              formData={formData}
+                formData={formData}
+                    headCompanies={headCompanies} 
               setFormData={setFormData}
               formErrors={formErrors}
               categories={categories}
