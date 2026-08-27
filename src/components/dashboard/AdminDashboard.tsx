@@ -799,13 +799,13 @@ useEffect(() => {
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("serviceBookings")}
               />
-              {/* <SidebarItem
+              <SidebarItem
                 icon={<Repeat className="h-5 w-5" />}
                 label="Recurring Contracts"
                 active={activeTab === "serviceSubscriptions"}
                 collapsed={sidebarCollapsed}
                 onClick={() => navigate("serviceSubscriptions")}
-              /> */}
+              />
              {/* <SidebarItem
                 icon={<Images className="h-5 w-5" />}
                 label="Portfolio"

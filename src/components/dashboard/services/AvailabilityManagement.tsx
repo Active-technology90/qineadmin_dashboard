@@ -10,7 +10,6 @@ import {
   X,
   AlertTriangle,
   Pencil,
-  Loader2,
   Loader2Icon,
 } from "lucide-react";
 import { motion } from "framer-motion";

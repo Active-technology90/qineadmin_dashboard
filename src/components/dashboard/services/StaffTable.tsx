@@ -444,7 +444,7 @@ export const StaffTable = ({
   const CardView = () => (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {staff.map((member) => {
-        const isToday = member.working_days?.includes(today);
+        const isToday = member.working_days?.includes(today) ?? false;
         return (
           <motion.div
             key={member.id}
@@ -580,7 +580,7 @@ export const StaffTable = ({
           </thead>
           <tbody className="divide-y divide-gray-50">
             {staff.map((member) => {
-              const isToday = member.working_days?.includes(today);
+              const isToday = member.working_days?.includes(today) ?? false;
               return (
                 <motion.tr
                   key={member.id}

@@ -140,35 +140,6 @@ export interface ValidationResult {
   isValid: boolean;
   errors: Record<string, string>;
 }
-// ── Lightweight list item (existing) ──
-export interface ServiceBooking {
-  id: number;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
-  scheduled_date: string;
-  scheduled_time: string;
-  quoted_price: string;
-  final_price: string;
-  currency: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_notes: string;
-  company_notes: string;
-  offering?: {
-    id: number;
-    title: string;
-    duration_minutes?: number;
-    primary_image?: string;
-    service_category?: string;
-  };
-  intake_data?: Record<string, any>;
-  company_slug: string; // needed for API call
-  created_at?: string;
-  updated_at?: string;
-  assigned_staff?: ServiceStaff | null;
-  company?: Company;
-  payment_status?: string;
-  payment_method?: string;
-}
 
 export interface CompanyListItem {
   id: number;
@@ -282,9 +253,6 @@ export interface CompanyProductListItem {
   total_reviews?: number;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Cart & Orders
-// ─────────────────────────────────────────────────────────────
 export interface CartItem {
   id: number;
   company_product: number;
@@ -353,6 +321,24 @@ export interface TaxInvoice {
   pdf_url?: string;
 }
 
+export interface AvailableDriver {
+  id: number;
+  name: string;
+  username: string;
+  phone?: string | null;
+  profile_image?: string | null;
+  average_rating: string | number;
+  total_reviews: number;
+  vehicle_type: string;
+  company_id: number;
+  company_name: string;
+  company_slug: string;
+  is_in_house: boolean;
+  distance_km?: number | null;
+  last_lat?: number | null;
+  last_lon?: number | null;
+}
+
 export interface Delivery {
   id: number;
   vendor_order: number;
@@ -362,13 +348,21 @@ export interface Delivery {
   delivery_person_id?: number;
   delivery_person_phone?: string;
   delivery_person_name?: string;
+  delivery_person_rating?: string;
+  delivery_person_total_reviews?: number;
+  logistics_company?: number | null;
+  logistics_company_name?: string | null;
+  is_3pl?: boolean;
+  decline_reason?: string;
   tracking_id?: string;
   status?: string;
-  delivery_person_image: string;
-  customer_lat: number;
-  customer_lon: number;
-  current_lat: number;
-  current_lng: number;
+  delivery_person_image?: string;
+  customer_lat?: number;
+  customer_lon?: number;
+  current_lat?: number;
+  current_lng?: number;
+  last_lat?: number;
+  last_lon?: number;
 }
 
 export interface VendorOrder {
@@ -459,11 +453,18 @@ export interface CheckoutResponse {
 // ─────────────────────────────────────────────────────────────
 export interface ServiceBooking {
   id: number;
-  customer: number;
+  customer?: number;
   customer_name?: string;
   customer_phone?: string;
-  company?: CompanyListItem;
-  offering?: ServiceOffering;
+  company?: CompanyListItem | Company;
+  company_slug?: string;
+  offering?: ServiceOffering | {
+    id: number;
+    title: string;
+    duration_minutes?: number;
+    primary_image?: string;
+    service_category?: string;
+  };
   assigned_staff?: ServiceStaff | null;
   selected_addons?: ServiceAddon[];
   location_type?: "provider_location" | "customer_location";
@@ -480,15 +481,15 @@ export interface ServiceBooking {
   payment_status?: string;
   payment_method?: string;
   checkout_url?: string | null;
-  intake_data: Record<string, unknown>;
+  intake_data?: Record<string, any>;
   customer_notes?: string;
   status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
   company_notes?: string;
   master_order?: number | null;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   receipt?: any; 
-   receipt_history?: any[]; 
+  receipt_history?: any[]; 
 }
 
 export interface FullServiceBooking {

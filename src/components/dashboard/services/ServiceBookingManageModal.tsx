@@ -585,10 +585,10 @@ export function ServiceBookingManageModal({
   booking: initialBooking,
   onClose,
   onStatusUpdate,
-  companyNotes,
-  setCompanyNotes,
-  finalPrice,
-  setFinalPrice,
+  companyNotes: _companyNotes,
+  setCompanyNotes: _setCompanyNotes,
+  finalPrice: _finalPrice,
+  setFinalPrice: _setFinalPrice,
   allBookings = [],
   onRefresh,
 }: {
@@ -598,10 +598,10 @@ export function ServiceBookingManageModal({
     booking: ServiceBooking,
     status: ServiceBooking["status"],
   ) => Promise<void>;
-  companyNotes: string;
-  setCompanyNotes: (val: string) => void;
-  finalPrice: string;
-  setFinalPrice: (val: string) => void;
+  companyNotes?: string;
+  setCompanyNotes?: (val: string) => void;
+  finalPrice?: string;
+  setFinalPrice?: (val: string) => void;
   allBookings?: ServiceBooking[];
   onRefresh?: () => Promise<void>;
 }) {
@@ -661,7 +661,7 @@ export function ServiceBookingManageModal({
       )
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
       )
       .slice(0, 10);
   }, [allBookings, customerPhone, company?.id, initialBooking.id]);
@@ -772,15 +772,9 @@ export function ServiceBookingManageModal({
                 <span className="flex items-center gap-1 sm:gap-2 bg-gray-100 px-2 sm:px-4 py-1 sm:py-1.5 rounded-full border border-gray-200 shadow-sm">
                   <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500" />
                   <span className="font-mono text-[10px] sm:text-[12px] font-semibold text-gray-600">
-                    {new Date(initialBooking.created_at).toLocaleDateString(
-                      "en-US",
-                      { month: "short", day: "numeric", year: "numeric" },
-                    )}
-                    <span className="text-gray-400 mx-0.5">•</span>
-                    {new Date(initialBooking.created_at).toLocaleTimeString(
-                      "en-US",
-                      { hour: "2-digit", minute: "2-digit", hour12: true },
-                    )}
+                    {initialBooking.created_at
+                      ? `${new Date(initialBooking.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} • ${new Date(initialBooking.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+                      : "—"}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 sm:gap-1.5 text-gray-600">
@@ -992,11 +986,7 @@ export function ServiceBookingManageModal({
                           </span>
                         )}
                         <span className="text-[10px] text-gray-400 font-mono">
-                          {new Date(b.created_at).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
+                          {b.created_at ? new Date(b.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
@@ -1040,8 +1030,8 @@ export function ServiceBookingManageModal({
                   <div className="flex justify-between text-xs font-bold">
                     <span className="opacity-60">Final Price</span>
                     <span>
-                      {finalPrice
-                        ? `${formatCurrency(finalPrice)} ${initialBooking.currency}`
+                      {initialBooking.final_price
+                        ? `${formatCurrency(initialBooking.final_price)} ${initialBooking.currency}`
                         : "—"}
                     </span>
                   </div>

@@ -226,10 +226,9 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
   const inputClass = (field: keyof FormErrors) => `
     w-full pl-8 sm:pl-10 pr-4 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border bg-white
     outline-none transition-all duration-200
-    ${
-      touched[field] && errors[field]
-        ? "border-red-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"
-        : "border-gray-200 focus:ring-4 focus:ring-purple-100 focus:border-purple-500"
+    ${touched[field] && errors[field]
+      ? "border-red-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"
+      : "border-gray-200 focus:ring-4 focus:ring-purple-100 focus:border-purple-500"
     }
   `;
 
@@ -442,13 +441,12 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         Password strength
                       </span>
                       <span
-                        className={`text-[10px] font-medium ${
-                          passwordStrength <= 1
+                        className={`text-[10px] font-medium ${passwordStrength <= 1
                             ? "text-red-500"
                             : passwordStrength <= 3
                               ? "text-yellow-500"
                               : "text-green-600"
-                        }`}
+                          }`}
                       >
                         {passwordStrengthText()}
                       </span>
@@ -457,15 +455,14 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       {[1, 2, 3, 4].map((level) => (
                         <div
                           key={level}
-                          className={`h-2 flex-1 rounded-full transition ${
-                            passwordStrength >= level
+                          className={`h-2 flex-1 rounded-full transition ${passwordStrength >= level
                               ? passwordStrength <= 1
                                 ? "bg-red-500"
                                 : passwordStrength <= 3
                                   ? "bg-yellow-500"
                                   : "bg-green-500"
                               : "bg-gray-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>

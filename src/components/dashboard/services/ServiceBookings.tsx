@@ -100,16 +100,13 @@ export default function ServiceBookings() {
   } | null>(null);
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
-  // refresh trigger – pass to hook if it supports a third parameter (or use a key)
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   /* -------------------- data fetching -------------------- */
   const filters = {
     status: statusFilter === "all" ? undefined : statusFilter,
     date: dateFilter || undefined,
   };
 
-  const { bookings, loading, updateStatus, getBookingDetail } =
+  const { bookings, loading, updateStatus, getBookingDetail, refetch } =
     useServiceBookings(isServiceCompany ? companySlug : null, filters);
 
   /* -------------------- derived data & pagination -------------------- */
@@ -373,7 +370,7 @@ export default function ServiceBookings() {
             }}
             hasActiveFilters={hasActiveFilters}
             onClear={clearAllFilters}
-            onRefresh={() => setRefreshTrigger((t) => t + 1)}
+            onRefresh={refetch}
             statusOptions={STATUS_OPTIONS}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
           />

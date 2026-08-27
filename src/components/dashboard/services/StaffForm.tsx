@@ -687,7 +687,7 @@ export function StaffForm({
 
   return (
     <div>
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      {toast && <Toast toast={toast} />}
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         <div className="mb-4">
           <p className="text-sm text-gray-500 mt-0.5">

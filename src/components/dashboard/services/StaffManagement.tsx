@@ -18,7 +18,6 @@ import {
   ArrowUp,
   ArrowDown,
   AlertCircle,
-  CalendarDays,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../../context/authContext";
@@ -716,8 +715,8 @@ const handleEditSuccess = async () => {
           ? valA.localeCompare(valB)
           : valB.localeCompare(valA);
       } else {
-        valA = a.average_rating || 0;
-        valB = b.average_rating || 0;
+        valA = Number(a.average_rating) || 0;
+        valB = Number(b.average_rating) || 0;
         return sortDir === "asc" ? valA - valB : valB - valA;
       }
     });

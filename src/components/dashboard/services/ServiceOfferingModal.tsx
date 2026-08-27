@@ -84,23 +84,6 @@ const billingCycleOptions = [
   { value: "yearly", label: "Yearly" },
 ];
 
-const pricingOptions = [
-  { value: "fixed", label: "Fixed" },
-  { value: "starting_at", label: "Starting At" },
-  { value: "hourly", label: "Hourly" },
-  { value: "custom", label: "Quote Based" },
-];
-
-const bookingOptions = [
-  { value: "direct", label: "Direct Booking" },
-  { value: "inquiry", label: "Inquiry / Lead" },
-];
-
-const paymentOptions = [
-  { value: "upfront", label: "Pay Upfront" },
-  { value: "post_service", label: "Pay After Service" },
-  { value: "deposit", label: "Deposit Required" },
-];
 
 /* -------------------------------------------------------------------------- */
 /*  Reusable Card                                                             */
@@ -201,24 +184,7 @@ export function ServiceOfferingModal({
 }) {
   /* ── State ────────────────────────────────────────────────────────────── */
   const [step, setStep] = useState<"details" | "gallery">("details");
-  const [form, setForm] = useState<ServiceFormState>({
-    title: "",
-    title_am: "",
-    description: "",
-    description_am: "",
-    pricing_type: "fixed",
-    price: "",
-    currency: "ETB",
-    duration_minutes: 30,
-    booking_mode: "inquiry",
-    payment_policy: "upfront",
-    deposit_percentage: "0",
-    service_category: "",
-    is_active: true,
-    is_featured: false,
-    order: 0,
-    intake_form_schema: [] as IntakeFormField[],
-  });
+  const [form, setForm] = useState<ServiceFormState>(defaultForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedOfferingId, setSavedOfferingId] = useState<number | null>(null);

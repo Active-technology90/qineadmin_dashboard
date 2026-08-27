@@ -27,13 +27,15 @@ import {
   Clock,
 } from "lucide-react";
 import {
-  getCompanyStaffByRole,
+  getAvailableDeliveryDrivers,
   reviewReceipt,
   assignDelivery,
   updateDeliveryPerson,
   prepareVendorOrder,
   confirmCODPayment,
 } from "../../../services/api";
+
+
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 import { CustomSelect } from "../../ui/CustomSelect";
@@ -330,17 +332,39 @@ const DeliveryCard = ({
     console.log("Delivery person name:", delivery.delivery_person_name);
     console.log("All delivery keys:", Object.keys(delivery));
   }
+  const getVehicleIcon = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case "motorcycle":
+        return "🏍️";
+      case "car":
+        return "🚗";
+      case "bicycle":
+        return "🚲";
+      case "van":
+        return "🚐";
+      case "foot":
+        return "🚶";
+      default:
+        return "🛵";
+    }
+  };
+
   const renderRating = (avg?: string, reviews?: number) => {
     if (!avg || avg === "0.00" || !reviews || reviews === 0)
       return "No reviews";
     const rating = parseFloat(avg).toFixed(1);
     return `⭐ ${rating} (${reviews})`;
   };
-  const staffOptions = staffList.map((s) => ({
-    value: String(s.id),
-    label: `${s.name} (${s.phone || "No Phone"}) — ${renderRating(s.average_rating, s.total_reviews)}`,
-    // icon: optional – could add a user icon if desired
-  }));
+
+  const staffOptions = staffList.map((s) => {
+    const vehicle = s.vehicle_type ? ` ${getVehicleIcon(s.vehicle_type)}` : "";
+    const badge = s.is_in_house ? "[In-House]" : `[${s.company_name || "3PL"}]`;
+    const distance = s.distance_km != null ? ` • ${s.distance_km} km` : "";
+    return {
+      value: String(s.id),
+      label: `${badge}${vehicle} ${s.name} (${s.phone || "No Phone"})${distance} — ${renderRating(s.average_rating, s.total_reviews)}`,
+    };
+  });
 
   // ── Get order cancellation/failure reason ──
   const getOrderFailureReason = () => {
@@ -388,21 +412,24 @@ const DeliveryCard = ({
     delivery?.status?.toLowerCase() === "failed" ||
     delivery?.status?.toLowerCase() === "cancelled" ||
     delivery?.status?.toLowerCase() === "rejected";
+
   useEffect(() => {
     if (!order.company?.slug) return; // still need a company slug
     const fetchStaff = async () => {
       try {
-        const res = await getCompanyStaffByRole(
-          order.company.slug!,
-          "delivery",
-        );
-        const mapped = (res.data.results || res.data).map((s: any) => ({
-          id: s.user.id,
-          name: `${s.user.username || s.user.first_name || ""}`.trim(),
-          phone: s.user.phone_number,
-          username: s.user.username,
-          average_rating: s.user.average_rating,
-          total_reviews: s.user.total_reviews,
+        const res = await getAvailableDeliveryDrivers(order.company.slug!);
+        const rawList = res.data || [];
+        const mapped = rawList.map((s: any) => ({
+          id: s.id,
+          name: `${s.name || s.username || ""}`.trim(),
+          phone: s.phone,
+          username: s.username,
+          average_rating: s.average_rating,
+          total_reviews: s.total_reviews,
+          vehicle_type: s.vehicle_type,
+          company_name: s.company_name,
+          is_in_house: s.is_in_house,
+          distance_km: s.distance_km,
         }));
         setStaffList(mapped);
 
@@ -426,12 +453,13 @@ const DeliveryCard = ({
           }
         });
         setUsernameMap(map);
-      } finally {
-        // nothing to cleanup
+      } catch (err) {
+        console.error("Failed to fetch available delivery drivers", err);
       }
     };
     fetchStaff();
   }, [showAssignForm, order.company?.slug]);
+
 
   const handleAssign = async () => {
     setAssigning(true);
@@ -511,12 +539,23 @@ const DeliveryCard = ({
                     </div>
                   )}{" "}
                   <div className="flex-1">
-                    <p className="font-bold text-gray-900 text-sm">
-                      {usernameMap.get(delivery.delivery_person_phone) ||
-                        delivery.delivery_person_name}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-bold text-gray-900 text-sm">
+                        {usernameMap.get(delivery.delivery_person_phone) ||
+                          delivery.delivery_person_name}
+                      </p>
+                      {delivery.logistics_company_name ? (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          {delivery.logistics_company_name} (3PL)
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          In-House
+                        </span>
+                      )}
+                    </div>
 
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200">
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200 mt-1">
                       <PhoneCall className="h-3 w-3 text-blue-600" />
                       <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight">
                         {delivery.delivery_person_phone}
@@ -524,6 +563,23 @@ const DeliveryCard = ({
 
                       <CopyButton text={delivery.delivery_person_phone} />
                     </div>
+
+                    {delivery?.status === "declined" && (
+                      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 shadow-sm">
+                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                            Driver Declined Delivery
+                          </p>
+                          <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                            {delivery.decline_reason
+                              ? `Reason: ${delivery.decline_reason}`
+                              : "The assigned driver declined this order. Please reassign to another driver."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {delivery?.status === "out_for_delivery" &&
                       onOpenLiveTracking && (
                         <button

@@ -19,7 +19,9 @@ import type {
   ProductImage,
   VendorOrder,
   Delivery,
+  AvailableDriver,
   AnalyticsOverviewResponse,
+
   UsersResponse,
   UserRole,
   ServiceOffering,
@@ -36,11 +38,9 @@ import type {
   IntakeFormField,
 } from "../types";
 
-// const API_URL = "https://backend-qine.activetechet.com/api/v1";
-
-// const API_URL = "http://localhost:8000/api/v1";
-
-const API_URL = "https://backend.elilitapp.com/api/v1";
+// const API_URL = import.meta.env.VITE_API_URL || "";
+const API_URL = "http://localhost:8000/api/v1/";
+// const API_URL = "https://backend.elilitapp.com/api/v1/";
 
 
 const api = axios.create({
@@ -48,6 +48,7 @@ const api = axios.create({
   timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
+
 
 // Flag to prevent multiple simultaneous token refresh calls 
 let isRefreshing = false;
@@ -684,6 +685,8 @@ export const getAdminVendorOrders = async (params?: {
   search?: string;
   company?: string;
   status?: string;
+  delivery_status?: string;
+  payment_method?: string;
   master_order?: number;
   ordering?: string;
   signal?: AbortSignal;
@@ -695,7 +698,7 @@ export const getAdminVendorOrders = async (params?: {
   });
 };
 
-// ========== COMPANY ORDERS (for company admin) ==========
+// ========== COMPANY VENDOR ORDERS ==========
 export const getCompanyVendorOrders = async (
   companySlug: string,
   params?: {
@@ -703,6 +706,9 @@ export const getCompanyVendorOrders = async (
     page_size?: number;
     search?: string;
     status?: string;
+    delivery_status?: string;
+    payment_method?: string;
+    master_order?: number;
     ordering?: string;
     signal?: AbortSignal;
   }
@@ -734,6 +740,12 @@ export const getDeliveries = async (params?: {
   delivery_person?: number;
   status?: string;
 }) => api.get<PaginatedResponse<Delivery>>("/deliveries/", { params });
+
+export const getAvailableDeliveryDrivers = async (companySlug: string) =>
+  api.get<AvailableDriver[]>("/deliveries/available-drivers/", {
+    params: { company_slug: companySlug },
+  });
+
 // ========== USER SEARCH (for company admin) ==========
 export const searchUsers = async (query: string) =>
   api.get<PaginatedResponse<User>>("/users/search/", { params: { q: query } });
