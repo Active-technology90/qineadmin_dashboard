@@ -33,18 +33,19 @@ const InputWithIcon = ({
   icon: Icon,
   id,
   ...props
-}: { icon: React.ElementType; id?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
+}: {
+  icon: React.ElementType;
+  id?: string;
+} & React.InputHTMLAttributes<HTMLInputElement>) => (
   <div className="relative">
     <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
     <input
       {...props}
       id={id}
-      className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all"
+      className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
     />
   </div>
 );
-
-
 
 const AvatarUpload = ({
   currentImage,
@@ -69,11 +70,7 @@ const AvatarUpload = ({
   }, [currentImage]);
 
   const validateFile = (file: File): boolean => {
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
     if (!allowedTypes.includes(file.type)) {
       onError?.("Please upload a JPG, PNG, or WEBP image.");
@@ -112,9 +109,7 @@ const AvatarUpload = ({
     createPreview(file);
   };
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     handleFile(file);
   };
@@ -176,13 +171,13 @@ const AvatarUpload = ({
           overflow-visible rounded-full
           border-2 border-dashed
           transition-all duration-200
-          focus-within:ring-4 focus-within:ring-[#6750A4]/20
+          focus-within:ring-4 focus-within:ring-secondary/20
           ${
             isDragging
-              ? "scale-105 border-[#6750A4] bg-purple-50"
+              ? "scale-105 border-secondary bg-purple-50"
               : hasImage
-              ? "border-gray-200 bg-gray-100 hover:border-[#6750A4]"
-              : "border-gray-300 bg-gray-50 hover:border-[#6750A4] hover:bg-purple-50"
+                ? "border-gray-200 bg-gray-100 hover:border-secondary"
+                : "border-gray-300 bg-gray-50 hover:border-secondary hover:bg-purple-50"
           }
         `}
         role="button"
@@ -193,11 +188,7 @@ const AvatarUpload = ({
             triggerFileInput();
           }
         }}
-        aria-label={
-          hasImage
-            ? "Change profile photo"
-            : "Upload profile photo"
-        }
+        aria-label={hasImage ? "Change profile photo" : "Upload profile photo"}
       >
         {/* Image Container */}
         <div className="relative h-full w-full overflow-hidden rounded-full">
@@ -233,13 +224,10 @@ const AvatarUpload = ({
               <div
                 className="
                   flex h-10 w-10 items-center justify-center
-                  rounded-full bg-[#6750A4]/10
+                  rounded-full bg-secondary/10
                 "
               >
-                <Upload
-                  className="h-5 w-5"
-                  style={{ color: PRIMARY_COLOR }}
-                />
+                <Upload className="h-5 w-5" style={{ color: PRIMARY_COLOR }} />
               </div>
 
               <span className="mt-1.5 text-[10px] font-medium text-gray-500">
@@ -299,9 +287,7 @@ const AvatarUpload = ({
       {/* Helper Text */}
       <div className="mt-3 text-center">
         <p className="text-xs font-medium text-gray-700">
-          {hasImage
-            ? "Profile photo"
-            : "Add profile photo"}
+          {hasImage ? "Profile photo" : "Add profile photo"}
         </p>
 
         <p className="mt-0.5 text-[10px] text-gray-400">
@@ -309,15 +295,12 @@ const AvatarUpload = ({
         </p>
 
         {!hasImage && (
-          <p className="mt-1 text-[10px] text-gray-400">
-            Click or drag & drop
-          </p>
+          <p className="mt-1 text-[10px] text-gray-400">Click or drag & drop</p>
         )}
       </div>
     </div>
   );
 };
-
 
 /* ─── Working Days Picker ─────────────────────────────── */
 const WorkingDaysPicker = ({
@@ -330,7 +313,11 @@ const WorkingDaysPicker = ({
   error?: string;
 }) => {
   const toggle = (day: number) => {
-    onChange(selected.includes(day) ? selected.filter((d) => d !== day) : [...selected, day]);
+    onChange(
+      selected.includes(day)
+        ? selected.filter((d) => d !== day)
+        : [...selected, day],
+    );
   };
 
   const selectAll = () => onChange([0, 1, 2, 3, 4, 5, 6]);
@@ -349,12 +336,19 @@ const WorkingDaysPicker = ({
               aria-checked={active}
               aria-label={day.label}
               onClick={() => toggle(day.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
                 active
                   ? "text-white border-transparent shadow-sm"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
               }`}
-              style={active ? { backgroundColor: PRIMARY_COLOR, borderColor: PRIMARY_COLOR } : {}}
+              style={
+                active
+                  ? {
+                      backgroundColor: PRIMARY_COLOR,
+                      borderColor: PRIMARY_COLOR,
+                    }
+                  : {}
+              }
             >
               {day.label}
             </button>
@@ -362,14 +356,26 @@ const WorkingDaysPicker = ({
         })}
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <button type="button" onClick={selectWeekdays} className="text-xs text-[#6750A4] hover:underline">
+        <button
+          type="button"
+          onClick={selectWeekdays}
+          className="text-xs text-secondary hover:underline"
+        >
           Weekdays
         </button>
-        <button type="button" onClick={selectAll} className="text-xs text-[#6750A4] hover:underline">
+        <button
+          type="button"
+          onClick={selectAll}
+          className="text-xs text-secondary hover:underline"
+        >
           All days
         </button>
         {selected.length > 0 && (
-          <button type="button" onClick={() => onChange([])} className="text-red-500 hover:underline">
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            className="text-red-500 hover:underline"
+          >
             Clear
           </button>
         )}
@@ -397,7 +403,10 @@ const ServiceMultiSelect = ({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -406,7 +415,7 @@ const ServiceMultiSelect = ({
   }, []);
 
   const filtered = services.filter((s) =>
-    s.title.toLowerCase().includes(search.toLowerCase())
+    s.title.toLowerCase().includes(search.toLowerCase()),
   );
   const selectedItems = services.filter((s) => selectedIds.includes(s.id));
 
@@ -414,7 +423,7 @@ const ServiceMultiSelect = ({
     onChange(
       selectedIds.includes(id)
         ? selectedIds.filter((i) => i !== id)
-        : [...selectedIds, id]
+        : [...selectedIds, id],
     );
   };
 
@@ -426,7 +435,7 @@ const ServiceMultiSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-10 w-full flex items-center justify-between px-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all"
+        className="h-10 w-full flex items-center justify-between px-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 hover:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -453,13 +462,15 @@ const ServiceMultiSelect = ({
                 placeholder="Search services..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border-0 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#6750A4]"
+                className="w-full px-3 py-1.5 text-xs border-0 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-secondary"
                 aria-label="Search services"
               />
             </div>
             <div className="max-h-48 overflow-y-auto py-1">
               {filtered.length === 0 ? (
-                <p className="text-xs text-gray-400 px-4 py-2">No services found.</p>
+                <p className="text-xs text-gray-400 px-4 py-2">
+                  No services found.
+                </p>
               ) : (
                 filtered.map((service) => {
                   const isSelected = selectedIds.includes(service.id);
@@ -468,16 +479,21 @@ const ServiceMultiSelect = ({
                       key={service.id}
                       type="button"
                       onClick={() => toggle(service.id)}
-                      className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-[#6750A4]/10 ${
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-secondary/10 ${
                         isSelected
-                          ? "bg-[#6750A4]/10 text-[#6750A4]"
+                          ? "bg-secondary/10 text-secondary"
                           : "text-gray-700"
                       }`}
                       role="option"
                       aria-selected={isSelected}
                     >
                       <span>{service.title}</span>
-                      {isSelected && <CheckSquare className="h-4 w-4" style={{ color: PRIMARY_COLOR }} />}
+                      {isSelected && (
+                        <CheckSquare
+                          className="h-4 w-4"
+                          style={{ color: PRIMARY_COLOR }}
+                        />
+                      )}
                     </button>
                   );
                 })
@@ -493,13 +509,13 @@ const ServiceMultiSelect = ({
           {selectedItems.map((s) => (
             <span
               key={s.id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-[#6750A4]/10 text-[#6750A4] rounded-full"
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-secondary/10 text-secondary rounded-full"
             >
               {s.title}
               <button
                 type="button"
                 onClick={() => toggle(s.id)}
-                className="ml-0.5 hover:text-[#6750A4] focus:outline-none"
+                className="ml-0.5 hover:text-secondary focus:outline-none"
                 aria-label={`Remove ${s.title}`}
               >
                 <X className="h-3 w-3" />
@@ -537,7 +553,7 @@ const ToggleSwitch = ({
     role="switch"
     aria-checked={checked}
     onClick={() => onChange(!checked)}
-    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6750A4]/50 focus:ring-offset-2"
+    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2"
     style={{ backgroundColor: checked ? PRIMARY_COLOR : "#D1D5DB" }}
   >
     <span className="sr-only">{label}</span>
@@ -568,22 +584,29 @@ export function StaffForm({
   const [nameAm, setNameAm] = useState(initialData?.name_am || "");
   const [roleTitle, setRoleTitle] = useState(initialData?.role_title || "");
   const [assignedServiceIds, setAssignedServiceIds] = useState<number[]>(
-    initialData?.assigned_service_ids || []
+    initialData?.assigned_service_ids || [],
   );
   const [workingDays, setWorkingDays] = useState<number[]>(
     initialData?.working_days
       ? Array.isArray(initialData.working_days)
         ? initialData.working_days
         : [initialData.working_days]
-      : [0, 1, 2, 3, 4, 5, 6]
+      : [0, 1, 2, 3, 4, 5, 6],
   );
-  const [startTime, setStartTime] = useState(initialData?.start_time?.slice(0, 5) || "09:00");
-  const [endTime, setEndTime] = useState(initialData?.end_time?.slice(0, 5) || "17:00");
+  const [startTime, setStartTime] = useState(
+    initialData?.start_time?.slice(0, 5) || "09:00",
+  );
+  const [endTime, setEndTime] = useState(
+    initialData?.end_time?.slice(0, 5) || "17:00",
+  );
   const [isOnline, setIsOnline] = useState(initialData?.is_online ?? true);
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Track previous staff ID to detect when editing a different member
@@ -604,7 +627,7 @@ export function StaffForm({
           ? Array.isArray(initialData.working_days)
             ? initialData.working_days
             : [initialData.working_days]
-          : [0, 1, 2, 3, 4, 5, 6]
+          : [0, 1, 2, 3, 4, 5, 6],
       );
       setStartTime(initialData?.start_time?.slice(0, 5) || "09:00");
       setEndTime(initialData?.end_time?.slice(0, 5) || "17:00");
@@ -619,8 +642,10 @@ export function StaffForm({
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     if (!name.trim()) errors.name = "Full name is required.";
-    if (workingDays.length === 0) errors.workingDays = "Select at least one working day.";
-    if (startTime >= endTime) errors.time = "Start time must be before end time.";
+    if (workingDays.length === 0)
+      errors.workingDays = "Select at least one working day.";
+    if (startTime >= endTime)
+      errors.time = "Start time must be before end time.";
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
       const firstErrorField = Object.keys(errors)[0];
@@ -642,8 +667,10 @@ export function StaffForm({
       formData.append("name", name.trim());
       formData.append("name_am", nameAm.trim());
       formData.append("role_title", roleTitle.trim());
-      assignedServiceIds.forEach((id) => formData.append("assigned_service_ids", String(id)));
-     formData.append("working_days", JSON.stringify(workingDays));
+      assignedServiceIds.forEach((id) =>
+        formData.append("assigned_service_ids", String(id)),
+      );
+      formData.append("working_days", JSON.stringify(workingDays));
       formData.append("start_time", startTime ? `${startTime}:00` : "09:00:00");
       formData.append("end_time", endTime ? `${endTime}:00` : "17:00:00");
       formData.append("is_online", isOnline ? "true" : "false");
@@ -652,10 +679,16 @@ export function StaffForm({
 
       if (isEditing && initialData) {
         await updateStaff(companySlug, initialData.id, formData);
-        setToast({ type: "success", message: "Specialist updated successfully." });
+        setToast({
+          type: "success",
+          message: "Specialist updated successfully.",
+        });
       } else {
         await createStaff(companySlug, formData);
-        setToast({ type: "success", message: "Specialist added successfully." });
+        setToast({
+          type: "success",
+          message: "Specialist added successfully.",
+        });
         // Reset form after creation (except toast)
         setName("");
         setNameAm("");
@@ -678,7 +711,13 @@ export function StaffForm({
     }
   };
 
-  const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
+  const SectionTitle = ({
+    icon: Icon,
+    title,
+  }: {
+    icon: React.ElementType;
+    title: string;
+  }) => (
     <div className="flex items-center gap-2 mb-4">
       <Icon className="h-4 w-4" style={{ color: PRIMARY_COLOR }} />
       <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
@@ -711,7 +750,10 @@ export function StaffForm({
           <SectionTitle icon={UserCheck} title="Profile Information" />
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="name"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Full Name (English) <span className="text-red-500">*</span>
               </label>
               <InputWithIcon
@@ -725,11 +767,16 @@ export function StaffForm({
                 aria-describedby={fieldErrors.name ? "name-error" : undefined}
               />
               {fieldErrors.name && (
-                <p id="name-error" className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>
+                <p id="name-error" className="text-xs text-red-500 mt-1">
+                  {fieldErrors.name}
+                </p>
               )}
             </div>
             <div>
-              <label htmlFor="name_am" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="name_am"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Name (Amharic)
               </label>
               <input
@@ -738,11 +785,14 @@ export function StaffForm({
                 value={nameAm}
                 onChange={(e) => setNameAm(e.target.value)}
                 placeholder="e.g. ሮቤል ዓለሙ"
-                className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 focus:border-[#6750A4] transition-all"
+                className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all"
               />
             </div>
             <div>
-              <label htmlFor="role_title" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="role_title"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Role / Title
               </label>
               <InputWithIcon
@@ -762,7 +812,10 @@ export function StaffForm({
           <SectionTitle icon={Clock} title="Availability Schedule" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="start_time" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="start_time"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Shift Start
               </label>
               <InputWithIcon
@@ -776,7 +829,10 @@ export function StaffForm({
               />
             </div>
             <div>
-              <label htmlFor="end_time" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="end_time"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Shift End
               </label>
               <InputWithIcon
@@ -789,7 +845,9 @@ export function StaffForm({
             </div>
           </div>
           {fieldErrors.time && (
-            <p id="time-error" className="text-xs text-red-500 mt-1">{fieldErrors.time}</p>
+            <p id="time-error" className="text-xs text-red-500 mt-1">
+              {fieldErrors.time}
+            </p>
           )}
           <div className="mt-4">
             <label className="block text-xs font-medium text-gray-700 mb-2">
@@ -812,7 +870,9 @@ export function StaffForm({
             onChange={setAssignedServiceIds}
             error={fieldErrors.services}
           />
-          <p className="text-xs text-gray-400 mt-1">Leave empty to assign all services.</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Leave empty to assign all services.
+          </p>
         </section>
 
         {/* Booking Status */}
@@ -821,17 +881,33 @@ export function StaffForm({
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-gray-700">Online & Booking</span>
-                <p className="text-xs text-gray-400 mt-0.5">Customers can book this specialist</p>
+                <span className="text-sm font-medium text-gray-700">
+                  Online & Booking
+                </span>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Customers can book this specialist
+                </p>
               </div>
-              <ToggleSwitch checked={isOnline} onChange={setIsOnline} label="Online & Booking" />
+              <ToggleSwitch
+                checked={isOnline}
+                onChange={setIsOnline}
+                label="Online & Booking"
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-gray-700">Active</span>
-                <p className="text-xs text-gray-400 mt-0.5">Visible to customers</p>
+                <span className="text-sm font-medium text-gray-700">
+                  Active
+                </span>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Visible to customers
+                </p>
               </div>
-              <ToggleSwitch checked={isActive} onChange={setIsActive} label="Active" />
+              <ToggleSwitch
+                checked={isActive}
+                onChange={setIsActive}
+                label="Active"
+              />
             </div>
           </div>
         </section>
@@ -841,10 +917,14 @@ export function StaffForm({
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 flex items-center justify-center gap-2 bg-[#6750A4] text-white font-medium py-2.5 px-4 rounded-xl text-sm transition-colors hover:bg-[#5B46A0] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-2 bg-secondary text-white font-medium py-2.5 px-4 rounded-xl text-sm transition-colors hover:bg-[#5B46A0] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {submitting ? "Saving..." : isEditing ? "Update Staff" : "Create Staff"}
+            {submitting
+              ? "Saving..."
+              : isEditing
+                ? "Update Staff"
+                : "Create Staff"}
           </button>
           {onCancel && (
             <button

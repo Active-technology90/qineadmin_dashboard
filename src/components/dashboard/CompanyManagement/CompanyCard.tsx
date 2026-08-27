@@ -1,5 +1,14 @@
 // src/components/admin/CompanyManagement/CompanyCard.tsx
-import { Building2, Tag } from "lucide-react";
+
+import React from "react";
+import {
+  Building2,
+  Tag,
+  ChevronRight,
+  MapPin,
+  Star,
+  Globe2,
+} from "lucide-react";
 import type { CompanyListItem } from "../../../types";
 
 interface CompanyCardProps {
@@ -10,120 +19,371 @@ interface CompanyCardProps {
 
 export default function CompanyCard({
   company,
-  // onEdit,
-  // userRole,
+  onEdit,
+  userRole,
 }: CompanyCardProps) {
+  const isActive = company.is_active;
+
+  const formatBusinessType = (value?: string) => {
+    if (!value) return "N/A";
+
+    return value
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   return (
-    <div className="relative flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden group w-full min-w-0 sm:min-w-[360px] max-w-full sm:max-w-md">
-      {/* Cover Image Section */}
-      <div className="relative h-40 w-full overflow-hidden">
+    <article
+      className="
+        group relative flex h-full min-w-0 flex-col
+        overflow-hidden rounded-2xl
+        border border-gray-200/80
+        bg-white
+        shadow-sm
+        transition-all duration-300
+        hover:-translate-y-0.5
+        hover:border-gray-300
+        hover:shadow-xl hover:shadow-gray-200/60
+      "
+    >
+      {/* =========================================================
+          COVER
+      ========================================================== */}
+      <div className="relative h-32 w-full overflow-hidden bg-gray-100 sm:h-36 md:h-40">
         {company.cover_image ? (
           <img
             src={company.cover_image}
-            alt={company.name}
-            className="w-full h-full object-cover"
+            alt={`${company.name} cover`}
+            className="
+              h-full w-full object-cover
+              transition-transform duration-700
+              group-hover:scale-105
+            "
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-secondary via-secondary-light to-[#9b87f5]" />
+          <div
+            className="
+              h-full w-full
+              bg-gradient-to-br
+              from-secondary
+              via-secondary-light
+              to-[#9b87f5]
+            "
+          >
+            {/* Decorative background */}
+            <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
+
+        {/* Cover overlay */}
+        <div
+          className="
+            absolute inset-0
+            bg-gradient-to-t
+            from-black/40 via-black/5 to-transparent
+          "
+        />
+
+        {/* Top status */}
+        <div className="absolute left-3 right-3 top-3 flex items-start justify-between">
+          {/* Profile label */}
+          <span
+            className="
+              inline-flex items-center gap-1.5
+              rounded-full
+              border border-white/20
+              bg-black/20
+              px-2.5 py-1
+              text-[10px] font-semibold
+              uppercase tracking-wider
+              text-white
+              backdrop-blur-md
+            "
+          >
+            <Building2 className="h-3 w-3" />
+            Company
+          </span>
+
+          {/* Active status */}
+          <span
+            className={`
+              inline-flex items-center gap-1.5
+              rounded-full
+              border px-2.5 py-1
+              text-[10px] font-semibold
+              backdrop-blur-md
+              ${
+                isActive
+                  ? "border-emerald-300/30 bg-emerald-500/90 text-white"
+                  : "border-white/20 bg-black/40 text-white"
+              }
+            `}
+          >
+            <span
+              className={`
+                h-1.5 w-1.5 rounded-full
+                ${isActive ? "bg-white" : "bg-gray-300"}
+              `}
+            />
+
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        </div>
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-10 flex flex-col bg-white rounded-t-3xl -mt-8 px-5 pb-3 pt-0">
-        {/* Logo and Name */}
-        <div className="flex items-center gap-4 -mt-12 mb-4 px-4">
-          <div className="flex-shrink-0 drop-shadow-xl">
+      {/* =========================================================
+          MAIN CONTENT
+      ========================================================== */}
+      <div className="flex flex-1 flex-col px-4 pb-4 sm:px-5 sm:pb-5">
+        {/* =======================================================
+            COMPANY IDENTITY
+        ======================================================== */}
+        <div className="relative -mt-8 mb-4 flex items-end gap-3">
+          {/* Logo */}
+          <div className="relative flex-shrink-0">
             {company.logo ? (
               <img
                 src={company.logo}
-                alt={company.name}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-4 border-white shadow-2xl"
+                alt={`${company.name} logo`}
+                className="
+                  h-16 w-16
+                  rounded-2xl
+                  border-4 border-white
+                  bg-white
+                  object-cover
+                  shadow-lg
+                  sm:h-[72px] sm:w-[72px]
+                "
               />
             ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-secondary to-[#9b87f5] flex items-center justify-center border-4 border-white shadow-2xl">
-                <Building2 size={32} className="text-white" />
+              <div
+                className="
+                  flex
+                  h-16 w-16
+                  items-center justify-center
+                  rounded-2xl
+                  border-4 border-white
+                  bg-gradient-to-br
+                  from-secondary to-[#9b87f5]
+                  shadow-lg
+                  sm:h-[72px] sm:w-[72px]
+                "
+              >
+                <Building2
+                  className="h-7 w-7 text-white sm:h-8 sm:w-8"
+                  strokeWidth={1.8}
+                />
+              </div>
+            )}
+
+            {/* Online/active dot */}
+            <span
+              className={`
+                absolute
+                bottom-0.5 right-0.5
+                h-4 w-4
+                rounded-full
+                border-[3px] border-white
+                shadow-sm
+                ${isActive ? "bg-emerald-500" : "bg-gray-400"}
+              `}
+            />
+          </div>
+
+          {/* Name */}
+          <div className="min-w-0 flex-1 pb-0.5">
+            <h3
+              title={company.name}
+              className="
+                line-clamp-2
+                break-words
+                text-[15px]
+                font-bold
+                leading-tight
+                text-gray-900
+                sm:text-base
+              "
+            >
+              {company.name}
+            </h3>
+
+            {company.slug && (
+              <div className="mt-1.5 flex min-w-0 items-center gap-1">
+                <Globe2 className="h-3 w-3 flex-shrink-0 text-gray-400" />
+
+                <span
+                  title={company.slug}
+                  className="
+                    min-w-0 truncate
+                    font-mono
+                    text-[10px]
+                    text-gray-500
+                  "
+                >
+                  {company.slug}
+                </span>
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-xl sm:text-2xl mb-1 line-clamp-2 break-words drop-shadow-lg text-white [text-shadow:_0_1px_4px_rgb(0_0_0_/_0.5)]">
-              {company.name}
-            </h3>
-            <p className="text-xs font-mono px-3 py-1 rounded-full inline-block bg-black/50 backdrop-blur-sm text-white/90 border border-secondary/50 shadow-lg truncate max-w-full">
-              {company.slug}
+        </div>
+
+        {/* =======================================================
+            BUSINESS TYPE / FEATURED
+        ======================================================== */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+              Business Type
+            </p>
+
+            <p className="mt-0.5 truncate text-xs font-semibold text-gray-800">
+              {formatBusinessType(company.business_type)}
             </p>
           </div>
+
+          {/* Featured badge if available */}
+          {"is_featured" in company && company.is_featured && (
+            <span
+              className="
+                inline-flex flex-shrink-0
+                items-center gap-1
+                rounded-full
+                border border-amber-200
+                bg-amber-50
+                px-2 py-1
+                text-[9px]
+                font-bold
+                text-amber-700
+              "
+            >
+              <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+              Featured
+            </span>
+          )}
         </div>
 
-        {/* Status Badges */}
-        <div className="flex gap-2 flex-wrap justify-end mb-3">
-          <span
-            className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
-              company.is_active
-                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                : "bg-gray-100 text-gray-500 border border-gray-200"
-            }`}
+        {/* =======================================================
+            DETAILS
+        ======================================================== */}
+        <div
+          className="
+            overflow-hidden
+            rounded-xl
+            border border-gray-100
+            bg-gray-50/60
+          "
+        >
+          {/* Category */}
+          <div
+            className="
+              flex min-w-0 items-center gap-3
+              border-b border-gray-100
+              px-3 py-2.5
+              transition-colors
+              group-hover:bg-white
+            "
           >
-            {company.is_active ? "● Active" : "○ Inactive"}
-          </span>
-        </div>
-
-        {/* Category */}
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 mb-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
-              <Tag size={14} className="text-indigo-600" />
+            <div
+              className="
+                flex h-8 w-8 flex-shrink-0
+                items-center justify-center
+                rounded-lg
+                border border-indigo-100
+                bg-indigo-50
+              "
+            >
+              <Tag className="h-3.5 w-3.5 text-indigo-600" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
+
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
                 Category
               </p>
-              <p className="font-semibold text-gray-900 text-sm break-words">
-                {company.category_name}
+
+              <p
+                title={company.category_name}
+                className="mt-0.5 truncate text-xs font-semibold text-gray-800"
+              >
+                {company.category_name || "Not specified"}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Subcategory */}
-        {company.sub_category_name && (
-          <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-lg p-3 mb-2 border border-indigo-100">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
-                <Tag size={14} className="text-indigo-400" />
+          {/* Subcategory */}
+          {company.sub_category_name && (
+            <div
+              className="
+                flex min-w-0 items-center gap-3
+                border-b border-gray-100
+                bg-white/40
+                px-3 py-2.5
+              "
+            >
+              <div
+                className="
+                  flex h-8 w-8 flex-shrink-0
+                  items-center justify-center
+                  rounded-lg
+                  border border-purple-100
+                  bg-purple-50
+                "
+              >
+                <Tag className="h-3.5 w-3.5 text-purple-500" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
                   Subcategory
                 </p>
-                <p className="font-medium text-gray-700 text-sm break-words">
+
+                <p
+                  title={company.sub_category_name}
+                  className="mt-0.5 truncate text-xs font-medium text-gray-700"
+                >
                   {company.sub_category_name}
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Business Type */}
-        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 bg-white rounded-md shadow-sm shrink-0">
-              <Building2 size={14} className="text-secondary" />
+          {/* Business type */}
+          <div
+            className="
+              flex min-w-0 items-center gap-3
+              px-3 py-2.5
+              transition-colors
+              group-hover:bg-white
+            "
+          >
+            <div
+              className="
+                flex h-8 w-8 flex-shrink-0
+                items-center justify-center
+                rounded-lg
+                border border-secondary/10
+                bg-secondary/5
+              "
+            >
+              <Building2 className="h-3.5 w-3.5 text-secondary" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">
+
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
                 Business Type
               </p>
-              <p className="font-bold text-gray-900 text-sm break-words">
-                {company.business_type?.toUpperCase() || "N/A"}
+
+              <p className="mt-0.5 truncate text-xs font-semibold text-gray-800">
+                {formatBusinessType(company.business_type)}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Edit Button - Removed, now located at top of form */}
+       
+      
+       
       </div>
-    </div>
+    </article>
   );
 }

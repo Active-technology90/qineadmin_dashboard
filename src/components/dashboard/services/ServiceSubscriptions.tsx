@@ -1,10 +1,4 @@
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Repeat,
   Search,
@@ -243,7 +237,9 @@ function KpiCard({
       </div>
       <div className="min-w-0">
         <p className="text-2xl font-bold leading-none text-gray-900">{value}</p>
-        <p className="mt-1 truncate text-xs font-medium text-gray-500">{label}</p>
+        <p className="mt-1 truncate text-xs font-medium text-gray-500">
+          {label}
+        </p>
       </div>
     </div>
   );
@@ -447,10 +443,8 @@ export default function ServiceSubscriptions() {
       const idMatches = String(subscription.id).includes(term);
       const customerName = subscription.customer_name?.toLowerCase() ?? "";
       const customerPhone = subscription.customer_phone?.toLowerCase() ?? "";
-      const offeringTitle =
-        subscription.offering?.title?.toLowerCase() ?? "";
-      const staffName =
-        subscription.assigned_staff?.name?.toLowerCase() ?? "";
+      const offeringTitle = subscription.offering?.title?.toLowerCase() ?? "";
+      const staffName = subscription.assigned_staff?.name?.toLowerCase() ?? "";
 
       return (
         idMatches ||
@@ -498,7 +492,7 @@ export default function ServiceSubscriptions() {
         label: "Total Contracts",
         value: total,
         icon: Repeat,
-        iconClass: "bg-[#6750A4]/10 text-[#6750A4]",
+        iconClass: "bg-secondary/10 text-secondary",
       },
       {
         label: "Active",
@@ -595,7 +589,7 @@ export default function ServiceSubscriptions() {
           <button
             type="button"
             onClick={clearCompany}
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#6750A4] hover:underline"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-secondary hover:underline"
           >
             <Repeat className="h-4 w-4" />
             Choose another company
@@ -619,7 +613,7 @@ export default function ServiceSubscriptions() {
         <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:p-4 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#6750A4]/70">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-secondary/70">
                 Service Management
               </p>
 
@@ -630,9 +624,9 @@ export default function ServiceSubscriptions() {
 
                 <span
                   title={companyName}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]"
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/5 px-2.5 py-1 text-xs font-semibold text-secondary"
                 >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" />
                   <span className="max-w-[180px] truncate sm:max-w-[260px]">
                     {companyName}
                   </span>
@@ -651,12 +645,10 @@ export default function ServiceSubscriptions() {
                   type="button"
                   onClick={clearCompany}
                   aria-label="Switch company"
-                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-[#6750A4]/30 hover:bg-[#6750A4]/5 hover:text-[#6750A4] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
+                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary/20 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
                 >
                   <Repeat className="h-4 w-4 shrink-0" />
-                  <span className=" truncate sm:inline">
-                    Switch Company
-                  </span>
+                  <span className=" truncate sm:inline">Switch Company</span>
                 </button>
               )}
 
@@ -666,7 +658,7 @@ export default function ServiceSubscriptions() {
                 disabled={loading}
                 aria-label="Refresh subscriptions"
                 title="Refresh subscriptions"
-                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-[#6750A4]/30 hover:bg-[#6750A4]/5 hover:text-[#6750A4] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
+                className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:gap-2 sm:px-3.5 sm:text-sm"
               >
                 <RefreshCw
                   className={`h-4 w-4 shrink-0 ${
@@ -705,9 +697,9 @@ export default function ServiceSubscriptions() {
                       key={tab.value}
                       type="button"
                       onClick={() => setSelectedStatus(tab.value)}
-                      className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 ${
+                      className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-secondary/20 ${
                         isActive
-                          ? "bg-[#6750A4] text-white shadow-sm shadow-[#6750A4]/20"
+                          ? "bg-secondary text-white shadow-sm shadow-secondary/20"
                           : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-100"
                       }`}
                     >
@@ -727,7 +719,7 @@ export default function ServiceSubscriptions() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search contract, customer, service, staff..."
                     aria-label="Search subscriptions"
-                    className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-9 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/10"
+                    className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-9 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-secondary focus:ring-2 focus:ring-secondary/10"
                   />
 
                   {search && (
@@ -735,7 +727,7 @@ export default function ServiceSubscriptions() {
                       type="button"
                       onClick={() => setSearch("")}
                       aria-label="Clear search"
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary/20"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -748,7 +740,7 @@ export default function ServiceSubscriptions() {
                   disabled={loading}
                   aria-label="Refresh subscriptions"
                   title="Refresh subscriptions"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-200 hover:border-[#6750A4]/30 hover:bg-[#6750A4]/5 hover:text-[#6750A4] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#6750A4]/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-3 sm:gap-2"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-200 hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary active:scale-95 focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-3 sm:gap-2"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${
@@ -779,7 +771,7 @@ export default function ServiceSubscriptions() {
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="font-semibold text-[#6750A4] hover:underline"
+                  className="font-semibold text-secondary hover:underline"
                 >
                   Clear Search
                 </button>
@@ -806,7 +798,7 @@ export default function ServiceSubscriptions() {
                 <button
                   type="button"
                   onClick={() => void fetchSubscriptions()}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#6750A4] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5B4592] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5B4592] focus:outline-none focus:ring-2 focus:ring-secondary/30"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Retry
@@ -826,7 +818,7 @@ export default function ServiceSubscriptions() {
                   <button
                     type="button"
                     onClick={() => setSearch("")}
-                    className="mt-4 text-sm font-semibold text-[#6750A4] hover:underline"
+                    className="mt-4 text-sm font-semibold text-secondary hover:underline"
                   >
                     Clear Search
                   </button>
@@ -854,7 +846,7 @@ export default function ServiceSubscriptions() {
                   <button
                     type="button"
                     onClick={() => setSelectedStatus("all")}
-                    className="mt-4 text-sm font-semibold text-[#6750A4] hover:underline"
+                    className="mt-4 text-sm font-semibold text-secondary hover:underline"
                   >
                     View all contracts
                   </button>
@@ -895,7 +887,7 @@ export default function ServiceSubscriptions() {
 
                           <td className="py-4 pr-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#6750A4]/10 text-sm font-semibold text-[#6750A4]">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-sm font-semibold text-secondary">
                                 {getInitials(subscription.customer_name)}
                               </div>
                               <div className="min-w-0">
@@ -954,7 +946,7 @@ export default function ServiceSubscriptions() {
                                 setManageModalOpen(true);
                               }}
                               aria-label={`Manage contract #${subscription.id}`}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-[#6750A4] shadow-sm transition-all hover:bg-[#6750A4] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-secondary shadow-sm transition-all hover:bg-secondary hover:text-white focus:outline-none focus:ring-2 focus:ring-secondary/30"
                             >
                               <SlidersHorizontal className="h-3.5 w-3.5" />
                               Manage
@@ -975,7 +967,7 @@ export default function ServiceSubscriptions() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#6750A4]/10 text-sm font-semibold text-[#6750A4]">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-sm font-semibold text-secondary">
                             {getInitials(subscription.customer_name)}
                           </div>
                           <div className="min-w-0">
@@ -990,9 +982,7 @@ export default function ServiceSubscriptions() {
                             )}
                           </div>
                         </div>
-                        <SubscriptionStatusBadge
-                          status={subscription.status}
-                        />
+                        <SubscriptionStatusBadge status={subscription.status} />
                       </div>
 
                       <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
@@ -1005,8 +995,7 @@ export default function ServiceSubscriptions() {
                           Service
                         </p>
                         <p className="mt-1 font-semibold text-gray-900">
-                          {subscription.offering?.title ||
-                            "Recurring Service"}
+                          {subscription.offering?.title || "Recurring Service"}
                         </p>
                         {subscription.assigned_staff?.name && (
                           <p className="mt-0.5 text-xs text-gray-500">
@@ -1027,9 +1016,7 @@ export default function ServiceSubscriptions() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">
-                            Next billing
-                          </p>
+                          <p className="text-xs text-gray-400">Next billing</p>
                           <div className="mt-1 text-sm">
                             <BillingDateCell
                               date={subscription.next_billing_date}
@@ -1045,7 +1032,7 @@ export default function ServiceSubscriptions() {
                           setManageModalOpen(true);
                         }}
                         aria-label={`Manage contract #${subscription.id}`}
-                        className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-[#6750A4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5B4592] focus:outline-none focus:ring-2 focus:ring-[#6750A4]/30"
+                        className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5B4592] focus:outline-none focus:ring-2 focus:ring-secondary/30"
                       >
                         <SlidersHorizontal className="h-4 w-4" />
                         Manage Contract
@@ -1059,11 +1046,8 @@ export default function ServiceSubscriptions() {
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-gray-500">
                       Showing{" "}
-                      {Math.min(
-                        (currentPage - 1) * pageSize + 1,
-                        totalItems,
-                      )}{" "}
-                      – {Math.min(currentPage * pageSize, totalItems)} of{" "}
+                      {Math.min((currentPage - 1) * pageSize + 1, totalItems)} –{" "}
+                      {Math.min(currentPage * pageSize, totalItems)} of{" "}
                       {totalItems} contracts
                     </p>
                     <Pagination

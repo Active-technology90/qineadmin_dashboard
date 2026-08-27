@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo,  useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Star,
   Clock,
@@ -10,7 +10,7 @@ import {
   X,
   CalendarDays,
 } from "lucide-react";
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import type { ServiceStaff, ServiceOffering } from "../../../types";
 
 const PRIMARY_COLOR = "#6750A4";
@@ -36,7 +36,7 @@ const AnimatedCounter = ({
     if (diff === 0) return;
 
     const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (prefersReducedMotion) {
       setDisplayValue(end);
@@ -157,7 +157,7 @@ export const DeleteModal = ({
       if (e.key === "Escape") onClose();
       if (e.key === "Tab" && modalRef.current) {
         const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
         );
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -256,11 +256,7 @@ export const DeleteModal = ({
 /* -------------------------------------------------------------------------- */
 
 // Online/Offline indicator with accessible text
-const StatusDot = ({
-  isOnline,
-}: {
-  isOnline: boolean | undefined | null;
-}) => (
+const StatusDot = ({ isOnline }: { isOnline: boolean | undefined | null }) => (
   <span
     className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
       isOnline !== false ? "bg-emerald-500" : "bg-gray-300"
@@ -361,16 +357,10 @@ const ServiceBadges = ({
 };
 
 // Today status badge
-const TodayStatus = ({
-  isToday,
-}: {
-  isToday: boolean;
-}) => (
+const TodayStatus = ({ isToday }: { isToday: boolean }) => (
   <span
     className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-      isToday
-        ? "text-emerald-700 bg-emerald-50"
-        : "text-gray-500 bg-gray-50"
+      isToday ? "text-emerald-700 bg-emerald-50" : "text-gray-500 bg-gray-50"
     }`}
   >
     <span
@@ -407,7 +397,7 @@ export const StaffTable = ({
   const today = useMemo(() => new Date().getDay(), []);
   const serviceMap = useMemo(
     () => new Map(offerings.map((s) => [s.id, s])),
-    [offerings]
+    [offerings],
   );
 
   const allSelected = staff.length > 0 && selectedIds.length === staff.length;
@@ -459,9 +449,7 @@ export const StaffTable = ({
               <div className="flex items-center gap-3">
                 <StaffAvatar staff={member} size="md" />
                 <div>
-                  <h4 className="font-semibold text-gray-900">
-                    {member.name}
-                  </h4>
+                  <h4 className="font-semibold text-gray-900">{member.name}</h4>
                   <p className="text-xs text-gray-500">
                     {member.role_title || "Specialist"}
                   </p>
@@ -471,7 +459,7 @@ export const StaffTable = ({
                 {onScheduleClick && (
                   <button
                     onClick={() => onScheduleClick(member)}
-                    className="p-2 text-gray-400 hover:text-[#6750A4] rounded-lg hover:bg-[#6750A4]/10 transition-colors"
+                    className="p-2 text-gray-400 hover:text-secondary rounded-lg hover:bg-secondary/10 transition-colors"
                     title="View daily schedule & bookings"
                     aria-label={`Schedule for ${member.name}`}
                   >
@@ -480,7 +468,7 @@ export const StaffTable = ({
                 )}
                 <button
                   onClick={() => onEdit(member)}
-                  className="p-2 text-gray-400 hover:text-[#6750A4] rounded-lg hover:bg-[#6750A4]/10 transition-colors"
+                  className="p-2 text-gray-400 hover:text-secondary rounded-lg hover:bg-secondary/10 transition-colors"
                   aria-label={`Edit ${member.name}`}
                 >
                   <Edit className="h-4 w-4" />
@@ -550,7 +538,7 @@ export const StaffTable = ({
                     ref={(el) => {
                       if (el) el.indeterminate = someSelected;
                     }}
-                    className="rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                    className="rounded border-gray-300 text-secondary focus:ring-secondary"
                     aria-label="Select all staff"
                   />
                 </div>
@@ -589,7 +577,7 @@ export const StaffTable = ({
                   exit={{ opacity: 0 }}
                   className={`${
                     selectedIds.includes(member.id)
-                      ? "bg-[#6750A4]/5"
+                      ? "bg-secondary/5"
                       : "hover:bg-gray-50"
                   } transition-colors`}
                 >
@@ -601,10 +589,10 @@ export const StaffTable = ({
                         setSelectedIds((prev) =>
                           prev.includes(member.id)
                             ? prev.filter((id) => id !== member.id)
-                            : [...prev, member.id]
+                            : [...prev, member.id],
                         )
                       }
-                      className="rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                      className="rounded border-gray-300 text-secondary focus:ring-secondary"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -656,7 +644,7 @@ export const StaffTable = ({
                       {onScheduleClick && (
                         <button
                           onClick={() => onScheduleClick(member)}
-                          className="p-2 text-gray-400 hover:text-[#6750A4] rounded-lg hover:bg-[#6750A4]/10 transition-colors"
+                          className="p-2 text-gray-400 hover:text-secondary rounded-lg hover:bg-secondary/10 transition-colors"
                           title="View daily schedule & bookings"
                           aria-label={`Schedule for ${member.name}`}
                         >
@@ -665,7 +653,7 @@ export const StaffTable = ({
                       )}
                       <button
                         onClick={() => onEdit(member)}
-                        className="p-2 text-gray-400 hover:text-[#6750A4] rounded-lg hover:bg-[#6750A4]/10 transition-colors"
+                        className="p-2 text-gray-400 hover:text-secondary rounded-lg hover:bg-secondary/10 transition-colors"
                         aria-label={`Edit ${member.name}`}
                       >
                         <Edit className="h-4 w-4" />

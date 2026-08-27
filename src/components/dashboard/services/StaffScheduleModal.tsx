@@ -20,7 +20,15 @@ interface StaffScheduleModalProps {
   onClose: () => void;
 }
 
-const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const WEEKDAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
   isOpen,
@@ -33,7 +41,8 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   });
 
-  const [scheduleData, setScheduleData] = useState<StaffScheduleResponse | null>(null);
+  const [scheduleData, setScheduleData] =
+    useState<StaffScheduleResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +51,9 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const res = await getManageStaffSchedule(companySlug, staff.id, { date: selectedDate });
+      const res = await getManageStaffSchedule(companySlug, staff.id, {
+        date: selectedDate,
+      });
       setScheduleData(res.data);
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Failed to load schedule.");
@@ -67,13 +78,40 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
     setSelectedDate(iso);
   };
 
-  const statusColors: Record<string, { bg: string; text: string; border: string }> = {
-    pending: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-    confirmed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-    in_progress: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-    completed: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
-    cancelled: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
-    no_show: { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-200" },
+  const statusColors: Record<
+    string,
+    { bg: string; text: string; border: string }
+  > = {
+    pending: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+    },
+    confirmed: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      border: "border-green-200",
+    },
+    in_progress: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+    },
+    completed: {
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+    },
+    cancelled: {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      border: "border-red-200",
+    },
+    no_show: {
+      bg: "bg-gray-100",
+      text: "text-gray-600",
+      border: "border-gray-200",
+    },
   };
 
   const appointments = scheduleData?.booked_appointments || [];
@@ -85,22 +123,27 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-[#6750A4] flex items-center justify-center font-bold text-lg shadow-sm border border-purple-200">
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-secondary flex items-center justify-center font-bold text-lg shadow-sm border border-purple-200">
               {staff.name.charAt(0)}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-gray-900">{staff.name}</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  {staff.name}
+                </h2>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    staff.is_online ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-600"
+                    staff.is_online
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {staff.is_online ? "ONLINE" : "OFFLINE"}
                 </span>
               </div>
               <p className="text-xs text-gray-500 font-medium mt-0.5">
-                {staff.role_title || "Specialist"} • Shift: {staff.start_time?.slice(0, 5)} - {staff.end_time?.slice(0, 5)}
+                {staff.role_title || "Specialist"} • Shift:{" "}
+                {staff.start_time?.slice(0, 5)} - {staff.end_time?.slice(0, 5)}
               </p>
             </div>
           </div>
@@ -120,7 +163,7 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
               onClick={() => setDateOffset(0)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 selectedDate === new Date().toISOString().split("T")[0]
-                  ? "bg-[#6750A4] text-white shadow-sm"
+                  ? "bg-secondary text-white shadow-sm"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
               }`}
             >
@@ -135,12 +178,12 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-[#6750A4]" />
+            <CalendarDays className="h-4 w-4 text-secondary" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-[#6750A4] focus:outline-none"
+              className="bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-secondary focus:outline-none"
             />
           </div>
         </div>
@@ -149,8 +192,10 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {loading ? (
             <div className="py-16 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-[#6750A4] mx-auto mb-2" />
-              <p className="text-xs font-semibold text-gray-500">Loading specialist schedule...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-secondary mx-auto mb-2" />
+              <p className="text-xs font-semibold text-gray-500">
+                Loading specialist schedule...
+              </p>
             </div>
           ) : error ? (
             <div className="p-4 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 flex items-center gap-2">
@@ -165,10 +210,12 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                   <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-sm font-bold text-amber-900">
-                      Off Duty on {WEEKDAY_NAMES[scheduleData.weekday] || "this day"}
+                      Off Duty on{" "}
+                      {WEEKDAY_NAMES[scheduleData.weekday] || "this day"}
                     </h4>
                     <p className="text-xs text-amber-700 mt-0.5">
-                      {staff.name} is not scheduled to work on this weekday according to their regular working days.
+                      {staff.name} is not scheduled to work on this weekday
+                      according to their regular working days.
                     </p>
                   </div>
                 </div>
@@ -180,10 +227,12 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                   <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider block mb-1">
                     Booked Appointments
                   </span>
-                  <p className="text-2xl font-bold text-[#6750A4]">
+                  <p className="text-2xl font-bold text-secondary">
                     {appointments.length}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">scheduled for {selectedDate}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    scheduled for {selectedDate}
+                  </p>
                 </div>
 
                 <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
@@ -193,7 +242,9 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                   <p className="text-2xl font-bold text-emerald-700">
                     {vacantSlots.length}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">available slots in shift</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    available slots in shift
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -201,7 +252,8 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                     Shift Range
                   </span>
                   <p className="text-sm font-bold text-gray-900 mt-1">
-                    {staff.start_time?.slice(0, 5)} → {staff.end_time?.slice(0, 5)}
+                    {staff.start_time?.slice(0, 5)} →{" "}
+                    {staff.end_time?.slice(0, 5)}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {staff.is_online ? "Active & Ready" : "Currently Offline"}
@@ -212,7 +264,7 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
               {/* Booked Appointments List */}
               <div>
                 <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-[#6750A4]" />
+                  <Briefcase className="h-4 w-4 text-secondary" />
                   Appointments & Client Bookings ({appointments.length})
                 </h3>
 
@@ -220,13 +272,15 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                   <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                     <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-1.5" />
                     <p className="text-xs font-semibold text-gray-600">
-                      No customer bookings scheduled for {staff.name} on this date.
+                      No customer bookings scheduled for {staff.name} on this
+                      date.
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {appointments.map((apt) => {
-                      const sc = statusColors[apt.status] || statusColors.pending;
+                      const sc =
+                        statusColors[apt.status] || statusColors.pending;
                       return (
                         <div
                           key={apt.booking_id}
@@ -242,7 +296,7 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
                               >
                                 {apt.status.toUpperCase()}
                               </span>
-                              <span className="text-xs font-semibold text-[#6750A4]">
+                              <span className="text-xs font-semibold text-secondary">
                                 #{apt.booking_id}
                               </span>
                             </div>
@@ -267,7 +321,8 @@ export const StaffScheduleModal: React.FC<StaffScheduleModalProps> = ({
 
                           <div className="text-right sm:border-l sm:border-gray-100 sm:pl-4">
                             <div className="text-sm font-bold text-gray-900">
-                              {parseFloat(apt.quoted_price).toLocaleString()} {apt.currency}
+                              {parseFloat(apt.quoted_price).toLocaleString()}{" "}
+                              {apt.currency}
                             </div>
                             <div className="text-[11px] text-gray-400 font-medium">
                               {apt.duration_minutes} mins

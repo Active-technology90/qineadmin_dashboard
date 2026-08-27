@@ -31,7 +31,9 @@ interface ServiceSubscriptionManageModalProps {
   onShowToast: (type: "success" | "error", message: string) => void;
 }
 
-export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageModalProps> = ({
+export const ServiceSubscriptionManageModal: React.FC<
+  ServiceSubscriptionManageModalProps
+> = ({
   isOpen,
   subscription,
   companySlug,
@@ -39,10 +41,13 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
   onUpdated,
   onShowToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<"overview" | "invoices" | "sessions">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "invoices" | "sessions"
+  >("overview");
 
   // Status update state
-  const [selectedStatus, setSelectedStatus] = useState<ServiceSubscription["status"]>("active");
+  const [selectedStatus, setSelectedStatus] =
+    useState<ServiceSubscription["status"]>("active");
   const [adminNotes, setAdminNotes] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -56,10 +61,13 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
 
   // Log session form state
   const [showLogForm, setShowLogForm] = useState(false);
-  const [logDate, setLogDate] = useState(new Date().toISOString().split("T")[0]);
+  const [logDate, setLogDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [logTime, setLogTime] = useState("10:00");
   const [logStaffId, setLogStaffId] = useState<number | undefined>(undefined);
-  const [logStatus, setLogStatus] = useState<ServiceSessionLog["status"]>("attended");
+  const [logStatus, setLogStatus] =
+    useState<ServiceSessionLog["status"]>("attended");
   const [logNotes, setLogNotes] = useState("");
   const [savingSession, setSavingSession] = useState(false);
 
@@ -84,7 +92,10 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
     if (!subscription) return;
     try {
       setLoadingSessions(true);
-      const res = await getSubscriptionSessionLogs(companySlug, subscription.id);
+      const res = await getSubscriptionSessionLogs(
+        companySlug,
+        subscription.id,
+      );
       setSessionLogs(res.data || []);
     } catch {
       setSessionLogs([]);
@@ -105,7 +116,10 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
       onShowToast("success", "Subscription status updated successfully.");
       onUpdated();
     } catch (err: any) {
-      onShowToast("error", err?.response?.data?.detail || "Failed to update subscription status.");
+      onShowToast(
+        "error",
+        err?.response?.data?.detail || "Failed to update subscription status.",
+      );
     } finally {
       setUpdatingStatus(false);
     }
@@ -118,7 +132,10 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
       onShowToast("success", "Next cycle invoice generated successfully.");
       onUpdated();
     } catch (err: any) {
-      onShowToast("error", err?.response?.data?.detail || "Failed to generate invoice.");
+      onShowToast(
+        "error",
+        err?.response?.data?.detail || "Failed to generate invoice.",
+      );
     } finally {
       setGeneratingInvoice(false);
     }
@@ -141,7 +158,10 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
       fetchSessionLogs();
       onUpdated();
     } catch (err: any) {
-      onShowToast("error", err?.response?.data?.detail || "Failed to record session log.");
+      onShowToast(
+        "error",
+        err?.response?.data?.detail || "Failed to record session log.",
+      );
     } finally {
       setSavingSession(false);
     }
@@ -160,7 +180,7 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-purple-100 text-[#6750A4] rounded-xl">
+            <div className="p-2.5 bg-purple-100 text-secondary rounded-xl">
               <Repeat className="h-6 w-6" />
             </div>
             <div>
@@ -177,8 +197,13 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-0.5">
-                Client: <span className="font-semibold text-gray-700">{subscription.customer_name}</span>{" "}
-                {subscription.customer_phone ? `(${subscription.customer_phone})` : ""}
+                Client:{" "}
+                <span className="font-semibold text-gray-700">
+                  {subscription.customer_name}
+                </span>{" "}
+                {subscription.customer_phone
+                  ? `(${subscription.customer_phone})`
+                  : ""}
               </p>
             </div>
           </div>
@@ -195,8 +220,16 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
         <div className="flex border-b border-gray-200 px-6 bg-gray-50/50">
           {[
             { key: "overview", label: "Contract Overview", icon: FileText },
-            { key: "invoices", label: `Invoices (${subscription.invoices?.length || 0})`, icon: DollarSign },
-            { key: "sessions", label: `Session Logs (${sessionLogs.length})`, icon: BookOpen },
+            {
+              key: "invoices",
+              label: `Invoices (${subscription.invoices?.length || 0})`,
+              icon: DollarSign,
+            },
+            {
+              key: "sessions",
+              label: `Session Logs (${sessionLogs.length})`,
+              icon: BookOpen,
+            },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -206,7 +239,7 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`flex items-center gap-2 py-3.5 px-4 font-semibold text-sm border-b-2 transition-all ${
                   isActive
-                    ? "border-[#6750A4] text-[#6750A4]"
+                    ? "border-secondary text-secondary"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -241,9 +274,12 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                     Cycle Fee
                   </span>
                   <p className="text-base font-bold text-gray-900">
-                    {parseFloat(subscription.cycle_amount).toLocaleString()} {subscription.currency}
+                    {parseFloat(subscription.cycle_amount).toLocaleString()}{" "}
+                    {subscription.currency}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">per {subscription.billing_cycle}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    per {subscription.billing_cycle}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -262,42 +298,57 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
               {/* Specialist / Tutor Assignment */}
               <div className="bg-white p-4 rounded-xl border border-gray-200">
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-[#6750A4]" /> Assigned Specialist / Tutor
+                  <User className="h-4 w-4 text-secondary" /> Assigned
+                  Specialist / Tutor
                 </h4>
                 <p className="text-sm font-semibold text-gray-800">
-                  {subscription.assigned_staff?.name || "No specialist assigned"}
-                  {subscription.assigned_staff?.role_title ? ` — ${subscription.assigned_staff.role_title}` : ""}
+                  {subscription.assigned_staff?.name ||
+                    "No specialist assigned"}
+                  {subscription.assigned_staff?.role_title
+                    ? ` — ${subscription.assigned_staff.role_title}`
+                    : ""}
                 </p>
               </div>
 
               {/* Client Intake Form Data */}
-              {subscription.intake_data && Object.keys(subscription.intake_data).length > 0 && (
-                <div className="bg-white p-4 rounded-xl border border-gray-200">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4 text-[#6750A4]" /> Client Intake Form Details
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {Object.entries(subscription.intake_data).map(([key, val]) => (
-                      <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                        <span className="text-xs text-gray-500 font-medium capitalize block">
-                          {key.replace(/_/g, " ")}
-                        </span>
-                        <span className="text-sm font-semibold text-gray-800 mt-0.5 block">
-                          {typeof val === "boolean"
-                            ? val ? "Yes" : "No"
-                            : Array.isArray(val)
-                            ? val.join(", ")
-                            : String(val || "-")}
-                        </span>
-                      </div>
-                    ))}
+              {subscription.intake_data &&
+                Object.keys(subscription.intake_data).length > 0 && (
+                  <div className="bg-white p-4 rounded-xl border border-gray-200">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-secondary" /> Client
+                      Intake Form Details
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {Object.entries(subscription.intake_data).map(
+                        ([key, val]) => (
+                          <div
+                            key={key}
+                            className="bg-gray-50 p-3 rounded-lg border border-gray-100"
+                          >
+                            <span className="text-xs text-gray-500 font-medium capitalize block">
+                              {key.replace(/_/g, " ")}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-800 mt-0.5 block">
+                              {typeof val === "boolean"
+                                ? val
+                                  ? "Yes"
+                                  : "No"
+                                : Array.isArray(val)
+                                  ? val.join(", ")
+                                  : String(val || "-")}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Status Update Form */}
               <div className="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-4">
-                <h4 className="text-sm font-bold text-gray-900">Contract Lifecycle & Status</h4>
+                <h4 className="text-sm font-bold text-gray-900">
+                  Contract Lifecycle & Status
+                </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -307,7 +358,7 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                     <select
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value as any)}
-                      className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:ring-2 focus:ring-[#6750A4] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:ring-2 focus:ring-secondary focus:outline-none"
                     >
                       <option value="active">Active (Ongoing)</option>
                       <option value="paused">Paused</option>
@@ -325,7 +376,7 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                       value={adminNotes}
                       onChange={(e) => setAdminNotes(e.target.value)}
                       placeholder="Special contract notes or student progress"
-                      className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#6750A4] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none"
                     />
                   </div>
                 </div>
@@ -334,9 +385,11 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                   <button
                     onClick={handleUpdateStatus}
                     disabled={updatingStatus}
-                    className="flex items-center gap-2 bg-[#6750A4] hover:bg-[#533f84] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 bg-secondary hover:bg-[#533f84] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all disabled:opacity-50"
                   >
-                    {updatingStatus && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {updatingStatus && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
                     Save Contract Status
                   </button>
                 </div>
@@ -349,9 +402,12 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div>
-                  <h4 className="text-sm font-bold text-gray-800">Periodic Billing Invoices</h4>
+                  <h4 className="text-sm font-bold text-gray-800">
+                    Periodic Billing Invoices
+                  </h4>
                   <p className="text-xs text-gray-500">
-                    Each billing cycle generates an invoice with payment tracking.
+                    Each billing cycle generates an invoice with payment
+                    tracking.
                   </p>
                 </div>
 
@@ -359,18 +415,24 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                   <button
                     onClick={handleGenerateInvoice}
                     disabled={generatingInvoice}
-                    className="flex items-center gap-2 bg-[#6750A4] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm transition-all disabled:opacity-50"
                   >
-                    {generatingInvoice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                    {generatingInvoice ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
                     Generate Next Invoice
                   </button>
                 )}
               </div>
 
-              {(!subscription.invoices || subscription.invoices.length === 0) ? (
+              {!subscription.invoices || subscription.invoices.length === 0 ? (
                 <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                   <DollarSign className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-600">No invoices generated yet</p>
+                  <p className="text-sm font-semibold text-gray-600">
+                    No invoices generated yet
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -381,31 +443,36 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-900">Invoice #{inv.id}</span>
+                          <span className="text-sm font-bold text-gray-900">
+                            Invoice #{inv.id}
+                          </span>
                           <span
                             className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                               inv.status === "paid"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : inv.status === "pending"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-red-100 text-red-800"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
                             {inv.status.toUpperCase()}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          Period: {inv.billing_period_start} → {inv.billing_period_end} | Due: {inv.due_date}
+                          Period: {inv.billing_period_start} →{" "}
+                          {inv.billing_period_end} | Due: {inv.due_date}
                         </p>
                       </div>
 
                       <div className="text-right">
                         <span className="text-base font-bold text-gray-900">
-                          {parseFloat(inv.amount).toLocaleString()} {inv.currency}
+                          {parseFloat(inv.amount).toLocaleString()}{" "}
+                          {inv.currency}
                         </span>
                         {inv.paid_at && (
                           <span className="text-xs text-emerald-600 block mt-0.5">
-                            Paid at: {new Date(inv.paid_at).toLocaleDateString()}
+                            Paid at:{" "}
+                            {new Date(inv.paid_at).toLocaleDateString()}
                           </span>
                         )}
                       </div>
@@ -421,7 +488,9 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div>
-                  <h4 className="text-sm font-bold text-gray-800">Attendance & Session Tracking</h4>
+                  <h4 className="text-sm font-bold text-gray-800">
+                    Attendance & Session Tracking
+                  </h4>
                   <p className="text-xs text-gray-500">
                     Log classes, sessions, homework, and student attendance.
                   </p>
@@ -429,7 +498,7 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
 
                 <button
                   onClick={() => setShowLogForm(!showLogForm)}
-                  className="flex items-center gap-2 bg-[#6750A4] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm transition-all"
+                  className="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm transition-all"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {showLogForm ? "Cancel" : "Log Attendance"}
@@ -442,7 +511,9 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                   onSubmit={handleCreateSessionLog}
                   className="bg-white p-5 rounded-2xl border border-purple-200 shadow-md space-y-4 animate-in fade-in"
                 >
-                  <h4 className="text-sm font-bold text-[#6750A4]">Record New Session</h4>
+                  <h4 className="text-sm font-bold text-secondary">
+                    Record New Session
+                  </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
@@ -482,8 +553,12 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                         <option value="attended">Attended</option>
                         <option value="missed">Missed</option>
                         <option value="rescheduled">Rescheduled</option>
-                        <option value="cancelled_by_student">Cancelled by Student</option>
-                        <option value="cancelled_by_tutor">Cancelled by Tutor</option>
+                        <option value="cancelled_by_student">
+                          Cancelled by Student
+                        </option>
+                        <option value="cancelled_by_tutor">
+                          Cancelled by Tutor
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -494,7 +569,11 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                     </label>
                     <select
                       value={logStaffId || ""}
-                      onChange={(e) => setLogStaffId(e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        setLogStaffId(
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-sm"
                     >
                       <option value="">Select specialist...</option>
@@ -523,9 +602,11 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                     <button
                       type="submit"
                       disabled={savingSession}
-                      className="flex items-center gap-2 bg-[#6750A4] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm disabled:opacity-50"
+                      className="flex items-center gap-2 bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#533f84] shadow-sm disabled:opacity-50"
                     >
-                      {savingSession && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      {savingSession && (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      )}
                       Save Record
                     </button>
                   </div>
@@ -535,12 +616,14 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
               {/* Session Logs List */}
               {loadingSessions ? (
                 <div className="py-10 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#6750A4] mx-auto" />
+                  <Loader2 className="h-6 w-6 animate-spin text-secondary mx-auto" />
                 </div>
               ) : sessionLogs.length === 0 ? (
                 <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                   <BookOpen className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-600">No session attendance records logged yet</p>
+                  <p className="text-sm font-semibold text-gray-600">
+                    No session attendance records logged yet
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -552,15 +635,18 @@ export const ServiceSubscriptionManageModal: React.FC<ServiceSubscriptionManageM
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-gray-900">
-                            {log.scheduled_date} {log.scheduled_time ? `@ ${log.scheduled_time}` : ""}
+                            {log.scheduled_date}{" "}
+                            {log.scheduled_time
+                              ? `@ ${log.scheduled_time}`
+                              : ""}
                           </span>
                           <span
                             className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                               log.status === "attended"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : log.status === "missed"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-amber-100 text-amber-800"
                             }`}
                           >
                             {log.status.replace(/_/g, " ").toUpperCase()}

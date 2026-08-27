@@ -230,40 +230,37 @@ const SlotFormModal = ({
   initialData?: AvailabilitySlot;
   existingSlots: AvailabilitySlot[];
   defaultDay?: number;
-  }) => {
+}) => {
   const normalizeTimeForInput = (time?: string | null): string => {
-  if (!time) return "";
+    if (!time) return "";
 
-  const [hours = "00", minutes = "00"] = time.split(":");
+    const [hours = "00", minutes = "00"] = time.split(":");
 
-  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
-};
-const [form, setForm] = useState({
-  day_of_week:
-    initialData?.day_of_week ??
-    (defaultDay !== undefined ? defaultDay : 0),
-  start_time: normalizeTimeForInput(initialData?.start_time) || "09:00",
-  end_time: normalizeTimeForInput(initialData?.end_time) || "17:00",
-  max_bookings: initialData?.max_bookings ?? 1,
-});
+    return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+  };
+  const [form, setForm] = useState({
+    day_of_week:
+      initialData?.day_of_week ?? (defaultDay !== undefined ? defaultDay : 0),
+    start_time: normalizeTimeForInput(initialData?.start_time) || "09:00",
+    end_time: normalizeTimeForInput(initialData?.end_time) || "17:00",
+    max_bookings: initialData?.max_bookings ?? 1,
+  });
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const isEdit = !!initialData;
-useEffect(() => {
-  if (!isOpen) return;
+  useEffect(() => {
+    if (!isOpen) return;
 
-  setForm({
-    day_of_week: initialData?.day_of_week ?? defaultDay ?? 0,
-    start_time:
-      normalizeTimeForInput(initialData?.start_time) || "09:00",
-    end_time:
-      normalizeTimeForInput(initialData?.end_time) || "17:00",
-    max_bookings: initialData?.max_bookings ?? 1,
-  });
+    setForm({
+      day_of_week: initialData?.day_of_week ?? defaultDay ?? 0,
+      start_time: normalizeTimeForInput(initialData?.start_time) || "09:00",
+      end_time: normalizeTimeForInput(initialData?.end_time) || "17:00",
+      max_bookings: initialData?.max_bookings ?? 1,
+    });
 
-  setFieldErrors({});
-  setLoading(false);
-}, [isOpen, initialData, defaultDay]);
+    setFieldErrors({});
+    setLoading(false);
+  }, [isOpen, initialData, defaultDay]);
 
   const handleChange = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -276,55 +273,52 @@ useEffect(() => {
     }
   };
 
-const validate = (): boolean => {
-  const result = validateAvailabilitySlot(
-    {
-      day_of_week: form.day_of_week,
-      start_time: form.start_time,
-      end_time: form.end_time,
-      max_bookings: form.max_bookings,
-      id: initialData?.id,
-    },
-    existingSlots.map((s) => ({
-      id: s.id,
-      day_of_week: s.day_of_week,
-      start_time: s.start_time,
-      end_time: s.end_time,
-    })),
-  );
-
-  setFieldErrors(result.errors);
-
-  return result.isValid;
-};
-
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!validate()) return;
-
-  setLoading(true);
-
-  try {
-    await onSubmit({
-      ...form,
-      id: initialData?.id,
-    });
-
-    onClose();
-  } catch (err: unknown) {
-    const msg = extractErrorMessage(
-      err,
-      "Failed to save slot",
+  const validate = (): boolean => {
+    const result = validateAvailabilitySlot(
+      {
+        day_of_week: form.day_of_week,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        max_bookings: form.max_bookings,
+        id: initialData?.id,
+      },
+      existingSlots.map((s) => ({
+        id: s.id,
+        day_of_week: s.day_of_week,
+        start_time: s.start_time,
+        end_time: s.end_time,
+      })),
     );
 
-    setFieldErrors({
-      general: msg,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    setFieldErrors(result.errors);
+
+    return result.isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    setLoading(true);
+
+    try {
+      await onSubmit({
+        ...form,
+        id: initialData?.id,
+      });
+
+      onClose();
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err, "Failed to save slot");
+
+      setFieldErrors({
+        general: msg,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -558,13 +552,13 @@ export default function AvailabilityManagement() {
     type: "success" | "error";
     message: string;
   } | null>(null);
-const [newSlotDay, setNewSlotDay] = useState(0);
+  const [newSlotDay, setNewSlotDay] = useState(0);
 
-const openAddModalForDay = (day: number) => {
-  setEditingSlot(undefined);
-  setNewSlotDay(day);
-  setIsSlotModalOpen(true);
-};
+  const openAddModalForDay = (day: number) => {
+    setEditingSlot(undefined);
+    setNewSlotDay(day);
+    setIsSlotModalOpen(true);
+  };
   // Fetch blackouts
   const fetchBlackouts = useCallback(async () => {
     if (!companySlug || !isServiceCompany) return;
@@ -600,23 +594,23 @@ const openAddModalForDay = (day: number) => {
   const summary = useMemo(() => {
     const workingDays = Object.keys(groupedSlots).length;
     const totalSlots = slots.length;
-  const weeklyHours = slots
-  .reduce((sum, slot) => {
-    const [sh, sm] = slot.start_time.split(":").map(Number);
-    const [eh, em] = slot.end_time.split(":").map(Number);
+    const weeklyHours = slots
+      .reduce((sum, slot) => {
+        const [sh, sm] = slot.start_time.split(":").map(Number);
+        const [eh, em] = slot.end_time.split(":").map(Number);
 
-    const startMinutes = sh * 60 + sm;
-    const endMinutes = eh * 60 + em;
+        const startMinutes = sh * 60 + sm;
+        const endMinutes = eh * 60 + em;
 
-    let duration = endMinutes - startMinutes;
+        let duration = endMinutes - startMinutes;
 
-    if (duration < 0) {
-      duration += 24 * 60;
-    }
+        if (duration < 0) {
+          duration += 24 * 60;
+        }
 
-    return sum + duration / 60;
-  }, 0)
-  .toFixed(1);
+        return sum + duration / 60;
+      }, 0)
+      .toFixed(1);
     const maxDaily = Math.max(...slots.map((s) => s.max_bookings), 0);
     const blockedDates = blackouts.length;
     return { workingDays, totalSlots, weeklyHours, maxDaily, blockedDates };
@@ -665,46 +659,46 @@ const openAddModalForDay = (day: number) => {
     setTimeout(() => setToast(null), 3000);
   };
 
-const handleSaveSlot = async (data: {
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  max_bookings: number;
-  id?: number;
-}) => {
-  if (data.id) {
-    await update(data.id, {
-      day_of_week: data.day_of_week,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      max_bookings: data.max_bookings,
-      is_active: true,
-    });
+  const handleSaveSlot = async (data: {
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    max_bookings: number;
+    id?: number;
+  }) => {
+    if (data.id) {
+      await update(data.id, {
+        day_of_week: data.day_of_week,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        max_bookings: data.max_bookings,
+        is_active: true,
+      });
 
-    showToast("success", "Slot updated successfully");
-  } else {
-    await create({
-      day_of_week: data.day_of_week,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      max_bookings: data.max_bookings,
-      is_active: true,
-    });
+      showToast("success", "Slot updated successfully");
+    } else {
+      await create({
+        day_of_week: data.day_of_week,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        max_bookings: data.max_bookings,
+        is_active: true,
+      });
 
-    showToast("success", "Slot added successfully");
-  }
-};
-// const openAddModalForDay = (day: number) => {
-//   setEditingSlot({
-//     id: 0,
-//     day_of_week: day,
-//     start_time: "09:00",
-//     end_time: "17:00",
-//     max_bookings: 1,
-//   } as AvailabilitySlot);
+      showToast("success", "Slot added successfully");
+    }
+  };
+  // const openAddModalForDay = (day: number) => {
+  //   setEditingSlot({
+  //     id: 0,
+  //     day_of_week: day,
+  //     start_time: "09:00",
+  //     end_time: "17:00",
+  //     max_bookings: 1,
+  //   } as AvailabilitySlot);
 
-//   setIsSlotModalOpen(true);
-// };
+  //   setIsSlotModalOpen(true);
+  // };
 
   const openEditModal = (slot: AvailabilitySlot) => {
     setEditingSlot(slot);
@@ -863,14 +857,14 @@ const handleSaveSlot = async (data: {
         onCancel={() => setBlackoutDeleteTarget(null)}
       />
 
-<SlotFormModal
-  isOpen={isSlotModalOpen}
-  onClose={closeSlotModal}
-  onSubmit={handleSaveSlot}
-  initialData={editingSlot}
-  existingSlots={slots}
-  defaultDay={newSlotDay}
-/>
+      <SlotFormModal
+        isOpen={isSlotModalOpen}
+        onClose={closeSlotModal}
+        onSubmit={handleSaveSlot}
+        initialData={editingSlot}
+        existingSlots={slots}
+        defaultDay={newSlotDay}
+      />
 
       <div className="space-y-8">
         {/* Header */}
@@ -885,8 +879,8 @@ const handleSaveSlot = async (data: {
 
                 {/* Company badge */}
                 {company?.name && (
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/5 px-2.5 py-1 text-xs font-semibold text-secondary">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" />
                     <span className="truncate max-w-[180px] sm:max-w-[280px]">
                       {company.name}
                     </span>
@@ -913,13 +907,13 @@ const handleSaveSlot = async (data: {
             text-sm font-medium text-gray-700
             shadow-sm
             transition-all duration-200
-            hover:border-[#6750A4]/30
-            hover:bg-[#6750A4]/5
-            hover:text-[#6750A4]
+            hover:border-secondary/30
+            hover:bg-secondary/5
+            hover:text-secondary
             active:scale-[0.98]
             focus:outline-none
             focus:ring-2
-            focus:ring-[#6750A4]/20
+            focus:ring-secondary/20
           "
                   aria-label={`Switch company from ${company?.name ?? "current company"}`}
                 >
@@ -964,7 +958,7 @@ const handleSaveSlot = async (data: {
             icon={CalendarOff}
             label="Blocked Dates"
             value={summary.blockedDates}
-            color="bg-[#6750A4]"
+            color="bg-secondary"
           />
         </div>
 
@@ -980,11 +974,11 @@ const handleSaveSlot = async (data: {
               </p>
             </div>
             <button
-            onClick={() => {
-  setEditingSlot(undefined);
-  setNewSlotDay(0);
-  setIsSlotModalOpen(true);
-}}
+              onClick={() => {
+                setEditingSlot(undefined);
+                setNewSlotDay(0);
+                setIsSlotModalOpen(true);
+              }}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-purple-800 transition shadow-sm"
             >
               <Plus className="h-4 w-4" />
@@ -1015,439 +1009,404 @@ const handleSaveSlot = async (data: {
           )}
         </section>
 
-    
-
-{/* ─────────────────────────────────────────────────────────
+        {/* ─────────────────────────────────────────────────────────
     Blackout / Closure Management
 ───────────────────────────────────────────────────────── */}
 
-<section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-
-  {/* Header */}
-  <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
-        <CalendarOff className="h-5 w-5 text-[#6750A4]" />
-      </div>
-
-      <div>
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Blackout Dates
-          </h3>
-
-          {!blackoutLoading && blackouts.length > 0 && (
-            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-              {blackouts.length}
-            </span>
-          )}
-
-          {editingBlackoutId && (
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-              Editing
-            </span>
-          )}
-        </div>
-
-        <p className="mt-0.5 text-xs text-gray-500">
-          Block bookings for holidays, closures, or unavailable hours.
-        </p>
-      </div>
-    </div>
-
-    {editingBlackoutId && (
-      <button
-        type="button"
-        onClick={cancelEditBlackout}
-        className="inline-flex h-8 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
-      >
-        Cancel editing
-      </button>
-    )}
-  </div>
-
-  {/* ───────────────────── Add / Edit Form ───────────────────── */}
-  <form
-    onSubmit={handleSubmitBlackout}
-    className="border-b border-gray-100 bg-gray-50/60 p-4 sm:p-5"
-  >
-    <div className="mb-4 flex items-center justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {editingBlackoutId ? "Edit closure" : "Add closure"}
-        </p>
-
-        <p className="mt-0.5 text-xs text-gray-400">
-          {editingBlackoutId
-            ? "Update the selected blackout period."
-            : "Create a date or time period when bookings are unavailable."}
-        </p>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-
-      {/* Reason */}
-      <div className="lg:col-span-4">
-        <label className="mb-1.5 block text-xs font-medium text-gray-700">
-          Reason <span className="text-red-500">*</span>
-        </label>
-
-        <input
-          type="text"
-          placeholder="e.g. Ethiopian New Year"
-          value={blackoutForm.title}
-          onChange={(e) =>
-            handleBlackoutFormChange("title", e.target.value)
-          }
-          className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:ring-2 ${
-            blackoutErrors.title
-              ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
-              : "border-gray-200 focus:border-[#6750A4] focus:ring-[#6750A4]/10"
-          }`}
-          aria-invalid={!!blackoutErrors.title}
-        />
-
-        {blackoutErrors.title && (
-          <p className="mt-1 text-xs text-red-600">
-            {blackoutErrors.title}
-          </p>
-        )}
-      </div>
-
-      {/* Date */}
-      <div className="lg:col-span-3">
-        <label className="mb-1.5 block text-xs font-medium text-gray-700">
-          Date <span className="text-red-500">*</span>
-        </label>
-
-        <input
-          type="date"
-          value={blackoutForm.date}
-          onChange={(e) =>
-            handleBlackoutFormChange("date", e.target.value)
-          }
-          className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-gray-900 outline-none transition-all focus:ring-2 ${
-            blackoutErrors.date
-              ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
-              : "border-gray-200 focus:border-[#6750A4] focus:ring-[#6750A4]/10"
-          }`}
-          aria-invalid={!!blackoutErrors.date}
-        />
-
-        {blackoutErrors.date && (
-          <p className="mt-1 text-xs text-red-600">
-            {blackoutErrors.date}
-          </p>
-        )}
-      </div>
-
-      {/* Closure Type */}
-      <div className="lg:col-span-5">
-        <label className="mb-1.5 block text-xs font-medium text-gray-700">
-          Closure type
-        </label>
-
-        <div className="grid grid-cols-2 rounded-xl border border-gray-200 bg-white p-1">
-          <button
-            type="button"
-            onClick={() =>
-              handleBlackoutFormChange("is_full_day", true)
-            }
-            className={`h-8 rounded-lg px-3 text-xs font-medium transition-all ${
-              blackoutForm.is_full_day
-                ? "bg-amber-100 text-amber-800 shadow-sm"
-                : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-            }`}
-          >
-            Full day
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              handleBlackoutFormChange("is_full_day", false)
-            }
-            className={`h-8 rounded-lg px-3 text-xs font-medium transition-all ${
-              !blackoutForm.is_full_day
-                ? "bg-blue-100 text-blue-700 shadow-sm"
-                : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-            }`}
-          >
-            Partial hours
-          </button>
-        </div>
-      </div>
-
-      {/* Partial Hours */}
-      {!blackoutForm.is_full_day && (
-        <>
-          <div className="lg:col-span-3">
-            <label className="mb-1.5 block text-xs font-medium text-gray-700">
-              Start time <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              type="time"
-              value={blackoutForm.start_time}
-              onChange={(e) =>
-                handleBlackoutFormChange(
-                  "start_time",
-                  e.target.value
-                )
-              }
-              className={`h-10 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:ring-2 ${
-                blackoutErrors.start_time
-                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-gray-200 focus:border-[#6750A4] focus:ring-[#6750A4]/10"
-              }`}
-            />
-
-            {blackoutErrors.start_time && (
-              <p className="mt-1 text-xs text-red-600">
-                {blackoutErrors.start_time}
-              </p>
-            )}
-          </div>
-
-          <div className="lg:col-span-3">
-            <label className="mb-1.5 block text-xs font-medium text-gray-700">
-              End time <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              type="time"
-              value={blackoutForm.end_time}
-              onChange={(e) =>
-                handleBlackoutFormChange(
-                  "end_time",
-                  e.target.value
-                )
-              }
-              className={`h-10 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:ring-2 ${
-                blackoutErrors.end_time
-                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-gray-200 focus:border-[#6750A4] focus:ring-[#6750A4]/10"
-              }`}
-            />
-
-            {blackoutErrors.end_time && (
-              <p className="mt-1 text-xs text-red-600">
-                {blackoutErrors.end_time}
-              </p>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Submit */}
-      <div
-        className={`flex items-end gap-2 ${
-          blackoutForm.is_full_day
-            ? "lg:col-span-5"
-            : "lg:col-span-6"
-        }`}
-      >
-        <button
-          type="submit"
-          disabled={blackoutSubmitting}
-          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {blackoutSubmitting ? (
-            <>
-              <Loader2Icon className="h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              {editingBlackoutId ? (
-                <>
-                  <Pencil className="h-3.5 w-3.5" />
-                  Update closure
-                </>
-              ) : (
-                <>
-                  <CalendarOff className="h-3.5 w-3.5" />
-                  Add closure
-                </>
-              )}
-            </>
-          )}
-        </button>
-
-        {editingBlackoutId && (
-          <button
-            type="button"
-            onClick={cancelEditBlackout}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-    </div>
-  </form>
-
-  {/* ───────────────────── Closure List ───────────────────── */}
-  <div className="p-4 sm:p-5">
-
-    {/* List Header */}
-    <div className="mb-3 flex items-center justify-between">
-      <div>
-        <h4 className="text-xs font-semibold text-gray-800">
-          Scheduled closures
-        </h4>
-
-        <p className="mt-0.5 text-[11px] text-gray-400">
-          Existing dates that block customer bookings
-        </p>
-      </div>
-
-      {!blackoutLoading && blackouts.length > 0 && (
-        <span className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
-          {blackouts.length}{" "}
-          {blackouts.length === 1 ? "closure" : "closures"}
-        </span>
-      )}
-    </div>
-
-    {/* Loading */}
-    {blackoutLoading ? (
-      <div className="space-y-2.5">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </div>
-    ) : blackouts.length === 0 ? (
-
-      /* Empty State */
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-5 py-12 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
-          <CalendarOff className="h-5 w-5 text-gray-400" />
-        </div>
-
-        <h3 className="text-sm font-semibold text-gray-800">
-          No scheduled closures
-        </h3>
-
-        <p className="mt-1 max-w-sm text-xs leading-5 text-gray-500">
-          Your business currently has no blackout dates.
-          Add a holiday or unavailable period above to stop
-          customers from booking.
-        </p>
-      </div>
-
-    ) : (
-
-      /* Closure Items */
-      <div className="space-y-2">
-
-        {blackouts.map((b) => (
-          <div
-            key={b.id}
-            className={`group rounded-xl border bg-white transition-all ${
-              editingBlackoutId === b.id
-                ? "border-blue-200 bg-blue-50/30 shadow-sm"
-                : "border-gray-200 hover:border-amber-200 hover:shadow-sm"
-            }`}
-          >
-            <div className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
-
-              {/* Left */}
-              <div className="flex min-w-0 items-center gap-3">
-
-                {/* Icon */}
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                    b.is_full_day
-                      ? "bg-amber-50"
-                      : "bg-blue-50"
-                  }`}
-                >
-                  <CalendarOff
-                    className={`h-4.5 w-4.5 ${
-                      b.is_full_day
-                        ? "text-[#6750A4]"
-                        : "text-blue-600"
-                    }`}
-                  />
-                </div>
-
-                {/* Details */}
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {b.title}
-                    </p>
-
-                    <span
-                      className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
-                        b.is_full_day
-                          ? "bg-amber-50 text-[#6750A4]"
-                          : "bg-blue-50 text-blue-700"
-                      }`}
-                    >
-                      {b.is_full_day
-                        ? "Full day"
-                        : "Partial"}
-                    </span>
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
-                    <span className="font-medium text-gray-700">
-                      {b.date}
-                    </span>
-
-                    <span className="text-gray-300">•</span>
-
-                    <span>
-                      {b.is_full_day
-                        ? "Unavailable all day"
-                        : `${formatTime(
-                            b.start_time || ""
-                          )} – ${formatTime(
-                            b.end_time || ""
-                          )}`}
-                    </span>
-                  </div>
-                </div>
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                <CalendarOff className="h-5 w-5 text-secondary" />
               </div>
 
-              {/* Right Actions */}
-              <div className="flex shrink-0 items-center gap-1 border-t border-gray-100 pt-2 sm:border-0 sm:pt-0">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Blackout Dates
+                  </h3>
 
-                <button
-                  type="button"
-                  onClick={() => startEditBlackout(b)}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-secondary transition hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit
-                </button>
+                  {!blackoutLoading && blackouts.length > 0 && (
+                    <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                      {blackouts.length}
+                    </span>
+                  )}
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setBlackoutDeleteTarget(b.id)
-                  }
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </button>
+                  {editingBlackoutId && (
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                      Editing
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Block bookings for holidays, closures, or unavailable hours.
+                </p>
               </div>
             </div>
+
+            {editingBlackoutId && (
+              <button
+                type="button"
+                onClick={cancelEditBlackout}
+                className="inline-flex h-8 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+              >
+                Cancel editing
+              </button>
+            )}
           </div>
-        ))}
 
+          {/* ───────────────────── Add / Edit Form ───────────────────── */}
+          <form
+            onSubmit={handleSubmitBlackout}
+            className="border-b border-gray-100 bg-gray-50/60 p-4 sm:p-5"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {editingBlackoutId ? "Edit closure" : "Add closure"}
+                </p>
+
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {editingBlackoutId
+                    ? "Update the selected blackout period."
+                    : "Create a date or time period when bookings are unavailable."}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              {/* Reason */}
+              <div className="lg:col-span-4">
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Reason <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="e.g. Ethiopian New Year"
+                  value={blackoutForm.title}
+                  onChange={(e) =>
+                    handleBlackoutFormChange("title", e.target.value)
+                  }
+                  className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:ring-2 ${
+                    blackoutErrors.title
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+                      : "border-gray-200 focus:border-secondary focus:ring-secondary/10"
+                  }`}
+                  aria-invalid={!!blackoutErrors.title}
+                />
+
+                {blackoutErrors.title && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {blackoutErrors.title}
+                  </p>
+                )}
+              </div>
+
+              {/* Date */}
+              <div className="lg:col-span-3">
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Date <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="date"
+                  value={blackoutForm.date}
+                  onChange={(e) =>
+                    handleBlackoutFormChange("date", e.target.value)
+                  }
+                  className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-gray-900 outline-none transition-all focus:ring-2 ${
+                    blackoutErrors.date
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+                      : "border-gray-200 focus:border-secondary focus:ring-secondary/10"
+                  }`}
+                  aria-invalid={!!blackoutErrors.date}
+                />
+
+                {blackoutErrors.date && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {blackoutErrors.date}
+                  </p>
+                )}
+              </div>
+
+              {/* Closure Type */}
+              <div className="lg:col-span-5">
+                <label className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Closure type
+                </label>
+
+                <div className="grid grid-cols-2 rounded-xl border border-gray-200 bg-white p-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleBlackoutFormChange("is_full_day", true)
+                    }
+                    className={`h-8 rounded-lg px-3 text-xs font-medium transition-all ${
+                      blackoutForm.is_full_day
+                        ? "bg-amber-100 text-amber-800 shadow-sm"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    }`}
+                  >
+                    Full day
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleBlackoutFormChange("is_full_day", false)
+                    }
+                    className={`h-8 rounded-lg px-3 text-xs font-medium transition-all ${
+                      !blackoutForm.is_full_day
+                        ? "bg-blue-100 text-blue-700 shadow-sm"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    }`}
+                  >
+                    Partial hours
+                  </button>
+                </div>
+              </div>
+
+              {/* Partial Hours */}
+              {!blackoutForm.is_full_day && (
+                <>
+                  <div className="lg:col-span-3">
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Start time <span className="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      type="time"
+                      value={blackoutForm.start_time}
+                      onChange={(e) =>
+                        handleBlackoutFormChange("start_time", e.target.value)
+                      }
+                      className={`h-10 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:ring-2 ${
+                        blackoutErrors.start_time
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+                          : "border-gray-200 focus:border-secondary focus:ring-secondary/10"
+                      }`}
+                    />
+
+                    {blackoutErrors.start_time && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {blackoutErrors.start_time}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="lg:col-span-3">
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700">
+                      End time <span className="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      type="time"
+                      value={blackoutForm.end_time}
+                      onChange={(e) =>
+                        handleBlackoutFormChange("end_time", e.target.value)
+                      }
+                      className={`h-10 w-full rounded-xl border bg-white px-3 text-sm outline-none transition-all focus:ring-2 ${
+                        blackoutErrors.end_time
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+                          : "border-gray-200 focus:border-secondary focus:ring-secondary/10"
+                      }`}
+                    />
+
+                    {blackoutErrors.end_time && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {blackoutErrors.end_time}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Submit */}
+              <div
+                className={`flex items-end gap-2 ${
+                  blackoutForm.is_full_day ? "lg:col-span-5" : "lg:col-span-6"
+                }`}
+              >
+                <button
+                  type="submit"
+                  disabled={blackoutSubmitting}
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {blackoutSubmitting ? (
+                    <>
+                      <Loader2Icon className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      {editingBlackoutId ? (
+                        <>
+                          <Pencil className="h-3.5 w-3.5" />
+                          Update closure
+                        </>
+                      ) : (
+                        <>
+                          <CalendarOff className="h-3.5 w-3.5" />
+                          Add closure
+                        </>
+                      )}
+                    </>
+                  )}
+                </button>
+
+                {editingBlackoutId && (
+                  <button
+                    type="button"
+                    onClick={cancelEditBlackout}
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+
+          {/* ───────────────────── Closure List ───────────────────── */}
+          <div className="p-4 sm:p-5">
+            {/* List Header */}
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-semibold text-gray-800">
+                  Scheduled closures
+                </h4>
+
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  Existing dates that block customer bookings
+                </p>
+              </div>
+
+              {!blackoutLoading && blackouts.length > 0 && (
+                <span className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
+                  {blackouts.length}{" "}
+                  {blackouts.length === 1 ? "closure" : "closures"}
+                </span>
+              )}
+            </div>
+
+            {/* Loading */}
+            {blackoutLoading ? (
+              <div className="space-y-2.5">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : blackouts.length === 0 ? (
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-5 py-12 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
+                  <CalendarOff className="h-5 w-5 text-gray-400" />
+                </div>
+
+                <h3 className="text-sm font-semibold text-gray-800">
+                  No scheduled closures
+                </h3>
+
+                <p className="mt-1 max-w-sm text-xs leading-5 text-gray-500">
+                  Your business currently has no blackout dates. Add a holiday
+                  or unavailable period above to stop customers from booking.
+                </p>
+              </div>
+            ) : (
+              /* Closure Items */
+              <div className="space-y-2">
+                {blackouts.map((b) => (
+                  <div
+                    key={b.id}
+                    className={`group rounded-xl border bg-white transition-all ${
+                      editingBlackoutId === b.id
+                        ? "border-blue-200 bg-blue-50/30 shadow-sm"
+                        : "border-gray-200 hover:border-amber-200 hover:shadow-sm"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                      {/* Left */}
+                      <div className="flex min-w-0 items-center gap-3">
+                        {/* Icon */}
+                        <div
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                            b.is_full_day ? "bg-amber-50" : "bg-blue-50"
+                          }`}
+                        >
+                          <CalendarOff
+                            className={`h-4.5 w-4.5 ${
+                              b.is_full_day ? "text-secondary" : "text-blue-600"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Details */}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-gray-900">
+                              {b.title}
+                            </p>
+
+                            <span
+                              className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+                                b.is_full_day
+                                  ? "bg-amber-50 text-secondary"
+                                  : "bg-blue-50 text-blue-700"
+                              }`}
+                            >
+                              {b.is_full_day ? "Full day" : "Partial"}
+                            </span>
+                          </div>
+
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+                            <span className="font-medium text-gray-700">
+                              {b.date}
+                            </span>
+
+                            <span className="text-gray-300">•</span>
+
+                            <span>
+                              {b.is_full_day
+                                ? "Unavailable all day"
+                                : `${formatTime(
+                                    b.start_time || "",
+                                  )} – ${formatTime(b.end_time || "")}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Actions */}
+                      <div className="flex shrink-0 items-center gap-1 border-t border-gray-100 pt-2 sm:border-0 sm:pt-0">
+                        <button
+                          type="button"
+                          onClick={() => startEditBlackout(b)}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-secondary transition hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setBlackoutDeleteTarget(b.id)}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    )}
-  </div>
-</section>
-
-
-</div>
-
     </>
   );
 }

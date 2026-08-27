@@ -74,7 +74,10 @@ const defaultForm: ServiceFormState = {
 // ----- Dropdown options -----
 const serviceTypeOptions = [
   { value: "one_off", label: "One-Off Service (e.g. Haircut, Auto, Beauty)" },
-  { value: "recurring", label: "Recurring Subscription (e.g. Tutoring, Cleaning)" },
+  {
+    value: "recurring",
+    label: "Recurring Subscription (e.g. Tutoring, Cleaning)",
+  },
 ];
 
 const billingCycleOptions = [
@@ -83,7 +86,6 @@ const billingCycleOptions = [
   { value: "quarterly", label: "Quarterly" },
   { value: "yearly", label: "Yearly" },
 ];
-
 
 /* -------------------------------------------------------------------------- */
 /*  Reusable Card                                                             */
@@ -94,11 +96,9 @@ const Card: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ icon, title, children, className = "" }) => (
-  <div
-    className={` rounded-2xl p-5 ${className}`}
-  >
+  <div className={` rounded-2xl p-5 ${className}`}>
     <div className="flex items-center gap-2 mb-4">
-      <span className="text-[#6750A4]">{icon}</span>
+      <span className="text-secondary">{icon}</span>
       <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
     </div>
     {children}
@@ -177,7 +177,7 @@ export function ServiceOfferingModal({
   onClose: () => void;
   onSave: (
     data: Partial<ServiceOffering>,
-    existingId?: number
+    existingId?: number,
   ) => Promise<ServiceOffering>;
   onSaved?: () => void;
   onShowToast?: (type: "success" | "error", message: string) => void;
@@ -280,20 +280,24 @@ export function ServiceOfferingModal({
     <K extends keyof ServiceFormState>(key: K, value: ServiceFormState[K]) => {
       setForm((prev) => ({ ...prev, [key]: value }));
     },
-    []
+    [],
   );
 
   /* ── Validation ─────────────────────────────────────────────────────────── */
   const validateDetails = useCallback((): string[] => {
     const errors: string[] = [];
     if (!form.title.trim()) errors.push("Title is required.");
-    if (form.title.length > 200) errors.push("Title must be under 200 characters.");
-    if (form.description.length > 500) errors.push("Description must be under 500 characters.");
+    if (form.title.length > 200)
+      errors.push("Title must be under 200 characters.");
+    if (form.description.length > 500)
+      errors.push("Description must be under 500 characters.");
     if (form.pricing_type !== "custom") {
       const priceVal = Number(form.price);
-      if (isNaN(priceVal) || priceVal < 0) errors.push("Price must be a valid non‑negative number.");
+      if (isNaN(priceVal) || priceVal < 0)
+        errors.push("Price must be a valid non‑negative number.");
     }
-    if (form.duration_minutes < 1) errors.push("Duration must be at least 1 minute.");
+    if (form.duration_minutes < 1)
+      errors.push("Duration must be at least 1 minute.");
     if (form.payment_policy === "deposit") {
       const deposit = Number(form.deposit_percentage);
       if (isNaN(deposit) || deposit < 0 || deposit > 100) {
@@ -310,7 +314,9 @@ export function ServiceOfferingModal({
     if (validationErrors.length > 0) {
       setError(validationErrors.join(" "));
       // Focus first invalid field
-      const firstInvalid = document.querySelector("[data-invalid]") as HTMLElement | null;
+      const firstInvalid = document.querySelector(
+        "[data-invalid]",
+      ) as HTMLElement | null;
       firstInvalid?.focus();
       return;
     }
@@ -330,7 +336,10 @@ export function ServiceOfferingModal({
       initialValuesRef.current = { ...form, price: saved.price ?? "" }; // update baseline
       setIsDirty(false);
       setStep("gallery");
-      onShowToast?.("success", existingId ? "Service updated" : "Service created");
+      onShowToast?.(
+        "success",
+        existingId ? "Service updated" : "Service created",
+      );
     } catch (error) {
       const msg = getErrorMessage(error);
       setError(msg);
@@ -379,12 +388,14 @@ export function ServiceOfferingModal({
           <div className="sticky top-0 bg-white z-20 px-6 py-5 border-b border-gray-100 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#6750A4]">
+                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-secondary">
                   <Wrench className="h-5 w-5" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">
-                    {offering || savedOfferingId ? "Edit Service" : "Add Service"}
+                    {offering || savedOfferingId
+                      ? "Edit Service"
+                      : "Add Service"}
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {offering
@@ -407,17 +418,17 @@ export function ServiceOfferingModal({
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
                     step === "details"
-                      ? "bg-[#6750A4] text-white"
+                      ? "bg-secondary text-white"
                       : step === "gallery"
-                      ? "bg-purple-100 text-[#6750A4]"
-                      : "bg-gray-100 text-gray-500"
+                        ? "bg-purple-100 text-secondary"
+                        : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {step === "gallery" ? <CheckCircle className="h-4 w-4" /> : 1}
                 </div>
                 <span
                   className={`text-sm font-medium hidden sm:inline ${
-                    step === "details" ? "text-[#6750A4]" : "text-gray-500"
+                    step === "details" ? "text-secondary" : "text-gray-500"
                   }`}
                 >
                   Service Details
@@ -426,7 +437,7 @@ export function ServiceOfferingModal({
               </div>
               <div className="flex-1 mx-2 h-0.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full bg-[#6750A4] transition-all duration-500 ${
+                  className={`h-full bg-secondary transition-all duration-500 ${
                     step === "gallery" ? "w-full" : "w-0"
                   }`}
                 />
@@ -435,7 +446,7 @@ export function ServiceOfferingModal({
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
                     step === "gallery"
-                      ? "bg-[#6750A4] text-white"
+                      ? "bg-secondary text-white"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -443,7 +454,7 @@ export function ServiceOfferingModal({
                 </div>
                 <span
                   className={`text-sm font-medium hidden sm:inline ${
-                    step === "gallery" ? "text-[#6750A4]" : "text-gray-500"
+                    step === "gallery" ? "text-secondary" : "text-gray-500"
                   }`}
                 >
                   Gallery
@@ -480,8 +491,10 @@ export function ServiceOfferingModal({
                           onChange={(e) => updateForm("title", e.target.value)}
                           placeholder="e.g. Premium Haircut"
                           required
-                          data-invalid={error && !form.title.trim() ? true : undefined}
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          data-invalid={
+                            error && !form.title.trim() ? true : undefined
+                          }
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                         />
                       </div>
 
@@ -492,8 +505,10 @@ export function ServiceOfferingModal({
                         <input
                           type="text"
                           value={form.title_am}
-                          onChange={(e) => updateForm("title_am", e.target.value)}
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          onChange={(e) =>
+                            updateForm("title_am", e.target.value)
+                          }
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                           placeholder="ሙሉ ፀጉር መቁረጥ"
                         />
                       </div>
@@ -506,10 +521,12 @@ export function ServiceOfferingModal({
                         </label>
                         <textarea
                           value={form.description}
-                          onChange={(e) => updateForm("description", e.target.value)}
+                          onChange={(e) =>
+                            updateForm("description", e.target.value)
+                          }
                           rows={3}
                           maxLength={500}
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                           placeholder="Describe the service..."
                         />
                       </div>
@@ -522,10 +539,12 @@ export function ServiceOfferingModal({
                         </label>
                         <textarea
                           value={form.description_am}
-                          onChange={(e) => updateForm("description_am", e.target.value)}
+                          onChange={(e) =>
+                            updateForm("description_am", e.target.value)
+                          }
                           rows={2}
                           maxLength={500}
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary resize-none min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                           placeholder="የአገልግሎት መግለጫ..."
                         />
                       </div>
@@ -542,7 +561,10 @@ export function ServiceOfferingModal({
                         <CustomSelect
                           value={form.pricing_type}
                           onChange={(val) =>
-                            updateForm("pricing_type", val as ServiceFormState["pricing_type"])
+                            updateForm(
+                              "pricing_type",
+                              val as ServiceFormState["pricing_type"],
+                            )
                           }
                           options={pricingOptions}
                           placeholder="Select..."
@@ -562,8 +584,10 @@ export function ServiceOfferingModal({
                               min="0"
                               step="0.01"
                               value={form.price}
-                              onChange={(e) => updateForm("price", e.target.value)}
-                              className="w-full border-2 rounded-xl pl-14 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                              onChange={(e) =>
+                                updateForm("price", e.target.value)
+                              }
+                              className="w-full border-2 rounded-xl pl-14 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                               placeholder="0.00"
                             />
                           </div>
@@ -578,9 +602,12 @@ export function ServiceOfferingModal({
                           min={1}
                           value={form.duration_minutes}
                           onChange={(e) =>
-                            updateForm("duration_minutes", Number(e.target.value) || 0)
+                            updateForm(
+                              "duration_minutes",
+                              Number(e.target.value) || 0,
+                            )
                           }
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                           placeholder="30"
                         />
                       </div>
@@ -588,7 +615,10 @@ export function ServiceOfferingModal({
                   </Card>
 
                   {/* Booking & Contract */}
-                  <Card icon={<Calendar size={18} />} title="Booking & Contract Type">
+                  <Card
+                    icon={<Calendar size={18} />}
+                    title="Booking & Contract Type"
+                  >
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -597,7 +627,10 @@ export function ServiceOfferingModal({
                         <CustomSelect
                           value={form.service_type}
                           onChange={(val) =>
-                            updateForm("service_type", val as ServiceFormState["service_type"])
+                            updateForm(
+                              "service_type",
+                              val as ServiceFormState["service_type"],
+                            )
                           }
                           options={serviceTypeOptions}
                           placeholder="Select service type..."
@@ -611,7 +644,10 @@ export function ServiceOfferingModal({
                           <CustomSelect
                             value={form.billing_cycle}
                             onChange={(val) =>
-                              updateForm("billing_cycle", val as ServiceFormState["billing_cycle"])
+                              updateForm(
+                                "billing_cycle",
+                                val as ServiceFormState["billing_cycle"],
+                              )
                             }
                             options={billingCycleOptions}
                             placeholder="Select cycle..."
@@ -625,7 +661,10 @@ export function ServiceOfferingModal({
                         <CustomSelect
                           value={form.booking_mode}
                           onChange={(val) =>
-                            updateForm("booking_mode", val as ServiceFormState["booking_mode"])
+                            updateForm(
+                              "booking_mode",
+                              val as ServiceFormState["booking_mode"],
+                            )
                           }
                           options={bookingOptions}
                           placeholder="Select..."
@@ -643,7 +682,10 @@ export function ServiceOfferingModal({
                         <CustomSelect
                           value={form.payment_policy}
                           onChange={(val) =>
-                            updateForm("payment_policy", val as ServiceFormState["payment_policy"])
+                            updateForm(
+                              "payment_policy",
+                              val as ServiceFormState["payment_policy"],
+                            )
                           }
                           options={paymentOptions}
                           placeholder="Select..."
@@ -663,7 +705,7 @@ export function ServiceOfferingModal({
                               onChange={(e) =>
                                 updateForm("deposit_percentage", e.target.value)
                               }
-                              className="w-full border-2 rounded-xl pl-4 pr-12 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                              className="w-full border-2 rounded-xl pl-4 pr-12 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                               placeholder="20"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
@@ -676,7 +718,10 @@ export function ServiceOfferingModal({
                   </Card>
 
                   {/* Category & Settings */}
-                  <Card icon={<Settings size={18} />} title="Category & Settings">
+                  <Card
+                    icon={<Settings size={18} />}
+                    title="Category & Settings"
+                  >
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -689,7 +734,7 @@ export function ServiceOfferingModal({
                           onChange={(e) =>
                             updateForm("order", Number(e.target.value) || 0)
                           }
-                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6750A4] min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-[#6750A4] focus:bg-white"
+                          className="w-full border-2 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-secondary min-h-[44px] border-gray-200 bg-gray-50/80 focus:border-secondary focus:bg-white"
                           placeholder="0"
                         />
                         <p className="text-xs text-gray-400 mt-1">
@@ -701,8 +746,10 @@ export function ServiceOfferingModal({
                           <input
                             type="checkbox"
                             checked={form.is_active}
-                            onChange={(e) => updateForm("is_active", e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                            onChange={(e) =>
+                              updateForm("is_active", e.target.checked)
+                            }
+                            className="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                           />
                           <span className="text-sm font-medium text-gray-700">
                             Active Service
@@ -712,8 +759,10 @@ export function ServiceOfferingModal({
                           <input
                             type="checkbox"
                             checked={form.is_featured}
-                            onChange={(e) => updateForm("is_featured", e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#6750A4] focus:ring-[#6750A4]"
+                            onChange={(e) =>
+                              updateForm("is_featured", e.target.checked)
+                            }
+                            className="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                           />
                           <span className="text-sm font-medium text-gray-700">
                             Featured Service
@@ -733,7 +782,9 @@ export function ServiceOfferingModal({
                   >
                     <IntakeFormBuilder
                       fields={form.intake_form_schema}
-                      onChange={(fields) => updateForm("intake_form_schema", fields)}
+                      onChange={(fields) =>
+                        updateForm("intake_form_schema", fields)
+                      }
                     />
                   </Card>
                 </div>
@@ -774,7 +825,7 @@ export function ServiceOfferingModal({
                   type="submit"
                   form="service-form"
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] disabled:opacity-50 transition shadow-sm"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] disabled:opacity-50 transition shadow-sm"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {saving ? "Saving…" : "Continue to Images"}
@@ -794,7 +845,7 @@ export function ServiceOfferingModal({
                 <button
                   type="button"
                   onClick={handleFinish}
-                  className="px-5 py-2.5 bg-[#6750A4] text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] transition shadow-sm"
+                  className="px-5 py-2.5 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-[#5B46A0] transition shadow-sm"
                 >
                   Done
                 </button>

@@ -276,8 +276,8 @@ export default function ServiceBookings() {
                 </h1>
 
                 {/* Company badge */}
-                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#6750A4]/15 bg-[#6750A4]/5 px-2.5 py-1 text-xs font-semibold text-[#6750A4]">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6750A4]" />
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/5 px-2.5 py-1 text-xs font-semibold text-secondary">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary" />
                   <span className="truncate max-w-[180px] sm:max-w-[280px]">
                     {companyName}
                   </span>
@@ -303,13 +303,13 @@ export default function ServiceBookings() {
             text-sm font-medium text-gray-700
             shadow-sm
             transition-all duration-200
-            hover:border-[#6750A4]/30
-            hover:bg-[#6750A4]/5
-            hover:text-[#6750A4]
+            hover:border-secondary/30
+            hover:bg-secondary/5
+            hover:text-secondary
             active:scale-[0.98]
             focus:outline-none
             focus:ring-2
-            focus:ring-[#6750A4]/20
+            focus:ring-secondary/20
             whitespace-nowrap
           "
                 >
@@ -428,7 +428,7 @@ export default function ServiceBookings() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         {b.assigned_staff ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="w-6 h-6 rounded-full bg-purple-100 text-[#6750A4] font-bold text-[10px] flex items-center justify-center">
+                            <span className="w-6 h-6 rounded-full bg-purple-100 text-secondary font-bold text-[10px] flex items-center justify-center">
                               {b.assigned_staff.name.charAt(0)}
                             </span>
                             <span className="text-xs font-semibold text-gray-800">
