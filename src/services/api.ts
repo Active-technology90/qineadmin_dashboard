@@ -39,8 +39,8 @@ import type {
 } from "../types";
 
 // const API_URL = import.meta.env.VITE_API_URL || "";
-const API_URL = "http://localhost:8000/api/v1/";
-// const API_URL = "https://backend.elilitapp.com/api/v1/";
+// const API_URL = "http://localhost:8000/api/v1/";
+const API_URL = "https://backend.elilitapp.com/api/v1/";
 
 
 const api = axios.create({
@@ -595,7 +595,7 @@ export const createCompanyBankAccount = async (
   companySlug: string,
   data: FormData | Record<string, unknown>
 ) => {
-    console.log("Creating company bank account with FormData", data);
+  console.log("Creating company bank account with FormData", data);
   if (data instanceof FormData) {
     console.log("Creating company bank account with FormData", data);
     return api.post(`/payments/company/${companySlug}/bank-accounts/`, data, {
@@ -679,6 +679,7 @@ export const getAdminMasterOrders = async (params?: {
   });
 };
 
+// ========== ADMIN VENDOR ORDERS ==========
 export const getAdminVendorOrders = async (params?: {
   page?: number;
   page_size?: number;
@@ -719,7 +720,6 @@ export const getCompanyVendorOrders = async (
     signal,
   });
 };
-
 export const getAdminAnalyticsOverview = async (params?: {
   period?: "week" | "month" | "year";
   company_slug?: string;
@@ -773,6 +773,63 @@ export const reviewReceipt = async (
 ) =>
   api.patch(`/payments/receipts/${receiptId}/review/`, data);
 
+// ========== COMPANY ADS ==========
+
+// Get all ads for a company
+export const getCompanyAds = async (
+  companySlug: string,
+  params?: {
+    search?: string;
+    is_active?: boolean;
+  }
+) => {
+  return api.get(`/ads/company/${companySlug}/`, {
+    params,
+  });
+};
+
+// Create an ad for a company
+export const createCompanyAd = async (
+  companySlug: string,
+  data: FormData
+) => {
+  return api.post(
+    `/ads/company/${companySlug}/`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+// Update company ad
+export const updateCompanyAd = async (
+  companySlug: string,
+  adId: number,
+  data: FormData
+) => {
+  return api.patch(
+    `/ads/company/${companySlug}/${adId}/`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+// Delete company ad
+export const deleteCompanyAd = async (
+  companySlug: string,
+  adId: number
+) => {
+  return api.delete(
+    `/ads/company/${companySlug}/${adId}/`
+  );
+};
 // ========== ADS MANAGEMENT (SuperAdmin only) ==========
 export const getAds = async (params?: {
   search?: string;

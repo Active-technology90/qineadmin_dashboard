@@ -216,6 +216,7 @@ const SlotFormModal = ({
   onSubmit,
   initialData,
   existingSlots,
+  defaultDay,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -228,29 +229,41 @@ const SlotFormModal = ({
   }) => Promise<void>;
   initialData?: AvailabilitySlot;
   existingSlots: AvailabilitySlot[];
-}) => {
-  const [form, setForm] = useState({
-    day_of_week: initialData?.day_of_week ?? 0,
-    start_time: initialData?.start_time ?? "09:00",
-    end_time: initialData?.end_time ?? "17:00",
-    max_bookings: initialData?.max_bookings ?? 1,
-  });
+  defaultDay?: number;
+  }) => {
+  const normalizeTimeForInput = (time?: string | null): string => {
+  if (!time) return "";
+
+  const [hours = "00", minutes = "00"] = time.split(":");
+
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+};
+const [form, setForm] = useState({
+  day_of_week:
+    initialData?.day_of_week ??
+    (defaultDay !== undefined ? defaultDay : 0),
+  start_time: normalizeTimeForInput(initialData?.start_time) || "09:00",
+  end_time: normalizeTimeForInput(initialData?.end_time) || "17:00",
+  max_bookings: initialData?.max_bookings ?? 1,
+});
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const isEdit = !!initialData;
+useEffect(() => {
+  if (!isOpen) return;
 
-  useEffect(() => {
-    if (isOpen) {
-      setForm({
-        day_of_week: initialData?.day_of_week ?? 0,
-        start_time: initialData?.start_time ?? "09:00",
-        end_time: initialData?.end_time ?? "17:00",
-        max_bookings: initialData?.max_bookings ?? 1,
-      });
-      setFieldErrors({});
-      setLoading(false);
-    }
-  }, [isOpen, initialData]);
+  setForm({
+    day_of_week: initialData?.day_of_week ?? defaultDay ?? 0,
+    start_time:
+      normalizeTimeForInput(initialData?.start_time) || "09:00",
+    end_time:
+      normalizeTimeForInput(initialData?.end_time) || "17:00",
+    max_bookings: initialData?.max_bookings ?? 1,
+  });
+
+  setFieldErrors({});
+  setLoading(false);
+}, [isOpen, initialData, defaultDay]);
 
   const handleChange = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -263,34 +276,55 @@ const SlotFormModal = ({
     }
   };
 
-  const validate = (): boolean => {
-    const result: ValidationResult = validateAvailabilitySlot(
-      { ...form, id: initialData?.id },
-      existingSlots.map((s) => ({
-        id: s.id,
-        day_of_week: s.day_of_week,
-        start_time: s.start_time,
-        end_time: s.end_time,
-      })),
-    );
-    setFieldErrors(result.errors);
-    return result.isValid;
-  };
+const validate = (): boolean => {
+  const result = validateAvailabilitySlot(
+    {
+      day_of_week: form.day_of_week,
+      start_time: form.start_time,
+      end_time: form.end_time,
+      max_bookings: form.max_bookings,
+      id: initialData?.id,
+    },
+    existingSlots.map((s) => ({
+      id: s.id,
+      day_of_week: s.day_of_week,
+      start_time: s.start_time,
+      end_time: s.end_time,
+    })),
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      await onSubmit({ ...form, id: initialData?.id });
-      onClose();
-    } catch (err: any) {
-      const msg = extractErrorMessage(err, "Failed to save slot");
-      setFieldErrors({ general: msg });
-    } finally {
-      setLoading(false);
-    }
-  };
+  setFieldErrors(result.errors);
+
+  return result.isValid;
+};
+
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!validate()) return;
+
+  setLoading(true);
+
+  try {
+    await onSubmit({
+      ...form,
+      id: initialData?.id,
+    });
+
+    onClose();
+  } catch (err: unknown) {
+    const msg = extractErrorMessage(
+      err,
+      "Failed to save slot",
+    );
+
+    setFieldErrors({
+      general: msg,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -524,7 +558,13 @@ export default function AvailabilityManagement() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+const [newSlotDay, setNewSlotDay] = useState(0);
 
+const openAddModalForDay = (day: number) => {
+  setEditingSlot(undefined);
+  setNewSlotDay(day);
+  setIsSlotModalOpen(true);
+};
   // Fetch blackouts
   const fetchBlackouts = useCallback(async () => {
     if (!companySlug || !isServiceCompany) return;
@@ -560,14 +600,23 @@ export default function AvailabilityManagement() {
   const summary = useMemo(() => {
     const workingDays = Object.keys(groupedSlots).length;
     const totalSlots = slots.length;
-    const weeklyHours = slots
-      .reduce((sum, slot) => {
-        const [sh, sm] = slot.start_time.split(":").map(Number);
-        const [eh, em] = slot.end_time.split(":").map(Number);
-        const hours = eh - sh + (em - sm) / 60;
-        return sum + hours;
-      }, 0)
-      .toFixed(1);
+  const weeklyHours = slots
+  .reduce((sum, slot) => {
+    const [sh, sm] = slot.start_time.split(":").map(Number);
+    const [eh, em] = slot.end_time.split(":").map(Number);
+
+    const startMinutes = sh * 60 + sm;
+    const endMinutes = eh * 60 + em;
+
+    let duration = endMinutes - startMinutes;
+
+    if (duration < 0) {
+      duration += 24 * 60;
+    }
+
+    return sum + duration / 60;
+  }, 0)
+  .toFixed(1);
     const maxDaily = Math.max(...slots.map((s) => s.max_bookings), 0);
     const blockedDates = blackouts.length;
     return { workingDays, totalSlots, weeklyHours, maxDaily, blockedDates };
@@ -616,26 +665,46 @@ export default function AvailabilityManagement() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSaveSlot = async (data: {
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    max_bookings: number;
-    id?: number;
-  }) => {
-    if (data.id) {
-      await update(data.id, { ...data, is_active: true });
-      showToast("success", "Slot updated");
-    } else {
-      await create({ ...data, is_active: true });
-      showToast("success", "Slot added");
-    }
-  };
+const handleSaveSlot = async (data: {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  max_bookings: number;
+  id?: number;
+}) => {
+  if (data.id) {
+    await update(data.id, {
+      day_of_week: data.day_of_week,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      max_bookings: data.max_bookings,
+      is_active: true,
+    });
 
-  const openAddModalForDay = () => {
-    setEditingSlot(undefined);
-    setIsSlotModalOpen(true);
-  };
+    showToast("success", "Slot updated successfully");
+  } else {
+    await create({
+      day_of_week: data.day_of_week,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      max_bookings: data.max_bookings,
+      is_active: true,
+    });
+
+    showToast("success", "Slot added successfully");
+  }
+};
+// const openAddModalForDay = (day: number) => {
+//   setEditingSlot({
+//     id: 0,
+//     day_of_week: day,
+//     start_time: "09:00",
+//     end_time: "17:00",
+//     max_bookings: 1,
+//   } as AvailabilitySlot);
+
+//   setIsSlotModalOpen(true);
+// };
 
   const openEditModal = (slot: AvailabilitySlot) => {
     setEditingSlot(slot);
@@ -794,13 +863,14 @@ export default function AvailabilityManagement() {
         onCancel={() => setBlackoutDeleteTarget(null)}
       />
 
-      <SlotFormModal
-        isOpen={isSlotModalOpen}
-        onClose={closeSlotModal}
-        onSubmit={handleSaveSlot}
-        initialData={editingSlot}
-        existingSlots={slots}
-      />
+<SlotFormModal
+  isOpen={isSlotModalOpen}
+  onClose={closeSlotModal}
+  onSubmit={handleSaveSlot}
+  initialData={editingSlot}
+  existingSlots={slots}
+  defaultDay={newSlotDay}
+/>
 
       <div className="space-y-8">
         {/* Header */}
@@ -910,10 +980,11 @@ export default function AvailabilityManagement() {
               </p>
             </div>
             <button
-              onClick={() => {
-                setEditingSlot(undefined);
-                setIsSlotModalOpen(true);
-              }}
+            onClick={() => {
+  setEditingSlot(undefined);
+  setNewSlotDay(0);
+  setIsSlotModalOpen(true);
+}}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-white text-sm font-medium rounded-xl hover:bg-purple-800 transition shadow-sm"
             >
               <Plus className="h-4 w-4" />

@@ -1,4 +1,3 @@
-// src/components/admin/CompanyManagement/CompanyManagement.tsx
 import React, {
   useEffect,
   useState,
@@ -41,7 +40,6 @@ import NonSuperAdminView from "./NonSuperAdminView";
 import CompanyFilters from "./CompanyFilters";
 import CompanyForm from "./CompanyForm";
 import type { CompanyFormData } from "./CompanyForm";
-// import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
 import LocationPickerModal from "./LocationPickerModal";
 
 type PaginatedResponse<T> = {
@@ -187,6 +185,40 @@ const SkeletonDetailCard: React.FC = () => (
   </div>
 );
 
+// Empty form data used for initial state and reset
+const EMPTY_COMPANY_FORM: CompanyFormData = {
+  name: "",
+  name_am: "",
+  slug: "",
+  head_company: null,
+  category: 0,
+  sub_category: 0,
+  business_type: "",
+  address: "",
+  address_am: "",
+  description: "",
+  description_am: "",
+  minimum_order_total: "0.00",
+  latitude: "",
+  longitude: "",
+  delivery_fee_per_km: "0.00",
+  is_active: true,
+  is_featured: false,
+  supports_table_service: false,
+  logo: null,
+  cover_image: null,
+  chapa_sub_account_id: "",
+  theme_primary: "#674FA3",
+  theme_dark: "#6750A4",
+  theme_light: "#8B6BB5",
+  tin_number: "",
+  vat_registration_number: "",
+  tax_type: "none",
+  license: null,
+  contact_phone: "",
+  contact_email: "",
+};
+
 export default function CompanyManagement() {
   const [pageSize, setPageSize] = useState(10);
   const { user } = useAuth();
@@ -198,7 +230,6 @@ export default function CompanyManagement() {
   const memberships = user?.memberships ?? [];
   const primaryMembership =
     !isSuperAdmin && !isMarketing ? getPrimaryMembership(memberships) : null;
-  // const userCompanySlug = primaryMembership?.company_slug ?? null;
   const userCompanyRole = primaryMembership?.role ?? null;
 
   // Get role for currently selected company
@@ -218,7 +249,6 @@ export default function CompanyManagement() {
   const canEditCompany = useCallback(
     (companySlug: string) => {
       if (isSuperAdmin || isMarketing) return true;
-      // Get the role for the specific company being edited
       const membershipForCompany = memberships.find(
         (m) => m.company_slug === companySlug,
       );
@@ -263,29 +293,7 @@ export default function CompanyManagement() {
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<CompanyFormData>({
-    name: "",
-    name_am: "",
-    slug: "",
-    head_company: null,
-    category: 0,
-    sub_category: 0,
-    business_type: "",
-    address: "",
-    address_am: "",
-    description: "",
-    description_am: "",
-    minimum_order_total: "0.00",
-    latitude: "",
-    longitude: "",
-    delivery_fee_per_km: "0.00",
-    is_active: true,
-    is_featured: false,
-    supports_table_service: false,
-    logo: null,
-    cover_image: null,
-    tin_number: "",
-    vat_registration_number: "",
-    tax_type: "none",
+    ...EMPTY_COMPANY_FORM,
   });
   const [originalFormData, setOriginalFormData] =
     useState<CompanyFormData | null>(null);
@@ -295,7 +303,6 @@ export default function CompanyManagement() {
 
   const handleLogoChange = useCallback(
     (file: File | null) => {
-      // Revoke old blob URL to avoid memory leaks
       if (logoPreview && logoPreview.startsWith("blob:")) {
         URL.revokeObjectURL(logoPreview);
       }
@@ -303,7 +310,6 @@ export default function CompanyManagement() {
         const url = URL.createObjectURL(file);
         setLogoPreview(url);
       } else {
-        // File is null - user wants to remove the image
         setLogoPreview(null);
       }
     },
@@ -319,22 +325,18 @@ export default function CompanyManagement() {
         const url = URL.createObjectURL(file);
         setCoverPreview(url);
       } else {
-        // File is null - user wants to remove the image
         setCoverPreview(null);
       }
     },
     [coverPreview],
   );
+
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CompanyListItem | null>(
     null,
   );
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
-
-  // ====== SYNC PREVIEW WITH FORMDATA ======
-  // Preview is managed by handleLogoChange and handleCoverChange callbacks
-  // No useEffect needed - they were causing previews to clear on edit
 
   // Filtered companies (super admin or marketing agent)
   const filteredCompanies = useMemo(() => {
@@ -484,14 +486,12 @@ export default function CompanyManagement() {
         sortable: true,
         render: (comp) => comp.address || "-",
       },
-      //  TIN Number column
       {
         key: "tin_number",
         header: "TIN",
         sortable: true,
         render: (comp) => comp.tin_number || "-",
       },
-      // ✅ ADDED: Tax Type column
       {
         key: "tax_type",
         header: "Tax Type",
@@ -499,8 +499,8 @@ export default function CompanyManagement() {
         render: (comp) => {
           const taxLabels: Record<string, string> = {
             vat: "VAT",
-            turnover: "Turnover",
-            withholding: "Withholding",
+            turnover_goods: "Turnover Goods",
+            turnover_services: "Turnover Services",
             none: "None",
           };
           return taxLabels[comp.tax_type || "none"] || "-";
@@ -542,7 +542,7 @@ export default function CompanyManagement() {
     [],
   );
 
-  // Sort change handler for the filter component
+  // Sort change handler
   const onSortChange = useCallback(
     (value: string) => {
       const [field, desiredOrder] = value.split("|");
@@ -595,9 +595,12 @@ export default function CompanyManagement() {
             (company as any).vat_registration_number || "",
           tax_type: (company as any).tax_type || "none",
           license: (company as any).license || null,
+          chapa_sub_account_id: (company as any).chapa_sub_account_id || "",
+          theme_primary: (company as any).theme_primary || "#674FA3",
+          theme_dark: (company as any).theme_dark || "#6750A4",
+          theme_light: (company as any).theme_light || "#8B6BB5",
         };
         setCompanies([companyListItem]);
-        // Load form data for inline edit
         setEditingSlug(companyListItem.slug);
         const newFormData: CompanyFormData = {
           name: companyListItem.name,
@@ -620,8 +623,6 @@ export default function CompanyManagement() {
           supports_table_service: companyListItem.supports_table_service,
           logo: null,
           cover_image: null,
-          phone: companyListItem.contact_phone || "",
-          email: companyListItem.contact_email || "",
           contact_phone: companyListItem.contact_phone || "",
           contact_email: companyListItem.contact_email || "",
           license: (companyListItem as any).license || null,
@@ -629,6 +630,11 @@ export default function CompanyManagement() {
           vat_registration_number:
             companyListItem.vat_registration_number || "",
           tax_type: companyListItem.tax_type || "none",
+          chapa_sub_account_id:
+            (companyListItem as any).chapa_sub_account_id || "",
+          theme_primary: (companyListItem as any).theme_primary || "#674FA3",
+          theme_dark: (companyListItem as any).theme_dark || "#6750A4",
+          theme_light: (companyListItem as any).theme_light || "#8B6BB5",
         };
         setFormData(newFormData);
         setOriginalFormData({
@@ -651,7 +657,6 @@ export default function CompanyManagement() {
           nextUrl = data.next;
         }
 
-        // 🟢 Fetch detail for each company to get TIN fields (list endpoint does not include them)
         const detailedCompanies = await Promise.all(
           allCompanies.map(async (company) => {
             try {
@@ -661,10 +666,18 @@ export default function CompanyManagement() {
                 ...company,
                 contact_phone: detail.contact_phone || "",
                 contact_email: detail.contact_email || "",
+                description: detail.description,
+                description_am: detail.description_am,
+                head_company: detail.head_company ?? null,
                 tin_number: detail.tin_number || "",
                 vat_registration_number: detail.vat_registration_number || "",
                 tax_type: detail.tax_type || "none",
                 license: detail.license || null,
+                chapa_sub_account_id: detail.chapa_sub_account_id || "",
+                theme_primary: detail.theme_primary || "#674FA3",
+                theme_dark: detail.theme_dark || "#6750A4",
+                theme_light: detail.theme_light || "#8B6BB5",
+                delivery_fee_per_km: detail.delivery_fee_per_km || "",
               };
             } catch (err) {
               return company;
@@ -673,7 +686,6 @@ export default function CompanyManagement() {
         );
 
         setCompanies(detailedCompanies);
-        // Auto-select first for modal form
         if (detailedCompanies.length > 0) {
           const first = detailedCompanies[0];
           setEditingSlug(first.slug);
@@ -698,14 +710,16 @@ export default function CompanyManagement() {
             supports_table_service: first.supports_table_service,
             logo: null,
             cover_image: null,
-            phone: first.contact_phone || "",
-            email: first.contact_email || "",
             contact_phone: first.contact_phone || "",
             contact_email: first.contact_email || "",
             license: (first as any).license || null,
             tin_number: first.tin_number || "",
             vat_registration_number: first.vat_registration_number || "",
             tax_type: first.tax_type || "none",
+            chapa_sub_account_id: (first as any).chapa_sub_account_id || "",
+            theme_primary: (first as any).theme_primary || "#674FA3",
+            theme_dark: (first as any).theme_dark || "#6750A4",
+            theme_light: (first as any).theme_light || "#8B6BB5",
           };
           setFormData(newFormData);
           setOriginalFormData({
@@ -746,55 +760,24 @@ export default function CompanyManagement() {
   const validateBasicInfo = () => {
     const errors: Record<string, string> = {};
 
-    // Slug format validation - only if slug exists
     if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug)) {
       errors.slug =
         "Slug must contain only lowercase letters, numbers, and hyphens";
     }
-
-    // Registration type specific validations
-    if (formData.registration_type === "vendor") {
-      // Vendor validations
-      if (!formData.name.trim()) {
-        errors.name = "Company name is required";
-      }
-      if (formData.category === 0) {
-        errors.category = "Please select a category";
-      }
-      if (formData.sub_category === 0) {
-        errors.sub_category = "Please select a subcategory";
-      }
-      if (!formData.business_type) {
-        errors.business_type = "Please select a business type";
-      }
-      if (!formData.slug.trim()) {
-        errors.slug = "Slug is required";
-      }
-    } else if (formData.registration_type === "service_provider") {
-      // Service Provider validations
-      if (!formData.full_name?.trim()) {
-        errors.full_name = "Full name is required";
-      }
-      if (!formData.national_id?.trim()) {
-        errors.national_id = "National ID is required";
-      }
-      if (!formData.skills?.trim()) {
-        errors.skills = "Skills / Services Offered is required";
-      }
-    } else if (formData.registration_type === "delivery_partner") {
-      // Delivery Partner validations
-      if (!formData.full_name?.trim()) {
-        errors.full_name = "Full name is required";
-      }
-      if (!formData.driver_license?.trim()) {
-        errors.driver_license = "Driver license is required";
-      }
-      if (!formData.vehicle_registration?.trim()) {
-        errors.vehicle_registration = "Vehicle registration is required";
-      }
-      if (!formData.vehicle_type) {
-        errors.vehicle_type = "Vehicle type is required";
-      }
+    if (!formData.name.trim()) {
+      errors.name = "Company name is required";
+    }
+    if (formData.category === 0) {
+      errors.category = "Please select a category";
+    }
+    if (formData.sub_category === 0) {
+      errors.sub_category = "Please select a subcategory";
+    }
+    if (!formData.business_type) {
+      errors.business_type = "Please select a business type";
+    }
+    if (!formData.slug.trim()) {
+      errors.slug = "Slug is required";
     }
 
     setFormErrors(errors);
@@ -803,15 +786,14 @@ export default function CompanyManagement() {
 
   const validateLocation = () => {
     const errors: Record<string, string> = {};
-    const phone = formData.contact_phone || formData.phone || "";
-    const email = formData.contact_email || formData.email || "";
-
-    if (!phone.trim()) {
+    if (!formData.contact_phone.trim()) {
       errors.contact_phone = "Phone Number is required";
     }
-    if (!email.trim()) {
+    if (!formData.contact_email.trim()) {
       errors.contact_email = "Email Address is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email.trim())
+    ) {
       errors.contact_email = "Please enter a valid email address";
     }
     setFormErrors(errors);
@@ -819,40 +801,9 @@ export default function CompanyManagement() {
   };
 
   const validateDocuments = () => {
-    const errors: Record<string, string> = {};
-    // Vendor document validations
-    if (formData.registration_type === "vendor") {
-      if (!formData.tin_number?.trim()) {
-        errors.tin_number = "TIN Number is required";
-      }
-
-      // Allow existing license URL
-      if (!formData.license_document && !formData.license && !editingSlug) {
-        errors.license_document = "License Document is required";
-      }
-
-      // Only require TIN document when creating a new company
-      if (!formData.tin_document && !editingSlug) {
-        errors.tin_document = "TIN Document is required";
-      }
-    }
-    // Service Provider document validations
-    if (formData.registration_type === "service_provider") {
-      if (!formData.national_id_document) {
-        errors.national_id_document = "National ID Document is required";
-      }
-    }
-    // Delivery Partner document validations
-    if (formData.registration_type === "delivery_partner") {
-      if (!formData.driver_license_document) {
-        errors.driver_license_document = "Driver License Document is required";
-      }
-      if (!formData.vehicle_document) {
-        errors.vehicle_document = "Vehicle Document is required";
-      }
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    // No required documents in backend; always valid
+    setFormErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -860,25 +811,19 @@ export default function CompanyManagement() {
     e.stopPropagation();
     if (!validateBasicInfo()) return;
 
-    // Check if any changes were made (for update operations)
     if (editingSlug && originalFormData) {
       const hasChanges = () => {
-        // Safe string comparison helper
         const cleanString = (val: any) =>
           val === null || val === undefined ? "" : String(val).trim();
-
-        // Safe float comparison helper (coordinates / prices)
         const cleanFloat = (val: any) => {
           if (val === null || val === undefined || val === "") return 0;
           const parsed = parseFloat(val);
           return isNaN(parsed) ? 0 : parsed;
         };
-
         const compareFloats = (val1: any, val2: any) => {
           return Math.abs(cleanFloat(val1) - cleanFloat(val2)) > 0.000001;
         };
 
-        // Text & Select Fields
         if (cleanString(formData.name) !== cleanString(originalFormData.name))
           return true;
         if (
@@ -923,8 +868,6 @@ export default function CompanyManagement() {
           cleanString(originalFormData.description_am)
         )
           return true;
-
-        // Floats and Decimals (Monetary & Coordinates)
         if (
           compareFloats(
             formData.minimum_order_total,
@@ -943,8 +886,6 @@ export default function CompanyManagement() {
           )
         )
           return true;
-
-        // Booleans
         if (Boolean(formData.is_active) !== Boolean(originalFormData.is_active))
           return true;
         if (
@@ -957,8 +898,6 @@ export default function CompanyManagement() {
           Boolean(originalFormData.supports_table_service)
         )
           return true;
-
-        //  TIN Fields
         if (
           cleanString(formData.tin_number) !==
           cleanString(originalFormData.tin_number)
@@ -974,39 +913,45 @@ export default function CompanyManagement() {
           cleanString(originalFormData.tax_type)
         )
           return true;
-
-        // Contact fields
         if (
-          cleanString(formData.contact_phone || formData.phone) !==
-          cleanString(originalFormData.contact_phone || originalFormData.phone)
+          cleanString(formData.chapa_sub_account_id) !==
+          cleanString(originalFormData.chapa_sub_account_id)
         )
           return true;
         if (
-          cleanString(formData.contact_email || formData.email) !==
-          cleanString(originalFormData.contact_email || originalFormData.email)
+          cleanString(formData.theme_primary) !==
+          cleanString(originalFormData.theme_primary)
         )
           return true;
         if (
-          cleanString(formData.license) !== cleanString(originalFormData.license)
+          cleanString(formData.theme_dark) !==
+          cleanString(originalFormData.theme_dark)
         )
           return true;
-
-        // File Uploads - Check if logo was removed
-        if (originalFormData.logo && formData.logo === null) return true;
-        if (formData.logo !== null) return true;
-        // Check if cover was removed (original had image, now null)
-        if (originalFormData.cover_image && formData.cover_image === null)
+        if (
+          cleanString(formData.theme_light) !==
+          cleanString(originalFormData.theme_light)
+        )
           return true;
-        if (formData.cover_image !== null) return true;
-
+        if (
+          cleanString(formData.contact_phone) !==
+          cleanString(originalFormData.contact_phone)
+        )
+          return true;
+        if (
+          cleanString(formData.contact_email) !==
+          cleanString(originalFormData.contact_email)
+        )
+          return true;
+        if (formData.license !== originalFormData.license) return true;
+        if (formData.logo !== originalFormData.logo) return true;
+        if (formData.cover_image !== originalFormData.cover_image) return true;
         return false;
       };
 
       const changesExist = hasChanges();
-
       if (!changesExist) {
         showToast("info", "No changes detected. Update canceled.");
-        // Close edit mode without submitting
         if (!isSuperAdmin && !isMarketing) {
           setIsEditingActive(false);
           resetForm();
@@ -1020,94 +965,65 @@ export default function CompanyManagement() {
 
     setSubmitting(true);
     try {
-      // Always use FormData to handle image deletion
       const formPayload = new FormData();
-
       formPayload.append("name", formData.name);
-
       if (formData.name_am) formPayload.append("name_am", formData.name_am);
-
       if (formData.slug) formPayload.append("slug", formData.slug);
-
       formPayload.append("category", String(formData.category));
-
       formPayload.append("sub_category", String(formData.sub_category));
-
-      // head_company: send the id, or "" to clear it (backend treats "" as null).
-      // Ignored by the backend for non-superusers (read-only there).
       formPayload.append(
         "head_company",
         formData.head_company ? String(formData.head_company) : "",
       );
-
       formPayload.append("business_type", formData.business_type);
-      if (formData.address) {
-        formPayload.append("address", formData.address);
-      }
-      if (formData.address_am) {
+      if (formData.address) formPayload.append("address", formData.address);
+      if (formData.address_am)
         formPayload.append("address_am", formData.address_am);
-      }
-
-      if (formData.description) {
+      if (formData.description)
         formPayload.append("description", formData.description);
-      }
-      if (formData.description_am) {
+      if (formData.description_am)
         formPayload.append("description_am", formData.description_am);
-      }
-
       formPayload.append(
         "minimum_order_total",
         formData.minimum_order_total || "0.00",
       );
-
-      if (formData.latitude) {
-        formPayload.append("latitude", formData.latitude);
-      }
-      if (formData.longitude) {
+      if (formData.latitude) formPayload.append("latitude", formData.latitude);
+      if (formData.longitude)
         formPayload.append("longitude", formData.longitude);
-      }
       formPayload.append(
         "delivery_fee_per_km",
         formData.delivery_fee_per_km || "0.00",
       );
-
       formPayload.append("is_active", String(formData.is_active));
-
       formPayload.append("is_featured", String(formData.is_featured));
-
       formPayload.append(
         "supports_table_service",
         String(formData.supports_table_service),
       );
-
-      //  TIN FIELDS - ALWAYS SEND (even if empty)
       formPayload.append("tin_number", formData.tin_number || "");
       formPayload.append(
         "vat_registration_number",
         formData.vat_registration_number || "",
       );
       formPayload.append("tax_type", formData.tax_type || "none");
-
-      // Contact fields
       formPayload.append(
-        "contact_phone",
-        formData.contact_phone || formData.phone || "",
+        "chapa_sub_account_id",
+        formData.chapa_sub_account_id || "",
       );
-      formPayload.append(
-        "contact_email",
-        formData.contact_email || formData.email || "",
-      );
+      formPayload.append("theme_primary", formData.theme_primary || "#674FA3");
+      formPayload.append("theme_dark", formData.theme_dark || "#6750A4");
+      formPayload.append("theme_light", formData.theme_light || "#8B6BB5");
+      formPayload.append("contact_phone", formData.contact_phone || "");
+      formPayload.append("contact_email", formData.contact_email || "");
 
-      // Handle license document (file) - NOT the text license_number
-      if (formData.license_document instanceof File) {
-        formPayload.append("license", formData.license_document);
+      // Handle license
+      if (formData.license instanceof File) {
+        formPayload.append("license", formData.license);
       } else if (formData.license === null && originalFormData?.license) {
         formPayload.append("license", "");
       }
-      // If no file and not removed, don't append anything (backend may keep existing)
 
-      // Handle logo: only send if user uploaded a new file OR intentionally removed it
-      // Do NOT send anything if the logo hasn't changed (formData.logo is null and original had image but user didn't click remove)
+      // Handle logo and cover
       if (formData.logo instanceof File) {
         formPayload.append("logo", formData.logo);
       } else if (
@@ -1115,11 +1031,8 @@ export default function CompanyManagement() {
         originalFormData?.logo &&
         logoPreview === null
       ) {
-        // User removed the image (logoPreview is null confirms they clicked remove)
         formPayload.append("logo", "");
       }
-
-      // Handle cover_image: only send if user uploaded a new file OR intentionally removed it
       if (formData.cover_image instanceof File) {
         formPayload.append("cover_image", formData.cover_image);
       } else if (
@@ -1127,7 +1040,6 @@ export default function CompanyManagement() {
         originalFormData?.cover_image &&
         coverPreview === null
       ) {
-        // User removed the cover image (coverPreview is null confirms they clicked remove)
         formPayload.append("cover_image", "");
       }
 
@@ -1144,14 +1056,10 @@ export default function CompanyManagement() {
           : "Company created successfully",
       );
 
-      // close modal smoothly
       setModalOpen(false);
       setIsEditingActive(false);
-
-      setTimeout(async () => {
-        resetForm();
-        await fetchData();
-      }, 250);
+      resetForm();
+      await fetchData();
     } catch (err: any) {
       if (err?.response?.status === 401) {
         showToast("error", "Session expired. Please refresh the page.");
@@ -1160,7 +1068,6 @@ export default function CompanyManagement() {
           err.response?.data?.message ||
           err.response?.data?.detail ||
           "Operation failed";
-
         showToast("error", msg);
       }
     } finally {
@@ -1227,7 +1134,6 @@ export default function CompanyManagement() {
         ),
         validate: validateLocation,
       },
-
       {
         id: "documents",
         title: <span className="text-secondary">Media & Documents</span>,
@@ -1305,52 +1211,7 @@ export default function CompanyManagement() {
 
   const resetForm = () => {
     setEditingSlug(null);
-    setFormData({
-      name: "",
-      name_am: "",
-      slug: "",
-      head_company: null,
-      category: 0,
-      sub_category: 0,
-      business_type: "",
-      address: "",
-      address_am: "",
-      description: "",
-      description_am: "",
-      minimum_order_total: "0.00",
-      latitude: "",
-      longitude: "",
-      delivery_fee_per_km: "0.00",
-      is_active: true,
-      is_featured: false,
-      supports_table_service: false,
-      logo: null,
-      cover_image: null,
-      registration_type: undefined,
-      full_name: "",
-      national_id: "",
-      skills: "",
-      experience_years: undefined,
-      driver_license: "",
-      vehicle_registration: "",
-      vehicle_type: "",
-      insurance_document: "",
-      tin_number: "",
-      vat_registration_number: "",
-      tax_type: "none",
-      license_document: null,
-      tin_document: null,
-      national_id_document: null,
-      certificate_document: null,
-      driver_license_document: null,
-      vehicle_document: null,
-      insurance_document_file: null,
-      phone: "",
-      email: "",
-      contact_phone: "",
-      contact_email: "",
-      license: null,
-    });
+    setFormData({ ...EMPTY_COMPANY_FORM });
     setOriginalFormData(null);
     setLogoPreview(null);
     setCoverPreview(null);
@@ -1364,6 +1225,7 @@ export default function CompanyManagement() {
         return;
       }
       setEditingSlug(company.slug);
+      setCurrentStep(0);
       const newFormData: CompanyFormData = {
         name: company.name,
         name_am: company.name_am || "",
@@ -1385,18 +1247,18 @@ export default function CompanyManagement() {
         supports_table_service: company.supports_table_service,
         logo: null,
         cover_image: null,
-        phone: company.contact_phone || "",
-        email: company.contact_email || "",
         contact_phone: company.contact_phone || "",
         contact_email: company.contact_email || "",
         license: (company as any).license || null,
-        // TIN fields for edit
         tin_number: company.tin_number || "",
         vat_registration_number: company.vat_registration_number || "",
         tax_type: company.tax_type || "none",
+        chapa_sub_account_id: (company as any).chapa_sub_account_id || "",
+        theme_primary: (company as any).theme_primary || "#674FA3",
+        theme_dark: (company as any).theme_dark || "#6750A4",
+        theme_light: (company as any).theme_light || "#8B6BB5",
       };
       setFormData(newFormData);
-      // Save original data for change detection (including original image URLs)
       setOriginalFormData({
         ...newFormData,
         logo: company.logo as any,
@@ -1467,10 +1329,10 @@ export default function CompanyManagement() {
   }
 
   return (
-    <div className="max-w-full  min-h-screen">
+    <div className="max-w-full min-h-screen">
       <Toast toast={toast} />
-      <div className="p-2  sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
-        {/* Header Section - Premium & Responsive */}
+      <div className="p-2 sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
+        {/* Header */}
         <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
             <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
@@ -1485,27 +1347,22 @@ export default function CompanyManagement() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {canAddCompany && (
-              <>
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setModalOpen(true);
-                  }}
-                  className="bg-secondary text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
-                >
-                  <Plus size={18} className=" w-3 h-3 sm:w-5 sm:h-5" />
-                  <span className="hidden md:inline">Add Company</span>
-                  <span className="inline md:hidden text-xs">Add</span>
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setModalOpen(true);
+                }}
+                className="bg-secondary text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
+              >
+                <Plus size={18} className="w-3 h-3 sm:w-5 sm:h-5" />
+                <span className="hidden md:inline">Add Company</span>
+                <span className="inline md:hidden text-xs">Add</span>
+              </button>
             )}
           </div>
         </div>
 
-        {/* Filters Section (super admin or marketing) with premium card styling */}
         {(isSuperAdmin || isMarketing) && (
-          // <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-5">
-
           <CompanyFilters
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
@@ -1527,14 +1384,11 @@ export default function CompanyManagement() {
             hasActiveFilters={hasActiveFilters}
             onClearAll={clearAllFilters}
           />
-          // </div>
         )}
 
-        {/* Main content views with responsive overflow handling */}
         {isSuperAdmin || isMarketing ? (
-          <div className=" ">
+          <div className="">
             <SuperAdminView
-              // Original data / layout props
               paginatedItems={paginatedItemsWithRowNumber}
               columns={columns}
               loading={loading}
@@ -1546,10 +1400,9 @@ export default function CompanyManagement() {
               onPageChange={goToPage}
               onEdit={openEdit}
               onDelete={canDeleteCompany ? handleDeleteClick : undefined}
-              // --- Mobile filter props (new) ---
               inputValue={inputValue}
               onInputChange={handleInputChange}
-              onSortChange={onSortChange} // the wrapper that calls handleSort
+              onSortChange={onSortChange}
               businessTypeFilter={businessTypeFilter}
               onBusinessTypeChange={setBusinessTypeFilter}
               categoryFilter={categoryFilter}
@@ -1595,7 +1448,6 @@ export default function CompanyManagement() {
           </div>
         )}
 
-        {/* Modals - already responsive via underlying components */}
         <MultiStepFormModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -1615,7 +1467,6 @@ export default function CompanyManagement() {
         />
       </div>
 
-      {/* Location Picker Modal */}
       {showMapPicker && (
         <LocationPickerModal
           isOpen={showMapPicker}

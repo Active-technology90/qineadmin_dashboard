@@ -21,6 +21,19 @@ import {
   Info,
 } from "lucide-react";
 import { useReadOnly } from "./AdminDashboard";
+import { useAuth } from "../../context/authContext";
+import {
+  getAds,
+  createAd,
+  updateAd,
+  deleteAd,
+  getMySubscription,
+  getCompanyAds,
+  createCompanyAd,
+  updateCompanyAd,
+  deleteCompanyAd,
+} from "../../services/api";
+import { useCurrentCompany } from "../../context/CurrentCompanyContext";
 
 // ----------------------------------------------------------------------
 // Types – matches the system’s expected ad structure
@@ -117,15 +130,8 @@ const Toast = ({
 };
 
 // ----------------------------------------------------------------------
-// API Integration
-// ----------------------------------------------------------------------
-import { getAds, createAd, updateAd, deleteAd, getMySubscription } from "../../services/api";
-import { useCurrentCompany } from "../../context/CurrentCompanyContext";
-
-// ----------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------
-
 const ITEMS_PER_PAGE = 6;
 
 // ----------------------------------------------------------------------
@@ -331,7 +337,7 @@ const ImageUploader: React.FC<{
   };
 
   return (
-    <div className="space-y-2 ">
+    <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
         Advertisement Image
       </label>
@@ -343,6 +349,18 @@ const ImageUploader: React.FC<{
           isDragging ? "ring-2 ring-secondary  ring-offset-2 bg-[#674FA3]/5" : ""
         }`}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+            // Allow re‑selecting the same file
+            e.target.value = "";
+          }}
+          className="hidden"
+        />
         {!preview ? (
           <div
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:bg-gray-50 ${
@@ -355,35 +373,30 @@ const ImageUploader: React.FC<{
               Drag & drop an image here, or click to browse
             </p>
             <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                e.target.files?.[0] && handleFile(e.target.files[0])
-              }
-              className="hidden"
-            />
           </div>
         ) : (
           <div className="relative group">
             <img
               src={preview}
               alt="Preview"
-              className="w-full h-56 object-cover rounded-xl shadow-sm"
+              className="w-full h-56 sm:h-64 object-cover rounded-xl shadow-sm"
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-3">
+            <div className="absolute inset-x-0 bottom-0 bg-black/50 p-3 flex items-center justify-center gap-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-white/90 p-2 rounded-full text-gray-800 hover:bg-white"
+                className="bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-800 hover:bg-gray-100"
               >
-                Replace
+                <Upload className="w-4 h-4 inline mr-1" />
+                Change Image
               </button>
               <button
+                type="button"
                 onClick={clearImage}
-                className="bg-white/90 p-2 rounded-full text-red-600 hover:bg-white"
+                className="bg-white px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-gray-100"
               >
-                Delete
+                <Trash2 className="w-4 h-4 inline mr-1" />
+                Remove
               </button>
             </div>
           </div>
@@ -422,16 +435,6 @@ const AdCard: React.FC<{
             {ad.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
-        {/* <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-gray-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-          <Target className="w-3 h-3" />
-          <span className="font-medium">
-            {isAllPages
-              ? "All Pages"
-              : pageCount === 0
-              ? "No Pages"
-              : `${pageCount} page${pageCount > 1 ? "s" : ""}`}
-          </span>
-        </div> */}
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-xl text-gray-900 mb-1 truncate">
@@ -718,7 +721,8 @@ const LoadingSkeleton: React.FC = () => (
 // MAIN COMPONENT
 // ----------------------------------------------------------------------
 export default function AdManagement() {
-  const isReadOnly = useReadOnly(); // respects viewer mode from dashboard
+  const baseReadOnly = useReadOnly(); // respects viewer mode from dashboard
+  const { user } = useAuth();
   const { toast, showToast, hideToast } = useToast();
   const { company } = useCurrentCompany();
   const [activeSub, setActiveSub] = useState<any>(null);
@@ -738,6 +742,7 @@ export default function AdManagement() {
     title?: string;
     image?: string;
   }>({});
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // UI state
   const [searchQuery, setSearchQuery] = useState("");
@@ -748,19 +753,63 @@ export default function AdManagement() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [adToDelete, setAdToDelete] = useState<Ad | null>(null);
 
+  // ------------------------------------------------------------
+  // Role / permission determination
+  // ------------------------------------------------------------
+  const isSuperAdmin = !user?.memberships?.length; // true if no company memberships
+
+  const companyRole = (() => {
+    if (!user || !company?.slug) return "";
+    if (isSuperAdmin) return "admin"; // super admin can manage any company
+    const membership = user.memberships?.find(
+      (m: any) => m.company_slug === company.slug,
+    );
+    return membership?.role || "";
+  })();
+
+  // A user is a true company admin (not super admin) if they have a company slug
+  // and are not a super admin. This ensures company‑scoped API endpoints are used.
+  const isCompanyAdmin = !isSuperAdmin && Boolean(company?.slug);
+
+  const canManageAds = isSuperAdmin || companyRole === "admin";
+  const isReadOnly = baseReadOnly || !canManageAds; // combined read‑only state
+
+  // ------------------------------------------------------------
+  // Effects
+  // ------------------------------------------------------------
   useEffect(() => {
     fetchAds();
-    if (company && company.slug) {
-      getMySubscription(company.slug).then(res => setActiveSub(res.data)).catch(console.error);
+    // Fetch subscription only for non‑super‑admin company users.
+    // Super admins do not need a company subscription check.
+    if (!isSuperAdmin && company && company.slug) {
+      getMySubscription(company.slug)
+        .then((res) => setActiveSub(res.data))
+        .catch(console.error);
     } else {
-      setActiveSub({ plan: { can_ad_home_page: true, can_ad_companies_list: true, can_ad_company_detail: true }});
+      // Default: full placement permissions for super admins / no company context
+      setActiveSub({
+        plan: {
+          can_ad_home_page: true,
+          can_ad_companies_list: true,
+          can_ad_company_detail: true,
+        },
+      });
     }
-  }, [company?.slug]);
+  }, [company?.slug, isSuperAdmin]);
 
+  // ------------------------------------------------------------
+  // Data fetching
+  // ------------------------------------------------------------
   const fetchAds = async () => {
     try {
       setIsLoading(true);
-      const response = await getAds();
+      let response;
+      if (isCompanyAdmin) {
+        response = await getCompanyAds(company!.slug);
+      } else {
+        // Global ads for super admin / no company context
+        response = await getAds();
+      }
       const adsList = Array.isArray(response.data)
         ? response.data
         : response.data?.results || [];
@@ -789,6 +838,9 @@ export default function AdManagement() {
     }
   };
 
+  // ------------------------------------------------------------
+  // Handlers
+  // ------------------------------------------------------------
   const handleDeleteClick = (ad: Ad) => {
     if (isReadOnly) return;
     setAdToDelete(ad);
@@ -798,7 +850,11 @@ export default function AdManagement() {
   const confirmDelete = async () => {
     if (adToDelete && !isReadOnly) {
       try {
-        await deleteAd(adToDelete.id);
+        if (isCompanyAdmin) {
+          await deleteCompanyAd(company!.slug, adToDelete.id);
+        } else {
+          await deleteAd(adToDelete.id);
+        }
         setAds(ads.filter((ad) => ad.id !== adToDelete.id));
         showToast("success", "Advertisement deleted successfully");
       } catch (error) {
@@ -818,6 +874,7 @@ export default function AdManagement() {
     setTargetPages([]);
     setIsActive(true);
     setImageFile(null);
+    setImagePreview(null);
     setFormErrors({});
     setModalOpen(true);
   };
@@ -830,6 +887,7 @@ export default function AdManagement() {
     setTargetPages(ad.target_pages);
     setIsActive(ad.is_active);
     setImageFile(null);
+    setImagePreview(null);
     setFormErrors({});
     setModalOpen(true);
   };
@@ -857,10 +915,18 @@ export default function AdManagement() {
 
     try {
       if (editingId) {
-        await updateAd(editingId, formData);
+        if (isCompanyAdmin) {
+          await updateCompanyAd(company!.slug, editingId, formData);
+        } else {
+          await updateAd(editingId, formData);
+        }
         showToast("success", "Advertisement updated successfully");
       } else {
-        await createAd(formData);
+        if (isCompanyAdmin) {
+          await createCompanyAd(company!.slug, formData);
+        } else {
+          await createAd(formData);
+        }
         showToast("success", "New Advertisement created");
       }
       setModalOpen(false);
@@ -872,7 +938,18 @@ export default function AdManagement() {
     }
   };
 
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  // ------------------------------------------------------------
   // Filtering & Pagination
+  // ------------------------------------------------------------
   const filteredAds = ads.filter((ad) => {
     const matchesSearch = ad.title
       .toLowerCase()
@@ -903,6 +980,9 @@ export default function AdManagement() {
     return `https://backend-qine.activetechet.com/media/${image}`;
   };
 
+  // ------------------------------------------------------------
+  // Render
+  // ------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -910,61 +990,25 @@ export default function AdManagement() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="
-  
-    bg-white/80 backdrop-blur-md
-    rounded-2xl
-    -mt-2 pt-3 sm:pt-4 pb-3 px-3 sm:px-4
-    border-b border-gray-100
-    w-full
-    overflow-hidden
-  "
+          className="bg-white/80 backdrop-blur-md rounded-2xl -mt-2 pt-3 sm:pt-4 pb-3 px-3 sm:px-4 border-b border-gray-100 w-full overflow-hidden"
         >
           <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 min-w-0 w-full">
-            {/* Left Section */}
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h1
-                className="
-        text-base xs:text-xl sm:text-3xl
-        font-bold
-        bg-gradient-to-r from-gray-900 to-gray-600
-        bg-clip-text text-transparent
-        truncate leading-tight
-      "
-              >
-                Advertisments
+              <h1 className="text-base xs:text-xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent truncate leading-tight">
+                {isCompanyAdmin ? "My Company Ads" : "Advertisments"}
               </h1>
-
-              <p
-                className="
-        text-gray-500
-        text-[11px] xs:text-xs sm:text-sm
-        mt-0.5
-        truncate
-      "
-              >
-                Manage placements across your platform
+              <p className="text-gray-500 text-[11px] xs:text-xs sm:text-sm mt-0.5 truncate">
+                {isCompanyAdmin
+                  ? "Manage ads for your company"
+                  : "Manage placements across your platform"}
               </p>
             </div>
-
-            {/* Right Section */}
             {!isReadOnly && (
               <div className="shrink-0">
                 <Button
                   onClick={openCreateModal}
                   size="lg"
-                  className="
-            shadow-sm
-            inline-flex items-center justify-center
-            gap-1.5 sm:gap-2
-            px-2.5 xs:px-3 sm:px-4
-            py-2 sm:py-2.5
-            text-xs sm:text-sm
-            whitespace-nowrap
-            min-h-[28px] sm:min-h-[40px]
-            max-w-[140px] xs:max-w-none
-            overflow-hidden
-          "
+                  className="shadow-sm inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-nowrap min-h-[28px] sm:min-h-[40px] max-w-[140px] xs:max-w-none overflow-hidden"
                 >
                   <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                   <span className="truncate">New Ads</span>
@@ -973,8 +1017,9 @@ export default function AdManagement() {
             )}
           </div>
         </motion.div>
+
         {/* Stats Grid */}
-        <div className=" hidden xs:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="hidden xs:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
             title="Total Ads"
             value={totalCount}
@@ -993,12 +1038,6 @@ export default function AdManagement() {
             icon={ImageIcon}
             color="from-gray-500 to-gray-600"
           />
-          {/* <StatCard
-            title="Pages Targeted"
-            value={totalPagesTargeted}
-            icon={Target}
-            color="from-indigo-500 to-indigo-600"
-          /> */}
         </div>
 
         {/* Search & Filter */}
@@ -1036,14 +1075,14 @@ export default function AdManagement() {
           </>
         )}
 
-        {/* Floating Mobile Action Button (only if not read-only) */}
+        {/* Floating Mobile Action Button */}
         {!isReadOnly && (
           <motion.button
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             whileTap={{ scale: 0.9 }}
             onClick={openCreateModal}
-            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-secondary  text-white shadow-xl flex items-center justify-center z-40"
+            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-secondary text-white shadow-xl flex items-center justify-center z-40"
           >
             <Plus className="w-6 h-6" />
           </motion.button>
@@ -1079,7 +1118,7 @@ export default function AdManagement() {
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 text-secondary  rounded border-gray-300 focus:ring-[#674FA3]"
+                className="w-4 h-4 text-secondary rounded border-gray-300 focus:ring-[#674FA3]"
               />
               <label
                 htmlFor="isActive"
@@ -1097,56 +1136,88 @@ export default function AdManagement() {
             placeholder="https://example.com/offer"
           />
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">Ad Placements</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Ad Placements
+            </label>
             <div className="space-y-2">
-              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_home_page ? "opacity-50" : ""}`}>
-                <input 
-                  type="checkbox" 
+              <label
+                className={`flex items-center gap-2 ${
+                  !activeSub?.plan?.can_ad_home_page ? "opacity-50" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
                   checked={targetPages.includes("home")}
                   onChange={(e) => {
-                    if (e.target.checked) setTargetPages([...targetPages, "home"]);
-                    else setTargetPages(targetPages.filter(p => p !== "home"));
+                    if (e.target.checked)
+                      setTargetPages([...targetPages, "home"]);
+                    else
+                      setTargetPages(targetPages.filter((p) => p !== "home"));
                   }}
                   disabled={!activeSub?.plan?.can_ad_home_page}
-                  className="w-4 h-4 text-secondary rounded border-gray-300" 
+                  className="w-4 h-4 text-secondary rounded border-gray-300"
                 />
                 <span className="text-sm">Home Page</span>
-                {!activeSub?.plan?.can_ad_home_page && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">Requires Pro+</span>}
-              </label>
-              
-              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_companies_list ? "opacity-50" : ""}`}>
-                <input 
-                  type="checkbox" 
-                  checked={targetPages.includes("companies_list")}
-                  onChange={(e) => {
-                    if (e.target.checked) setTargetPages([...targetPages, "companies_list"]);
-                    else setTargetPages(targetPages.filter(p => p !== "companies_list"));
-                  }}
-                  disabled={!activeSub?.plan?.can_ad_companies_list}
-                  className="w-4 h-4 text-secondary rounded border-gray-300" 
-                />
-                <span className="text-sm">Companies List Page</span>
-                {!activeSub?.plan?.can_ad_companies_list && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">Requires Basic+</span>}
+                {!activeSub?.plan?.can_ad_home_page && (
+                  <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">
+                    Requires Pro+
+                  </span>
+                )}
               </label>
 
-              <label className={`flex items-center gap-2 ${!activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""}`}>
-                <input 
-                  type="checkbox" 
+              <label
+                className={`flex items-center gap-2 ${
+                  !activeSub?.plan?.can_ad_companies_list ? "opacity-50" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={targetPages.includes("companies_list")}
+                  onChange={(e) => {
+                    if (e.target.checked)
+                      setTargetPages([...targetPages, "companies_list"]);
+                    else
+                      setTargetPages(
+                        targetPages.filter((p) => p !== "companies_list"),
+                      );
+                  }}
+                  disabled={!activeSub?.plan?.can_ad_companies_list}
+                  className="w-4 h-4 text-secondary rounded border-gray-300"
+                />
+                <span className="text-sm">Companies List Page</span>
+                {!activeSub?.plan?.can_ad_companies_list && (
+                  <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">
+                    Requires Basic+
+                  </span>
+                )}
+              </label>
+
+              <label
+                className={`flex items-center gap-2 ${
+                  !activeSub?.plan?.can_ad_company_detail ? "opacity-50" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
                   checked={targetPages.includes("company_detail")}
                   onChange={(e) => {
-                    if (e.target.checked) setTargetPages([...targetPages, "company_detail"]);
-                    else setTargetPages(targetPages.filter(p => p !== "company_detail"));
+                    if (e.target.checked)
+                      setTargetPages([...targetPages, "company_detail"]);
+                    else
+                      setTargetPages(
+                        targetPages.filter((p) => p !== "company_detail"),
+                      );
                   }}
                   disabled={!activeSub?.plan?.can_ad_company_detail}
-                  className="w-4 h-4 text-secondary rounded border-gray-300" 
+                  className="w-4 h-4 text-secondary rounded border-gray-300"
                 />
                 <span className="text-sm">Company Detail Page</span>
               </label>
             </div>
           </div>
           <ImageUploader
-            onFileChange={setImageFile}
-            previewUrl={imageFile ? URL.createObjectURL(imageFile) : null}
+            onFileChange={handleImageChange}
+            previewUrl={imagePreview}
             existingImage={
               editingId ? ads.find((a) => a.id === editingId)?.image : undefined
             }

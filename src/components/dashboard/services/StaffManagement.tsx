@@ -110,7 +110,7 @@ const PageHeader = ({
       {/* Actions */}
       <div className="flex w-full items-center gap-2 sm:w-auto">
         {/* Refresh */}
-        <button
+        {/* <button
           type="button"
           onClick={onRefresh}
           className="
@@ -133,7 +133,7 @@ const PageHeader = ({
           title="Refresh staff data"
         >
           <RefreshCw className="h-4 w-4" />
-        </button>
+        </button> */}
 
         {/* Switch Company */}
         {isSuperAdmin && (
@@ -159,7 +159,7 @@ const PageHeader = ({
             aria-label="Switch company"
           >
             <Repeat className="h-4 w-4 shrink-0" />
-            <span>Switch Company</span>
+            <span className="">Switch</span>
           </button>
         )}
 
@@ -756,17 +756,7 @@ const handleEditSuccess = async () => {
 
   if (showSelector) {
     return (
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            Staff & Specialists
-          </h1>
-          <p className="text-sm text-gray-500">
-            Select a service business to manage its specialists.
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <CompanySelector
+      <CompanySelector
             companies={serviceCompanies}
             isLoading={isLoadingCompanies}
             onSelect={(slug: string, name: string) => {
@@ -779,8 +769,7 @@ const handleEditSuccess = async () => {
             }}
             onBack={clearCompany}
           />
-        </div>
-      </div>
+       
     );
   }
 
