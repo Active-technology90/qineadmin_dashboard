@@ -804,13 +804,6 @@ const DeliveryCard = ({
       setLoadingStaff(false);
     }
   };
-    } catch (err) {
-      console.error("Failed to fetch available delivery drivers", err);
-      showToast("error", "Failed to load delivery drivers");
-    } finally {
-      setLoadingStaff(false);
-    }
-  };
 
   useEffect(() => {
     if (showAssignForm) {
