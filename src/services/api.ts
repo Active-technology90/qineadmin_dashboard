@@ -741,10 +741,18 @@ export const getDeliveries = async (params?: {
   status?: string;
 }) => api.get<PaginatedResponse<Delivery>>("/deliveries/", { params });
 
-export const getAvailableDeliveryDrivers = async (companySlug: string) =>
+export const getAvailableDeliveryDrivers = async (
+  companySlug: string,
+  params?: {
+    vendor_order_id?: number;
+    driver_type?: "in_house" | "3pl" | "all" | string;
+    vehicle_type?: string;
+  }
+) =>
   api.get<AvailableDriver[]>("/deliveries/available-drivers/", {
-    params: { company_slug: companySlug },
+    params: { company_slug: companySlug, ...params },
   });
+
 
 // ========== USER SEARCH (for company admin) ==========
 export const searchUsers = async (query: string) =>

@@ -122,6 +122,7 @@ export interface Company {
   created_at?: string;
   chapa_sub_account_id?: string;
   minimum_order_total?: string;
+  maximum_cod_total?: string;
   latitude?: string;
   longitude?: string;
   delivery_fee_per_km?: string;
@@ -158,6 +159,7 @@ export interface CompanyListItem {
   address?: string;
   address_am?: string;
   minimum_order_total?: string;
+  maximum_cod_total?: string;
   latitude?: string;
   longitude?: string;
   delivery_fee_per_km?: string;
@@ -340,6 +342,20 @@ export interface AvailableDriver {
   last_lon?: number | null;
 }
 
+export interface DeliveryDispatchAttempt {
+  id: number;
+  driver: number;
+  driver_name?: string;
+  driver_phone?: string | null;
+  driver_image?: string | null;
+  logistics_company?: number | null;
+  logistics_company_name?: string | null;
+  status: "assigned" | "accepted" | "declined" | "reassigned" | string;
+  decline_reason?: string;
+  assigned_at: string;
+  responded_at?: string | null;
+}
+
 export interface Delivery {
   id: number;
   vendor_order: number;
@@ -354,9 +370,10 @@ export interface Delivery {
   logistics_company?: number | null;
   logistics_company_name?: string | null;
   is_3pl?: boolean;
-  decline_reason?: string;
-  tracking_id?: string;
   status?: string;
+  decline_reason?: string;
+  attempts?: DeliveryDispatchAttempt[];
+  tracking_id?: string;
   delivery_person_image?: string;
   customer_lat?: number;
   customer_lon?: number;
@@ -365,6 +382,7 @@ export interface Delivery {
   last_lat?: number;
   last_lon?: number;
 }
+
 
 export interface VendorOrder {
   id: number;

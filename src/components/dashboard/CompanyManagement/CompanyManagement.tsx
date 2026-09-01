@@ -199,6 +199,7 @@ const EMPTY_COMPANY_FORM: CompanyFormData = {
   description: "",
   description_am: "",
   minimum_order_total: "0.00",
+  maximum_cod_total: "0.00",
   latitude: "",
   longitude: "",
   delivery_fee_per_km: "0.00",
@@ -577,6 +578,7 @@ export default function CompanyManagement() {
           sub_category_name: company.sub_category_name,
           business_type: company.business_type,
           minimum_order_total: company.minimum_order_total || "0.00",
+          maximum_cod_total: company.maximum_cod_total || "0.00",
           latitude: company.latitude || "",
           longitude: company.longitude || "",
           delivery_fee_per_km: company.delivery_fee_per_km || "0.00",
@@ -613,6 +615,7 @@ export default function CompanyManagement() {
           description: companyListItem.description || "",
           description_am: (companyListItem as any).description_am || "",
           minimum_order_total: companyListItem.minimum_order_total || "0.00",
+          maximum_cod_total: companyListItem.maximum_cod_total || "0.00",
           latitude: companyListItem.latitude || "",
           longitude: companyListItem.longitude || "",
           delivery_fee_per_km: companyListItem.delivery_fee_per_km || "0.00",
@@ -700,6 +703,7 @@ export default function CompanyManagement() {
             description: first.description || "",
             description_am: (first as any).description_am || "",
             minimum_order_total: first.minimum_order_total || "0.00",
+            maximum_cod_total: first.maximum_cod_total || "0.00",
             latitude: first.latitude || "",
             longitude: first.longitude || "",
             delivery_fee_per_km: first.delivery_fee_per_km || "0.00",
@@ -873,6 +877,13 @@ export default function CompanyManagement() {
           )
         )
           return true;
+        if (
+          compareFloats(
+            formData.maximum_cod_total,
+            originalFormData.maximum_cod_total,
+          )
+        )
+          return true;
         if (compareFloats(formData.latitude, originalFormData.latitude))
           return true;
         if (compareFloats(formData.longitude, originalFormData.longitude))
@@ -984,6 +995,10 @@ export default function CompanyManagement() {
       formPayload.append(
         "minimum_order_total",
         formData.minimum_order_total || "0.00",
+      );
+      formPayload.append(
+        "maximum_cod_total",
+        formData.maximum_cod_total || "0.00",
       );
       if (formData.latitude) formPayload.append("latitude", formData.latitude);
       if (formData.longitude)
@@ -1241,6 +1256,7 @@ export default function CompanyManagement() {
         description: company.description || "",
         description_am: (company as any).description_am || "",
         minimum_order_total: company.minimum_order_total || "0.00",
+        maximum_cod_total: company.maximum_cod_total || "0.00",
         latitude: company.latitude || "",
         longitude: company.longitude || "",
         delivery_fee_per_km: company.delivery_fee_per_km || "0.00",

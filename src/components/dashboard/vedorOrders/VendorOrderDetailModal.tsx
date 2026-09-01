@@ -38,6 +38,9 @@ import {
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
 import { CustomSelect } from "../../ui/CustomSelect";
+import { db } from "../../../services/firebase";
+import { ref, onValue, off } from "firebase/database";
+
 
 // ---------- Animation Variants ----------
 const containerVariants = {
@@ -328,6 +331,13 @@ const DeliveryCard = ({
   const [ratingMap, setRatingMap] = useState<
     Map<string, { average_rating: string; total_reviews: number }>
   >(new Map());
+  const [driverLocations, setDriverLocations] = useState<
+    Record<
+      number,
+      { latitude: number; longitude: number; is_online?: boolean; updated_at?: number }
+    >
+  >({});
+
   const delivery = order.delivery;
   const canManage = !readOnly && order.status?.toLowerCase() === "processing";
 
@@ -364,15 +374,121 @@ const DeliveryCard = ({
     return `⭐ ${rating} (${reviews})`;
   };
 
-  const staffOptions = staffList.map((s) => {
-    const vehicle = s.vehicle_type ? ` ${getVehicleIcon(s.vehicle_type)}` : "";
-    const badge = s.is_in_house ? "[In-House]" : `[${s.company_name || "3PL"}]`;
-    const distance = s.distance_km != null ? ` • ${s.distance_km} km` : "";
-    return {
-      value: String(s.id),
-      label: `${badge}${vehicle} ${s.name} (${s.phone || "No Phone"})${distance} — ${renderRating(s.average_rating, s.total_reviews)}`,
+  // Helper to compute great-circle distance in km on client
+  const haversineKm = (
+    lat1?: number,
+    lon1?: number,
+    lat2?: number,
+    lon2?: number
+  ) => {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null)
+      return null;
+    const R = 6371; // Earth radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10;
+  };
+
+  // Subscribe to real-time live GPS for eligible drivers via Firebase drivers/{driverId}
+  useEffect(() => {
+    if (!showAssignForm || staffList.length === 0) return;
+    const cleanups: Array<() => void> = [];
+
+    staffList.forEach((driver) => {
+      const driverRef = ref(db, `drivers/${driver.id}`);
+      const callback = (snapshot: any) => {
+        const data = snapshot.val();
+        if (data && data.latitude != null && data.longitude != null) {
+          setDriverLocations((prev) => ({
+            ...prev,
+            [driver.id]: data,
+          }));
+        }
+      };
+      onValue(driverRef, callback);
+      cleanups.push(() => off(driverRef, "value", callback));
+    });
+
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
     };
-  });
+  }, [showAssignForm, staffList]);
+
+  // Compute live proximity options
+  const staffOptions = useMemo(() => {
+    const storeLat = order.company?.latitude
+      ? Number(order.company.latitude)
+      : undefined;
+    const storeLon = order.company?.longitude
+      ? Number(order.company.longitude)
+      : undefined;
+
+    const augmented = staffList.map((s) => {
+      const liveLoc = driverLocations[s.id];
+      let liveDistance = s.distance_km;
+      let isLive = false;
+
+      if (
+        liveLoc &&
+        liveLoc.latitude != null &&
+        liveLoc.longitude != null &&
+        storeLat != null &&
+        storeLon != null
+      ) {
+        liveDistance = haversineKm(
+          storeLat,
+          storeLon,
+          Number(liveLoc.latitude),
+          Number(liveLoc.longitude)
+        );
+        isLive = true;
+      }
+
+      return {
+        ...s,
+        liveDistance,
+        isLive,
+        isOnline: liveLoc ? liveLoc.is_online !== false : true,
+      };
+    });
+
+    // Sort: In-house first, then by closest live distance
+    augmented.sort((a, b) => {
+      const rankA = a.is_in_house ? 0 : 1;
+      const rankB = b.is_in_house ? 0 : 1;
+      if (rankA !== rankB) return rankA - rankB;
+
+      const distA = a.liveDistance != null ? a.liveDistance : 999999;
+      const distB = b.liveDistance != null ? b.liveDistance : 999999;
+      return distA - distB;
+    });
+
+    return augmented.map((s) => {
+      const vehicle = s.vehicle_type ? ` ${getVehicleIcon(s.vehicle_type)}` : "";
+      const badge = s.is_in_house ? "[In-House]" : `[${s.company_name || "3PL"}]`;
+      const distLabel =
+        s.liveDistance != null
+          ? ` • ${s.liveDistance} km${s.isLive ? " (Live)" : ""}`
+          : "";
+      return {
+        value: String(s.id),
+        label: `${badge}${vehicle} ${s.name} (${s.phone || "No Phone"})${distLabel} — ${renderRating(s.average_rating, s.total_reviews)}`,
+      };
+    });
+  }, [
+    staffList,
+    driverLocations,
+    order.company?.latitude,
+    order.company?.longitude,
+  ]);
+
 
   // ── Get order cancellation/failure reason ──
   const getOrderFailureReason = () => {
@@ -425,8 +541,11 @@ const DeliveryCard = ({
     if (!order.company?.slug) return; // still need a company slug
     const fetchStaff = async () => {
       try {
-        const res = await getAvailableDeliveryDrivers(order.company.slug!);
+        const res = await getAvailableDeliveryDrivers(order.company.slug!, {
+          vendor_order_id: order.id,
+        });
         const rawList = res.data || [];
+
         const mapped = rawList.map((s: any) => ({
           id: s.id,
           name: `${s.name || s.username || ""}`.trim(),
@@ -641,9 +760,69 @@ const DeliveryCard = ({
                         </div>
                       </div>
                     )}
-                    {/* <div className="mt-1">
-                    <span className={getStatusBadge(delivery.status)}>{delivery.status?.replace(/_/g, " ")}</span>
-                  </div> */}
+                    {/* ── DISPATCH ATTEMPTS HISTORY ── */}
+                    {delivery?.attempts && delivery.attempts.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <History className="h-3 w-3 text-gray-400" /> Dispatch History ({delivery.attempts.length})
+                        </p>
+                        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                          {delivery.attempts.map((att: any) => {
+                            const isDeclined = att.status === "declined";
+                            const isAccepted = att.status === "accepted";
+                            const isReassigned = att.status === "reassigned";
+                            return (
+                              <div
+                                key={att.id}
+                                className={`text-[11px] p-2 rounded-lg flex items-start justify-between gap-2 border ${
+                                  isDeclined
+                                    ? "bg-rose-50/70 border-rose-200 text-rose-800"
+                                    : isAccepted
+                                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-800"
+                                    : isReassigned
+                                    ? "bg-gray-50 border-gray-200 text-gray-600"
+                                    : "bg-blue-50/70 border-blue-200 text-blue-800"
+                                }`}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap font-semibold">
+                                    <span>{att.driver_name || `Driver #${att.driver}`}</span>
+                                    {att.logistics_company_name && (
+                                      <span className="text-[9px] font-medium px-1.5 py-0.2 bg-white rounded border border-current">
+                                        {att.logistics_company_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {att.decline_reason && (
+                                    <p className="text-[10px] italic mt-0.5 opacity-90 truncate">
+                                      "{att.decline_reason}"
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                                    isDeclined
+                                      ? "bg-rose-200 text-rose-900"
+                                      : isAccepted
+                                      ? "bg-emerald-200 text-emerald-900"
+                                      : isReassigned
+                                      ? "bg-gray-200 text-gray-800"
+                                      : "bg-blue-200 text-blue-900"
+                                  }`}>
+                                    {att.status}
+                                  </span>
+                                  {att.assigned_at && (
+                                    <p className="text-[9px] text-gray-400 mt-0.5">
+                                      {new Date(att.assigned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {deliveryStatus ||
                     ((canManage || cod) && (
@@ -655,6 +834,7 @@ const DeliveryCard = ({
                       </button>
                     ))}
                 </div>
+
               ) : (
                 <div className="text-center py-2">
                   <p className="text-xs text-gray-400 mb-3 italic">
@@ -1568,19 +1748,7 @@ export function VendorOrderDetailModal({
                           </p>
                           {order.fulfillment_type === "pickup" && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                />
-                              </svg>
+                              
                               Self Pickup
                             </span>
                           )}

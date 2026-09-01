@@ -19,6 +19,7 @@ export interface CompanyFormData {
   description: string;
   description_am: string;
   minimum_order_total: string;
+  maximum_cod_total: string;
   latitude: string;
   longitude: string;
   delivery_fee_per_km: string;
@@ -410,7 +411,7 @@ export default function CompanyForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className={labelClassName}>Minimum Order Total</label>
           <input
@@ -418,6 +419,17 @@ export default function CompanyForm({
             placeholder="0.00"
             value={formData.minimum_order_total}
             onChange={(e) => setFormData({ ...formData, minimum_order_total: e.target.value })}
+            disabled={!isEditingActive}
+            className={inputClassName()}
+          />
+        </div>
+        <div>
+          <label className={labelClassName}>Maximum COD Limit</label>
+          <input
+            type="text"
+            placeholder="0.00 (0 for unlimited)"
+            value={formData.maximum_cod_total}
+            onChange={(e) => setFormData({ ...formData, maximum_cod_total: e.target.value })}
             disabled={!isEditingActive}
             className={inputClassName()}
           />
@@ -871,6 +883,10 @@ export default function CompanyForm({
           <div>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">Minimum Order Total</p>
             <p className="text-sm font-semibold text-gray-900">{formData.minimum_order_total || "0.00"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Maximum COD Limit</p>
+            <p className="text-sm font-semibold text-gray-900">{formData.maximum_cod_total || "0.00 (Unlimited)"}</p>
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">Delivery Fee/KM</p>
