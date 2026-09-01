@@ -266,6 +266,12 @@ export default function DeliveryTrackingMap({
   const [firebaseData, setFirebaseData] = useState<
     Record<number, FirebaseDriverData>
   >({});
+  const [driverLocations, setDriverLocations] = useState<
+    Record<
+      number,
+      { latitude: number; longitude: number; heading?: number; is_online?: boolean; updated_at?: number }
+    >
+  >({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<AvailableDriver[]>([]);
@@ -405,82 +411,11 @@ export default function DeliveryTrackingMap({
       const fetchDrivers = async () => {
         setLoadingDrivers(true);
         try {
-          const [inHouseRes, thirdPartyRes] = await Promise.all([
-            getAvailableDeliveryDrivers(selectedOrder.company.slug, true),
-            getAvailableDeliveryDrivers(selectedOrder.company.slug, false),
-          ]);
-          
-          const allDrivers = [
-            ...(inHouseRes.data || []),
-            ...(thirdPartyRes.data || []),
-          ];
-          
-          // Map and enhance with distance calculations
-          const customerLoc = getCustomerLocation(selectedOrder);
-          const mappedDrivers = allDrivers.map((d: any) => {
-            let distance = null;
-            let locationSource = null;
-            
-            if (customerLoc) {
-              // Check for live location from Firebase
-              const liveLoc = getDriverLiveLocationFromFirebase(d.id);
-              if (liveLoc && isValidCoordinate(liveLoc.lat, liveLoc.lon)) {
-                distance = haversine(
-                  customerLoc.lat,
-                  customerLoc.lon,
-                  liveLoc.lat,
-                  liveLoc.lon
-                );
-                locationSource = 'live';
-              } else if (d.current_lat != null && d.current_lng != null) {
-                const lat = parseFloat(d.current_lat);
-                const lng = parseFloat(d.current_lng);
-                if (isValidCoordinate(lat, lng)) {
-                  distance = haversine(customerLoc.lat, customerLoc.lon, lat, lng);
-                  locationSource = 'current';
-                }
-              } else if (d.last_lat != null && d.last_lon != null) {
-                const lat = parseFloat(d.last_lat);
-                const lng = parseFloat(d.last_lon);
-                if (isValidCoordinate(lat, lng)) {
-                  distance = haversine(customerLoc.lat, customerLoc.lon, lat, lng);
-                  locationSource = 'last_known';
-                }
-              } else if (d.distance_km != null) {
-                distance = parseFloat(d.distance_km);
-                locationSource = 'api';
-              }
-            }
-            
-            return {
-              id: d.id,
-              name: d.name || d.username || "Unknown Driver",
-              username: d.username,
-              phone: d.phone,
-              vehicle_type: d.vehicle_type,
-              is_in_house: d.is_in_house,
-              company_name: d.company_name,
-              current_lat: d.current_lat,
-              current_lng: d.current_lng,
-              last_lat: d.last_lat,
-              last_lon: d.last_lon,
-              distance_km: distance,
-              location_source: locationSource,
-              average_rating: d.average_rating,
-              total_reviews: d.total_reviews,
-              profile_image: d.profile_image,
-            };
+          const res = await getAvailableDeliveryDrivers(selectedOrder.company.slug!, {
+            vendor_order_id: selectedOrder.id,
           });
-          
-          // Sort by distance (nearest first)
-          mappedDrivers.sort((a: any, b: any) => {
-            if (a.distance_km == null && b.distance_km == null) return 0;
-            if (a.distance_km == null) return 1;
-            if (b.distance_km == null) return -1;
-            return a.distance_km - b.distance_km;
-          });
-          
-          setAvailableDrivers(mappedDrivers);
+          const allDrivers = res.data || [];
+          setAvailableDrivers(allDrivers);
         } catch (err) {
           console.error("Failed to fetch available drivers", err);
           showToast("error", "Failed to load available drivers");
@@ -491,28 +426,96 @@ export default function DeliveryTrackingMap({
       
       fetchDrivers();
     }
-  }, [mode, selectedOrder, selectedOrder?.company?.slug]);
+  }, [mode, selectedOrder?.id, selectedOrder?.company?.slug]);
 
-  // Helper to get driver location from Firebase
-  const getDriverLiveLocationFromFirebase = (driverId: number) => {
-    // Search through firebaseData for matching driver
-    for (const [orderId, data] of Object.entries(firebaseData)) {
-      // Check if this order's driver matches
-      const order = combinedOrders.find(o => o.id === parseInt(orderId));
-      if (order?.delivery?.delivery_person_id === driverId) {
-        if (data.lat != null && data.lon != null) {
-          return { lat: data.lat, lon: data.lon };
+  // ── Firebase candidate drivers dynamic subscriptions ────────────────
+  useEffect(() => {
+    if (mode !== "driver_selection" || !availableDrivers.length) return;
+    const cleanups: Array<() => void> = [];
+
+    availableDrivers.forEach((driver) => {
+      const driverRef = ref(db, `drivers/${driver.id}`);
+      const callback = (snapshot: any) => {
+        const data = snapshot.val();
+        if (data && data.latitude != null && data.longitude != null) {
+          setDriverLocations((prev) => ({
+            ...prev,
+            [driver.id]: data,
+          }));
         }
+      };
+      onValue(driverRef, callback);
+      cleanups.push(() => off(driverRef, "value", callback));
+    });
+
+    return () => {
+      cleanups.forEach((c) => c());
+    };
+  }, [mode, availableDrivers]);
+
+  // Helper to get driver location from Firebase (presence or tracking)
+  const getDriverLiveLocationFromFirebase = useCallback(
+    (driverId: number) => {
+      // 1. Direct candidate driver presence from Firebase `drivers/{driverId}`
+      const directLoc = driverLocations[driverId];
+      if (directLoc && directLoc.latitude != null && directLoc.longitude != null) {
+        return {
+          lat: Number(directLoc.latitude),
+          lon: Number(directLoc.longitude),
+          heading: directLoc.heading,
+          is_online: directLoc.is_online !== false,
+        };
+      }
+
+      // 2. Active order tracking from Firebase `deliveries/{tracking_id}`
+      for (const [orderId, data] of Object.entries(firebaseData)) {
+        const order = combinedOrders.find((o) => o.id === parseInt(orderId));
+        if (order?.delivery?.delivery_person_id === driverId) {
+          if (data.lat != null && data.lon != null) {
+            return {
+              lat: Number(data.lat),
+              lon: Number(data.lon),
+              heading: data.heading,
+              is_online: true,
+            };
+          }
+        }
+      }
+      return null;
+    },
+    [driverLocations, firebaseData, combinedOrders]
+  );
+
+  // Get customer location
+  const getCustomerLocation = (order: any) => {
+    const delivery = order?.delivery;
+    const lat =
+      delivery?.customer_lat ||
+      order?.customer_lat ||
+      order?.shipping_address_ref?.latitude ||
+      order?.shipping_lat ||
+      order?.delivery_address?.lat ||
+      order?.vendor_order_detail?.customer_lat;
+    const lon =
+      delivery?.customer_lon ||
+      order?.customer_lon ||
+      order?.shipping_address_ref?.longitude ||
+      order?.shipping_lon ||
+      order?.delivery_address?.lon ||
+      order?.vendor_order_detail?.customer_lon;
+    if (lat != null && lon != null) {
+      const parsedLat = parseFloat(lat);
+      const parsedLon = parseFloat(lon);
+      if (isValidCoordinate(parsedLat, parsedLon)) {
+        return { lat: parsedLat, lon: parsedLon };
       }
     }
     return null;
   };
 
-  // Get customer location
-  const getCustomerLocation = (order: any) => {
-    const delivery = order?.delivery;
-    const lat = delivery?.customer_lat || order?.customer_lat || order?.delivery_address?.lat;
-    const lon = delivery?.customer_lon || order?.customer_lon || order?.delivery_address?.lon;
+  const getStoreLocation = (order: any) => {
+    const lat = order?.company?.latitude;
+    const lon = order?.company?.longitude;
     if (lat != null && lon != null) {
       const parsedLat = parseFloat(lat);
       const parsedLon = parseFloat(lon);
@@ -533,6 +536,96 @@ export default function DeliveryTrackingMap({
       lon <= 180
     );
   };
+
+  // ── Compute enhanced drivers with real-time Firebase distance ──────
+  const enhancedDrivers = useMemo(() => {
+    const storeLat = selectedOrder?.company?.latitude
+      ? parseFloat(selectedOrder.company.latitude)
+      : null;
+    const storeLon = selectedOrder?.company?.longitude
+      ? parseFloat(selectedOrder.company.longitude)
+      : null;
+    const custLoc = getCustomerLocation(selectedOrder);
+    const refLoc =
+      storeLat != null && storeLon != null && isValidCoordinate(storeLat, storeLon)
+        ? { lat: storeLat, lon: storeLon }
+        : custLoc;
+
+    const mapped = availableDrivers.map((d: any) => {
+      let distance = null;
+      let locationSource = null;
+      let isLive = false;
+      let currentLat = d.current_lat != null ? parseFloat(d.current_lat) : null;
+      let currentLng = d.current_lng != null ? parseFloat(d.current_lng) : null;
+
+      const liveLoc = getDriverLiveLocationFromFirebase(d.id);
+      if (liveLoc && isValidCoordinate(liveLoc.lat, liveLoc.lon)) {
+        currentLat = liveLoc.lat;
+        currentLng = liveLoc.lon;
+        isLive = true;
+        locationSource = "live";
+        if (refLoc) {
+          distance = haversine(refLoc.lat, refLoc.lon, liveLoc.lat, liveLoc.lon);
+        }
+      } else if (currentLat != null && currentLng != null && isValidCoordinate(currentLat, currentLng)) {
+        if (refLoc) distance = haversine(refLoc.lat, refLoc.lon, currentLat, currentLng);
+        locationSource = "current";
+      } else if (d.last_lat != null && d.last_lon != null) {
+        const lastLat = parseFloat(d.last_lat);
+        const lastLon = parseFloat(d.last_lon);
+        if (isValidCoordinate(lastLat, lastLon)) {
+          if (refLoc) distance = haversine(refLoc.lat, refLoc.lon, lastLat, lastLon);
+          locationSource = "last_known";
+        }
+      } else if (d.distance_km != null) {
+        distance = parseFloat(d.distance_km);
+        locationSource = "api";
+      }
+
+      return {
+        ...d,
+        current_lat: currentLat,
+        current_lng: currentLng,
+        distance_km: distance != null ? Math.round(distance * 10) / 10 : null,
+        location_source: locationSource,
+        isLive,
+      };
+    });
+
+    mapped.sort((a: any, b: any) => {
+      const distA = a.distance_km != null ? a.distance_km : 999999;
+      const distB = b.distance_km != null ? b.distance_km : 999999;
+      if (distA !== distB) return distA - distB;
+      const rankA = a.is_in_house ? 0 : 1;
+      const rankB = b.is_in_house ? 0 : 1;
+      return rankA - rankB;
+    });
+
+    return mapped;
+  }, [availableDrivers, driverLocations, firebaseData, selectedOrder, getDriverLiveLocationFromFirebase]);
+
+  // ── Filter available drivers ──────────────────────────────────────
+  const filteredAvailableDrivers = useMemo(() => {
+    let filtered = [...enhancedDrivers];
+    
+    if (driverFilter === "in_house") {
+      filtered = filtered.filter((d) => d.is_in_house === true);
+    } else if (driverFilter === "third_party") {
+      filtered = filtered.filter((d) => d.is_in_house === false);
+    }
+    
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter((d) =>
+        d.name?.toLowerCase().includes(search) ||
+        d.phone?.toLowerCase().includes(search) ||
+        d.username?.toLowerCase().includes(search) ||
+        d.company_name?.toLowerCase().includes(search)
+      );
+    }
+    
+    return filtered;
+  }, [enhancedDrivers, driverFilter, searchTerm]);
 
   // ── Groupings ──────────────────────────────────────────────────────
   const customerGroups = useMemo(() => {
@@ -960,7 +1053,7 @@ export default function DeliveryTrackingMap({
       driverMarkers.current.clear();
       
       // Add available drivers as markers
-      availableDrivers.forEach((driver, index) => {
+      filteredAvailableDrivers.forEach((driver, index) => {
         const color = getDriverColor(index);
         const isPending = pendingDriverId === driver.id;
         const isSelected = selectedDriverId === driver.id;
@@ -1144,6 +1237,13 @@ export default function DeliveryTrackingMap({
             maxZoom: 15,
             animate: false,
           });
+        } else if (mapRef.current) {
+          const storeLoc = getStoreLocation(selectedOrder);
+          if (storeLoc) {
+            mapRef.current.setView([storeLoc.lat, storeLoc.lon], 14);
+          } else {
+            mapRef.current.setView([9.014046, 38.7871437], 13);
+          }
         }
         initialFitDone.current = true;
       }, 500);
@@ -1171,7 +1271,8 @@ export default function DeliveryTrackingMap({
     mode,
     selectedOrderId,
     selectedOrder,
-    availableDrivers,
+    filteredAvailableDrivers,
+    driverLocations,
     pendingDriverId,
     selectedDriverId,
   ]);
@@ -1182,7 +1283,7 @@ export default function DeliveryTrackingMap({
     setShowConfirmPanel(true);
     
     // Center map on the selected driver
-    const driver = availableDrivers.find(d => d.id === driverId);
+    const driver = enhancedDrivers.find(d => d.id === driverId);
     if (driver && mapRef.current) {
       let lat = null;
       let lng = null;
@@ -1300,28 +1401,6 @@ export default function DeliveryTrackingMap({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isSidebarOpen, toggleSidebar, onClose, showConfirmPanel]);
-
-  // ── Filter available drivers ──────────────────────────────────────
-  const filteredAvailableDrivers = useMemo(() => {
-    let filtered = [...availableDrivers];
-    
-    if (driverFilter === "in_house") {
-      filtered = filtered.filter((d) => d.is_in_house === true);
-    } else if (driverFilter === "third_party") {
-      filtered = filtered.filter((d) => d.is_in_house === false);
-    }
-    
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter((d) =>
-        d.name?.toLowerCase().includes(search) ||
-        d.phone?.toLowerCase().includes(search) ||
-        d.username?.toLowerCase().includes(search)
-      );
-    }
-    
-    return filtered;
-  }, [availableDrivers, driverFilter, searchTerm]);
 
   // ── Render sidebar ────────────────────────────────────────────────
   const renderSidebar = useCallback(() => {
@@ -1843,10 +1922,9 @@ export default function DeliveryTrackingMap({
             </div>
           )}
           {!loading && !error && mode === "driver_selection" && selectedOrder && !getCustomerLocation(selectedOrder) && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-6">
-              <MapPin className="h-16 w-16 text-red-400 mb-4" />
-              <h3 className="font-bold text-gray-800 text-lg mb-2">Customer location unavailable</h3>
-              <p className="text-sm text-gray-500">No valid coordinates found for this delivery.</p>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-amber-500/95 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2 border border-white/20 pointer-events-none">
+              <MapPin className="h-3.5 w-3.5" />
+              <span>Customer GPS coordinates not set · Showing available drivers near store</span>
             </div>
           )}
           <div ref={containerRef} className="w-full h-full z-0" />
@@ -1855,9 +1933,9 @@ export default function DeliveryTrackingMap({
           {showConfirmPanel && pendingDriverId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 animate-in slide-in-from-bottom-4 duration-300">
               {(() => {
-                const driver = availableDrivers.find(d => d.id === pendingDriverId);
+                const driver = enhancedDrivers.find(d => d.id === pendingDriverId) || availableDrivers.find(d => d.id === pendingDriverId);
                 if (!driver) return null;
-                const color = getDriverColor(availableDrivers.indexOf(driver));
+                const color = getDriverColor(enhancedDrivers.indexOf(driver));
                 const hasLocation = driver.distance_km != null;
                 
                 return (
