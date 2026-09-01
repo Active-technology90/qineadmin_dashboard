@@ -38,9 +38,9 @@ import type {
   IntakeFormField,
 } from "../types";
 
-// const API_URL = import.meta.env.VITE_API_URL || "";
+const API_URL = import.meta.env.VITE_API_URL || "";
 // const API_URL = "http://localhost:8000/api/v1/";
-const API_URL = "https://backend.elilitapp.com/api/v1/";
+// const API_URL = "https://backend.elilitapp.com/api/v1/";
 
 
 const api = axios.create({
@@ -743,15 +743,24 @@ export const getDeliveries = async (params?: {
 
 export const getAvailableDeliveryDrivers = async (
   companySlug: string,
-  params?: {
-    vendor_order_id?: number;
-    driver_type?: "in_house" | "3pl" | "all" | string;
-    vehicle_type?: string;
+  paramsOrInHouse?:
+    | {
+        vendor_order_id?: number;
+        driver_type?: "in_house" | "3pl" | "all" | string;
+        vehicle_type?: string;
+      }
+    | boolean
+) => {
+  let queryParams: Record<string, any> = { company_slug: companySlug };
+  if (typeof paramsOrInHouse === "boolean") {
+    queryParams.driver_type = paramsOrInHouse ? "in_house" : "3pl";
+  } else if (paramsOrInHouse && typeof paramsOrInHouse === "object") {
+    Object.assign(queryParams, paramsOrInHouse);
   }
-) =>
-  api.get<AvailableDriver[]>("/deliveries/available-drivers/", {
-    params: { company_slug: companySlug, ...params },
+  return api.get<AvailableDriver[]>("/deliveries/available-drivers/", {
+    params: queryParams,
   });
+};
 
 
 // ========== USER SEARCH (for company admin) ==========
