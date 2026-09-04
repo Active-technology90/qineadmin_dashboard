@@ -1,5 +1,5 @@
 // VendorOrderDetailModal.tsx - Complete rewrite with View on Map
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -28,6 +28,7 @@ import {
   Clock,
   Users,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import {
   getAvailableDeliveryDrivers,
@@ -292,1138 +293,1387 @@ const CopyButton = ({ text }: { text?: string | null }) => {
 };
 
 // ─── DELIVERY CARD WITH VIEW ON MAP ──────────────────────────────
-const DeliveryCard = ({
-  order,
-  onUpdate,
-  readOnly,
-  onOpenLiveTracking,
-  liveDriverLocations = {},
-  onViewOnMap, // New prop
-}: any) => {
-  const [staffList, setStaffList] = useState<any[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | "">("");
-  const [assigning, setAssigning] = useState(false);
-  const [showAssignForm, setShowAssignForm] = useState(false);
-  const [filterType, setFilterType] = useState<"all" | "in_house" | "third_party">("all");
-  const [loadingStaff, setLoadingStaff] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+const DeliveryCard = ({ 
+  order, 
+  onUpdate, 
+  readOnly, 
+  onOpenLiveTracking, 
+  liveDriverLocations = {}, 
+  onViewOnMap, 
+}: any) => { 
+  const [staffList, setStaffList] = useState<any[]>([]); 
+  const [selectedUserId, setSelectedUserId] = useState<number | "">(""); 
+  const [assigning, setAssigning] = useState(false); 
+  const [showAssignForm, setShowAssignForm] = useState(false); 
+  const [filterType, setFilterType] = useState<"all" | "in_house" | "third_party">("all"); 
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState<"all" | "motorcycle" | "car" | "bicycle" | "van" | "foot">("all"); 
+  const [loadingStaff, setLoadingStaff] = useState(false); 
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [showDriverTypeFilter, setShowDriverTypeFilter] = useState(false); 
+  const [showVehicleTypeFilter, setShowVehicleTypeFilter] = useState(false); 
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [sortBy, setSortBy] = useState<"distance" | "rating" | "name">("distance"); 
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc"); 
+  const [routeData, setRouteData] = useState<Record<number, { distanceKm: number | null; durationMinutes: number | null; loading: boolean; error?: boolean }>>({}); 
+  const [showMapPreview, setShowMapPreview] = useState(false); 
 
-  const [usernameMap, setUsernameMap] = useState<Map<string, string>>(
-    new Map(),
-  );
-  const { showToast } = useToast();
-  const [showFullscreenImage, setShowFullscreenImage] = useState(false);
-  const [ratingMap, setRatingMap] = useState<
-    Map<string, { average_rating: string; total_reviews: number }>
-  >(new Map());
-  const [driverLocations, setDriverLocations] = useState<
-    Record<
-      number,
-      { latitude: number; longitude: number; is_online?: boolean; updated_at?: number }
-    >
-  >({});
-  const delivery = order.delivery;
-  const canManage = !readOnly && order.status?.toLowerCase() === "processing";
-  const cod = order.payment_method === "cod";
-  const deliveryStatus = delivery?.status?.toLowerCase() === "picked_up";
+  const [usernameMap, setUsernameMap] = useState<Map<string, string>>( 
+    new Map(), 
+  ); 
+  const { showToast } = useToast(); 
+  const [showFullscreenImage, setShowFullscreenImage] = useState(false); 
+  const [ratingMap, setRatingMap] = useState< 
+    Map<string, { average_rating: string; total_reviews: number }> 
+  >(new Map()); 
+  const [driverLocations, setDriverLocations] = useState< 
+    Record< 
+      number, 
+      { latitude: number; longitude: number; is_online?: boolean; updated_at?: number } 
+    > 
+  >({}); 
+  const delivery = order.delivery; 
+  const canManage = !readOnly && order.status?.toLowerCase() === "processing"; 
+  const cod = order.payment_method === "cod"; 
+  const deliveryStatus = delivery?.status?.toLowerCase() === "picked_up"; 
 
-  // Helper function to calculate distance between two coordinates
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+  // OSRM route cache ref
+  const routeCacheRef = useRef<Map<string, { distanceKm: number; durationMinutes: number; timestamp: number }>>(new Map());
+  const routeRequestTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
-  const isValidCoordinate = (lat: number, lon: number): boolean => {
-    return (
-      Number.isFinite(lat) &&
-      Number.isFinite(lon) &&
-      lat >= -90 &&
-      lat <= 90 &&
-      lon >= -180 &&
-      lon <= 180
-    );
-  };
+  // Helper function to calculate distance between two coordinates 
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => { 
+    const R = 6371; 
+    const dLat = ((lat2 - lat1) * Math.PI) / 180; 
+    const dLon = ((lon2 - lon1) * Math.PI) / 180; 
+    const a = 
+      Math.sin(dLat / 2) ** 2 + 
+      Math.cos((lat1 * Math.PI) / 180) * 
+        Math.cos((lat2 * Math.PI) / 180) * 
+        Math.sin(dLon / 2) ** 2; 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+    return R * c; 
+  }; 
 
-  const getCustomerLocation = () => {
-    const lat = delivery?.customer_lat || order?.customer_lat || order?.delivery_address?.lat;
-    const lon = delivery?.customer_lon || order?.customer_lon || order?.delivery_address?.lon;
-    if (lat != null && lon != null) {
-      const parsedLat = parseFloat(lat);
-      const parsedLon = parseFloat(lon);
-      if (isValidCoordinate(parsedLat, parsedLon)) {
-        return { lat: parsedLat, lon: parsedLon };
-      }
-    }
-    return null;
-  };
+  const isValidCoordinate = (lat: number, lon: number): boolean => { 
+    return ( 
+      Number.isFinite(lat) && 
+      Number.isFinite(lon) && 
+      lat >= -90 && 
+      lat <= 90 && 
+      lon >= -180 && 
+      lon <= 180 
+    ); 
+  }; 
 
-  const mockDrivers = [
-    {
-      id: 12,
-      name: "goliad bekila",
-      username: "goliad",
-      phone: "0942199009",
-      profile_image: null,
-      average_rating: "0.00",
-      total_reviews: 0,
-      vehicle_type: "motorcycle",
-      company_id: 10,
-      company_name: "Elfiya Flour Factory",
-      company_slug: "elfiya-flour-factory",
-      is_in_house: true,
-      distance_km: 2.5,
-      last_lat: 8.9806,
-      last_lon: 38.7578,
-      current_lat: 9.0107,
-      current_lng: 38.7613,
-    },
-    {
-      id: 13,
-      name: "bemo tes",
-      username: "bemo",
-      phone: "0989876765",
-      profile_image: null,
-      average_rating: "4.00",
-      total_reviews: 1,
-      vehicle_type: "motorcycle",
-      company_id: 10,
-      company_name: "Elfiya Flour Factory",
-      company_slug: "elfiya-flour-factory",
-      is_in_house: true,
-      distance_km: 1.8,
-      last_lat: 9.0107,
-      last_lon: 38.7613,
-      current_lat: 9.0107,
-      current_lng: 38.7613,
-    },
-    {
-      id: 18,
-      name: "Chala Bekele",
-      username: "yango_rider_1",
-      phone: "+251911223344",
-      profile_image: null,
-      average_rating: "0.00",
-      total_reviews: 0,
-      vehicle_type: "motorcycle",
-      company_id: 48,
-      company_name: "Yango Logistics",
-      company_slug: "yango-logistics",
-      is_in_house: false,
-      distance_km: 3.2,
-      last_lat: 9.0321,
-      last_lon: 38.7519,
-      current_lat: 9.0321,
-      current_lng: 38.7519,
-    },
-    {
-      id: 19,
-      name: "Abebe Kebede",
-      username: "ride_ethiopia_1",
-      phone: "+251944556677",
-      profile_image: null,
-      average_rating: "3.50",
-      total_reviews: 2,
-      vehicle_type: "car",
-      company_id: 55,
-      company_name: "Ride Ethiopia",
-      company_slug: "ride-ethiopia",
-      is_in_house: false,
-      distance_km: 1.5,
-      last_lat: 9.0056,
-      last_lon: 38.7634,
-      current_lat: 9.0056,
-      current_lng: 38.7634,
-    },
-    {
-      id: 20,
-      name: "Hana Tesfaye",
-      username: "hana_driver",
-      phone: "+251955667788",
-      profile_image: null,
-      average_rating: "4.50",
-      total_reviews: 3,
-      vehicle_type: "car",
-      company_id: 10,
-      company_name: "Elfiya Flour Factory",
-      company_slug: "elfiya-flour-factory",
-      is_in_house: true,
-      distance_km: 0.8,
-      last_lat: 9.0012,
-      last_lon: 38.7598,
-      current_lat: 9.0012,
-      current_lng: 38.7598,
-    },
-    {
-      id: 21,
-      name: "Dawit Bekele",
-      username: "dawit_rider",
-      phone: "+251966889900",
-      profile_image: null,
-      average_rating: "0.00",
-      total_reviews: 0,
-      vehicle_type: "motorcycle",
-      company_id: 10,
-      company_name: "Elfiya Flour Factory",
-      company_slug: "elfiya-flour-factory",
-      is_in_house: true,
-      distance_km: null,
-      last_lat: null,
-      last_lon: null,
-      current_lat: null,
-      current_lng: null,
-    },
-  ];
+  const getCustomerLocation = () => { 
+    const lat = delivery?.customer_lat || order?.customer_lat || order?.delivery_address?.lat; 
+    const lon = delivery?.customer_lon || order?.customer_lon || order?.delivery_address?.lon; 
+    if (lat != null && lon != null) { 
+      const parsedLat = parseFloat(lat); 
+      const parsedLon = parseFloat(lon); 
+      if (isValidCoordinate(parsedLat, parsedLon)) { 
+        return { lat: parsedLat, lon: parsedLon }; 
+      } 
+    } 
+    return null; 
+  }; 
 
-  const getVehicleIcon = (type?: string) => {
-    switch (type?.toLowerCase()) {
-      case "motorcycle":
-        return "🏍️";
-      case "car":
-        return "🚗";
-      case "bicycle":
-        return "🚲";
-      case "van":
-        return "🚐";
-      case "foot":
-        return "🚶";
-      default:
-        return "🛵";
-    }
-  };
+  const getVehicleIcon = (type?: string) => { 
+    switch (type?.toLowerCase()) { 
+      case "motorcycle": 
+        return "🏍️"; 
+      case "car": 
+        return "🚗"; 
+      case "bicycle": 
+        return "🚲"; 
+      case "van": 
+        return "🚐"; 
+      case "foot": 
+        return "🚶"; 
+      default: 
+        return "🛵"; 
+    } 
+  }; 
 
-  const getVehicleName = (type?: string) => {
-    switch (type?.toLowerCase()) {
-      case "motorcycle":
-        return "Motorcycle";
-      case "car":
-        return "Car";
-      case "bicycle":
-        return "Bicycle";
-      case "van":
-        return "Van";
-      case "foot":
-        return "On Foot";
-      default:
-        return "Vehicle";
-    }
-  };
+  const getVehicleName = (type?: string) => { 
+    switch (type?.toLowerCase()) { 
+      case "motorcycle": 
+        return "Motorcycle"; 
+      case "car": 
+        return "Car"; 
+      case "bicycle": 
+        return "Bicycle"; 
+      case "van": 
+        return "Van"; 
+      case "foot": 
+        return "On Foot"; 
+      default: 
+        return "Vehicle"; 
+    } 
+  }; 
 
-  const renderRating = (avg?: string, reviews?: number) => {
-    if (!avg || avg === "0.00" || !reviews || reviews === 0)
-      return "No reviews";
-    const rating = parseFloat(avg).toFixed(1);
-    return `⭐ ${rating} (${reviews})`;
-  };
+  const renderRating = (avg?: string, reviews?: number) => { 
+    if (!avg || avg === "0.00" || !reviews || reviews === 0) 
+      return "No reviews"; 
+    const rating = parseFloat(avg).toFixed(1); 
+    return `⭐ ${rating} (${reviews})`; 
+  }; 
 
-  // Subscribe to real-time live GPS for eligible drivers via Firebase drivers/{driverId}
-  useEffect(() => {
-    if (!showAssignForm || staffList.length === 0) return;
-    const cleanups: Array<() => void> = [];
-
-    staffList.forEach((driver) => {
-      const driverRef = ref(db, `drivers/${driver.id}`);
-      const callback = (snapshot: any) => {
-        const data = snapshot.val();
-        if (data && data.latitude != null && data.longitude != null) {
-          setDriverLocations((prev) => ({
-            ...prev,
-            [driver.id]: data,
-          }));
-        }
-      };
-      onValue(driverRef, callback);
-      cleanups.push(() => off(driverRef, "value", callback));
-    });
-
-    return () => {
-      cleanups.forEach((cleanup) => cleanup());
-    };
-  }, [showAssignForm, staffList]);
-
-  const getDriverLiveLocation = (driverId: number) => {
-    const localLoc = driverLocations[driverId];
-    if (localLoc && localLoc.latitude != null && localLoc.longitude != null) {
-      return {
-        lat: Number(localLoc.latitude),
-        lon: Number(localLoc.longitude),
-        is_online: localLoc.is_online !== false,
-      };
-    }
-
-    if (liveDriverLocations && typeof liveDriverLocations === "object") {
-      const entries = Object.values(liveDriverLocations);
-      for (const entry of entries as any[]) {
-        if (entry && typeof entry === "object") {
-          if (entry.driver_id === driverId || entry.id === driverId) {
-            return {
-              lat: Number(entry.lat ?? entry.latitude),
-              lon: Number(entry.lon ?? entry.longitude ?? entry.lng),
-              is_online: entry.is_online !== false,
-            };
-          }
-        }
-      }
-      const directMatch =
-        (liveDriverLocations as any)[driverId] ||
-        (liveDriverLocations as any)[String(driverId)];
-      if (directMatch) {
-        return {
-          lat: Number(directMatch.lat ?? directMatch.latitude),
-          lon: Number(directMatch.lon ?? directMatch.longitude ?? directMatch.lng),
-          is_online: directMatch.is_online !== false,
-        };
-      }
-    }
-    return null;
-  };
-
-  const getReferenceLocation = () => {
-    const storeLat = order.company?.latitude ? parseFloat(order.company.latitude) : null;
-    const storeLon = order.company?.longitude ? parseFloat(order.company.longitude) : null;
-    if (storeLat != null && storeLon != null && isValidCoordinate(storeLat, storeLon)) {
-      return { lat: storeLat, lon: storeLon, type: "store" };
-    }
-    const custLoc = getCustomerLocation();
-    if (custLoc) {
-      return { ...custLoc, type: "customer" };
-    }
-    return null;
-  };
-
-  const staffWithDistance = useMemo(() => {
-    const refLoc = getReferenceLocation();
-    return staffList.map((s) => {
-      const liveLoc = getDriverLiveLocation(s.id);
-      if (liveLoc && isValidCoordinate(liveLoc.lat, liveLoc.lon)) {
-        const distance = refLoc
-          ? calculateDistance(refLoc.lat, refLoc.lon, liveLoc.lat, liveLoc.lon)
-          : null;
-        return {
-          ...s,
-          calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null,
-          location_source: "live",
-          isLive: true,
-          isOnline: liveLoc.is_online !== false,
-        };
-      }
-      if (s.current_lat != null && s.current_lng != null) {
-        const currentLat = parseFloat(s.current_lat);
-        const currentLng = parseFloat(s.current_lng);
-        if (isValidCoordinate(currentLat, currentLng)) {
-          const distance = refLoc
-            ? calculateDistance(refLoc.lat, refLoc.lon, currentLat, currentLng)
-            : null;
-          return {
-            ...s,
-            calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null,
-            location_source: "current",
-            isLive: false,
-            isOnline: true,
-          };
-        }
-      }
-      if (s.last_lat != null && s.last_lon != null) {
-        const lastLat = parseFloat(s.last_lat);
-        const lastLon = parseFloat(s.last_lon);
-        if (isValidCoordinate(lastLat, lastLon)) {
-          const distance = refLoc
-            ? calculateDistance(refLoc.lat, refLoc.lon, lastLat, lastLon)
-            : null;
-          return {
-            ...s,
-            calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null,
-            location_source: "last_known",
-            isLive: false,
-            isOnline: true,
-          };
-        }
-      }
-      if (s.distance_km != null && !isNaN(parseFloat(s.distance_km))) {
-        return {
-          ...s,
-          calculated_distance: Math.round(parseFloat(s.distance_km) * 10) / 10,
-          location_source: "api",
-          isLive: false,
-          isOnline: true,
-        };
-      }
-      return {
-        ...s,
-        calculated_distance: null,
-        location_source: null,
-        isLive: false,
-        isOnline: true,
-      };
-    });
-  }, [
-    staffList,
-    driverLocations,
-    liveDriverLocations,
-    order.company?.latitude,
-    order.company?.longitude,
-    delivery?.customer_lat,
-    delivery?.customer_lon,
-    order?.customer_lat,
-    order?.customer_lon,
-    order?.delivery_address?.lat,
-    order?.delivery_address?.lon,
-  ]);
-
-  const filteredStaffList = useMemo(() => {
-    let filtered = [...staffWithDistance];
-    if (filterType === "in_house") {
-      filtered = filtered.filter((s) => s.is_in_house === true);
-    } else if (filterType === "third_party") {
-      filtered = filtered.filter((s) => s.is_in_house === false);
-    }
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.name?.toLowerCase().includes(search) ||
-          s.phone?.toLowerCase().includes(search) ||
-          s.username?.toLowerCase().includes(search) ||
-          s.company_name?.toLowerCase().includes(search)
-      );
-    }
-    return filtered.sort((a, b) => {
-      const distA = a.calculated_distance != null ? a.calculated_distance : 999999;
-      const distB = b.calculated_distance != null ? b.calculated_distance : 999999;
-      if (distA !== distB) return distA - distB;
-      const rankA = a.is_in_house ? 0 : 1;
-      const rankB = b.is_in_house ? 0 : 1;
-      return rankA - rankB;
-    });
-  }, [staffWithDistance, filterType, searchTerm]);
-
-  const getOrderFailureReason = () => {
-    if (delivery?.failure_reason) return delivery.failure_reason;
-    if (delivery?.cancellation_reason) return delivery.cancellation_reason;
-    if (delivery?.cancelled_reason) return delivery.cancelled_reason;
-    if (delivery?.reason) return delivery.reason;
-    if (delivery?.status_reason) return delivery.status_reason;
-    if (order?.vendor_order_detail?.failure_reason)
-      return order.vendor_order_detail.failure_reason;
-    if (order?.vendor_order_detail?.cancellation_reason)
-      return order.vendor_order_detail.cancellation_reason;
-    if (order?.vendor_order_detail?.cancelled_reason)
-      return order.vendor_order_detail.cancelled_reason;
-    if (order?.vendor_order_detail?.reason)
-      return order.vendor_order_detail.reason;
-    if (order?.failure_reason) return order.failure_reason;
-    if (order?.cancellation_reason) return order.cancellation_reason;
-    if (order?.cancelled_reason) return order.cancelled_reason;
-    if (order?.reason) return order.reason;
-    if (order?.status_reason) return order.status_reason;
-    if (order?.cancel_reason) return order.cancel_reason;
-    if (order?.delivery_notes) return order.delivery_notes;
-    if (order?.notes) return order.notes;
-    if (order?.admin_notes) return order.admin_notes;
-    if (order?.cancellation_note) return order.cancellation_note;
-    return null;
-  };
-
-  const failureReason = getOrderFailureReason();
-  const isOrderFailed =
-    order.status?.toLowerCase() === "cancelled" ||
-    order.status?.toLowerCase() === "failed" ||
-    order.status?.toLowerCase() === "rejected" ||
-    delivery?.status?.toLowerCase() === "failed" ||
-    delivery?.status?.toLowerCase() === "cancelled" ||
-    delivery?.status?.toLowerCase() === "rejected";
-
-  const fetchStaff = async (filter: "all" | "in_house" | "third_party") => {
-    if (!order.company?.slug) return;
-    setLoadingStaff(true);
-    try {
-      let allDrivers: any[] = [];
-      try {
-        const res = await getAvailableDeliveryDrivers(order.company.slug, {
-          vendor_order_id: order.id,
-          driver_type: filter === "all" ? "all" : filter === "in_house" ? "in_house" : "3pl",
-        });
-        allDrivers = res.data || [];
-      } catch (apiError) {
-        console.warn("API fetch failed, using mock data", apiError);
-        allDrivers =
-          filter === "all"
-            ? mockDrivers
-            : filter === "in_house"
-            ? mockDrivers.filter((d) => d.is_in_house)
-            : mockDrivers.filter((d) => !d.is_in_house);
-      }
-
-      const mapped = allDrivers.map((s: any) => ({
-        id: s.id,
-        name: `${s.name || s.username || ""}`.trim(),
-        phone: s.phone,
-        username: s.username,
-        average_rating: s.average_rating,
-        total_reviews: s.total_reviews,
-        vehicle_type: s.vehicle_type,
-        company_name: s.company_name,
-        is_in_house: s.is_in_house,
-        distance_km: s.distance_km,
-        last_lat: s.last_lat,
-        last_lon: s.last_lon,
-        current_lat: s.current_lat,
-        current_lng: s.current_lng,
+  // OSRM route fetcher with caching and debouncing
+  const fetchOSRMRoute = useCallback(async (driverId: number, fromLat: number, fromLon: number, toLat: number, toLon: number) => {
+    const cacheKey = `${fromLat.toFixed(4)},${fromLon.toFixed(4)}_${toLat.toFixed(4)},${toLon.toFixed(4)}`;
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    
+    // Check cache
+    const cached = routeCacheRef.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setRouteData(prev => ({
+        ...prev,
+        [driverId]: { distanceKm: cached.distanceKm, durationMinutes: cached.durationMinutes, loading: false }
       }));
-      setStaffList(mapped);
-
-      const ratingMap = new Map();
-      mapped.forEach((staff: any) => {
-        if (staff.phone) {
-          ratingMap.set(staff.phone, {
-            average_rating: staff.average_rating,
-            total_reviews: staff.total_reviews,
-          });
-        }
-      });
-      setRatingMap(ratingMap);
-
-      const map = new Map();
-      mapped.forEach((staff: any) => {
-        if (staff.phone && staff.username) {
-          map.set(staff.phone, staff.username);
-        }
-      });
-      setUsernameMap(map);
-    } catch (err) {
-      console.error("Failed to fetch available delivery drivers", err);
-      showToast("error", "Failed to load delivery drivers");
-    } finally {
-      setLoadingStaff(false);
+      return;
     }
-  };
-
-  useEffect(() => {
-    if (showAssignForm) {
-      fetchStaff(filterType);
-      setSearchTerm("");
-      setSelectedUserId("");
-    }
-  }, [showAssignForm, filterType, order.company?.slug]);
-
-  const handleAssign = async () => {
-    setAssigning(true);
+    
+    setRouteData(prev => ({
+      ...prev,
+      [driverId]: { distanceKm: null, durationMinutes: null, loading: true }
+    }));
+    
     try {
-      if (delivery) {
-        await updateDeliveryPerson(
-          delivery.id.toString(),
-          Number(selectedUserId),
-        );
-      } else {
-        await assignDelivery({
-          vendor_order: order.id,
-          delivery_person: Number(selectedUserId),
+      const url = `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=false`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.code === "Ok" && data.routes?.length > 0) {
+        const distanceKm = data.routes[0].distance / 1000;
+        const durationMinutes = data.routes[0].duration / 60;
+        
+        routeCacheRef.current.set(cacheKey, {
+          distanceKm,
+          durationMinutes,
+          timestamp: Date.now()
         });
+        
+        setRouteData(prev => ({
+          ...prev,
+          [driverId]: { distanceKm, durationMinutes, loading: false }
+        }));
+      } else {
+        setRouteData(prev => ({
+          ...prev,
+          [driverId]: { distanceKm: null, durationMinutes: null, loading: false, error: true }
+        }));
       }
-      await onUpdate();
-      showToast("success", "Delivery person assigned successfully");
-      setShowAssignForm(false);
-    } catch (err: any) {
-      showToast("error", "Failed to assign delivery person");
-    } finally {
-      setAssigning(false);
+    } catch (err) {
+      setRouteData(prev => ({
+        ...prev,
+        [driverId]: { distanceKm: null, durationMinutes: null, loading: false, error: true }
+      }));
     }
-  };
+  }, []);
 
-  const formatDistance = (distance: number | null | undefined) => {
-    if (distance == null) return "Distance unavailable";
-    if (distance < 1) return `${(distance * 1000).toFixed(0)} m`;
-    return `${distance.toFixed(1)} km`;
-  };
+  // Subscribe to real-time live GPS for eligible drivers via Firebase drivers/{driverId} 
+  useEffect(() => { 
+    if (!showAssignForm || staffList.length === 0) return; 
+    const cleanups: Array<() => void> = []; 
 
-  // ─── Handle View on Map click ────────────────────────────────────
-  const handleViewOnMap = () => {
-    if (onViewOnMap && order.id) {
-      onViewOnMap(order.id);
-    }
-  };
+    staffList.forEach((driver) => { 
+      const driverRef = ref(db, `drivers/${driver.id}`); 
+      const callback = (snapshot: any) => { 
+        const data = snapshot.val(); 
+        if (data && data.latitude != null && data.longitude != null) { 
+          setDriverLocations((prev) => ({ 
+            ...prev, 
+            [driver.id]: data, 
+          })); 
+        } 
+      }; 
+      onValue(driverRef, callback); 
+      cleanups.push(() => off(driverRef, "value", callback)); 
+    }); 
 
-  return (
-    <>
-      <Card
-        title="Delivery Details"
-        icon={Truck}
-        status={delivery?.status}
-        className={
-          (!delivery && deliveryStatus) || canManage || cod
-            ? "ring-2 ring-purple-100 border-purple-200"
-            : ""
+    return () => { 
+      cleanups.forEach((cleanup) => cleanup()); 
+    }; 
+  }, [showAssignForm, staffList]); 
+
+  // Cleanup route request timers on unmount
+  useEffect(() => {
+    return () => {
+      routeRequestTimers.current.forEach(timer => clearTimeout(timer));
+      routeRequestTimers.current.clear();
+    };
+  }, []);
+
+  const getDriverLiveLocation = (driverId: number) => { 
+    const localLoc = driverLocations[driverId]; 
+    if (localLoc && localLoc.latitude != null && localLoc.longitude != null) { 
+      return { 
+        lat: Number(localLoc.latitude), 
+        lon: Number(localLoc.longitude), 
+        is_online: localLoc.is_online !== false, 
+      }; 
+    } 
+
+    if (liveDriverLocations && typeof liveDriverLocations === "object") { 
+      const entries = Object.values(liveDriverLocations); 
+      for (const entry of entries as any[]) { 
+        if (entry && typeof entry === "object") { 
+          if (entry.driver_id === driverId || entry.id === driverId) { 
+            return { 
+              lat: Number(entry.lat ?? entry.latitude), 
+              lon: Number(entry.lon ?? entry.longitude ?? entry.lng), 
+              is_online: entry.is_online !== false, 
+            }; 
+          } 
+        } 
+      } 
+      const directMatch = 
+        (liveDriverLocations as any)[driverId] || 
+        (liveDriverLocations as any)[String(driverId)]; 
+      if (directMatch) { 
+        return { 
+          lat: Number(directMatch.lat ?? directMatch.latitude), 
+          lon: Number(directMatch.lon ?? directMatch.longitude ?? directMatch.lng), 
+          is_online: directMatch.is_online !== false, 
+        }; 
+      } 
+    } 
+    return null; 
+  }; 
+
+  const getReferenceLocation = () => { 
+    const storeLat = order.company?.latitude ? parseFloat(order.company.latitude) : null; 
+    const storeLon = order.company?.longitude ? parseFloat(order.company.longitude) : null; 
+    if (storeLat != null && storeLon != null && isValidCoordinate(storeLat, storeLon)) { 
+      return { lat: storeLat, lon: storeLon, type: "store" }; 
+    } 
+    const custLoc = getCustomerLocation(); 
+    if (custLoc) { 
+      return { ...custLoc, type: "customer" }; 
+    } 
+    return null; 
+  }; 
+
+  const staffWithDistance = useMemo(() => { 
+    const refLoc = getReferenceLocation(); 
+    return staffList.map((s) => { 
+      const liveLoc = getDriverLiveLocation(s.id); 
+      if (liveLoc && isValidCoordinate(liveLoc.lat, liveLoc.lon)) { 
+        const distance = refLoc 
+          ? calculateDistance(refLoc.lat, refLoc.lon, liveLoc.lat, liveLoc.lon) 
+          : null; 
+        return { 
+          ...s, 
+          calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null, 
+          location_source: "live", 
+          isLive: true, 
+          isOnline: liveLoc.is_online !== false, 
+          live_lat: liveLoc.lat,
+          live_lon: liveLoc.lon,
+        }; 
+      } 
+      if (s.current_lat != null && s.current_lng != null) { 
+        const currentLat = parseFloat(s.current_lat); 
+        const currentLng = parseFloat(s.current_lng); 
+        if (isValidCoordinate(currentLat, currentLng)) { 
+          const distance = refLoc 
+            ? calculateDistance(refLoc.lat, refLoc.lon, currentLat, currentLng) 
+            : null; 
+          return { 
+            ...s, 
+            calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null, 
+            location_source: "current", 
+            isLive: false, 
+            isOnline: true, 
+            live_lat: currentLat,
+            live_lon: currentLng,
+          }; 
+        } 
+      } 
+      if (s.last_lat != null && s.last_lon != null) { 
+        const lastLat = parseFloat(s.last_lat); 
+        const lastLon = parseFloat(s.last_lon); 
+        if (isValidCoordinate(lastLat, lastLon)) { 
+          const distance = refLoc 
+            ? calculateDistance(refLoc.lat, refLoc.lon, lastLat, lastLon) 
+            : null; 
+          return { 
+            ...s, 
+            calculated_distance: distance != null ? Math.round(distance * 10) / 10 : null, 
+            location_source: "last_known", 
+            isLive: false, 
+            isOnline: true, 
+            live_lat: lastLat,
+            live_lon: lastLon,
+          }; 
+        } 
+      } 
+      if (s.distance_km != null && !isNaN(parseFloat(s.distance_km))) { 
+        return { 
+          ...s, 
+          calculated_distance: Math.round(parseFloat(s.distance_km) * 10) / 10, 
+          location_source: "api", 
+          isLive: false, 
+          isOnline: true, 
+        }; 
+      } 
+      return { 
+        ...s, 
+        calculated_distance: null, 
+        location_source: null, 
+        isLive: false, 
+        isOnline: true, 
+      }; 
+    }); 
+  }, [ 
+    staffList, 
+    driverLocations, 
+    liveDriverLocations, 
+    order.company?.latitude, 
+    order.company?.longitude, 
+    delivery?.customer_lat, 
+    delivery?.customer_lon, 
+    order?.customer_lat, 
+    order?.customer_lon, 
+    order?.delivery_address?.lat, 
+    order?.delivery_address?.lon, 
+  ]); 
+
+  // Filter and sort staff
+  const filteredStaffList = useMemo(() => { 
+    let filtered = [...staffWithDistance]; 
+     
+    // Filter by driver type (in-house vs 3PL) 
+    if (filterType === "in_house") { 
+      filtered = filtered.filter((s) => s.is_in_house === true); 
+    } else if (filterType === "third_party") { 
+      filtered = filtered.filter((s) => s.is_in_house === false); 
+    } 
+     
+    // Filter by vehicle type 
+    if (vehicleTypeFilter !== "all") { 
+      filtered = filtered.filter((s) =>  
+        s.vehicle_type?.toLowerCase() === vehicleTypeFilter.toLowerCase() 
+      ); 
+    } 
+     
+    // Filter by search term 
+    if (searchTerm.trim()) { 
+      const search = searchTerm.toLowerCase(); 
+      filtered = filtered.filter( 
+        (s) => 
+          s.name?.toLowerCase().includes(search) || 
+          s.phone?.toLowerCase().includes(search) || 
+          s.username?.toLowerCase().includes(search) || 
+          s.company_name?.toLowerCase().includes(search) 
+      ); 
+    } 
+     
+    // Sort based on selected criteria 
+    return filtered.sort((a, b) => { 
+      if (sortBy === "distance") { 
+        // Use OSRM road distance if available, otherwise fallback to haversine
+        const distA = routeData[a.id]?.distanceKm ?? a.calculated_distance ?? 999999; 
+        const distB = routeData[b.id]?.distanceKm ?? b.calculated_distance ?? 999999; 
+        return sortOrder === "asc" ? distA - distB : distB - distA; 
+      } else if (sortBy === "rating") { 
+        const ratingA = parseFloat(a.average_rating || "0"); 
+        const ratingB = parseFloat(b.average_rating || "0"); 
+        return sortOrder === "asc" ? ratingA - ratingB : ratingB - ratingA; 
+      } else { 
+        // sort by name 
+        const nameA = a.name?.toLowerCase() || ""; 
+        const nameB = b.name?.toLowerCase() || ""; 
+        return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA); 
+      } 
+    }); 
+  }, [staffWithDistance, filterType, vehicleTypeFilter, searchTerm, sortBy, sortOrder, routeData]); 
+
+  // Pagination 
+  const totalPages = Math.ceil(filteredStaffList.length / itemsPerPage); 
+  const paginatedStaffList = useMemo(() => { 
+    const startIndex = (currentPage - 1) * itemsPerPage; 
+    const endIndex = startIndex + itemsPerPage; 
+    return filteredStaffList.slice(startIndex, endIndex); 
+  }, [filteredStaffList, currentPage, itemsPerPage]); 
+
+  // Calculate OSRM routes for visible drivers only (debounced)
+  useEffect(() => {
+    if (!showAssignForm || paginatedStaffList.length === 0) return;
+    
+    const customerLoc = getCustomerLocation();
+    if (!customerLoc) return;
+    
+    paginatedStaffList.forEach((driver) => {
+      if (driver.live_lat != null && driver.live_lon != null && 
+          isValidCoordinate(driver.live_lat, driver.live_lon)) {
+        
+        // Debounce route calculation
+        const timerKey = driver.id;
+        if (routeRequestTimers.current.has(timerKey)) {
+          clearTimeout(routeRequestTimers.current.get(timerKey));
         }
-      >
-        <AnimatePresence mode="wait">
-          {!showAssignForm ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {delivery?.delivery_person_name ? (
-                <div className="flex items-center gap-4">
-                  {delivery.delivery_person_image ? (
-                    <div
-                      className="relative group cursor-pointer"
-                      onClick={() => setShowFullscreenImage(true)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ")
-                          setShowFullscreenImage(true);
-                      }}
+        
+        routeRequestTimers.current.set(
+          timerKey,
+          setTimeout(() => {
+            fetchOSRMRoute(driver.id, driver.live_lat, driver.live_lon, customerLoc.lat, customerLoc.lon);
+            routeRequestTimers.current.delete(timerKey);
+          }, 300)
+        );
+      }
+    });
+  }, [paginatedStaffList, showAssignForm, fetchOSRMRoute]);
+
+  // Reset to first page when filters change 
+  useEffect(() => { 
+    setCurrentPage(1); 
+  }, [filterType, vehicleTypeFilter, searchTerm, sortBy, sortOrder, itemsPerPage]); 
+
+  const getOrderFailureReason = () => { 
+    if (delivery?.failure_reason) return delivery.failure_reason; 
+    if (delivery?.cancellation_reason) return delivery.cancellation_reason; 
+    if (delivery?.cancelled_reason) return delivery.cancelled_reason; 
+    if (delivery?.reason) return delivery.reason; 
+    if (delivery?.status_reason) return delivery.status_reason; 
+    if (order?.vendor_order_detail?.failure_reason) 
+      return order.vendor_order_detail.failure_reason; 
+    if (order?.vendor_order_detail?.cancellation_reason) 
+      return order.vendor_order_detail.cancellation_reason; 
+    if (order?.vendor_order_detail?.cancelled_reason) 
+      return order.vendor_order_detail.cancelled_reason; 
+    if (order?.vendor_order_detail?.reason) 
+      return order.vendor_order_detail.reason; 
+    if (order?.failure_reason) return order.failure_reason; 
+    if (order?.cancellation_reason) return order.cancellation_reason; 
+    if (order?.cancelled_reason) return order.cancelled_reason; 
+    if (order?.reason) return order.reason; 
+    if (order?.status_reason) return order.status_reason; 
+    if (order?.cancel_reason) return order.cancel_reason; 
+    if (order?.delivery_notes) return order.delivery_notes; 
+    if (order?.notes) return order.notes; 
+    if (order?.admin_notes) return order.admin_notes; 
+    if (order?.cancellation_note) return order.cancellation_note; 
+    return null; 
+  }; 
+
+  const failureReason = getOrderFailureReason(); 
+  const isOrderFailed = 
+    order.status?.toLowerCase() === "cancelled" || 
+    order.status?.toLowerCase() === "failed" || 
+    order.status?.toLowerCase() === "rejected" || 
+    delivery?.status?.toLowerCase() === "failed" || 
+    delivery?.status?.toLowerCase() === "cancelled" || 
+    delivery?.status?.toLowerCase() === "rejected"; 
+
+  const fetchStaff = async (filter: "all" | "in_house" | "third_party", vehicleType?: string) => { 
+    if (!order.company?.slug) return; 
+    setLoadingStaff(true); 
+    try { 
+      const params: any = { 
+        vendor_order_id: order.id, 
+        driver_type: filter === "all" ? "all" : filter === "in_house" ? "in_house" : "3pl", 
+      }; 
+       
+      if (vehicleType && vehicleType !== "all") { 
+        params.vehicle_type = vehicleType; 
+      } 
+       
+      const res = await getAvailableDeliveryDrivers(order.company.slug, params); 
+      const allDrivers = res.data || []; 
+ 
+      const mapped = allDrivers.map((s: any) => ({ 
+        id: s.id, 
+        name: `${s.name || s.username || ""}`.trim(), 
+        phone: s.phone, 
+        username: s.username, 
+        average_rating: s.average_rating, 
+        total_reviews: s.total_reviews, 
+        vehicle_type: s.vehicle_type, 
+        company_name: s.company_name, 
+        is_in_house: s.is_in_house, 
+        distance_km: s.distance_km, 
+        last_lat: s.last_lat, 
+        last_lon: s.last_lon, 
+        current_lat: s.current_lat, 
+        current_lng: s.current_lng, 
+      })); 
+      setStaffList(mapped); 
+ 
+      const ratingMap = new Map(); 
+      mapped.forEach((staff: any) => { 
+        if (staff.phone) { 
+          ratingMap.set(staff.phone, { 
+            average_rating: staff.average_rating, 
+            total_reviews: staff.total_reviews, 
+          }); 
+        } 
+      }); 
+      setRatingMap(ratingMap); 
+ 
+      const map = new Map(); 
+      mapped.forEach((staff: any) => { 
+        if (staff.phone && staff.username) { 
+          map.set(staff.phone, staff.username); 
+        } 
+      }); 
+      setUsernameMap(map); 
+    } catch (err) { 
+      console.error("Failed to fetch available delivery drivers", err); 
+      showToast("error", "Failed to load delivery drivers"); 
+    } finally { 
+      setLoadingStaff(false); 
+    } 
+  }; 
+ 
+  useEffect(() => { 
+    if (showAssignForm) { 
+      fetchStaff(filterType, vehicleTypeFilter); 
+      setSearchTerm(""); 
+      setSelectedUserId(""); 
+    } 
+  }, [showAssignForm, filterType, vehicleTypeFilter, order.company?.slug]); 
+ 
+  const handleAssign = async () => { 
+    setAssigning(true); 
+    try { 
+      if (delivery) { 
+        await updateDeliveryPerson( 
+          delivery.id.toString(), 
+          Number(selectedUserId), 
+        ); 
+      } else { 
+        await assignDelivery({ 
+          vendor_order: order.id, 
+          delivery_person: Number(selectedUserId), 
+        }); 
+      } 
+      await onUpdate(); 
+      showToast("success", "Delivery person assigned successfully"); 
+      setShowAssignForm(false); 
+    } catch (err: any) { 
+      showToast("error", "Failed to assign delivery person"); 
+    } finally { 
+      setAssigning(false); 
+    } 
+  }; 
+ 
+  const formatDistance = (distance: number | null | undefined) => { 
+    if (distance == null) return "Distance unavailable"; 
+    if (distance < 1) return `${(distance * 1000).toFixed(0)} m`; 
+    return `${distance.toFixed(1)} km`; 
+  }; 
+
+  const formatDuration = (minutes: number | null | undefined) => {
+    if (minutes == null) return "ETA unavailable";
+    if (minutes < 1) return "< 1 min";
+    if (minutes < 60) return `~${Math.round(minutes)} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return `~${hours}h ${mins}m`;
+  };
+ 
+  const handleViewOnMap = () => { 
+    if (onViewOnMap && order.id) { 
+      onViewOnMap(order.id); 
+    } 
+  }; 
+
+  // Determine best match (nearest driver with OSRM or haversine distance)
+  const bestMatchDriver = useMemo(() => {
+    if (filteredStaffList.length === 0 || sortBy !== "distance" || sortOrder !== "asc") return null;
+    const firstDriver = filteredStaffList[0];
+    if (firstDriver && (firstDriver.live_lat != null || firstDriver.calculated_distance != null)) {
+      return firstDriver;
+    }
+    return null;
+  }, [filteredStaffList, sortBy, sortOrder]);
+
+  return ( 
+    <> 
+      <Card 
+        title="Delivery Details" 
+        icon={Truck} 
+        status={delivery?.status} 
+        className={ 
+          (!delivery && deliveryStatus) || canManage || cod 
+            ? "ring-2 ring-purple-100 border-purple-200" 
+            : "" 
+        } 
+      > 
+        <AnimatePresence mode="wait"> 
+          {!showAssignForm ? ( 
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+            > 
+              {delivery?.delivery_person_name ? ( 
+                <div className="flex items-center gap-4"> 
+                  {delivery.delivery_person_image ? ( 
+                    <div 
+                      className="relative group cursor-pointer" 
+                      onClick={() => setShowFullscreenImage(true)} 
+                      role="button" 
+                      tabIndex={0} 
+                      onKeyDown={(e) => { 
+                        if (e.key === "Enter" || e.key === " ") 
+                          setShowFullscreenImage(true); 
+                      }} 
+                    > 
+                      <img 
+                        src={delivery.delivery_person_image} 
+                        alt={ 
+                          delivery.delivery_person_username || 
+                          delivery.delivery_person_name 
+                        } 
+                        className="w-14 h-14 rounded-full object-contain ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300" 
+                      /> 
+                      <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"> 
+                        <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" /> 
+                      </div> 
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-1 shadow-md"> 
+                        <div className="h-2 w-2 rounded-full bg-white"></div> 
+                      </div> 
+                    </div> 
+                  ) : ( 
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm"> 
+                      {getInitials( 
+                        usernameMap.get(delivery.delivery_person_phone) || 
+                          delivery.delivery_person_name, 
+                      )} 
+                    </div> 
+                  )} 
+                  <div className="flex-1"> 
+                    <div className="flex items-center gap-1.5 flex-wrap"> 
+                      <p className="font-bold text-gray-900 text-sm"> 
+                        {usernameMap.get(delivery.delivery_person_phone) || 
+                          delivery.delivery_person_name} 
+                      </p> 
+                      {delivery.logistics_company_name ? ( 
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200"> 
+                          {delivery.logistics_company_name} (3PL) 
+                        </span> 
+                      ) : ( 
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"> 
+                          In-House 
+                        </span> 
+                      )} 
+                    </div> 
+ 
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200 mt-1"> 
+                      <PhoneCall className="h-3 w-3 text-blue-600" /> 
+                      <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight"> 
+                        {delivery.delivery_person_phone} 
+                      </span> 
+                      <CopyButton text={delivery.delivery_person_phone} /> 
+                    </div> 
+ 
+                    {delivery?.status === "declined" && ( 
+                      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 shadow-sm"> 
+                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" /> 
+                        <div className="flex-1"> 
+                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider"> 
+                            Driver Declined Delivery 
+                          </p> 
+                          <p className="text-xs text-amber-700 font-medium leading-relaxed"> 
+                            {delivery.decline_reason 
+                              ? `Reason: ${delivery.decline_reason}` 
+                              : "The assigned driver declined this order. Please reassign to another driver."} 
+                          </p> 
+                        </div> 
+                      </div> 
+                    )} 
+ 
+                    <div className="flex flex-wrap items-center gap-2 mt-2"> 
+                      {delivery?.status === "out_for_delivery" && 
+                        onOpenLiveTracking && ( 
+                          <button 
+                            onClick={onOpenLiveTracking} 
+                            className="inline-flex items-center justify-center gap-2 
+                              rounded-xl border border-emerald-200 
+                              bg-gradient-to-r from-emerald-500 to-green-600 
+                              px-4 py-1.5 
+                              text-xs sm:text-sm font-semibold text-white 
+                              shadow-sm transition-all duration-200 
+                              hover:from-emerald-600 hover:to-green-700 
+                              hover:shadow-lg hover:-translate-y-0.5 
+                              active:translate-y-0 
+                              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" 
+                          > 
+                            <span className="relative flex h-2.5 w-2.5"> 
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" /> 
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" /> 
+                            </span> 
+                            <Navigation className="h-4 w-4" /> 
+                            <span>Live Tracking</span> 
+                          </button> 
+                        )} 
+                       
+                      {order.fulfillment_type === "delivery" && ( 
+                        <button 
+                          onClick={handleViewOnMap} 
+                          className="inline-flex items-center justify-center gap-1.5 
+                            rounded-xl border border-purple-200 
+                            bg-purple-50 text-secondary 
+                            px-3 py-1.5 
+                            text-xs font-semibold 
+                            shadow-sm transition-all duration-200 
+                            hover:bg-purple-100 hover:shadow-md 
+                            focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" 
+                        > 
+                          <MapPin className="h-3.5 w-3.5" /> 
+                          <span>View on Map</span> 
+                        </button> 
+                      )} 
+                    </div> 
+ 
+                    {ratingMap.has(delivery.delivery_person_phone) && ( 
+                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-600"> 
+                        <span> 
+                          {renderRating( 
+                            ratingMap.get(delivery.delivery_person_phone)! 
+                              .average_rating, 
+                            ratingMap.get(delivery.delivery_person_phone)! 
+                              .total_reviews, 
+                          )} 
+                        </span> 
+                      </div> 
+                    )} 
+                    {isOrderFailed && failureReason && ( 
+                      <div className="mt-2 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 shadow-sm"> 
+                        <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" /> 
+                        <div className="flex-1"> 
+                          <p className="text-[9px] font-semibold text-rose-600"> 
+                            Reason 
+                          </p> 
+                          <p className="text-xs text-rose-700 font-medium leading-relaxed"> 
+                            {failureReason} 
+                          </p> 
+                        </div> 
+                      </div> 
+                    )} 
+                    {delivery?.attempts && delivery.attempts.length > 0 && ( 
+                      <div className="mt-3 pt-2.5 border-t border-gray-100"> 
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1"> 
+                          <History className="h-3 w-3 text-gray-400" /> Dispatch History ({delivery.attempts.length}) 
+                        </p> 
+                        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1"> 
+                          {delivery.attempts.map((att: any) => { 
+                            const isDeclined = att.status === "declined"; 
+                            const isAccepted = att.status === "accepted"; 
+                            const isReassigned = att.status === "reassigned"; 
+                            return ( 
+                              <div 
+                                key={att.id} 
+                                className={`text-[11px] p-2 rounded-lg flex items-start justify-between gap-2 border ${ 
+                                  isDeclined 
+                                    ? "bg-rose-50/70 border-rose-200 text-rose-800" 
+                                    : isAccepted 
+                                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-800" 
+                                    : isReassigned 
+                                    ? "bg-gray-50 border-gray-200 text-gray-600" 
+                                    : "bg-blue-50/70 border-blue-200 text-blue-800" 
+                                }`} 
+                              > 
+                                <div className="flex-1 min-w-0"> 
+                                  <div className="flex items-center gap-1.5 flex-wrap font-semibold"> 
+                                    <span>{att.driver_name || `Driver #${att.driver}`}</span> 
+                                    {att.logistics_company_name && ( 
+                                      <span className="text-[9px] font-medium px-1.5 py-0.2 bg-white rounded border border-current"> 
+                                        {att.logistics_company_name} 
+                                      </span> 
+                                    )} 
+                                  </div> 
+                                  {att.decline_reason && ( 
+                                    <p className="text-[10px] italic mt-0.5 opacity-90 truncate"> 
+                                      "{att.decline_reason}" 
+                                    </p> 
+                                  )} 
+                                </div> 
+                                <div className="text-right flex-shrink-0"> 
+                                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${ 
+                                    isDeclined 
+                                      ? "bg-rose-200 text-rose-900" 
+                                      : isAccepted 
+                                      ? "bg-emerald-200 text-emerald-900" 
+                                      : isReassigned 
+                                      ? "bg-gray-200 text-gray-800" 
+                                      : "bg-blue-200 text-blue-900" 
+                                  }`}> 
+                                    {att.status} 
+                                  </span> 
+                                  {att.assigned_at && ( 
+                                    <p className="text-[9px] text-gray-400 mt-0.5"> 
+                                      {new Date(att.assigned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                                    </p> 
+                                  )} 
+                                </div> 
+                              </div> 
+                            ); 
+                          })} 
+                        </div> 
+                      </div> 
+                    )} 
+                  </div> 
+                  {deliveryStatus || 
+                    ((canManage || cod) && ( 
+                      <button 
+                        onClick={() => setShowAssignForm(true)} 
+                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors" 
+                      > 
+                        Change 
+                      </button> 
+                    ))} 
+                </div> 
+ 
+              ) : ( 
+                <div className="text-center py-2"> 
+                  <p className="text-xs text-gray-400 mb-3 italic"> 
+                    No delivery person assigned yet 
+                  </p> 
+                  <div className="flex flex-col sm:flex-row gap-2"> 
+                    {deliveryStatus || 
+                      (canManage && ( 
+                        <button 
+                          onClick={() => setShowAssignForm(true)} 
+                          className="flex-1 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all" 
+                        > 
+                          Assign Delivery person 
+                        </button> 
+                      ))} 
+                     
+                    {order.fulfillment_type === "delivery" && ( 
+                      <button 
+                        onClick={handleViewOnMap} 
+                        className="flex-1 py-2 bg-purple-50 text-secondary rounded-xl text-xs font-bold border border-purple-200 hover:bg-purple-100 shadow-sm transition-all flex items-center justify-center gap-2" 
+                      > 
+                        <MapPin className="h-4 w-4" /> 
+                        View on Map 
+                      </button> 
+                    )} 
+                  </div> 
+                  {isOrderFailed && failureReason && ( 
+                    <div className="mt-3 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 text-left shadow-sm"> 
+                      <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" /> 
+                      <div className="flex-1"> 
+                        <p className="text-[9px] font-semibold text-rose-600"> 
+                          Reason 
+                        </p> 
+                        <p className="text-xs text-rose-700 font-medium leading-relaxed"> 
+                          {failureReason} 
+                        </p> 
+                      </div> 
+                    </div> 
+                  )} 
+                </div> 
+              )} 
+            </motion.div> 
+          ) : ( 
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="space-y-4" 
+            > 
+              {/* Compact Header with View Toggle */}
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-gray-700"> 
+                  Assign Delivery Person 
+                </h3>
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setShowMapPreview(false)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${!showMapPreview ? "bg-white text-secondary shadow-sm" : "text-gray-600 hover:text-gray-800"}`}
+                  >
+                    List
+                  </button>
+                  <button
+                    onClick={() => setShowMapPreview(true)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${showMapPreview ? "bg-white text-secondary shadow-sm" : "text-gray-600 hover:text-gray-800"}`}
+                  >
+                    Route Map
+                  </button>
+                </div>
+              </div>
+
+              {showMapPreview ? (
+                <div className="bg-gray-50 rounded-xl p-4 min-h-[300px] flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-12 w-12 text-purple-300 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Route Map Preview</p>
+                    <p className="text-xs text-gray-500 mb-4">Driver locations and routes will appear here</p>
+                    <button
+                      onClick={handleViewOnMap}
+                      className="px-4 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary-light transition-colors"
                     >
-                      <img
-                        src={delivery.delivery_person_image}
-                        alt={
-                          delivery.delivery_person_username ||
-                          delivery.delivery_person_name
-                        }
-                        className="w-14 h-14 rounded-full object-contain ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                        <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-1 shadow-md">
-                        <div className="h-2 w-2 rounded-full bg-white"></div>
-                      </div>
+                      Open Full Map
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Search and Sort Toolbar */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /> 
+                      <input 
+                        type="text" 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        placeholder="Search delivery person..." 
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                      /> 
                     </div>
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm">
-                      {getInitials(
-                        usernameMap.get(delivery.delivery_person_phone) ||
-                          delivery.delivery_person_name,
-                      )}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                        className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="distance">Distance</option>
+                        <option value="rating">Rating</option>
+                        <option value="name">Name</option>
+                      </select>
+                      <button
+                        onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                        className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                        aria-label={`Sort ${sortOrder === "asc" ? "descending" : "ascending"}`}
+                      >
+                        {sortOrder === "asc" ? "↑" : "↓"}
+                      </button>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-bold text-gray-900 text-sm">
-                        {usernameMap.get(delivery.delivery_person_phone) ||
-                          delivery.delivery_person_name}
-                      </p>
-                      {delivery.logistics_company_name ? (
-                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          {delivery.logistics_company_name} (3PL)
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          In-House
-                        </span>
-                      )}
-                    </div>
+                  </div>
 
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200 mt-1">
-                      <PhoneCall className="h-3 w-3 text-blue-600" />
-                      <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight">
-                        {delivery.delivery_person_phone}
-                      </span>
-                      <CopyButton text={delivery.delivery_person_phone} />
-                    </div>
-
-                    {delivery?.status === "declined" && (
-                      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 shadow-sm">
-                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
-                            Driver Declined Delivery
-                          </p>
-                          <p className="text-xs text-amber-700 font-medium leading-relaxed">
-                            {delivery.decline_reason
-                              ? `Reason: ${delivery.decline_reason}`
-                              : "The assigned driver declined this order. Please reassign to another driver."}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                      {delivery?.status === "out_for_delivery" &&
-                        onOpenLiveTracking && (
-                          <button
-                            onClick={onOpenLiveTracking}
-                            className="inline-flex items-center justify-center gap-2
-                              rounded-xl border border-emerald-200
-                              bg-gradient-to-r from-emerald-500 to-green-600
-                              px-4 py-1.5
-                              text-xs sm:text-sm font-semibold text-white
-                              shadow-sm transition-all duration-200
-                              hover:from-emerald-600 hover:to-green-700
-                              hover:shadow-lg hover:-translate-y-0.5
-                              active:translate-y-0
-                              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                          >
-                            <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" />
-                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
-                            </span>
-                            <Navigation className="h-4 w-4" />
-                            <span>Live Tracking</span>
-                          </button>
-                        )}
-                      
-                      {/* View on Map button - shown for all delivery orders */}
-                      {order.fulfillment_type === "delivery" && (
-                        <button
-                          onClick={handleViewOnMap}
-                          className="inline-flex items-center justify-center gap-1.5
-                            rounded-xl border border-purple-200
-                            bg-purple-50 text-secondary
-                            px-3 py-1.5
-                            text-xs font-semibold
-                            shadow-sm transition-all duration-200
-                            hover:bg-purple-100 hover:shadow-md
-                            focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-                        >
-                          <MapPin className="h-3.5 w-3.5" />
-                          <span>View on Map</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {ratingMap.has(delivery.delivery_person_phone) && (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-600">
-                        <span>
-                          {renderRating(
-                            ratingMap.get(delivery.delivery_person_phone)!
-                              .average_rating,
-                            ratingMap.get(delivery.delivery_person_phone)!
-                              .total_reviews,
+                  {/* Collapsible Driver Type Filter */}
+                  <div className="bg-gray-50 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setShowDriverTypeFilter(!showDriverTypeFilter)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
+                      aria-expanded={showDriverTypeFilter}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-gray-700">Driver Type</span>
+                          {!showDriverTypeFilter && (
+                            <p className="text-[10px] text-gray-500">
+                              {filterType === "all" ? "All Drivers" : filterType === "in_house" ? "In-House" : "3PL Partners"}
+                            </p>
                           )}
-                        </span>
-                      </div>
-                    )}
-                    {isOrderFailed && failureReason && (
-                      <div className="mt-2 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 shadow-sm">
-                        <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-[9px] font-semibold text-rose-600">
-                            Reason
-                          </p>
-                          <p className="text-xs text-rose-700 font-medium leading-relaxed">
-                            {failureReason}
-                          </p>
                         </div>
                       </div>
-                    )}
-                    {/* ── DISPATCH ATTEMPTS HISTORY ── */}
-                    {delivery?.attempts && delivery.attempts.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-gray-100">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                          <History className="h-3 w-3 text-gray-400" /> Dispatch History ({delivery.attempts.length})
-                        </p>
-                        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                          {delivery.attempts.map((att: any) => {
-                            const isDeclined = att.status === "declined";
-                            const isAccepted = att.status === "accepted";
-                            const isReassigned = att.status === "reassigned";
-                            return (
-                              <div
-                                key={att.id}
-                                className={`text-[11px] p-2 rounded-lg flex items-start justify-between gap-2 border ${
-                                  isDeclined
-                                    ? "bg-rose-50/70 border-rose-200 text-rose-800"
-                                    : isAccepted
-                                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-800"
-                                    : isReassigned
-                                    ? "bg-gray-50 border-gray-200 text-gray-600"
-                                    : "bg-blue-50/70 border-blue-200 text-blue-800"
-                                }`}
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5 flex-wrap font-semibold">
-                                    <span>{att.driver_name || `Driver #${att.driver}`}</span>
-                                    {att.logistics_company_name && (
-                                      <span className="text-[9px] font-medium px-1.5 py-0.2 bg-white rounded border border-current">
-                                        {att.logistics_company_name}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {att.decline_reason && (
-                                    <p className="text-[10px] italic mt-0.5 opacity-90 truncate">
-                                      "{att.decline_reason}"
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="text-right flex-shrink-0">
-                                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                                    isDeclined
-                                      ? "bg-rose-200 text-rose-900"
-                                      : isAccepted
-                                      ? "bg-emerald-200 text-emerald-900"
-                                      : isReassigned
-                                      ? "bg-gray-200 text-gray-800"
-                                      : "bg-blue-200 text-blue-900"
-                                  }`}>
-                                    {att.status}
-                                  </span>
-                                  {att.assigned_at && (
-                                    <p className="text-[9px] text-gray-400 mt-0.5">
-                                      {new Date(att.assigned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {deliveryStatus ||
-                    ((canManage || cod) && (
-                      <button
-                        onClick={() => setShowAssignForm(true)}
-                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors"
-                      >
-                        Change
-                      </button>
-                    ))}
-                </div>
-
-              ) : (
-                <div className="text-center py-2">
-                  <p className="text-xs text-gray-400 mb-3 italic">
-                    No delivery person assigned yet
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    {deliveryStatus ||
-                      (canManage && (
-                        <button
-                          onClick={() => setShowAssignForm(true)}
-                          className="flex-1 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all"
+                      <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showDriverTypeFilter ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {showDriverTypeFilter && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
                         >
-                          Assign Delivery person
-                        </button>
-                      ))}
-                    
-                    {/* View on Map button - shown for all delivery orders */}
-                    {order.fulfillment_type === "delivery" && (
-                      <button
-                        onClick={handleViewOnMap}
-                        className="flex-1 py-2 bg-purple-50 text-secondary rounded-xl text-xs font-bold border border-purple-200 hover:bg-purple-100 shadow-sm transition-all flex items-center justify-center gap-2"
-                      >
-                        <MapPin className="h-4 w-4" />
-                        View on Map
-                      </button>
-                    )}
-                  </div>
-                  {isOrderFailed && failureReason && (
-                    <div className="mt-3 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 text-left shadow-sm">
-                      <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-[9px] font-semibold text-rose-600">
-                          Reason
-                        </p>
-                        <p className="text-xs text-rose-700 font-medium leading-relaxed">
-                          {failureReason}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Filter Drivers
-                </label>
-                <div className="flex gap-2 mt-1.5">
-                  <button
-                    onClick={() => {
-                      setFilterType("all");
-                      setSelectedUserId("");
-                    }}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                      filterType === "all"
-                        ? "bg-secondary text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("in_house");
-                      setSelectedUserId("");
-                    }}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                      filterType === "in_house"
-                        ? "bg-secondary text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    In-House
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("third_party");
-                      setSelectedUserId("");
-                    }}
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                      filterType === "third_party"
-                        ? "bg-secondary text-white shadow-md"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    3PL
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search delivery person..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Available Delivery Persons ({filteredStaffList.length})
-              </label>
-              
-              {loadingStaff ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="h-20 bg-gray-100 rounded-xl"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredStaffList.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-gray-600 mb-1">
-                    No available delivery persons
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {searchTerm || filterType !== "all"
-                      ? "Try adjusting your search or filters"
-                      : "There are currently no delivery persons available for this delivery."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {filteredStaffList.map((staff, index) => {
-                    const isSelected = selectedUserId === staff.id;
-                    const isNearest = index === 0 && staff.calculated_distance != null;
-                    const hasLocation = staff.calculated_distance != null;
-                    
-                    return (
-                      <div
-                        key={staff.id}
-                        onClick={() => setSelectedUserId(staff.id)}
-                        className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? "border-secondary bg-purple-50 shadow-md"
-                            : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm"
-                        }`}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            setSelectedUserId(staff.id);
-                          }
-                        }}
-                      >
-                        {isNearest && (
-                          <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full shadow-sm">
-                            ⭐ NEAREST
-                          </span>
-                        )}
-                        
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                            {getInitials(staff.name)}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <div>
-                                <p className="font-bold text-gray-900 text-sm truncate">
-                                  {staff.name}
-                                </p>
-                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                  {staff.is_in_house ? (
-                                    <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      In-House
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                      {staff.company_name || "3PL"}
-                                    </span>
-                                  )}
-                                  {staff.vehicle_type && (
-                                    <span className="text-[10px] text-gray-500">
-                                      {getVehicleIcon(staff.vehicle_type)} {getVehicleName(staff.vehicle_type)}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col items-end gap-1">
-                                {hasLocation ? (
-                                  <>
-                                    <span className={`text-xs font-bold ${
-                                      staff.calculated_distance < 1
-                                        ? "text-emerald-600"
-                                        : staff.calculated_distance < 3
-                                        ? "text-blue-600"
-                                        : "text-gray-600"
-                                    }`}>
-                                      📍 {formatDistance(staff.calculated_distance)}
-                                    </span>
-                                    {staff.location_source === 'live' && (
-                                      <span className="text-[9px] text-green-600 flex items-center gap-0.5">
-                                        <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></span>
-                                        Live
-                                      </span>
-                                    )}
-                                  </>
-                                ) : (
-                                  <span className="text-xs text-gray-400">
-                                    Distance unavailable
-                                  </span>
-                                )}
-                                
-                                {isSelected && (
-                                  <span className="text-[10px] font-bold text-secondary">
-                                    ✓ Selected
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-2 flex items-center justify-between">
-                              <div className="flex items-center gap-2 text-xs text-gray-600">
-                                <span className="flex items-center gap-1">
-                                  <PhoneCall className="h-3 w-3" />
-                                  {staff.phone || "No Phone"}
-                                </span>
-                                {staff.average_rating && staff.average_rating !== "0.00" && (
-                                  <span>{renderRating(staff.average_rating, staff.total_reviews)}</span>
-                                )}
-                              </div>
-                              
+                          <div className="px-4 pb-3 space-y-2">
+                            {[
+                              { value: "all", label: "All Drivers" },
+                              { value: "in_house", label: "In-House" },
+                              { value: "third_party", label: "3PL Partners" },
+                            ].map((option) => (
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedUserId(staff.id);
+                                key={option.value}
+                                onClick={() => {
+                                  setFilterType(option.value as any);
+                                  setSelectedUserId("");
                                 }}
-                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                                  isSelected
+                                className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
+                                  filterType === option.value
                                     ? "bg-secondary text-white"
-                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                                 }`}
                               >
-                                {isSelected ? "Selected" : "Select"}
+                                {option.label}
                               </button>
-                            </div>
+                            ))}
                           </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Collapsible Vehicle Type Filter */}
+                  <div className="bg-gray-50 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setShowVehicleTypeFilter(!showVehicleTypeFilter)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
+                      aria-expanded={showVehicleTypeFilter}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-gray-500" />
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-gray-700">Vehicle Type</span>
+                          {!showVehicleTypeFilter && (
+                            <p className="text-[10px] text-gray-500">
+                              {vehicleTypeFilter === "all" ? "All Vehicles" : getVehicleName(vehicleTypeFilter)}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showVehicleTypeFilter ? "rotate-180" : ""}`} />
+                    </button>
+                    <AnimatePresence>
+                      {showVehicleTypeFilter && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-3 space-y-2">
+                            {[
+                              { value: "all", label: "All Vehicles", icon: "🛵" },
+                              { value: "motorcycle", label: "Motorcycle", icon: "🏍️" },
+                              { value: "car", label: "Car", icon: "🚗" },
+                              { value: "bicycle", label: "Bicycle", icon: "🚲" },
+                              { value: "van", label: "Van", icon: "🚐" },
+                              { value: "foot", label: "On Foot", icon: "🚶" },
+                            ].map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => {
+                                  setVehicleTypeFilter(option.value as any);
+                                  setSelectedUserId("");
+                                }}
+                                className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
+                                  vehicleTypeFilter === option.value
+                                    ? "bg-secondary text-white"
+                                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                                }`}
+                              >
+                                {option.icon} {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-              <div className="flex gap-2 text-[10px] text-gray-500">
-                <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full">
-                  {staffWithDistance.filter(s => s.is_in_house).length} In-House
-                </span>
-                <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
-                  {staffWithDistance.filter(s => !s.is_in_house).length} 3PL
-                </span>
-                {staffWithDistance.filter(s => s.calculated_distance != null).length > 0 && (
-                  <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-full">
-                    📍 {staffWithDistance.filter(s => s.calculated_distance != null).length} with location
-                  </span>
-                )}
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={handleAssign}
-                  disabled={assigning || !selectedUserId}
-                  className="flex-1 bg-secondary text-white py-2 rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {assigning ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Assigning...
-                    </>
-                  ) : (
-                    "Assign Driver"
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowAssignForm(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-bold"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
-
-      <AnimatePresence>
-        {showFullscreenImage && delivery?.delivery_person_image && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4"
-            onClick={() => setShowFullscreenImage(false)}
-          >
-            <button
-              onClick={() => setShowFullscreenImage(false)}
-              className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 backdrop-blur-sm z-10"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white/70 text-xs font-medium flex items-center gap-2">
-              <ZoomIn className="h-3.5 w-3.5" />
-              <span>Click anywhere to close</span>
-            </div>
-
-            <motion.img
-              src={delivery.delivery_person_image}
-              alt="Delivery Person"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+                  {/* Results count */}
+                  <div className="flex items-center justify-between"> 
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest"> 
+                      Available ({filteredStaffList.length})
+                    </label> 
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      className="text-[10px] px-2 py-1 rounded-lg bg-white border border-gray-200 focus:outline-none"
+                    >
+                      <option value={10}>10 / page</option>
+                      <option value={25}>25 / page</option>
+                      <option value={50}>50 / page</option>
+                      <option value={100}>100 / page</option>
+                    </select>
+                  </div> 
+                   
+                  {loadingStaff ? ( 
+                    <div className="space-y-3"> 
+                      <div className="animate-pulse flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 text-purple-500 animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">Finding available drivers...</span>
+                      </div>
+                    </div> 
+                  ) : filteredStaffList.length === 0 ? ( 
+                    <div className="text-center py-8"> 
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" /> 
+                      <p className="text-sm font-semibold text-gray-600 mb-1"> 
+                        No available delivery persons 
+                      </p> 
+                      <p className="text-xs text-gray-500"> 
+                        {searchTerm || filterType !== "all" || vehicleTypeFilter !== "all" 
+                          ? "Try adjusting your search or filters" 
+                          : "There are currently no delivery persons available for this delivery."} 
+                      </p> 
+                    </div> 
+                  ) : ( 
+                    <> 
+                      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar"> 
+                        {paginatedStaffList.map((staff, index) => { 
+                          const isSelected = selectedUserId === staff.id; 
+                          const hasLocation = staff.calculated_distance != null; 
+                          const globalIndex = (currentPage - 1) * itemsPerPage + index; 
+                          const isNearest = globalIndex === 0 && sortBy === "distance" && sortOrder === "asc" && hasLocation;
+                          const routeInfo = routeData[staff.id];
+                          const roadDistance = routeInfo?.distanceKm;
+                          const roadDuration = routeInfo?.durationMinutes;
+                          const isRouteLoading = routeInfo?.loading;
+                          const isBestMatch = bestMatchDriver?.id === staff.id;
+                           
+                          return ( 
+                            <div 
+                              key={staff.id} 
+                              onClick={() => setSelectedUserId(staff.id)} 
+                              className={`relative p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${ 
+                                isSelected 
+                                  ? "border-secondary bg-purple-50 shadow-md" 
+                                  : isBestMatch
+                                  ? "border-emerald-400 bg-emerald-50/50 shadow-md"
+                                  : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm" 
+                              }`} 
+                              role="button" 
+                              tabIndex={0} 
+                              onKeyDown={(e) => { 
+                                if (e.key === "Enter" || e.key === " ") { 
+                                  setSelectedUserId(staff.id); 
+                                } 
+                              }} 
+                            > 
+                              {isBestMatch && ( 
+                                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full shadow-sm flex items-center gap-1"> 
+                                  ⭐ BEST MATCH 
+                                </span> 
+                              )} 
+                               
+                              <div className="flex items-start gap-3"> 
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0"> 
+                                  {getInitials(staff.name)} 
+                                </div> 
+                                 
+                                <div className="flex-1 min-w-0"> 
+                                  <div className="flex items-center justify-between gap-2"> 
+                                    <div className="min-w-0 flex-1"> 
+                                      <p className="font-bold text-gray-900 text-sm truncate"> 
+                                        {staff.name} 
+                                      </p> 
+                                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap"> 
+                                        {staff.is_in_house ? ( 
+                                          <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"> 
+                                            In-House 
+                                          </span> 
+                                        ) : ( 
+                                          <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200"> 
+                                            {staff.company_name || "3PL"} 
+                                          </span> 
+                                        )} 
+                                        {staff.vehicle_type && ( 
+                                          <span className="text-[10px] text-gray-500"> 
+                                            {getVehicleIcon(staff.vehicle_type)} {getVehicleName(staff.vehicle_type)}
+                                          </span> 
+                                        )} 
+                                      </div> 
+                                    </div> 
+                                     
+                                    <div className="flex flex-col items-end gap-1 flex-shrink-0"> 
+                                      {isRouteLoading ? (
+                                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                          Calculating route...
+                                        </span>
+                                      ) : roadDistance != null ? (
+                                        <>
+                                          <span className={`text-xs font-bold ${isBestMatch ? "text-emerald-600" : "text-gray-600"}`}> 
+                                            📍 {formatDistance(roadDistance)} 
+                                          </span>
+                                          {roadDuration != null && (
+                                            <span className="text-[10px] text-gray-500">
+                                              ⏱ {formatDuration(roadDuration)}
+                                            </span>
+                                          )}
+                                        </>
+                                      ) : hasLocation ? ( 
+                                        <> 
+                                          <span className={`text-xs font-bold ${isBestMatch ? "text-emerald-600" : "text-gray-600"}`}> 
+                                            📍 {formatDistance(staff.calculated_distance)} 
+                                          </span> 
+                                          {staff.location_source === 'live' && ( 
+                                            <span className="text-[9px] text-green-600 flex items-center gap-0.5"> 
+                                              <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></span> 
+                                              Live 
+                                            </span> 
+                                          )} 
+                                        </> 
+                                      ) : ( 
+                                        <span className="text-xs text-gray-400"> 
+                                          No location 
+                                        </span> 
+                                      )} 
+                                       
+                                      {isSelected && ( 
+                                        <span className="text-[10px] font-bold text-secondary"> 
+                                          ✓ Selected 
+                                        </span> 
+                                      )} 
+                                    </div> 
+                                  </div> 
+                                   
+                                  <div className="mt-2 flex items-center justify-between"> 
+                                    <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0"> 
+                                      <span className="flex items-center gap-1 truncate"> 
+                                        <PhoneCall className="h-3 w-3 flex-shrink-0" /> 
+                                        {staff.phone || "No Phone"} 
+                                      </span> 
+                                      {staff.average_rating && staff.average_rating !== "0.00" && ( 
+                                        <span className="flex-shrink-0"> 
+                                          {renderRating(staff.average_rating, staff.total_reviews)} 
+                                        </span> 
+                                      )} 
+                                    </div> 
+                                     
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        setSelectedUserId(staff.id); 
+                                      }} 
+                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex-shrink-0 ${ 
+                                        isSelected 
+                                          ? "bg-secondary text-white" 
+                                          : isBestMatch
+                                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                                          : "bg-gray-100 text-gray-600 hover:bg-gray-200" 
+                                      }`} 
+                                    > 
+                                      {isSelected ? "Selected" : "Select"} 
+                                    </button> 
+                                  </div> 
+                                </div> 
+                              </div> 
+                            </div> 
+                          ); 
+                        })} 
+                      </div> 
+ 
+                      {/* Pagination */} 
+                      {totalPages > 1 && ( 
+                        <div className="flex items-center justify-between pt-2"> 
+                          <button 
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+                            disabled={currentPage === 1} 
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                          > 
+                            ← Prev 
+                          </button> 
+                          <div className="flex items-center gap-1"> 
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => { 
+                              let pageNum; 
+                              if (totalPages <= 5) { 
+                                pageNum = i + 1; 
+                              } else if (currentPage <= 3) { 
+                                pageNum = i + 1; 
+                              } else if (currentPage >= totalPages - 2) { 
+                                pageNum = totalPages - 4 + i; 
+                              } else { 
+                                pageNum = currentPage - 2 + i; 
+                              } 
+                               
+                              return ( 
+                                <button 
+                                  key={pageNum} 
+                                  onClick={() => setCurrentPage(pageNum)} 
+                                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${ 
+                                    currentPage === pageNum 
+                                      ? "bg-secondary text-white" 
+                                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50" 
+                                  }`} 
+                                > 
+                                  {pageNum} 
+                                </button> 
+                              ); 
+                            })} 
+                          </div> 
+                          <button 
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+                            disabled={currentPage === totalPages} 
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                          > 
+                            Next → 
+                          </button> 
+                        </div> 
+                      )} 
+                    </> 
+                  )} 
+ 
+                  {/* Summary stats */} 
+                  <div className="flex gap-2 text-[10px] text-gray-500 flex-wrap"> 
+                    <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full"> 
+                      {staffWithDistance.filter(s => s.is_in_house).length} In-House 
+                    </span> 
+                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full"> 
+                      {staffWithDistance.filter(s => !s.is_in_house).length} 3PL 
+                    </span> 
+                    {staffWithDistance.filter(s => s.calculated_distance != null).length > 0 && ( 
+                      <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-full"> 
+                        📍 {staffWithDistance.filter(s => s.calculated_distance != null).length} with location 
+                      </span> 
+                    )} 
+                  </div> 
+ 
+                  <div className="flex gap-2 pt-2"> 
+                    <button 
+                      onClick={handleAssign} 
+                      disabled={assigning || !selectedUserId} 
+                      className="flex-1 bg-secondary text-white py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:bg-secondary-light transition-colors" 
+                    > 
+                      {assigning ? ( 
+                        <> 
+                          <Loader2 className="h-3 w-3 animate-spin" /> 
+                          Assigning... 
+                        </> 
+                      ) : ( 
+                        "Assign Driver" 
+                      )} 
+                    </button> 
+                    <button 
+                      onClick={() => setShowAssignForm(false)} 
+                      className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors" 
+                    > 
+                      Cancel 
+                    </button> 
+                  </div> 
+                </>
+              )} 
+            </motion.div> 
+          )} 
+        </AnimatePresence> 
+      </Card> 
+ 
+      <AnimatePresence> 
+        {showFullscreenImage && delivery?.delivery_person_image && ( 
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4" 
+            onClick={() => setShowFullscreenImage(false)} 
+          > 
+            <button 
+              onClick={() => setShowFullscreenImage(false)} 
+              className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 backdrop-blur-sm z-10" 
+            > 
+              <X className="h-6 w-6" /> 
+            </button> 
+ 
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white/70 text-xs font-medium flex items-center gap-2"> 
+              <ZoomIn className="h-3.5 w-3.5" /> 
+              <span>Click anywhere to close</span> 
+            </div> 
+ 
+            <motion.img 
+              src={delivery.delivery_person_image} 
+              alt="Delivery Person" 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }} 
+              transition={{ type: "spring", damping: 25, stiffness: 300 }} 
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10" 
+            /> 
+          </motion.div> 
+        )} 
+      </AnimatePresence> 
+    </> 
+  ); 
 };
-
 // ─── RECEIPT REVIEW CARD ──────────────────────────────────────────
 const ReceiptReviewCard = ({
   receipt,
@@ -1952,7 +2202,7 @@ export function VendorOrderDetailModal({
   onOpenLiveTracking,
   allOrders = [],
   onSelectOrder,
-  onViewOnMap, // New prop
+  onViewOnMap,
 }: any) {
   if (!order) return null;
   const [refreshing, setRefreshing] = useState(false);
@@ -2616,5 +2866,5 @@ export function VendorOrderDetailModal({
         />
       )}
     </>
-  );
+  ); 
 }
