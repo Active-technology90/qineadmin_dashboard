@@ -1,5 +1,35 @@
 import { Edit, Trash2, User as UserIcon, Star } from "lucide-react";
 
+const getRoleLabel = (role?: string) => {
+  switch (role) {
+    case "staff":
+      return "Dispatcher";
+    case "delivery":
+      return "Delivery";
+    case "admin":
+      return "Admin";
+    case "viewer":
+      return "Viewer";
+    default:
+      return role || "—";
+  }
+};
+
+const getRoleBadgeClass = (role?: string) => {
+  switch (role) {
+    case "staff":
+      return "bg-secondary/10 text-secondary border-secondary/15";
+    case "delivery":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    case "admin":
+      return "bg-violet-50 text-violet-700 border-violet-200";
+    case "viewer":
+      return "bg-gray-100 text-gray-600 border-gray-200";
+    default:
+      return "bg-gray-100 text-gray-600 border-gray-200";
+  }
+};
+
 interface CompanyUsersTableProps {
   users: any[];
   loading: boolean;
@@ -126,7 +156,7 @@ export function CompanyUsersTable({
               ))
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 sm:py-12 text-gray-500">
+                <td colSpan={isAdmin ? 5 : 4} className="text-center py-8 sm:py-12 text-gray-500">
                   <UserIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-300 mb-2" />
                   <p className="text-xs sm:text-sm">No users found</p>
                 </td>
@@ -162,8 +192,8 @@ export function CompanyUsersTable({
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="capitalize px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-gray-100 text-gray-700 whitespace-nowrap">
-                      {user.role}
+                    <span className={`inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full border whitespace-nowrap ${getRoleBadgeClass(user.role)}`}>
+                      {getRoleLabel(user.role)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -195,12 +225,13 @@ export function CompanyUsersTable({
                       <span className="text-[10px] sm:text-xs text-gray-400">—</span>
                     )}
                   </td>
-<td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
-                    {isAdmin && (
+{isAdmin && (
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+                    {(
                       <button
                         onClick={() => onEdit(user)}
                         className="text-secondary hover:text-indigo-800 mr-2 sm:mr-3 transition p-1 rounded-md hover:bg-indigo-50"
-                        title="Edit role"
+                        title="Edit team role"
                       >
                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
@@ -217,13 +248,14 @@ export function CompanyUsersTable({
                         title={
                           isSelf(user)
                             ? "You cannot delete yourself"
-                            : "Remove user"
+                            : user.role === "staff" ? "Remove dispatcher" : "Remove user"
                         }
                       >
                         <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     )}
                   </td>
+                )}
                 </tr>
               ))
             )}

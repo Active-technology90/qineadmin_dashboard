@@ -1,4 +1,4 @@
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2 } from "lucide-react";
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -17,42 +17,64 @@ export function DeleteUserModal({
 }: DeleteUserModalProps) {
   if (!isOpen || !user) return null;
 
+  const isDispatcher = user.role === "staff";
+  const subjectLabel = isDispatcher ? "dispatcher" : "user";
+  const actionLabel = isDispatcher ? "Remove Dispatcher" : "Remove User";
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4 md:p-6" onClick={onClose}>
-      <div className="bg-white w-full max-w-[90%] sm:max-w-lg rounded-xl sm:rounded-2xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-100">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Remove User</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4 md:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[90%] overflow-hidden rounded-xl bg-white shadow-xl sm:max-w-lg sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-gray-100 p-4 sm:p-5">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">{actionLabel}</h2>
+            {isDispatcher && (
+              <p className="mt-0.5 text-xs text-gray-500">Dispatcher access will be removed from this company.</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            aria-label="Close"
+          >
             <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-        <div className="p-4 sm:p-5 pb-0 sm:pb-2">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
-              <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+
+        <div className="p-4 pb-2 sm:p-5">
+          <div className="flex items-start gap-3 sm:items-center">
+            <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mt-0 sm:h-12 sm:w-12">
+              <Trash2 className="h-5 w-5 text-red-600 sm:h-6 sm:w-6" />
             </div>
             <div className="flex-1">
-              <p className="text-sm sm:text-base text-gray-700">
+              <p className="text-sm text-gray-700 sm:text-base">
                 Are you sure you want to remove{" "}
-                <span className="font-semibold">{user.first_name} {user.last_name}</span> from this company?
+                <span className="font-semibold">{user.first_name} {user.last_name}</span>{" "}
+                as a {subjectLabel} from this company?
               </p>
-              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">This action cannot be undone.</p>
+              <p className="mt-1 text-[10px] text-gray-500 sm:text-xs">This company membership will be removed.</p>
             </div>
           </div>
         </div>
-        <div className="flex flex-row justify-end gap-3 p-3 sm:p-4 bg-gray-50 rounded-b-xl sm:rounded-b-2xl mt-0">
+
+        <div className="mt-0 flex flex-row justify-end gap-3 rounded-b-xl bg-gray-50 p-3 sm:rounded-b-2xl sm:p-4">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
+            className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm text-gray-700 transition hover:bg-white sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={deleting}
-            className="px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="rounded-lg bg-red-600 px-4 py-1.5 text-sm text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
           >
-            {deleting ? "Removing..." : "Remove User"}
+            {deleting ? "Removing..." : actionLabel}
           </button>
         </div>
       </div>

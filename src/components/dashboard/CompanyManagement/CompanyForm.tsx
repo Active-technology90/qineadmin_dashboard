@@ -51,6 +51,9 @@ interface CompanyFormProps {
   onLogoFileChange?: (file: File | null) => void;
   onCoverFileChange?: (file: File | null) => void;
   isEditingActive: boolean;
+  canManageActiveStatus?: boolean;
+  isCompanyVerified?: boolean;
+  onVerificationChange?: (verified: boolean) => void;
   submitting: boolean;
   editingSlug: string | null;
   headCompanyName?: string | null;
@@ -71,6 +74,9 @@ export default function CompanyForm({
   onLogoFileChange,
   onCoverFileChange,
   isEditingActive,
+  canManageActiveStatus = false,
+  isCompanyVerified = false,
+  onVerificationChange,
   submitting,
   editingSlug,
   headCompanyName,
@@ -283,22 +289,66 @@ export default function CompanyForm({
       </div>
      
 
-      {/* Toggles */}
+      {/* Verification + Toggles */}
+      {canManageActiveStatus && editingSlug && (
+        <div className={`flex items-center justify-between gap-4 p-4 rounded-xl border ${
+          isCompanyVerified
+            ? "bg-blue-50 border-blue-200"
+            : "bg-amber-50 border-amber-200"
+        }`}>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Company Verification</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {isCompanyVerified
+                ? "Verified. The active status can now be changed."
+                : "Verify this company before activating it."}
+            </p>
+            <p className="text-[10px] text-gray-400 mt-1">Frontend-only verification state</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={isCompanyVerified}
+              onChange={(e) => onVerificationChange?.(e.target.checked)}
+              disabled={!isEditingActive}
+            />
+            <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+              isCompanyVerified ? "bg-blue-500" : "bg-gray-300"
+            } ${!isEditingActive ? "opacity-60" : ""}`}></div>
+          </label>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <div className={`flex items-center gap-3 p-3 rounded-xl border ${formData.is_active ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"}`}>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className={`relative inline-flex items-center ${
+            isEditingActive && canManageActiveStatus && isCompanyVerified
+              ? "cursor-pointer"
+              : "cursor-not-allowed"
+          }`}>
             <input
               type="checkbox"
               className="sr-only peer"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              disabled={!isEditingActive}
+              disabled={!isEditingActive || !canManageActiveStatus || !isCompanyVerified}
             />
-            <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${formData.is_active ? "bg-emerald-500" : "bg-gray-300"} ${!isEditingActive ? "opacity-60" : ""}`}></div>
+            <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${formData.is_active ? "bg-emerald-500" : "bg-gray-300"} ${
+              !isEditingActive || !canManageActiveStatus || !isCompanyVerified ? "opacity-60" : ""
+            }`}></div>
           </label>
           <div>
             <p className="text-sm font-medium text-gray-900">Is Active</p>
-            <p className="text-xs text-gray-500">{formData.is_active ? "Visible to customers" : "Hidden from customers"}</p>
+            <p className="text-xs text-gray-500">
+              {!canManageActiveStatus
+                ? "Only super admin can change this setting"
+                : !isCompanyVerified
+                  ? "Verify the company before activation"
+                  : formData.is_active
+                    ? "Visible to customers"
+                    : "Hidden from customers"}
+            </p>
           </div>
         </div>
 

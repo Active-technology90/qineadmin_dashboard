@@ -8,11 +8,10 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import {
-  X, Navigation, Loader2, RefreshCw, Truck, MapPin, Clock,
-  CheckCircle, PanelLeftClose, PanelLeftOpen, Maximize2, Building2,
-  Users, Search, Check, Phone, Package, Navigation2, Home, Star,
-  Route as RouteIcon, AlertTriangle, Store, User, ArrowRight, Award,
-  Factory, Box, ChevronDown, ChevronUp,
+  X, Navigation, Loader2, RefreshCw, MapPin, PanelLeftClose,
+  PanelLeftOpen, Maximize2, Users, Search, Check, Phone, Package,
+  Navigation2, Star, AlertTriangle, Store, ChevronDown, ChevronUp,
+  Satellite, Map as MapIcon,
 } from "lucide-react";
 import {
   getAdminVendorOrders,
@@ -120,6 +119,11 @@ interface AvailableDriver {
   total_eta_minutes?: number | null;
   road_distance_to_customer?: number | null;
   road_eta_to_customer?: number | null;
+  road_distance_to_pickup?: number | null;
+  road_eta_to_pickup?: number | null;
+  pickup_to_customer_distance?: number | null;
+  pickup_to_customer_eta?: number | null;
+  recommendation_rank?: number | null;
   is_nearest?: boolean;
 }
 
@@ -223,6 +227,65 @@ const DRIVER_COLORS = [
 
 const getDriverColor = (index: number) => DRIVER_COLORS[index % DRIVER_COLORS.length];
 
+// Smooth Leaflet marker movement so Firebase location updates do not visually jump.
+const markerAnimationFrames = new WeakMap<object, number>();
+const animateMarkerTo = (
+  marker: Leaflet.Marker,
+  lat: number,
+  lon: number,
+  duration = 650,
+) => {
+  const start = marker.getLatLng();
+  if (Math.abs(start.lat - lat) < 0.000001 && Math.abs(start.lng - lon) < 0.000001) return;
+
+  const previousFrame = markerAnimationFrames.get(marker as unknown as object);
+  if (previousFrame) cancelAnimationFrame(previousFrame);
+
+  const startedAt = performance.now();
+  const tick = (now: number) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    // Ease out keeps frequent GPS updates feeling responsive instead of mechanical.
+    const eased = 1 - Math.pow(1 - progress, 3);
+    marker.setLatLng([
+      start.lat + (lat - start.lat) * eased,
+      start.lng + (lon - start.lng) * eased,
+    ]);
+
+    if (progress < 1) {
+      const frame = requestAnimationFrame(tick);
+      markerAnimationFrames.set(marker as unknown as object, frame);
+    } else {
+      markerAnimationFrames.delete(marker as unknown as object);
+    }
+  };
+
+  const frame = requestAnimationFrame(tick);
+  markerAnimationFrames.set(marker as unknown as object, frame);
+};
+
+const formatMapAddress = (value: any): string => {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value !== "object") return String(value).trim();
+
+  const parts = [
+    value.address,
+    value.full_address,
+    value.text,
+    value.street,
+    value.street_address,
+    value.area,
+    value.subcity,
+    value.city,
+    value.region,
+    value.country,
+  ]
+    .filter((part) => typeof part === "string" && part.trim())
+    .map((part) => part.trim());
+
+  return Array.from(new Set(parts)).join(", ");
+};
+
 // ── Canonical Order Destination Helper ─────────────────────
 const getOrderDestination = (order: any): OrderDestination => {
   if (!order) {
@@ -260,33 +323,25 @@ const getOrderDestination = (order: any): OrderDestination => {
   }
 
   let address = "";
-  
-  if (order.shipping_address_text) {
-    address = order.shipping_address_text;
-  }
-  else if (order.vendor_orders?.[0]?.shipping_address_text) {
-    address = order.vendor_orders[0].shipping_address_text;
-  }
-  else if (order.delivery?.customer_address) {
-    address = order.delivery.customer_address;
-  }
-  else if (order.vendor_orders?.[0]?.delivery?.customer_address) {
-    address = order.vendor_orders[0].delivery.customer_address;
-  }
-  else {
-    const addressFields = [
-      order.delivery_address,
-      order.customer_address,
-      order.address,
-      order.street_address,
-      order.shipping_address_ref?.address,
-      order.shipping_address_ref?.street,
-      order.shipping_address_ref?.text,
-      order.shipping_address_ref?.full_address,
-    ].filter(Boolean);
-    
-    if (addressFields.length > 0) {
-      address = addressFields[0];
+
+  const addressCandidates = [
+    order.shipping_address_text,
+    order.vendor_orders?.[0]?.shipping_address_text,
+    order.delivery?.customer_address,
+    order.vendor_orders?.[0]?.delivery?.customer_address,
+    order.shipping_address_ref,
+    order.vendor_orders?.[0]?.shipping_address_ref,
+    order.delivery_address,
+    order.customer_address,
+    order.address,
+    order.street_address,
+  ];
+
+  for (const candidate of addressCandidates) {
+    const formatted = formatMapAddress(candidate);
+    if (formatted) {
+      address = formatted;
+      break;
     }
   }
 
@@ -368,53 +423,11 @@ const normalizeOrder = (order: any): DispatchOrder => {
     assignmentBlockedReason: assignmentCheck.reason,
     companyLat: pickupLat,
     companyLon: pickupLon,
-    companyAddress: company?.address || company?.address_am || "",
+    companyAddress: formatMapAddress(company?.address || company?.address_am || company?.location || ""),
   };
 };
 
 // ── UI atoms ───────────────────────────────────────────────────────
-const StatusBadge: React.FC<{ status?: string }> = React.memo(({ status }) => {
-  const isLive = status === "out_for_delivery" || status === "shipped";
-  return (
-    <span
-      className={`flex items-center gap-1.5 text-[12px] sm:text-xs font-medium ${
-        isLive ? "text-green-400" : "text-gray-400"
-      }`}
-    >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          isLive ? "bg-green-500 animate-pulse" : "bg-gray-300"
-        }`}
-      />
-      {isLive ? "Live" : status || "Pending"}
-    </span>
-  );
-});
-
-const StatsCard: React.FC<{
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  iconBgColor: string;
-  iconColor: string;
-}> = React.memo(({ icon, title, value, iconBgColor, iconColor }) => (
-  <div className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center gap-3 border border-gray-200 flex-1 min-w-[80px]">
-    <div
-      className={`${iconBgColor} w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0`}
-    >
-      <div className={`${iconColor}`}>{icon}</div>
-    </div>
-    <div className="min-w-0">
-      <div className="text-lg font-extrabold text-gray-800 truncate">
-        {value}
-      </div>
-      <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">
-        {title}
-      </div>
-    </div>
-  </div>
-));
-
 // ── Popup generators ───────────────────────────────────────────
 const createCompanyPopup = (order: DispatchOrder): string => {
   return `
@@ -592,30 +605,6 @@ const createDriverPopup = (
   `;
 };
 
-const createPickupPopup = (order: DispatchOrder): string => {
-  return `
-    <div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:300px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="background:#6750A4;border-radius:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;">🏪</div>
-        <div>
-          <div style="font-size:16px;font-weight:700;color:#111827;">Pickup Location</div>
-          <div style="font-size:13px;color:#6B7280;">${escapeHtml(order.pickupName)}</div>
-        </div>
-      </div>
-      ${order.companyAddress ? `
-        <div style="background:#F9FAFB;border-radius:12px;padding:12px;margin-bottom:8px;">
-          <div style="font-size:12px;color:#374151;">📍 ${escapeHtml(order.companyAddress)}</div>
-        </div>
-      ` : ''}
-      ${order.pickupLat != null && order.pickupLon != null ? `
-        <div style="font-size:11px;color:#6B7280;font-family:monospace;">
-          ${order.pickupLat.toFixed(6)}, ${order.pickupLon.toFixed(6)}
-        </div>
-      ` : ''}
-    </div>
-  `;
-};
-
 const createDriverPopupForSelection = (
   driver: AvailableDriver,
   order: DispatchOrder,
@@ -624,65 +613,71 @@ const createDriverPopupForSelection = (
 ): string => {
   const safeName = escapeHtml(driver.name);
   const hasLocation = driver.current_lat != null && driver.current_lng != null;
-  const locationLabel = driver.isLive ? "🟢 Live" : 
-                        driver.location_source === "last_known" ? "🕒 Last known" : 
-                        "📡 Available";
-  
+  const locationLabel = driver.isLive
+    ? "🟢 Realtime GPS"
+    : driver.location_source === "last_known"
+      ? "🕒 Last known location"
+      : "📡 Available location";
+
   return `
-    <div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px;">
+    <div style="font-family:Inter,system-ui,sans-serif;min-width:280px;max-width:340px;">
       ${isNearest ? `
-        <div style="background:#F0FDF4;border:1px solid #22C55E;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-          <span style="font-size:14px;">⭐</span>
-          <span style="font-size:12px;font-weight:700;color:#166534;">BEST MATCH</span>
+        <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:12px;font-weight:800;color:#6750A4;">★ RECOMMENDED DRIVER</span>
+          <span style="font-size:10px;font-weight:700;color:#6D28D9;">Best pickup ETA</span>
         </div>
-      ` : ''}
+      ` : ""}
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         ${driver.profile_image ? `
-          <img src="${escapeHtml(driver.profile_image)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${color};" />
+          <img src="${escapeHtml(driver.profile_image)}" style="width:46px;height:46px;border-radius:13px;object-fit:cover;border:2px solid ${isNearest ? "#6750A4" : color};" />
         ` : `
-          <div style="background:${color}20;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid ${color};">🚚</div>
+          <div style="background:#F5F3FF;color:#6750A4;border-radius:13px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid #DDD6FE;">🚚</div>
         `}
-        <div>
-          <div style="font-size:15px;font-weight:700;color:#111827;">${safeName}</div>
-          <div style="font-size:11px;color:${color};">${locationLabel} · ${getVehicleName(driver.vehicle_type)}</div>
+        <div style="min-width:0;">
+          <div style="font-size:15px;font-weight:800;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeName}</div>
+          <div style="font-size:11px;color:#6B7280;margin-top:2px;">${locationLabel} · ${getVehicleName(driver.vehicle_type)}</div>
         </div>
       </div>
-      
+
       ${hasLocation ? `
-        <div style="background:#F9FAFB;border-radius:12px;padding:12px;margin-bottom:8px;">
-          ${driver.distance_to_customer != null ? `
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:4px;">
-              <span>📍 To Recipient</span>
-              <span style="font-weight:700;">${formatDistance(driver.distance_to_customer)}</span>
-            </div>
-          ` : ''}
-          ${driver.road_distance_to_customer != null ? `
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:4px;">
-              <span>🛣 Road Distance</span>
-              <span style="font-weight:700;">${formatDistance(driver.road_distance_to_customer)}</span>
-            </div>
-          ` : ''}
-          ${driver.road_eta_to_customer != null ? `
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;">
-              <span>⏱ ETA</span>
-              <span style="font-weight:700;">${formatDuration(driver.road_eta_to_customer)}</span>
-            </div>
-          ` : ''}
+        <div style="background:#F9FAFB;border:1px solid #F3F4F6;border-radius:12px;padding:11px;margin-bottom:10px;">
+          <div style="font-size:10px;font-weight:800;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dispatch route</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:#374151;margin-bottom:7px;">
+            <span style="width:20px;height:20px;border-radius:7px;background:${isNearest ? "#6750A4" : color};color:white;display:flex;align-items:center;justify-content:center;font-size:10px;">1</span>
+            <span style="flex:1;">Driver → Pickup</span>
+            <strong>${formatDistance(driver.road_distance_to_pickup ?? driver.distance_to_pickup)}</strong>
+            <span style="color:#9CA3AF;">${driver.road_eta_to_pickup != null ? formatDuration(driver.road_eta_to_pickup) : ""}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:#374151;margin-bottom:7px;">
+            <span style="width:20px;height:20px;border-radius:7px;background:#6750A4;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;">2</span>
+            <span style="flex:1;">Pickup → Customer</span>
+            <strong>${formatDistance(driver.pickup_to_customer_distance)}</strong>
+            <span style="color:#9CA3AF;">${driver.pickup_to_customer_eta != null ? formatDuration(driver.pickup_to_customer_eta) : ""}</span>
+          </div>
+          <div style="border-top:1px solid #E5E7EB;padding-top:8px;display:flex;justify-content:space-between;font-size:12px;color:#111827;">
+            <span style="font-weight:700;">Total trip</span>
+            <strong style="color:#6750A4;">${formatDistance(driver.total_route_distance)} · ${formatDuration(driver.total_eta_minutes)}</strong>
+          </div>
         </div>
       ` : `
         <div style="background:#F9FAFB;border-radius:12px;padding:12px;margin-bottom:8px;text-align:center;">
-          <span style="font-size:12px;color:#6B7280;">⚪ Location unavailable</span>
+          <span style="font-size:12px;color:#6B7280;">Location unavailable</span>
         </div>
       `}
-      
+
+      <div style="background:#F5F3FF;border-radius:10px;padding:9px 10px;margin-bottom:10px;font-size:11px;color:#5B4A85;">
+        <div style="font-weight:800;margin-bottom:3px;">Delivery destination</div>
+        <div>${escapeHtml(order.address)}</div>
+      </div>
+
       ${driver.phone ? `
         <a href="tel:${escapeHtml(driver.phone)}" style="
-          display:block;background:${color};color:white;text-align:center;
-          padding:10px;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;
+          display:block;background:#6750A4;color:white;text-align:center;
+          padding:10px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;
         ">
-          📞 Call ${safeName}
+          Call ${safeName}
         </a>
-      ` : ''}
+      ` : ""}
     </div>
   `;
 };
@@ -691,125 +686,52 @@ const createDriverPopupForSelection = (
 const makeCompanyIcon = (): Leaflet.DivIcon => {
   const L = (window as any).L;
   return L.divIcon({
-    className: "company-marker",
+    className: "dispatch-marker dispatch-marker--pickup",
     html: `
-      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-        <div style="
-          background:#4CAF50;border-radius:50%;width:42px;height:42px;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 4px 12px rgba(76,175,80,0.4);border:3px solid white;font-size:20px;
-        ">🏢</div>
+      <div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;inset:0;border-radius:15px;background:#6750A4;box-shadow:0 8px 24px rgba(103,80,164,.28);border:3px solid white;"></div>
+        <span style="position:relative;font-size:20px;line-height:1;">🏪</span>
+        <span style="position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:999px;background:#22C55E;border:2px solid white;box-shadow:0 2px 8px rgba(34,197,94,.35);"></span>
       </div>
-      <div style="
-        position:absolute;
-        bottom:-20px;
-        left:50%;
-        transform:translateX(-50%);
-        white-space:nowrap;
-        font-size:10px;
-        font-weight:600;
-        color:#374151;
-        background:white;
-        padding:2px 6px;
-        border-radius:4px;
-        box-shadow:0 1px 3px rgba(0,0,0,0.1);
-      ">Company</div>
+      <div style="position:absolute;left:50%;top:52px;transform:translateX(-50%);white-space:nowrap;background:white;color:#4B5563;border:1px solid #E5E7EB;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:700;box-shadow:0 4px 12px rgba(15,23,42,.10);">Pickup</div>
     `,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
+    iconSize: [46, 46],
+    iconAnchor: [23, 23],
   });
 };
 
 const makeCustomerIcon = (orders: DeliveryWithLocation[]): Leaflet.DivIcon => {
   const L = (window as any).L;
   const customerName = orders[0]?.recipient_name || orders[0]?.customer_name || "Recipient";
-  
+
   return L.divIcon({
-    className: "customer-marker-grouped",
+    className: "dispatch-marker dispatch-marker--recipient",
     html: `
-      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-        <div style="
-          background:white;border-radius:50%;width:42px;height:42px;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 4px 12px rgba(0,0,0,0.25);border:3px solid #F59E0B;font-size:20px;
-        ">📍</div>
-        ${orders.length > 1 ? `<span style="
-          position:absolute;top:-6px;right:-6px;background:#F59E0B;color:white;
-          border-radius:50%;width:20px;height:20px;display:flex;align-items:center;
-          justify-content:center;font-size:11px;font-weight:bold;
-        ">${orders.length}</span>` : ""}
+      <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;inset:0;border-radius:14px;background:white;border:2px solid #F59E0B;box-shadow:0 8px 22px rgba(15,23,42,.16);"></div>
+        <span style="position:relative;font-size:19px;line-height:1;">📍</span>
+        ${orders.length > 1 ? `<span style="position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#F59E0B;color:white;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;box-sizing:border-box;">${orders.length}</span>` : ""}
       </div>
-      <div style="
-        position:absolute;
-        bottom:-20px;
-        left:50%;
-        transform:translateX(-50%);
-        white-space:nowrap;
-        font-size:10px;
-        font-weight:600;
-        color:#374151;
-        background:white;
-        padding:2px 6px;
-        border-radius:4px;
-        box-shadow:0 1px 3px rgba(0,0,0,0.1);
-        max-width:120px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-      ">${escapeHtml(customerName)}</div>
+      <div style="position:absolute;left:50%;top:50px;transform:translateX(-50%);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:white;color:#4B5563;border:1px solid #E5E7EB;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:700;box-shadow:0 4px 12px rgba(15,23,42,.10);">${escapeHtml(customerName)}</div>
     `,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
   });
 };
 
 const makeDeliveryLocationIcon = (customerName: string): Leaflet.DivIcon => {
   const L = (window as any).L;
   return L.divIcon({
-    className: "delivery-location-marker",
+    className: "dispatch-marker dispatch-marker--delivery",
     html: `
-      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-        <div style="
-          background:#2196F3;border-radius:50%;width:38px;height:38px;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 4px 12px rgba(33,150,243,0.4);border:3px solid white;font-size:18px;
-        ">📦</div>
+      <div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;inset:0;border-radius:15px;background:white;border:3px solid #6750A4;box-shadow:0 9px 24px rgba(103,80,164,.22);"></div>
+        <span style="position:relative;font-size:20px;line-height:1;">📦</span>
       </div>
-      <div style="
-        position:absolute;
-        bottom:-20px;
-        left:50%;
-        transform:translateX(-50%);
-        white-space:nowrap;
-        font-size:10px;
-        font-weight:600;
-        color:#374151;
-        background:white;
-        padding:2px 6px;
-        border-radius:4px;
-        box-shadow:0 1px 3px rgba(0,0,0,0.1);
-        max-width:120px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-      ">${escapeHtml(customerName)}</div>
+      <div style="position:absolute;left:50%;top:52px;transform:translateX(-50%);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#6750A4;color:white;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;box-shadow:0 4px 12px rgba(103,80,164,.22);">${escapeHtml(customerName)}</div>
     `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-  });
-};
-
-const makePickupIcon = (): Leaflet.DivIcon => {
-  const L = (window as any).L;
-  return L.divIcon({
-    className: "pickup-marker",
-    html: `
-      <div style="
-        background:#6750A4;border-radius:50%;width:36px;height:36px;
-        display:flex;align-items:center;justify-content:center;
-        box-shadow:0 4px 12px rgba(103,80,164,0.4);border:3px solid white;font-size:18px;
-      ">🏪</div>
-    `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [46, 46],
+    iconAnchor: [23, 23],
   });
 };
 
@@ -818,37 +740,35 @@ const makeDriverIcon = (
   count: number,
   color: string,
   isInHouse?: boolean,
-  isNearest?: boolean
+  isNearest?: boolean,
+  isLive = true,
 ): Leaflet.DivIcon => {
   const L = (window as any).L;
   const typeLabel = isInHouse ? "In-House" : "3PL";
-  const highlightBorder = isNearest ? "border:3px solid #22C55E;" : `border:2px solid ${color};`;
-  const starBadge = isNearest ? `<span style="
-    position:absolute;top:-10px;left:-10px;font-size:20px;
-  ">⭐</span>` : "";
-  
+  const safeName = escapeHtml(driverName);
+  const statusLabel = isLive ? "Live" : "View only";
+  const statusColor = isLive ? "#22C55E" : "#9CA3AF";
+
   return L.divIcon({
-    className: "driver-marker-grouped",
+    className: "dispatch-driver-marker",
     html: `
-      <div style="position:relative;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;box-shadow:0 4px 16px rgba(0,0,0,0.2);white-space:nowrap;font-family:Inter,system-ui,sans-serif;cursor:pointer;${isNearest ? 'box-shadow:0 6px 24px rgba(34,197,94,0.4);' : ''}">
-        ${starBadge}
-        <div style="
-          width:44px;height:44px;border-radius:50%;background:${color}20;
-          ${highlightBorder}display:flex;align-items:center;justify-content:center;font-size:26px;
-        ">🚚</div>
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <span style="font-size:14px;font-weight:700;color:#6750A4;max-width:120px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(driverName)}</span>
-          <span style="font-size:11px;font-weight:600;color:${color};display:flex;align-items:center;gap:4px;">🟢 Live · ${typeLabel} · ${count} order${count > 1 ? "s" : ""}</span>
+      <div style="position:relative;display:flex;align-items:center;gap:9px;background:white;border:1px solid ${isNearest ? "#C4B5FD" : "#E5E7EB"};border-left:4px solid ${isNearest ? "#6750A4" : color};border-radius:16px;padding:6px 10px 6px 6px;box-shadow:0 10px 28px rgba(15,23,42,.16);white-space:nowrap;font-family:Inter,system-ui,sans-serif;cursor:pointer;min-width:150px;">
+        <div style="position:relative;width:38px;height:38px;border-radius:12px;background:#F5F3FF;color:#6750A4;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid #EDE9FE;flex:none;">
+          🚚
+          <span style="position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border-radius:999px;background:${statusColor};border:2px solid white;"></span>
         </div>
-        ${count > 1 ? `<span style="
-          position:absolute;top:-8px;right:-8px;background:${color};color:white;
-          border-radius:50%;width:22px;height:22px;display:flex;align-items:center;
-          justify-content:center;font-size:12px;font-weight:bold;
-        ">${count}</span>` : ""}
+        <div style="min-width:0;display:flex;flex-direction:column;gap:2px;">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span style="max-width:116px;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:800;color:#1F2937;">${safeName}</span>
+            ${isNearest ? `<span style="background:#F5F3FF;color:#6750A4;border:1px solid #DDD6FE;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:800;">BEST</span>` : ""}
+          </div>
+          <span style="font-size:9px;font-weight:700;color:${isLive ? "#6B7280" : "#9CA3AF"};">${statusLabel} · ${typeLabel}${count > 1 ? ` · ${count} stops` : ""}</span>
+        </div>
+        ${count > 1 ? `<span style="position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;background:#6750A4;color:white;border:2px solid white;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;box-sizing:border-box;">${count}</span>` : ""}
       </div>
     `,
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
+    iconSize: [170, 52],
+    iconAnchor: [22, 26],
   });
 };
 
@@ -893,6 +813,9 @@ export default function DeliveryTrackingMap({
   const [showCustomerMarker, setShowCustomerMarker] = useState(true);
   const [showDeliveryMarker, setShowDeliveryMarker] = useState(true);
   const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(false);
+  const [isOrderRouteExpanded, setIsOrderRouteExpanded] = useState(false);
+  const [isDriverToolsExpanded, setIsDriverToolsExpanded] = useState(false);
+  const [mapStyle, setMapStyle] = useState<"street" | "satellite">("street");
 
   // Data state
   const [firebaseData, setFirebaseData] = useState<Record<number, FirebaseDriverData>>({});
@@ -900,10 +823,13 @@ export default function DeliveryTrackingMap({
     latitude: number; longitude: number; heading?: number; is_online?: boolean; updated_at?: number;
   }>>({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [realtimeUpdatedAt, setRealtimeUpdatedAt] = useState<Date | null>(null);
+  const [activeRealtimeSubscriptions, setActiveRealtimeSubscriptions] = useState(0);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<AvailableDriver[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [routeDataByDriver, setRouteDataByDriver] = useState<Record<number, RouteSummary | null>>({});
+  const [pickupCustomerRoute, setPickupCustomerRoute] = useState<RouteSummary | null>(null);
 
   // Refs
   const mapRef = useRef<Leaflet.Map | null>(null);
@@ -917,11 +843,13 @@ export default function DeliveryTrackingMap({
   const clusterGroup = useRef<Leaflet.LayerGroup | null>(null);
   const subscribedIds = useRef<Set<string>>(new Set());
   const initialFitDone = useRef(false);
+  const tileLayerRef = useRef<Leaflet.TileLayer | null>(null);
   
   // OSRM routing refs
   const routeCache = useRef<Map<RouteCacheKey, RouteCacheEntry>>(new Map());
   const pendingRequests = useRef<Map<RouteCacheKey, Promise<RouteSummary | null>>>(new Map());
   const debounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const driverRoutePositionKeys = useRef<Map<number, string>>(new Map());
 
   // React Query
   const queryKey = useMemo(
@@ -954,9 +882,13 @@ export default function DeliveryTrackingMap({
       }
       return fetched;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    // Firebase is the primary real-time channel; polling is a resilient fallback for
+    // newly assigned/completed deliveries and backend-only status changes.
+    refetchInterval: mode === "tracking" ? 30 * 1000 : 60 * 1000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     retry: 2,
     enabled: shouldFetchAll || !!effectiveSlug,
   });
@@ -1082,6 +1014,7 @@ export default function DeliveryTrackingMap({
             ...prev,
             [driver.id]: data,
           }));
+          setRealtimeUpdatedAt(new Date());
         }
       };
       onValue(driverRef, callback);
@@ -1150,16 +1083,24 @@ export default function DeliveryTrackingMap({
     return requestPromise;
   }, []);
 
-  // Enhanced drivers with route calculations
+  // Enhanced drivers with dispatch-route calculations.
+  // The assignment route is always Driver -> Company/Pickup -> Customer.
   const enhancedDrivers = useMemo(() => {
     if (!normalizedOrder) return [];
 
-    const pickup: Coordinates | null = normalizedOrder.pickupLat != null && normalizedOrder.pickupLon != null
-      ? { lat: normalizedOrder.pickupLat, lon: normalizedOrder.pickupLon }
-      : null;
-    const customer: Coordinates | null = normalizedOrder.customerLat != null && normalizedOrder.customerLon != null
-      ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon }
-      : null;
+    const pickup: Coordinates | null =
+      normalizedOrder.pickupLat != null && normalizedOrder.pickupLon != null
+        ? { lat: normalizedOrder.pickupLat, lon: normalizedOrder.pickupLon }
+        : null;
+    const customer: Coordinates | null =
+      normalizedOrder.customerLat != null && normalizedOrder.customerLon != null
+        ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon }
+        : null;
+
+    const fallbackPickupToCustomer =
+      pickup && customer
+        ? haversine(pickup.lat, pickup.lon, customer.lat, customer.lon)
+        : null;
 
     const mapped = availableDrivers.map((d: any) => {
       let driverLoc: Coordinates | null = null;
@@ -1179,19 +1120,32 @@ export default function DeliveryTrackingMap({
         locationSource = "last_known";
       }
 
-      let distance_to_pickup: number | null = null;
-      let distance_to_customer: number | null = null;
+      const distanceToPickup =
+        driverLoc && pickup
+          ? haversine(driverLoc.lat, driverLoc.lon, pickup.lat, pickup.lon)
+          : null;
+      const distanceToCustomer =
+        driverLoc && customer
+          ? haversine(driverLoc.lat, driverLoc.lon, customer.lat, customer.lon)
+          : null;
 
-      if (driverLoc) {
-        if (pickup) {
-          distance_to_pickup = haversine(driverLoc.lat, driverLoc.lon, pickup.lat, pickup.lon);
-        }
-        if (customer) {
-          distance_to_customer = haversine(driverLoc.lat, driverLoc.lon, customer.lat, customer.lon);
-        }
-      }
+      const driverToPickupRoute = routeDataByDriver[d.id] || null;
+      const pickupToCustomerDistance =
+        pickupCustomerRoute?.distanceKm ?? fallbackPickupToCustomer;
+      const pickupToCustomerEta = pickupCustomerRoute?.durationMinutes ?? null;
 
-      const routeData = routeDataByDriver[d.id] || null;
+      const roadDistanceToPickup =
+        driverToPickupRoute?.distanceKm ?? distanceToPickup;
+      const roadEtaToPickup = driverToPickupRoute?.durationMinutes ?? null;
+
+      const totalDistance =
+        roadDistanceToPickup != null && pickupToCustomerDistance != null
+          ? roadDistanceToPickup + pickupToCustomerDistance
+          : null;
+      const totalEta =
+        roadEtaToPickup != null && pickupToCustomerEta != null
+          ? roadEtaToPickup + pickupToCustomerEta
+          : null;
 
       return {
         ...d,
@@ -1199,85 +1153,178 @@ export default function DeliveryTrackingMap({
         current_lng: driverLoc?.lon ?? null,
         location_source: locationSource,
         isLive,
-        distance_to_pickup,
-        distance_to_customer,
-        total_route_distance: distance_to_pickup != null && distance_to_customer != null
-          ? distance_to_pickup + distance_to_customer
-          : null,
-        road_distance_to_customer: routeData?.distanceKm ?? null,
-        road_eta_to_customer: routeData?.durationMinutes ?? null,
-      };
+        distance_to_pickup: distanceToPickup,
+        distance_to_customer: distanceToCustomer,
+        road_distance_to_pickup: roadDistanceToPickup,
+        road_eta_to_pickup: roadEtaToPickup,
+        pickup_to_customer_distance: pickupToCustomerDistance,
+        pickup_to_customer_eta: pickupToCustomerEta,
+        total_route_distance: totalDistance,
+        total_eta_minutes: totalEta,
+        road_distance_to_customer: totalDistance,
+        road_eta_to_customer: totalEta,
+        is_nearest: false,
+        recommendation_rank: null,
+      } as AvailableDriver;
     });
 
-    const driversWithDistance = mapped.filter(d => d.distance_to_customer != null);
-    if (driversWithDistance.length > 0) {
-      const nearest = driversWithDistance.reduce((min, d) => 
-        (d.distance_to_customer! < min.distance_to_customer!) ? d : min
-      );
-      nearest.is_nearest = true;
-    }
+    // Only drivers with a realtime GPS feed are assignable/recommendable.
+    // Drivers with last-known/API coordinates remain visible for dispatcher context.
+    const rankable = mapped
+      .filter((d) => d.isLive === true && d.current_lat != null && d.current_lng != null)
+      .sort((a, b) => {
+        const etaA = a.road_eta_to_pickup ?? Number.POSITIVE_INFINITY;
+        const etaB = b.road_eta_to_pickup ?? Number.POSITIVE_INFINITY;
+        if (etaA !== etaB) return etaA - etaB;
 
-    mapped.sort((a: any, b: any) => {
+        const distA = a.road_distance_to_pickup ?? a.distance_to_pickup ?? Number.POSITIVE_INFINITY;
+        const distB = b.road_distance_to_pickup ?? b.distance_to_pickup ?? Number.POSITIVE_INFINITY;
+        if (distA !== distB) return distA - distB;
+
+        return (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0);
+      });
+
+    rankable.forEach((driver, index) => {
+      driver.recommendation_rank = index + 1;
+      driver.is_nearest = index === 0;
+    });
+
+    mapped.sort((a, b) => {
       switch (sortOption) {
         case "nearest_pickup":
-          return (a.distance_to_pickup ?? 999999) - (b.distance_to_pickup ?? 999999);
+          return (
+            (a.road_distance_to_pickup ?? a.distance_to_pickup ?? 999999) -
+            (b.road_distance_to_pickup ?? b.distance_to_pickup ?? 999999)
+          );
         case "highest_rated":
           return (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0);
         case "fastest_eta":
-          return (a.road_eta_to_customer ?? a.total_route_distance ?? 999999) - 
-                 (b.road_eta_to_customer ?? b.total_route_distance ?? 999999);
+          return (
+            (a.total_eta_minutes ?? a.road_eta_to_pickup ?? 999999) -
+            (b.total_eta_minutes ?? b.road_eta_to_pickup ?? 999999)
+          );
         case "recommended":
         default:
-          if ((a.is_nearest ?? false) !== (b.is_nearest ?? false)) return (a.is_nearest ?? false) ? -1 : 1;
-          if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
-          if ((a.distance_to_customer == null) !== (b.distance_to_customer == null)) {
-            return a.distance_to_customer != null ? -1 : 1;
-          }
-          if (a.distance_to_customer !== b.distance_to_customer) {
-            return (a.distance_to_customer ?? 999999) - (b.distance_to_customer ?? 999999);
+          if ((a.recommendation_rank ?? 999999) !== (b.recommendation_rank ?? 999999)) {
+            return (a.recommendation_rank ?? 999999) - (b.recommendation_rank ?? 999999);
           }
           return (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0);
       }
     });
 
     return mapped;
-  }, [availableDrivers, normalizedOrder, getDriverLiveLocation, sortOption, routeDataByDriver]);
+  }, [
+    availableDrivers,
+    normalizedOrder,
+    getDriverLiveLocation,
+    sortOption,
+    routeDataByDriver,
+    pickupCustomerRoute,
+  ]);
 
-  // Calculate routes for all drivers in selection mode
+  // Shared second leg: Company/Pickup -> Customer. It is the same for every driver.
+  useEffect(() => {
+    if (mode !== "driver_selection" || !normalizedOrder) {
+      setPickupCustomerRoute(null);
+      return;
+    }
+
+    if (
+      normalizedOrder.pickupLat == null ||
+      normalizedOrder.pickupLon == null ||
+      normalizedOrder.customerLat == null ||
+      normalizedOrder.customerLon == null
+    ) {
+      setPickupCustomerRoute(null);
+      return;
+    }
+
+    let cancelled = false;
+    const pickup: Coordinates = {
+      lat: normalizedOrder.pickupLat,
+      lon: normalizedOrder.pickupLon,
+    };
+    const customer: Coordinates = {
+      lat: normalizedOrder.customerLat,
+      lon: normalizedOrder.customerLon,
+    };
+
+    fetchOSRMRoute(pickup, customer).then((route) => {
+      if (!cancelled) setPickupCustomerRoute(route);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    mode,
+    normalizedOrder?.id,
+    normalizedOrder?.pickupLat,
+    normalizedOrder?.pickupLon,
+    normalizedOrder?.customerLat,
+    normalizedOrder?.customerLon,
+    fetchOSRMRoute,
+  ]);
+
+  // First leg for every candidate: live Driver -> Company/Pickup.
   useEffect(() => {
     if (mode !== "driver_selection" || !normalizedOrder || !enhancedDrivers.length) return;
+    if (normalizedOrder.pickupLat == null || normalizedOrder.pickupLon == null) return;
 
-    const customer: Coordinates | null = normalizedOrder.customerLat != null && normalizedOrder.customerLon != null
-      ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon }
-      : null;
-
-    if (!customer) return;
+    const pickup: Coordinates = {
+      lat: normalizedOrder.pickupLat,
+      lon: normalizedOrder.pickupLon,
+    };
 
     enhancedDrivers.forEach((driver: AvailableDriver) => {
-      if (driver.isLive && driver.current_lat != null && driver.current_lng != null && 
-          isValidCoordinate(driver.current_lat, driver.current_lng)) {
-        const from: Coordinates = { lat: driver.current_lat, lon: driver.current_lng };
-        const to: Coordinates = customer;
-        
-        const debounceKey = `driver_route_${driver.id}`;
-        if (debounceTimers.current.has(debounceKey)) {
-          clearTimeout(debounceTimers.current.get(debounceKey));
-        }
-
-        debounceTimers.current.set(
-          debounceKey,
-          setTimeout(async () => {
-            const routeSummary = await fetchOSRMRoute(from, to);
-            setRouteDataByDriver(prev => ({
-              ...prev,
-              [driver.id]: routeSummary,
-            }));
-            debounceTimers.current.delete(debounceKey);
-          }, 2000)
-        );
+      if (
+        driver.current_lat == null ||
+        driver.current_lng == null ||
+        !isValidCoordinate(driver.current_lat, driver.current_lng)
+      ) {
+        return;
       }
+
+      const from: Coordinates = {
+        lat: driver.current_lat,
+        lon: driver.current_lng,
+      };
+      const debounceKey = `driver_pickup_route_${driver.id}`;
+      const positionKey = `${from.lat.toFixed(4)},${from.lon.toFixed(4)}_${pickup.lat.toFixed(4)},${pickup.lon.toFixed(4)}`;
+
+      // Do not continuously request the same road route just because route state
+      // itself caused a render. A new request is needed only after meaningful GPS movement.
+      if (driverRoutePositionKeys.current.get(driver.id) === positionKey) return;
+      driverRoutePositionKeys.current.set(driver.id, positionKey);
+
+      // If a newer GPS point arrives while a route request is waiting, replace
+      // the pending timer so OSRM receives the newest known driver position.
+      const existingTimer = debounceTimers.current.get(debounceKey);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      debounceTimers.current.set(
+        debounceKey,
+        setTimeout(async () => {
+          const routeSummary = await fetchOSRMRoute(from, pickup);
+          if (!routeSummary) {
+            driverRoutePositionKeys.current.delete(driver.id);
+          }
+          setRouteDataByDriver((prev) => ({
+            ...prev,
+            [driver.id]: routeSummary,
+          }));
+          debounceTimers.current.delete(debounceKey);
+        }, 550),
+      );
     });
-  }, [mode, normalizedOrder, enhancedDrivers, fetchOSRMRoute]);
+  }, [
+    mode,
+    normalizedOrder?.id,
+    normalizedOrder?.pickupLat,
+    normalizedOrder?.pickupLon,
+    enhancedDrivers,
+    fetchOSRMRoute,
+  ]);
 
   // Filter available drivers
   const filteredAvailableDrivers = useMemo(() => {
@@ -1328,7 +1375,7 @@ export default function DeliveryTrackingMap({
   }, [liveDeliveries]);
 
   const driverColorMap = useMemo(() => {
-    const drivers = Array.from(driverGroups.keys()).sort();
+    const drivers = (Array.from(driverGroups.keys()) as string[]).sort();
     const colorMap = new Map<string, string>();
     drivers.forEach((driver, idx) => colorMap.set(driver, getDriverColor(idx)));
     return colorMap;
@@ -1370,6 +1417,24 @@ export default function DeliveryTrackingMap({
     addCSS("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css", "mc-css-dt");
     addCSS("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css", "mc-default-css-dt");
 
+    if (!document.getElementById("delivery-map-production-ui")) {
+      const style = document.createElement("style");
+      style.id = "delivery-map-production-ui";
+      style.textContent = `
+        .dispatch-marker, .dispatch-driver-marker { background: transparent !important; border: 0 !important; }
+        .leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: 0 18px 48px rgba(15,23,42,.18); border: 1px solid rgba(229,231,235,.9); }
+        .leaflet-popup-content { margin: 14px 16px; }
+        .leaflet-popup-tip { box-shadow: 2px 2px 4px rgba(15,23,42,.08); }
+        .leaflet-control-zoom { border: 1px solid #E5E7EB !important; border-radius: 14px !important; overflow: hidden; box-shadow: 0 8px 24px rgba(15,23,42,.12); }
+        .leaflet-control-zoom a { color: #6750A4 !important; border-color: #F3F4F6 !important; width: 34px !important; height: 34px !important; line-height: 34px !important; font-weight: 700 !important; }
+        .leaflet-control-zoom a:hover { background: #F5F3FF !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,.88) !important; border-radius: 8px 0 0 0; font-size: 9px !important; }
+        .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: #6750A4 !important; color: white !important; }
+        .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(103,80,164,.22) !important; }
+      `;
+      document.head.appendChild(style);
+    }
+
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.onload = () => {
@@ -1381,13 +1446,35 @@ export default function DeliveryTrackingMap({
     document.head.appendChild(script);
   }, []);
 
-  // Firebase subscriptions for live deliveries
-  useEffect(() => {
-    if (!liveDeliveries.length) return;
+  // Realtime delivery subscriptions. Subscribe from API tracking ids rather than the
+  // already-filtered live list so a Firebase status/location change can bring an order
+  // into or out of the live view immediately.
+  const realtimeTrackingTargets = useMemo(() => {
+    const targets = new Map<string, number[]>();
+    const finalStatuses = new Set([
+      "delivered", "cancelled", "rejected", "refunded", "completed",
+    ]);
 
-    const currentTrackingIds = new Set(
-      liveDeliveries.map(o => o.delivery?.tracking_id).filter(Boolean) as string[]
-    );
+    allOrders.forEach((order: any) => {
+      const vendorOrder = order.vendor_orders?.[0];
+      const deliveryData = vendorOrder?.delivery || order.delivery;
+      const trackingId = deliveryData?.tracking_id;
+      const status = (
+        deliveryData?.status || order.delivery_status || vendorOrder?.delivery_status || order.status || ""
+      ).toLowerCase();
+
+      if (!trackingId || finalStatuses.has(status)) return;
+      const key = String(trackingId);
+      const ids = targets.get(key) || [];
+      ids.push(order.id);
+      targets.set(key, ids);
+    });
+
+    return targets;
+  }, [allOrders]);
+
+  useEffect(() => {
+    const currentTrackingIds = new Set(realtimeTrackingTargets.keys());
 
     subscribedIds.current.forEach(id => {
       if (!currentTrackingIds.has(id)) {
@@ -1397,33 +1484,47 @@ export default function DeliveryTrackingMap({
     });
 
     currentTrackingIds.forEach(id => {
-      if (!subscribedIds.current.has(id)) {
-        const trackingRef = ref(db, `deliveries/${id}`);
-        onValue(trackingRef, snapshot => {
+      if (subscribedIds.current.has(id)) return;
+
+      const trackingRef = ref(db, `deliveries/${id}`);
+      onValue(
+        trackingRef,
+        snapshot => {
           const val = snapshot.val();
           if (!val) return;
-          liveDeliveries.forEach(o => {
-            if (o.delivery?.tracking_id === id) {
-              setFirebaseData(prev => ({
-                ...prev,
-                [o.id]: {
-                  lat: val.latitude ?? val.lat,
-                  lon: val.longitude ?? val.lon,
-                  speed: val.speed,
-                  heading: val.heading,
-                  status: val.status,
-                  driver_name: val.driver_name,
-                  driver_phone: val.driver_phone,
-                  customer_address: val.customer_address,
-                },
-              }));
-            }
+
+          const orderIds = realtimeTrackingTargets.get(id) || [];
+          if (!orderIds.length) return;
+
+          setFirebaseData(prev => {
+            const next = { ...prev };
+            orderIds.forEach(orderId => {
+              next[orderId] = {
+                ...next[orderId],
+                lat: val.latitude ?? val.lat ?? next[orderId]?.lat,
+                lon: val.longitude ?? val.lon ?? next[orderId]?.lon,
+                speed: val.speed ?? next[orderId]?.speed,
+                heading: val.heading ?? next[orderId]?.heading,
+                status: val.status ?? next[orderId]?.status,
+                driver_name: val.driver_name ?? next[orderId]?.driver_name,
+                driver_phone: val.driver_phone ?? next[orderId]?.driver_phone,
+                customer_address: val.customer_address ?? next[orderId]?.customer_address,
+              };
+            });
+            return next;
           });
-        });
-        subscribedIds.current.add(id);
-      }
+          setRealtimeUpdatedAt(new Date());
+        },
+        () => {
+          // API polling remains active as a fallback if Firebase is temporarily unavailable.
+          setActiveRealtimeSubscriptions(subscribedIds.current.size);
+        },
+      );
+      subscribedIds.current.add(id);
     });
-  }, [liveDeliveries]);
+
+    setActiveRealtimeSubscriptions(subscribedIds.current.size);
+  }, [realtimeTrackingTargets]);
 
   // Firebase cleanup
   useEffect(() => {
@@ -1446,14 +1547,21 @@ export default function DeliveryTrackingMap({
       zoomControl: false,
       keyboard: true,
       keyboardPanDelta: 80,
+      zoomAnimation: true,
+      fadeAnimation: true,
+      markerZoomAnimation: true,
+      preferCanvas: true,
     }).setView([9.03, 38.74], 12);
     mapRef.current = map;
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
+    
+    // Add default street layer
+    tileLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
       attribution: "© OpenStreetMap contributors", 
-    }).addTo(map); 
- 
+      maxZoom: 19,
+    }).addTo(map);
+
     const cluster = L.markerClusterGroup({ 
       maxClusterRadius: 60, 
       spiderfyOnMaxZoom: true, 
@@ -1466,9 +1574,34 @@ export default function DeliveryTrackingMap({
       map.remove(); 
       mapRef.current = null; 
       clusterGroup.current = null; 
+      tileLayerRef.current = null;
     }; 
-  }, [leafletLoaded]); 
- 
+  }, [leafletLoaded]);
+
+  // Handle map style changes
+  useEffect(() => {
+    if (!mapRef.current || !tileLayerRef.current || !leafletLoaded) return;
+    const L = (window as any).L;
+    
+    // Remove current tile layer
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+    }
+    
+    // Add new tile layer based on selected style
+    if (mapStyle === "satellite") {
+      tileLayerRef.current = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "© Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+        maxZoom: 19,
+      }).addTo(mapRef.current);
+    } else {
+      tileLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 19,
+      }).addTo(mapRef.current);
+    }
+  }, [mapStyle, leafletLoaded]);
+
   // Reset fit flag when new deliveries appear after being empty 
   useEffect(() => { 
     if (liveDeliveries.length > 0) { 
@@ -1485,36 +1618,39 @@ export default function DeliveryTrackingMap({
     const currentCustomerKeys = new Set<string>(); 
     const currentDriverKeys = new Set<string>(); 
  
-    // Customer markers 
-    customerGroups.forEach((orders, key) => { 
-      const [latStr, lngStr] = key.split(","); 
-      const lat = parseFloat(latStr); 
-      const lng = parseFloat(lngStr); 
-      
-      if (!isValidCoordinate(lat, lng)) {
-        console.warn(`Invalid customer coordinates: ${lat}, ${lng}`);
-        return;
-      }
-      
-      currentCustomerKeys.add(key); 
- 
-      let marker = customerMarkers.current.get(key); 
-      if (!marker) { 
-        const icon = makeCustomerIcon(orders); 
-        const newMarker = L.marker([lat, lng], { icon }).bindPopup( 
-          createCustomerPopup(orders), 
-          { maxWidth: 320 } 
-        ); 
-        newMarker.on("click", () => setActiveOrderId(orders[0].id)); 
-        cluster.addLayer(newMarker); 
-        customerMarkers.current.set(key, newMarker); 
-      } else { 
-        marker.setLatLng([lat, lng]); 
-        marker.setIcon(makeCustomerIcon(orders)); 
-        marker.setPopupContent(createCustomerPopup(orders)); 
-      } 
-    }); 
- 
+    // Customer markers are a tracking-layer toggle. Driver selection uses the
+    // dedicated destination marker instead of duplicating the recipient point.
+    if (mode === "tracking" && showCustomerMarker) {
+      customerGroups.forEach((orders, key) => { 
+        const [latStr, lngStr] = key.split(","); 
+        const lat = parseFloat(latStr); 
+        const lng = parseFloat(lngStr); 
+        
+        if (!isValidCoordinate(lat, lng)) {
+          console.warn(`Invalid customer coordinates: ${lat}, ${lng}`);
+          return;
+        }
+        
+        currentCustomerKeys.add(key); 
+   
+        let marker = customerMarkers.current.get(key); 
+        if (!marker) { 
+          const icon = makeCustomerIcon(orders); 
+          const newMarker = L.marker([lat, lng], { icon }).bindPopup( 
+            createCustomerPopup(orders), 
+            { maxWidth: 320 } 
+          ); 
+          newMarker.on("click", () => setActiveOrderId(orders[0].id)); 
+          cluster.addLayer(newMarker); 
+          customerMarkers.current.set(key, newMarker); 
+        } else { 
+          marker.setLatLng([lat, lng]); 
+          marker.setIcon(makeCustomerIcon(orders)); 
+          marker.setPopupContent(createCustomerPopup(orders)); 
+        } 
+      });
+    }
+
     // Remove stale customer markers 
     customerMarkers.current.forEach((marker, key) => { 
       if (!currentCustomerKeys.has(key)) { 
@@ -1532,112 +1668,196 @@ export default function DeliveryTrackingMap({
         ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon } 
         : null; 
  
-      // Clear existing driver markers and route lines 
-      driverMarkers.current.forEach(marker => cluster.removeLayer(marker)); 
-      driverMarkers.current.clear(); 
-      routeLines.current.forEach(line => line.remove()); 
-      routeLines.current.clear(); 
- 
-      // Add company marker (pickup location) 
-      if (pickup && showCompanyMarker) { 
-        if (!companyMarkerRef.current) { 
-          companyMarkerRef.current = L.marker([pickup.lat, pickup.lon], { icon: makeCompanyIcon() }) 
-            .bindPopup(createCompanyPopup(normalizedOrder)) 
-            .addTo(mapRef.current); 
-        } else { 
-          companyMarkerRef.current.setLatLng([pickup.lat, pickup.lon]); 
-          companyMarkerRef.current.setPopupContent(createCompanyPopup(normalizedOrder)); 
-        } 
-      } else { 
-        if (companyMarkerRef.current) { 
-          companyMarkerRef.current.remove(); 
-          companyMarkerRef.current = null; 
-        } 
-      } 
- 
-      // Add delivery/customer marker with full address
-      if (customer && showDeliveryMarker) { 
-        if (!deliveryMarkerRef.current) { 
-          deliveryMarkerRef.current = L.marker([customer.lat, customer.lon], { 
-            icon: makeDeliveryLocationIcon(normalizedOrder.customerName) 
-          }) 
-            .bindPopup(createCustomerPopupForOrder(normalizedOrder)) 
-            .addTo(mapRef.current); 
-        } else { 
-          deliveryMarkerRef.current.setLatLng([customer.lat, customer.lon]); 
-          deliveryMarkerRef.current.setIcon(makeDeliveryLocationIcon(normalizedOrder.customerName)); 
-          deliveryMarkerRef.current.setPopupContent(createCustomerPopupForOrder(normalizedOrder)); 
-        } 
-      } else { 
-        if (deliveryMarkerRef.current) { 
-          deliveryMarkerRef.current.remove(); 
-          deliveryMarkerRef.current = null; 
-        } 
-      } 
- 
-      // Add driver markers and route lines 
-      filteredAvailableDrivers.forEach((driver, index) => { 
-        const color = getDriverColor(index); 
-        const isPending = pendingDriverId === driver.id; 
-        const isSelected = selectedDriverId === driver.id; 
-        const isNearest = driver.is_nearest === true; 
-         
-        if (driver.current_lat != null && driver.current_lng != null &&  
-            isValidCoordinate(driver.current_lat, driver.current_lng)) { 
-          const icon = makeDriverIcon(driver.name, 1, color, driver.is_in_house, isNearest); 
-          const marker = L.marker([driver.current_lat, driver.current_lng], { icon }) 
-            .bindPopup(createDriverPopupForSelection(driver, normalizedOrder, color, isNearest)); 
-           
-          marker.on("click", () => handleDriverMarkerClick(driver.id)); 
-          cluster.addLayer(marker); 
-          driverMarkers.current.set(`selection_${driver.id}`, marker); 
- 
-          // Add route line for this driver to customer 
-          if (customer && driver.isLive) { 
-            const routeData = routeDataByDriver[driver.id]; 
-            const lineKey = `selection_route_${driver.id}`; 
-            let line = routeLines.current.get(lineKey); 
- 
-            if (routeData && routeData.coordinates.length > 0) { 
-              const weight = isNearest ? 6 : 3; 
-              const opacity = isNearest ? 1 : 0.65; 
-              if (!line) { 
-                const newLine = L.polyline(routeData.coordinates, { 
-                  color, 
-                  weight, 
-                  opacity, 
-                }); 
-                newLine.addTo(mapRef.current!); 
-                routeLines.current.set(lineKey, newLine); 
-              } else { 
-                line.setLatLngs(routeData.coordinates); 
-                line.setStyle({ color, weight, opacity, dashArray: undefined }); 
-              } 
-            } else if (customer) { 
-              const weight = isNearest ? 4 : 2; 
-              const opacity = isNearest ? 0.9 : 0.5; 
-              if (!line) { 
-                const newLine = L.polyline( 
-                  [ 
-                    [driver.current_lat, driver.current_lng], 
-                    [customer.lat, customer.lon], 
-                  ], 
-                  { color, weight, opacity, dashArray: "8 6" } 
-                ); 
-                newLine.addTo(mapRef.current!); 
-                routeLines.current.set(lineKey, newLine); 
-              } else { 
-                line.setLatLngs([ 
-                  [driver.current_lat, driver.current_lng], 
-                  [customer.lat, customer.lon], 
-                ]); 
-                line.setStyle({ color, weight, opacity, dashArray: "8 6" }); 
-              } 
-            } 
-          } 
-        } 
-      }); 
- 
+      // Keep selection markers alive between Firebase updates so locations can move
+      // smoothly instead of being removed/recreated on every GPS tick.
+      driverMarkers.current.forEach((marker, key) => {
+        if (!key.startsWith("selection_")) {
+          cluster.removeLayer(marker);
+          driverMarkers.current.delete(key);
+        }
+      });
+      routeLines.current.forEach((line, key) => {
+        if (!key.startsWith("selection_route_")) {
+          line.remove();
+          routeLines.current.delete(key);
+        }
+      });
+
+      // Add company marker (pickup location)
+      if (pickup && showCompanyMarker) {
+        if (!companyMarkerRef.current) {
+          companyMarkerRef.current = L.marker([pickup.lat, pickup.lon], { icon: makeCompanyIcon() })
+            .bindPopup(createCompanyPopup(normalizedOrder), { maxWidth: 320 })
+            .addTo(mapRef.current);
+        } else {
+          companyMarkerRef.current.setLatLng([pickup.lat, pickup.lon]);
+          companyMarkerRef.current.setIcon(makeCompanyIcon());
+          companyMarkerRef.current.setPopupContent(createCompanyPopup(normalizedOrder));
+        }
+      } else if (companyMarkerRef.current) {
+        companyMarkerRef.current.remove();
+        companyMarkerRef.current = null;
+      }
+
+      // Add delivery/customer marker with full address.
+      if (customer && showDeliveryMarker) {
+        if (!deliveryMarkerRef.current) {
+          deliveryMarkerRef.current = L.marker([customer.lat, customer.lon], {
+            icon: makeDeliveryLocationIcon(normalizedOrder.customerName),
+          })
+            .bindPopup(createCustomerPopupForOrder(normalizedOrder), { maxWidth: 340 })
+            .addTo(mapRef.current);
+        } else {
+          deliveryMarkerRef.current.setLatLng([customer.lat, customer.lon]);
+          deliveryMarkerRef.current.setIcon(makeDeliveryLocationIcon(normalizedOrder.customerName));
+          deliveryMarkerRef.current.setPopupContent(createCustomerPopupForOrder(normalizedOrder));
+        }
+      } else if (deliveryMarkerRef.current) {
+        deliveryMarkerRef.current.remove();
+        deliveryMarkerRef.current = null;
+      }
+
+      const visibleSelectionKeys = new Set<string>();
+      const visibleSelectionRouteKeys = new Set<string>();
+
+      filteredAvailableDrivers.forEach((driver, index) => {
+        const color = getDriverColor(index);
+        const isNearest = driver.is_nearest === true;
+        const markerKey = `selection_${driver.id}`;
+        visibleSelectionKeys.add(markerKey);
+
+        if (
+          driver.current_lat != null &&
+          driver.current_lng != null &&
+          isValidCoordinate(driver.current_lat, driver.current_lng)
+        ) {
+          let marker = driverMarkers.current.get(markerKey);
+          const icon = makeDriverIcon(driver.name, 1, color, driver.is_in_house, isNearest, driver.isLive === true);
+          const popup = createDriverPopupForSelection(driver, normalizedOrder, color, isNearest);
+
+          if (!marker) {
+            marker = L.marker([driver.current_lat, driver.current_lng], {
+              icon,
+              riseOnHover: true,
+              riseOffset: 500,
+            }).bindPopup(popup, { maxWidth: 340 });
+            cluster.addLayer(marker);
+            driverMarkers.current.set(markerKey, marker);
+          } else {
+            animateMarkerTo(marker, driver.current_lat, driver.current_lng);
+            marker.setIcon(icon);
+            marker.setPopupContent(popup);
+          }
+
+          // Non-live drivers stay visible on the map but cannot start assignment.
+          marker.off("click");
+          if (driver.isLive === true && normalizedOrder.canAssign) {
+            marker.on("click", () => handleDriverMarkerClick(driver.id));
+          }
+
+          // Route leg 1: Driver -> Company/Pickup.
+          const lineKey = `selection_route_${driver.id}`;
+          visibleSelectionRouteKeys.add(lineKey);
+          const line = routeLines.current.get(lineKey);
+
+          if (pickup) {
+            const routeData = routeDataByDriver[driver.id];
+            if (routeData?.coordinates?.length) {
+              if (!line) {
+                const newLine = L.polyline(routeData.coordinates, {
+                  color: isNearest ? "#6750A4" : color,
+                  weight: isNearest ? 5 : 2.5,
+                  opacity: isNearest ? 0.95 : 0.38,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }).addTo(mapRef.current!);
+                routeLines.current.set(lineKey, newLine);
+              } else {
+                line.setLatLngs(routeData.coordinates);
+                line.setStyle({
+                  color: isNearest ? "#6750A4" : color,
+                  weight: isNearest ? 5 : 2.5,
+                  opacity: isNearest ? 0.95 : 0.38,
+                  dashArray: undefined,
+                });
+              }
+            } else {
+              const points: [number, number][] = [
+                [driver.current_lat, driver.current_lng],
+                [pickup.lat, pickup.lon],
+              ];
+              if (!line) {
+                const newLine = L.polyline(points, {
+                  color: isNearest ? "#6750A4" : color,
+                  weight: isNearest ? 4 : 2,
+                  opacity: isNearest ? 0.8 : 0.3,
+                  dashArray: "7 7",
+                }).addTo(mapRef.current!);
+                routeLines.current.set(lineKey, newLine);
+              } else {
+                line.setLatLngs(points);
+                line.setStyle({
+                  color: isNearest ? "#6750A4" : color,
+                  weight: isNearest ? 4 : 2,
+                  opacity: isNearest ? 0.8 : 0.3,
+                  dashArray: "7 7",
+                });
+              }
+            }
+          } else if (line) {
+            line.remove();
+            routeLines.current.delete(lineKey);
+          }
+        }
+      });
+
+      // Route leg 2: Company/Pickup -> Customer.
+      const pickupCustomerLineKey = "selection_route_pickup_customer";
+      if (pickup && customer) {
+        visibleSelectionRouteKeys.add(pickupCustomerLineKey);
+        const existingSharedLine = routeLines.current.get(pickupCustomerLineKey);
+        const sharedPoints =
+          pickupCustomerRoute?.coordinates?.length
+            ? pickupCustomerRoute.coordinates
+            : ([
+                [pickup.lat, pickup.lon],
+                [customer.lat, customer.lon],
+              ] as [number, number][]);
+
+        if (!existingSharedLine) {
+          const sharedLine = L.polyline(sharedPoints, {
+            color: "#6750A4",
+            weight: 5,
+            opacity: 0.9,
+            dashArray: pickupCustomerRoute?.coordinates?.length ? undefined : "8 7",
+            lineCap: "round",
+            lineJoin: "round",
+          }).addTo(mapRef.current!);
+          routeLines.current.set(pickupCustomerLineKey, sharedLine);
+        } else {
+          existingSharedLine.setLatLngs(sharedPoints);
+          existingSharedLine.setStyle({
+            color: "#6750A4",
+            weight: 5,
+            opacity: 0.9,
+            dashArray: pickupCustomerRoute?.coordinates?.length ? undefined : "8 7",
+          });
+        }
+      }
+
+      driverMarkers.current.forEach((marker, key) => {
+        if (key.startsWith("selection_") && !visibleSelectionKeys.has(key)) {
+          cluster.removeLayer(marker);
+          driverMarkers.current.delete(key);
+        }
+      });
+      routeLines.current.forEach((line, key) => {
+        if (key.startsWith("selection_route_") && !visibleSelectionRouteKeys.has(key)) {
+          line.remove();
+          routeLines.current.delete(key);
+        }
+      });
+
       // Fit bounds if needed 
       if (!initialFitDone.current && (pickup || customer)) { 
         setTimeout(() => { 
@@ -1652,7 +1872,21 @@ export default function DeliveryTrackingMap({
         }, 500); 
       } 
     } else { 
-      // Tracking mode 
+      // Tracking mode. Remove selection-only layers when switching modes, while
+      // preserving live tracking markers between Firebase position updates.
+      driverMarkers.current.forEach((marker, key) => {
+        if (key.startsWith("selection_")) {
+          cluster.removeLayer(marker);
+          driverMarkers.current.delete(key);
+        }
+      });
+      routeLines.current.forEach((line, key) => {
+        if (key.startsWith("selection_route_")) {
+          line.remove();
+          routeLines.current.delete(key);
+        }
+      });
+
       driverGroups.forEach((orders, driverName) => { 
         currentDriverKeys.add(driverName); 
         const color = driverColorMap.get(driverName)!; 
@@ -1675,7 +1909,7 @@ export default function DeliveryTrackingMap({
             cluster.addLayer(marker); 
             driverMarkers.current.set(driverName, marker); 
           } else { 
-            marker.setLatLng([driverLat, driverLng]); 
+            animateMarkerTo(marker, driverLat, driverLng); 
             marker.setIcon(makeDriverIcon(driverName, orders.length, color, isInHouse)); 
             marker.setPopupContent( 
               createDriverPopup(driverName, orders, color, orders[0]?.delivery.delivery_person_phone) 
@@ -1692,9 +1926,9 @@ export default function DeliveryTrackingMap({
             const orderId = order.id; 
  
             const debounceKey = `route_${orderId}`; 
-            if (debounceTimers.current.has(debounceKey)) { 
-              clearTimeout(debounceTimers.current.get(debounceKey)); 
-            } 
+            // Do not keep resetting the timer on every GPS tick. This guarantees
+            // route geometry refreshes during continuous movement.
+            if (debounceTimers.current.has(debounceKey)) return;
  
             debounceTimers.current.set( 
               debounceKey, 
@@ -1738,7 +1972,7 @@ export default function DeliveryTrackingMap({
                   } 
                 } 
                 debounceTimers.current.delete(debounceKey); 
-              }, 3000) 
+              }, 1400) 
             ); 
           }); 
         } else { 
@@ -1810,7 +2044,7 @@ export default function DeliveryTrackingMap({
     customerGroups, driverGroups, driverColorMap, liveDeliveries, 
     followDriver, activeOrderId, mode, normalizedOrder, 
     filteredAvailableDrivers, pendingDriverId, selectedDriverId, 
-    fetchOSRMRoute, routeDataByDriver, showCompanyMarker, showDeliveryMarker, 
+    fetchOSRMRoute, routeDataByDriver, pickupCustomerRoute, showCompanyMarker, showDeliveryMarker, showCustomerMarker, 
   ]); 
  
   // Fly to active order on click 
@@ -1954,751 +2188,1027 @@ export default function DeliveryTrackingMap({
         deliveryMarkerRef.current.remove(); 
         deliveryMarkerRef.current = null; 
       } 
+      if (tileLayerRef.current) {
+        tileLayerRef.current = null;
+      }
     }; 
   }, []); 
  
-  // Render driver selection sidebar 
-  const renderDriverSelectionSidebar = () => { 
-    if (!normalizedOrder) return null; 
- 
-    return ( 
-      <> 
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary"> 
-          {/* Collapsible Order Summary Card */} 
-          <div className="bg-white/10 rounded-xl mb-3 overflow-hidden"> 
-            {/* Collapsed Header */} 
-            <button 
-              onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)} 
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors" 
-            > 
-              <div className="flex items-center gap-2 flex-1 min-w-0"> 
-                <h3 className="font-bold text-white text-sm truncate"> 
-                  ORDER #{normalizedOrder.id} 
-                </h3> 
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${ 
-                  normalizedOrder.canAssign  
-                    ? "bg-green-500/20 text-green-300" 
-                    : "bg-red-500/20 text-red-300" 
-                }`}> 
-                  {normalizedOrder.canAssign ? "Assignable" : "Blocked"} 
-                </span> 
-              </div> 
-              {isOrderSummaryExpanded ? ( 
-                <ChevronUp className="h-4 w-4 text-white/60 flex-shrink-0" /> 
-              ) : ( 
-                <ChevronDown className="h-4 w-4 text-white/60 flex-shrink-0" /> 
-              )} 
-            </button> 
-             
-            {/* Expanded Content */} 
-            {isOrderSummaryExpanded && ( 
-              <div className="px-3 pb-3"> 
-                {!normalizedOrder.canAssign && ( 
-                  <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 mb-2"> 
-                    <p className="text-[11px] text-red-300 flex items-start gap-1"> 
-                      <AlertTriangle className="h-3 w-3 flex-shrink-0 mt-0.5" /> 
-                      {normalizedOrder.assignmentBlockedReason} 
-                    </p> 
-                  </div> 
-                )} 
-                 
-                <div className="space-y-1.5 text-[11px] text-white/80"> 
-                  <div className="flex items-center gap-2"> 
-                    <User className="h-3 w-3 text-purple-300" /> 
-                    <span className="font-medium">{normalizedOrder.customerName}</span> 
-                  </div> 
-                  <div className="flex items-center gap-2"> 
-                    <Home className="h-3 w-3 text-amber-300" /> 
-                    <span>{normalizedOrder.address}</span> 
-                  </div> 
-                  {normalizedOrder.customerLat != null && normalizedOrder.customerLon != null && ( 
-                    <div className="flex items-center gap-2 font-mono text-[10px] text-white/60"> 
-                      <Navigation2 className="h-3 w-3 text-green-300" /> 
-                      <span>{normalizedOrder.customerLat.toFixed(6)}, {normalizedOrder.customerLon.toFixed(6)}</span> 
-                    </div> 
-                  )} 
-                  {normalizedOrder.customerPhone && ( 
-                    <div className="flex items-center gap-2"> 
-                      <Phone className="h-3 w-3 text-blue-300" /> 
-                      <span>{normalizedOrder.customerPhone}</span> 
-                    </div> 
-                  )} 
-                  <div className="flex items-center gap-2"> 
-                    <Store className="h-3 w-3 text-purple-300" /> 
-                    <span>{normalizedOrder.pickupName}</span> 
-                  </div> 
-                  <div className="flex items-center gap-2"> 
-                    <span className="text-white/60">Payment:</span> 
-                    <span>{normalizedOrder.paymentStatus}</span> 
-                  </div> 
-                </div> 
-              </div> 
-            )} 
-          </div> 
-           
-          {/* Map Controls */} 
-          <div className="flex gap-1.5 mb-3"> 
-            <button 
-              onClick={() => setShowCompanyMarker(!showCompanyMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showCompanyMarker ? "bg-green-500/20 text-green-300 border border-green-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              🏢 Company 
-            </button> 
-            <button 
-              onClick={() => setShowDeliveryMarker(!showDeliveryMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showDeliveryMarker ? "bg-blue-500/20 text-blue-300 border border-blue-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              📦 Delivery 
-            </button> 
-            <button 
-              onClick={() => setShowCustomerMarker(!showCustomerMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showCustomerMarker ? "bg-amber-500/20 text-amber-300 border border-amber-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              📍 Recipient 
-            </button> 
-          </div> 
-           
-          {/* Search */} 
-          <div className="relative mb-3"> 
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/50" /> 
-            <input 
-              type="text" 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              placeholder="Search drivers..." 
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 text-white placeholder:text-white/40 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-            /> 
-          </div> 
-           
-          {/* Filters */} 
-          <div className="flex gap-1.5 mb-2"> 
-            <button 
-              onClick={() => setDriverFilter("all")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              All 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("in_house")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              In-House 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("third_party")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              3PL 
-            </button> 
-          </div> 
-        </div> 
-         
-        {/* Driver List */} 
-        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary"> 
-          {loadingDrivers && ( 
-            <div className="flex items-center justify-center py-10"> 
-              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" /> 
-              <span className="ml-3 text-sm text-gray-400">Finding available drivers...</span> 
-            </div> 
-          )} 
-           
-          {!loadingDrivers && filteredAvailableDrivers.length === 0 && ( 
-            <div className="text-center py-10"> 
-              <Users className="h-10 w-10 text-gray-500 mx-auto mb-3" /> 
-              <p className="text-sm text-gray-400 font-medium">No available drivers</p> 
-              <p className="text-xs text-gray-500 mt-1"> 
-                {normalizedOrder.canAssign  
-                  ? "There are currently no drivers available for this delivery." 
-                  : "Driver assignment is blocked for this order."} 
-              </p> 
-            </div> 
-          )} 
-           
-          {filteredAvailableDrivers.map((driver, index) => { 
-            const isPending = pendingDriverId === driver.id; 
-            const isSelected = selectedDriverId === driver.id; 
-            const isNearest = driver.is_nearest === true; 
-            const color = getDriverColor(index); 
-            const hasLocation = driver.current_lat != null && driver.current_lng != null; 
-            const isLive = driver.isLive === true;
-             
-            return ( 
-              <div 
-                key={driver.id} 
-                onClick={() => isLive && normalizedOrder.canAssign && handleDriverMarkerClick(driver.id)} 
-                className={`p-3 lg:p-4 rounded-xl border shadow-md transition ${isLive ? 'cursor-pointer' : 'cursor-not-allowed'} ${ 
-                  isPending 
-                    ? "bg-white/20 border-purple-400 ring-2 ring-purple-400/50" 
-                    : isSelected 
-                    ? "bg-white/15 border-emerald-400 ring-2 ring-emerald-400/50" 
-                    : isNearest 
-                    ? "bg-green-500/10 border-green-500 ring-2 ring-green-500/50" 
-                    : "bg-white/10 border-white/10 hover:bg-white/15" 
-                } ${!normalizedOrder.canAssign || !isLive ? "opacity-50" : ""}`} 
-              > 
-                {isNearest && ( 
-                  <div className="flex items-center gap-1 mb-2"> 
-                    <Award className="h-4 w-4 text-green-400" /> 
-                    <span className="text-[11px] font-bold text-green-300"> 
-                      ⭐ BEST MATCH 
-                    </span> 
-                  </div> 
-                )} 
-                <div className="flex items-center gap-3"> 
-                  {/* Driver avatar/photo */} 
-                  <div className="relative flex-shrink-0"> 
-                    {driver.profile_image ? ( 
-                      <img 
-                        src={driver.profile_image} 
-                        alt={driver.name} 
-                        className="w-10 h-10 rounded-full object-cover border-2" 
-                        style={{ borderColor: isNearest ? "#22C55E" : color }} 
-                      /> 
-                    ) : ( 
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white" 
-                        style={{ backgroundColor: isNearest ? "#22C55E" : color }} 
-                      > 
-                        {getInitials(driver.name)} 
-                      </div> 
-                    )} 
-                    {driver.isLive && ( 
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span> 
-                    )} 
-                  </div> 
-                   
-                  <div className="flex-1 min-w-0"> 
-                    <div className="flex items-center justify-between gap-1"> 
-                      <span className="font-semibold text-sm text-white truncate"> 
-                        {driver.name} 
-                      </span> 
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white"> 
-                        #{index + 1} 
-                      </span> 
-                    </div> 
-                     
-                    <div className="flex items-center gap-1.5 mt-0.5"> 
-                      <span className="text-[10px] text-white/60"> 
-                        {getVehicleIcon(driver.vehicle_type)} {getVehicleName(driver.vehicle_type)} 
-                      </span> 
-                      <span className="text-[10px] text-white/40">·</span> 
-                      {driver.is_in_house ? ( 
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"> 
-                          In-House 
-                        </span> 
-                      ) : ( 
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300"> 
-                          3PL 
-                        </span> 
-                      )} 
-                    </div> 
-                     
-                    {/* Location info */} 
-                    <div className="mt-1.5 space-y-0.5"> 
-                      {hasLocation ? ( 
-                        <> 
-                          {driver.distance_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              📍 {formatDistance(driver.distance_to_customer)} to recipient 
-                            </div> 
-                          )} 
-                          {driver.road_distance_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              🛣 {formatDistance(driver.road_distance_to_customer)} road distance 
-                            </div> 
-                          )} 
-                          {driver.road_eta_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              ⏱ {formatDuration(driver.road_eta_to_customer)} 
-                            </div> 
-                          )} 
-                          <div className="text-[10px] flex items-center gap-1"> 
-                            {driver.isLive ? ( 
-                              <span className="text-green-400 flex items-center gap-0.5"> 
-                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> 
-                                Live 
-                              </span> 
-                            ) : driver.location_source === "last_known" ? ( 
-                              <span className="text-yellow-400">Last known</span> 
-                            ) : ( 
-                              <span className="text-blue-400">Available</span> 
-                            )} 
-                          </div> 
-                        </> 
-                      ) : ( 
-                        <div className="text-[10px] text-gray-400"> 
-                          ⚪ Location unavailable 
-                        </div> 
-                      )} 
-                    </div> 
-                     
-                    {/* Rating */} 
-                    {(driver.average_rating || driver.total_reviews) && ( 
-                      <div className="flex items-center gap-1 mt-1 text-[10px] text-white/60"> 
-                        <Star className="h-3 w-3 text-yellow-400" /> 
-                        <span>{driver.average_rating || "N/A"}</span> 
-                        {driver.total_reviews && ( 
-                          <span>· {driver.total_reviews} reviews</span> 
-                        )} 
-                      </div> 
-                    )} 
-                  </div> 
-                   
-                  {/* Action button */} 
-                  <div className="flex-shrink-0"> 
-                    {isSelected ? ( 
-                      <span className="text-[10px] font-bold text-emerald-400">✓ Selected</span> 
-                    ) : isPending ? ( 
-                      <span className="text-[10px] font-bold text-purple-400">Pending</span> 
-                    ) : ( 
-                      <button 
-                        onClick={e => { 
-                          e.stopPropagation(); 
-                          if (isLive && normalizedOrder.canAssign) handleDriverMarkerClick(driver.id); 
-                        }} 
-                        disabled={!isLive || !normalizedOrder.canAssign} 
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${ 
-                          isNearest 
-                            ? "bg-green-500 hover:bg-green-600 text-white" 
-                            : "bg-purple-500 hover:bg-purple-600 text-white" 
-                        }`} 
-                      > 
-                        {isLive ? "Select" : "Offline"} 
-                      </button> 
-                    )} 
-                  </div> 
-                </div> 
-              </div> 
-            ); 
-          })} 
-        </div> 
-      </> 
-    ); 
-  }; 
- 
-  // Render tracking sidebar 
-  const renderTrackingSidebar = () => { 
-    return ( 
-      <> 
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary flex items-center justify-between gap-2"> 
-          <h3 className="font-bold text-white/90 text-xs sm:text-sm uppercase tracking-wider"> 
-            Live Delivery Personnel 
-          </h3> 
-        </div> 
-         
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary"> 
-          <div className="flex gap-1.5"> 
-            <button 
-              onClick={() => setDriverFilter("all")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              All 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("in_house")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              In-House 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("third_party")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              3PL 
-            </button> 
-          </div> 
-        </div> 
-         
-        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary"> 
-          {loading && !driverGroups.size && ( 
-            <div className="flex items-center justify-center py-10"> 
-              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" /> 
-            </div> 
-          )} 
-          {!loading && !driverGroups.size && ( 
-            <div className="text-center py-10 text-xs sm:text-sm text-gray-400"> 
-              No drivers currently out for delivery. 
-            </div> 
-          )} 
-          {Array.from(driverGroups.entries()).map(([driverName, orders], idx) => { 
-            const isActive = orders.some(o => o.id === activeOrderId); 
-            const color = driverColorMap.get(driverName); 
-            const count = orders.length; 
-            const speed = orders[0]?.delivery.speed; 
-            const isInHouse = orders[0]?.delivery.is_in_house; 
- 
-            // Calculate distance range for this driver 
-            let distanceDisplay: string | null = null; 
-            const driverLat = orders[0]?.delivery.current_lat; 
-            const driverLng = orders[0]?.delivery.current_lng; 
-            if (driverLat != null && driverLng != null) { 
-              const distances = orders.map((o) => {
-                const dest = getOrderDestination(o);
-                if (dest.lat == null || dest.lon == null) return null;
-                return haversine(driverLat, driverLng, dest.lat, dest.lon);
-              }).filter(Boolean) as number[];
-              
-              if (distances.length > 0) {
-                const min = Math.min(...distances).toFixed(1); 
-                const max = Math.max(...distances).toFixed(1); 
+  // Render driver selection sidebar
+  const renderDriverSelectionSidebar = () => {
+    if (!normalizedOrder) return null;
+
+    const bestDriver =
+      filteredAvailableDrivers.find((driver) => driver.is_nearest && driver.isLive === true) ||
+      filteredAvailableDrivers.find(
+        (driver) => driver.isLive === true && driver.current_lat != null && driver.current_lng != null,
+      ) ||
+      null;
+    const liveDriverCount = filteredAvailableDrivers.filter(
+      (driver) => driver.isLive === true && driver.current_lat != null && driver.current_lng != null,
+    ).length;
+    const viewOnlyDriverCount = filteredAvailableDrivers.length - liveDriverCount;
+
+    const compactDistance = (value: number | null | undefined) =>
+      value == null ? "—" : formatDistance(value);
+    const compactDuration = (value: number | null | undefined) =>
+      value == null ? "—" : formatDuration(value);
+
+    return (
+      <div className="flex min-h-0 flex-1 flex-col bg-[#6750A4] text-white">
+        {/* Compact dispatch header */}
+        <div className="shrink-0 border-b border-white/10 px-3 py-3 lg:px-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/55">
+                  Dispatch assignment
+                </p>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[8px] font-extrabold ${
+                    normalizedOrder.canAssign ? "bg-white/15 text-white" : "bg-rose-500/25 text-rose-100"
+                  }`}
+                >
+                  {normalizedOrder.canAssign ? "READY" : "BLOCKED"}
+                </span>
+              </div>
+              <div className="mt-0.5 flex min-w-0 items-center gap-2">
+                <h3 className="truncate text-sm font-bold text-white">Order #{normalizedOrder.id}</h3>
+                <span className="truncate text-[10px] text-white/65">· {normalizedOrder.customerName}</span>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              <div className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2 py-1 text-[9px] font-semibold text-white/85 sm:flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </div>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/80 transition hover:bg-white/20 hover:text-white"
+                aria-label="Collapse driver assignment sidebar"
+                title="Collapse sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Route accordion - intentionally dense to preserve vertical space */}
+          <div className="mt-2 overflow-hidden rounded-xl border border-white/15 bg-black/10">
+            <button
+              type="button"
+              onClick={() => setIsOrderRouteExpanded((expanded) => !expanded)}
+              className="flex w-full items-center gap-2 px-2.5 py-2 text-left transition hover:bg-white/[0.05]"
+              aria-expanded={isOrderRouteExpanded}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/80">
+                <Package className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <p className="shrink-0 text-[8px] font-extrabold uppercase tracking-[0.11em] text-white/45">Order route</p>
+                  {bestDriver && (
+                    <span className="truncate rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[8px] font-bold text-emerald-100">
+                      {bestDriver.name}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 truncate text-[10px] font-semibold text-white/90">Driver → Company → Customer</p>
+              </div>
+              <ChevronDown
+                className={`h-3.5 w-3.5 shrink-0 text-white/55 transition-transform ${isOrderRouteExpanded ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            <div className="grid grid-cols-3 border-t border-white/10">
+              <div className="min-w-0 px-2 py-1.5">
+                <p className="truncate text-[7px] font-bold uppercase tracking-wide text-white/40">To pickup</p>
+                <p className="mt-0.5 truncate text-[9px] font-bold text-white">
+                  {bestDriver ? compactDistance(bestDriver.road_distance_to_pickup ?? bestDriver.distance_to_pickup) : "—"}
+                </p>
+              </div>
+              <div className="min-w-0 border-x border-white/10 px-2 py-1.5">
+                <p className="truncate text-[7px] font-bold uppercase tracking-wide text-white/40">Pickup → customer</p>
+                <p className="mt-0.5 truncate text-[9px] font-bold text-white">
+                  {bestDriver ? compactDistance(bestDriver.pickup_to_customer_distance) : "—"}
+                </p>
+              </div>
+              <div className="min-w-0 px-2 py-1.5">
+                <p className="truncate text-[7px] font-bold uppercase tracking-wide text-white/40">Total ETA</p>
+                <p className="mt-0.5 truncate text-[9px] font-bold text-white">
+                  {bestDriver ? compactDuration(bestDriver.total_eta_minutes) : "—"}
+                </p>
+              </div>
+            </div>
+
+            {isOrderRouteExpanded && (
+              <div className="border-t border-white/10 px-2.5 py-2.5">
+                <div className="relative space-y-2">
+                  <div className="absolute bottom-2 left-[8px] top-2 w-px bg-white/15" />
+                  {[
+                    {
+                      step: "1",
+                      label: "Driver",
+                      title: bestDriver ? bestDriver.name : "Choose a live driver",
+                      detail: bestDriver?.isLive ? "Realtime GPS" : "Live GPS required",
+                    },
+                    {
+                      step: "2",
+                      label: "Company / pickup",
+                      title: normalizedOrder.pickupName,
+                      detail: normalizedOrder.companyAddress || "Pickup address unavailable",
+                    },
+                    {
+                      step: "3",
+                      label: "Customer / delivery",
+                      title: normalizedOrder.customerName,
+                      detail: normalizedOrder.address || "Delivery address unavailable",
+                    },
+                  ].map((step) => (
+                    <div key={step.step} className="relative flex min-w-0 items-start gap-2">
+                      <span className="mt-0.5 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/10 text-[7px] font-extrabold text-white">
+                        {step.step}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className="shrink-0 text-[7px] font-bold uppercase tracking-wide text-white/40">{step.label}</p>
+                          <p className="truncate text-[9px] font-semibold text-white/90">{step.title}</p>
+                        </div>
+                        <p className="mt-0.5 truncate text-[8px] text-white/45" title={step.detail}>{step.detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!normalizedOrder.canAssign && (
+            <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-rose-300/20 bg-rose-500/15 px-2.5 py-2 text-[9px] text-rose-100">
+              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+              <span className="line-clamp-2">{normalizedOrder.assignmentBlockedReason}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Compact driver controls */}
+        <div className="shrink-0 border-b border-white/10 px-3 py-2.5">
+          <button
+            type="button"
+            onClick={() => setIsDriverToolsExpanded((expanded) => !expanded)}
+            className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/10 px-2.5 py-2 text-left transition hover:bg-white/15"
+            aria-expanded={isDriverToolsExpanded}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <Search className="h-3.5 w-3.5 shrink-0 text-white/65" />
+              <span className="text-[10px] font-bold text-white">Find & filter drivers</span>
+              <span className="truncate text-[8px] text-white/50">
+                {filteredAvailableDrivers.length} total · {liveDriverCount} live · {viewOnlyDriverCount} view only
+              </span>
+            </div>
+            <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/55 transition-transform ${isDriverToolsExpanded ? "rotate-180" : ""}`} />
+          </button>
+
+          {isDriverToolsExpanded && (
+            <div className="mt-2 space-y-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/45" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search driver, phone, vehicle..."
+                  className="w-full rounded-lg border border-white/15 bg-white/10 py-2 pl-8 pr-2.5 text-[11px] text-white outline-none transition placeholder:text-white/40 focus:border-white/35 focus:bg-white/15 focus:ring-2 focus:ring-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-1 rounded-lg bg-black/10 p-1">
+                {[
+                  { value: "all", label: "All" },
+                  { value: "in_house", label: "In-House" },
+                  { value: "third_party", label: "3PL" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setDriverFilter(option.value as typeof driverFilter)}
+                    className={`rounded-md px-2 py-1.5 text-[9px] font-bold transition ${
+                      driverFilter === option.value
+                        ? "bg-white text-[#6750A4] shadow-sm"
+                        : "text-white/65 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-white/40">Rank</span>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as SortOption)}
+                  className="min-w-0 flex-1 rounded-lg border border-white/15 bg-[#6750A4] px-2 py-1.5 text-[9px] font-semibold text-white outline-none focus:border-white/35"
+                >
+                  <option value="recommended">Recommended</option>
+                  <option value="nearest_pickup">Nearest pickup</option>
+                  <option value="fastest_eta">Fastest total ETA</option>
+                  <option value="highest_rated">Highest rated</option>
+                </select>
+                <span className="flex shrink-0 items-center gap-1 text-[8px] font-semibold text-emerald-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live assignable
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Driver list - remains purple to make the sidebar one visual surface */}
+        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto bg-[#6750A4] px-2.5 py-2.5 [scrollbar-color:rgba(255,255,255,.28)_transparent] [scrollbar-width:thin]">
+          {loadingDrivers && (
+            <div className="flex items-center justify-center rounded-xl border border-white/15 bg-white/10 py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <span className="ml-2 text-[10px] text-white/65">Comparing drivers...</span>
+            </div>
+          )}
+
+          {!loadingDrivers && filteredAvailableDrivers.length === 0 && (
+            <div className="rounded-xl border border-dashed border-white/20 bg-white/10 px-4 py-7 text-center">
+              <Users className="mx-auto mb-2 h-6 w-6 text-white/35" />
+              <p className="text-[11px] font-bold text-white">No available drivers</p>
+              <p className="mt-1 text-[9px] leading-4 text-white/50">
+                {normalizedOrder.canAssign ? "No drivers match the current filter." : "Assignment is blocked for this order."}
+              </p>
+            </div>
+          )}
+
+          {filteredAvailableDrivers.map((driver, index) => {
+            const isPending = pendingDriverId === driver.id;
+            const isSelected = selectedDriverId === driver.id;
+            const isBest = driver.is_nearest === true;
+            const hasLocation = driver.current_lat != null && driver.current_lng != null;
+            const canSelect = driver.isLive === true && hasLocation && normalizedOrder.canAssign;
+            const pickupDistance = driver.road_distance_to_pickup ?? driver.distance_to_pickup;
+
+            return (
+              <div
+                key={driver.id}
+                onClick={() => canSelect && handleDriverMarkerClick(driver.id)}
+                className={`group rounded-xl border px-2.5 py-2.5 transition ${
+                  canSelect ? "cursor-pointer hover:bg-white/15" : "cursor-not-allowed"
+                } ${
+                  isPending
+                    ? "border-white/65 bg-white/20 ring-1 ring-white/25"
+                    : isSelected
+                      ? "border-emerald-300/70 bg-emerald-300/10"
+                      : isBest
+                        ? "border-white/45 bg-white/15"
+                        : canSelect
+                          ? "border-white/15 bg-white/10"
+                          : "border-white/10 bg-black/10 opacity-70"
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className="relative shrink-0">
+                    {driver.profile_image ? (
+                      <img
+                        src={driver.profile_image}
+                        alt={driver.name}
+                        className="h-9 w-9 rounded-lg border border-white/20 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.12] text-[11px] font-extrabold text-white">
+                        {getInitials(driver.name)}
+                      </div>
+                    )}
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#6750A4] ${
+                        driver.isLive ? "bg-emerald-400" : hasLocation ? "bg-amber-300" : "bg-white/35"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className="truncate text-[11px] font-extrabold text-white">{driver.name}</p>
+                          {driver.recommendation_rank != null && driver.recommendation_rank <= 3 && (
+                            <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[7px] font-extrabold ${
+                              isBest ? "bg-white text-[#6750A4]" : "bg-white/15 text-white/70"
+                            }`}>
+                              {isBest ? "BEST" : `#${driver.recommendation_rank}`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex min-w-0 items-center gap-1 text-[8px] text-white/55">
+                          <span className="truncate">{getVehicleIcon(driver.vehicle_type)} {getVehicleName(driver.vehicle_type)}</span>
+                          <span>·</span>
+                          <span className="truncate">{driver.is_in_house ? "In-House" : driver.company_name || "3PL"}</span>
+                          {driver.average_rating && (
+                            <>
+                              <span>·</span>
+                              <span className="flex shrink-0 items-center gap-0.5 text-amber-200"><Star className="h-2.5 w-2.5" />{driver.average_rating}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[7px] font-extrabold ${
+                        driver.isLive
+                          ? "bg-emerald-300/20 text-emerald-100"
+                          : hasLocation
+                            ? "bg-amber-200/15 text-amber-100"
+                            : "bg-white/10 text-white/45"
+                      }`}>
+                        {driver.isLive ? "LIVE" : hasLocation ? "VIEW" : "OFFLINE"}
+                      </span>
+                    </div>
+
+                    {/* Dense route metrics: one line instead of three cards */}
+                    <div className="mt-2 flex min-w-0 items-center gap-1.5 rounded-lg bg-black/10 px-2 py-1.5 text-[8px]">
+                      <span className="shrink-0 text-white/40">Pickup</span>
+                      <strong className="truncate text-white/90">{compactDistance(pickupDistance)}</strong>
+                      <span className="text-white/25">•</span>
+                      <span className="shrink-0 text-white/40">ETA</span>
+                      <strong className="truncate text-white/90">{compactDuration(driver.road_eta_to_pickup)}</strong>
+                      <span className="text-white/25">•</span>
+                      <span className="shrink-0 text-white/40">Trip</span>
+                      <strong className="truncate text-white/90">{compactDistance(driver.total_route_distance)}</strong>
+                    </div>
+
+                    <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                      <p className="truncate text-[8px] text-white/40">
+                        {driver.phone || driver.username || `Driver #${index + 1}`}
+                        {!driver.isLive ? " · realtime GPS required" : ""}
+                      </p>
+
+                      {isSelected ? (
+                        <span className="flex shrink-0 items-center gap-1 text-[8px] font-extrabold text-emerald-200">
+                          <Check className="h-3 w-3" /> Assigned
+                        </span>
+                      ) : isPending ? (
+                        <span className="shrink-0 text-[8px] font-extrabold text-white">Confirm</span>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canSelect) handleDriverMarkerClick(driver.id);
+                          }}
+                          disabled={!canSelect}
+                          title={!driver.isLive ? "Realtime GPS is required before this driver can be assigned" : undefined}
+                          className="shrink-0 rounded-md bg-white px-2.5 py-1 text-[8px] font-extrabold text-[#6750A4] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+                        >
+                          {canSelect ? (isBest ? "Assign best" : "Select") : "View only"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCollapsedSidebarRail = () => (
+    <div className="hidden min-h-0 flex-1 flex-col items-center bg-[#6750A4] py-3 lg:flex">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20"
+        aria-label="Expand sidebar"
+        title="Expand sidebar"
+      >
+        <PanelLeftOpen className="h-4 w-4" />
+      </button>
+      <div className="mt-4 h-px w-7 bg-white/15" />
+      <div className="mt-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white/85" title="Dispatch assignment">
+        <Navigation2 className="h-4 w-4" />
+      </div>
+      {mode === "driver_selection" && (
+        <>
+          <div className="mt-3 flex h-9 w-9 flex-col items-center justify-center rounded-xl bg-white/10 text-white" title={`${availableDrivers.length} available drivers`}>
+            <Users className="h-3.5 w-3.5" />
+            <span className="mt-0.5 text-[7px] font-extrabold">{availableDrivers.length}</span>
+          </div>
+          <div className="mt-3 flex h-9 w-9 flex-col items-center justify-center rounded-xl bg-emerald-300/15 text-emerald-100" title="Realtime connection">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="mt-1 text-[6px] font-bold uppercase">Live</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  // Render tracking sidebar
+  const renderTrackingSidebar = () => {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col bg-[#6750A4]">
+        <div className="shrink-0 border-b border-white/10 px-4 pb-4 pt-5 lg:px-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Dispatch center</p>
+              <h3 className="mt-1 text-base font-bold text-white">Live delivery personnel</h3>
+              <p className="mt-1 text-[11px] text-white/65">
+                {driverGroups.size} driver{driverGroups.size === 1 ? "" : "s"} · {liveDeliveries.length} active deliver{liveDeliveries.length === 1 ? "y" : "ies"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-white/10 px-2.5 py-2 text-right">
+              <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold text-white/90">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Realtime
+              </div>
+              <p className="mt-0.5 text-[9px] text-white/50">
+                {activeRealtimeSubscriptions} channel{activeRealtimeSubscriptions === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="shrink-0 border-b border-white/10 px-4 py-3">
+          <div className="grid grid-cols-3 gap-1 rounded-xl bg-black/10 p-1">
+            {[
+              { value: "all", label: "All" },
+              { value: "in_house", label: "In-House" },
+              { value: "third_party", label: "3PL" },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setDriverFilter(option.value as typeof driverFilter)}
+                className={`rounded-lg px-2 py-2 text-[11px] font-semibold transition ${
+                  driverFilter === option.value
+                    ? "bg-white text-secondary shadow-sm"
+                    : "text-white/65 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-2.5 overflow-y-auto p-3 lg:p-4">
+          {loading && !driverGroups.size && (
+            <div className="flex items-center justify-center rounded-xl border border-white/15 bg-white/10 py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-white" />
+              <span className="ml-3 text-sm text-white/70">Loading live drivers...</span>
+            </div>
+          )}
+
+          {!loading && !driverGroups.size && (
+            <div className="rounded-xl border border-dashed border-white/20 bg-white/10 px-5 py-10 text-center">
+              <Navigation className="mx-auto mb-3 h-8 w-8 text-white/30" />
+              <p className="text-sm font-semibold text-white">No active deliveries</p>
+              <p className="mt-1 text-xs leading-5 text-white/55">
+                Drivers will appear here when a delivery moves into live tracking.
+              </p>
+            </div>
+          )}
+
+          {Array.from(driverGroups.entries()).map(([driverName, orders]) => {
+            const isActive = orders.some((o) => o.id === activeOrderId);
+            const color = driverColorMap.get(driverName) || "#6750A4";
+            const count = orders.length;
+            const speed = orders[0]?.delivery.speed;
+            const isInHouse = orders[0]?.delivery.is_in_house;
+            const driverLat = orders[0]?.delivery.current_lat;
+            const driverLng = orders[0]?.delivery.current_lng;
+            const activeOrder = orders.find((o) => o.id === activeOrderId) || orders[0];
+            const activeDestination = getOrderDestination(activeOrder);
+
+            let distanceDisplay: string | null = null;
+            if (driverLat != null && driverLng != null) {
+              const distances = orders
+                .map((o) => {
+                  const dest = getOrderDestination(o);
+                  if (dest.lat == null || dest.lon == null) return null;
+                  return haversine(driverLat, driverLng, dest.lat, dest.lon);
+                })
+                .filter((value): value is number => value != null);
+
+              if (distances.length) {
+                const min = Math.min(...distances).toFixed(1);
+                const max = Math.max(...distances).toFixed(1);
                 distanceDisplay = min === max ? `${min} km` : `${min}–${max} km`;
               }
-            } 
- 
-            return ( 
-              <div 
-                key={driverName} 
-                onClick={() => setActiveOrderId(orders[0].id)} 
-                className={`p-3 lg:p-4 rounded-xl border shadow-md flex items-center gap-3 transition cursor-pointer hover:shadow-lg ${ 
-                  isActive 
-                    ? "bg-white/15 border-purple-400 ring-2 ring-purple-400/50" 
-                    : "bg-white/10 border-white/10 hover:bg-white/15" 
-                }`} 
-                role="button" 
-                tabIndex={0} 
-                aria-label={`Driver ${driverName}, ${count} orders`} 
-                onKeyDown={(e) => { 
-                  if (e.key === "Enter" || e.key === " ") 
-                    setActiveOrderId(orders[0].id); 
-                }} 
-              > 
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" 
-                  style={{ backgroundColor: color }} 
-                > 
-                  {idx + 1} 
-                </div> 
-                <div className="flex-1 min-w-0"> 
-                  <div className="flex items-center justify-between gap-1"> 
-                    <span className="font-semibold text-sm text-white truncate"> 
-                      {driverName} 
-                    </span> 
-                    <div className="flex items-center gap-2"> 
-                      {isInHouse ? ( 
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"> 
-                          In-House 
-                        </span> 
-                      ) : ( 
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300"> 
-                          3PL 
-                        </span> 
-                      )} 
-                      {count > 1 && ( 
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}> 
-                          {count} 
-                        </span> 
-                      )} 
-                      <Truck className="h-8 w-8" style={{ color }} /> 
-                    </div> 
-                  </div> 
-                  <div className="mt-1 flex items-center gap-2 flex-wrap text-[10px] sm:text-xs text-gray-200"> 
-                    <StatusBadge status="out_for_delivery" /> 
-                    {speed && <span>{speed} km/h</span>} 
-                    {distanceDisplay && <span>· {distanceDisplay}</span>} 
-                    <span>· {orders.length} destination{orders.length > 1 ? "s" : ""}</span> 
-                  </div> 
-                  <div className="text-[10px] sm:text-xs text-gray-200 truncate mt-1 flex items-center gap-1"> 
-                    <MapPin className="h-3 w-3 flex-shrink-0" /> 
-                    {orders.length} destination{orders.length > 1 ? "s" : ""} 
-                  </div> 
-                </div> 
-              </div> 
-            ); 
-          })} 
-        </div> 
-      </> 
-    ); 
-  }; 
- 
-  // Render 
-  return createPortal( 
-    <div className="fixed inset-0 z-50 bg-gray-100 flex flex-col overflow-hidden"> 
-      {/* Header */} 
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 sticky top-0 backdrop-blur-md"> 
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0"> 
-          <button 
-            onClick={toggleSidebar} 
-            className="hidden lg:flex p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500 shrink-0" 
-            aria-label="Toggle sidebar" 
-          > 
-            {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />} 
-          </button> 
-          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 tracking-tight truncate min-w-0"> 
-            {mode === "driver_selection" ? "Select Delivery Driver" : "Live Vehicle Tracking"} 
-          </h2> 
-          {mode === "driver_selection" && normalizedOrder && ( 
-            <span className="text-xs text-gray-500 truncate"> 
-              #{normalizedOrder.id} · {normalizedOrder.customerName} 
-            </span> 
-          )} 
-          <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full shrink-0"> 
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live 
-          </span> 
-        </div> 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0"> 
-          <span className="hidden xl:inline text-xs text-gray-400"> 
-            Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : "Just now"} 
-          </span> 
-          <button 
-            onClick={() => refetch()} 
-            disabled={isFetching} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Refresh data" 
-          > 
-            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} /> 
-          </button> 
-          <button 
-            onClick={fitAllMarkers} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Fit all markers" 
-          > 
-            <Maximize2 className="h-4 w-4" /> 
-          </button> 
-          {mode === "tracking" && ( 
-            <button 
-              onClick={toggleFollow} 
-              className={`p-1.5 rounded-full hover:bg-gray-100 transition ${ 
-                followDriver ? "bg-purple-100 text-purple-600" : "text-gray-500" 
-              }`} 
-              aria-label="Follow driver" 
-            > 
-              <Navigation className="h-4 w-4" /> 
-            </button> 
-          )} 
-          <button 
-            onClick={onClose} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Close" 
-          > 
-            <X className="h-5 w-5" /> 
-          </button> 
-        </div> 
-      </div> 
- 
-      {/* Content */} 
-      <div className="flex-1 flex overflow-hidden relative"> 
-        {/* Mobile backdrop */} 
-        <div 
-          className={`lg:hidden fixed inset-0 z-30 bg-black/50 transition-opacity ${ 
-            isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none" 
-          }`} 
-          onClick={toggleSidebar} 
-        /> 
- 
-        {/* Mobile drawer */} 
-        <div 
-          className={`fixed top-0 left-0 z-40 w-[85%] max-w-[360px] h-full bg-secondary transform transition-transform duration-300 rounded-r-2xl shadow-2xl flex flex-col overflow-hidden lg:hidden ${ 
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full" 
-          }`} 
-        > 
-          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()} 
-        </div> 
- 
-        {/* Desktop sidebar */} 
-        <div 
-          className={`hidden lg:flex flex-col shrink-0 bg-secondary transition-all duration-300 overflow-hidden ${ 
-            isSidebarOpen ? "w-[340px]" : "w-0 border-r-0" 
-          }`} 
-        > 
-          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()} 
-        </div> 
- 
-        {/* Map */} 
-        <div className="flex-1 relative bg-gray-100 h-full w-full min-h-[400px] sm:min-h-[500px]"> 
-          {loading && !lastUpdated && !driverGroups.size && ( 
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10"> 
-              <Loader2 className="h-10 w-10 text-purple-500 animate-spin" /> 
-              <p className="ml-4 text-sm text-gray-500"> 
-                {mode === "driver_selection" ? "Loading delivery details…" : "Fetching live deliveries…"} 
-              </p> 
-            </div> 
-          )} 
-          {error && !loading && ( 
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-4"> 
-              <X className="h-10 w-10 text-red-400 mb-4" /> 
-              <p className="text-red-500 text-sm mb-4">{error}</p> 
-              <button 
-                onClick={() => refetch()} 
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium" 
-              > 
-                Retry 
-              </button> 
-            </div> 
-          )} 
-          {!loading && !error && mode === "driver_selection" && normalizedOrder && !normalizedOrder.canAssign && ( 
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-500/95 text-white px-4 py-2 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2"> 
-              <AlertTriangle className="h-3.5 w-3.5" /> 
-              <span>{normalizedOrder.assignmentBlockedReason}</span> 
-            </div> 
-          )} 
-          {!loading && !error && mode === "tracking" && !driverGroups.size && ( 
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-6"> 
-              <Navigation className="h-16 w-16 text-amber-400 mb-4" /> 
-              <h3 className="font-bold text-gray-800 text-lg mb-2"> 
-                No active deliveries 
-              </h3> 
-              <p className="text-sm text-gray-500"> 
-                No drivers are currently out for delivery. 
-              </p> 
-            </div> 
-          )} 
-          <div ref={containerRef} className="w-full h-full z-0" /> 
-           
-          {/* Confirmation panel */} 
-          {showConfirmPanel && pendingDriverId && normalizedOrder && ( 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-5"> 
-              {(() => { 
-                const driver = enhancedDrivers.find(d => d.id === pendingDriverId); 
-                if (!driver) return null; 
-                const color = getDriverColor(enhancedDrivers.indexOf(driver)); 
-                const isNearest = driver.is_nearest === true; 
-                 
-                return ( 
-                  <div> 
-                    <div className="flex items-center gap-3 mb-4"> 
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" 
-                        style={{ backgroundColor: isNearest ? "#22C55E" : color }} 
-                      > 
-                        {isNearest ? "⭐" : getInitials(driver.name)} 
-                      </div> 
-                      <div> 
-                        <p className="font-bold text-gray-900 text-sm"> 
-                          {isNearest ? "Assign Nearest Driver" : "Assign Driver"} 
-                        </p> 
-                        <p className="text-xs text-gray-500"> 
-                          {driver.name} · {getVehicleName(driver.vehicle_type)} 
-                        </p> 
-                      </div> 
-                    </div> 
-                     
-                    <div className="space-y-2 text-xs mb-4"> 
-                      <div className="flex items-center gap-2"> 
-                        <Package className="h-3.5 w-3.5 text-purple-500" /> 
-                        <span>Order #{normalizedOrder.id}</span> 
-                      </div> 
-                      <div className="flex items-start gap-2"> 
-                        <Home className="h-3.5 w-3.5 text-amber-500 mt-0.5" /> 
-                        <span>{normalizedOrder.address}</span> 
-                      </div> 
-                      {normalizedOrder.pickupName && ( 
-                        <div className="flex items-center gap-2"> 
-                          <Store className="h-3.5 w-3.5 text-purple-500" /> 
-                          <span>{normalizedOrder.pickupName}</span> 
-                        </div> 
-                      )} 
-                      {driver.road_distance_to_customer != null ? ( 
-                        <div className="flex items-center gap-2"> 
-                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" /> 
-                          <span>{formatDistance(driver.road_distance_to_customer)} road · {formatDuration(driver.road_eta_to_customer)}</span> 
-                        </div> 
-                      ) : driver.distance_to_customer != null ? ( 
-                        <div className="flex items-center gap-2"> 
-                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" /> 
-                          <span>{formatDistance(driver.distance_to_customer)} to recipient</span> 
-                        </div> 
-                      ) : null} 
-                    </div> 
-                     
-                    <div className="flex gap-2"> 
-                      <button 
-                        onClick={handleConfirmAssignment} 
-                        disabled={isAssigning || !normalizedOrder.canAssign || !driver.isLive} 
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 ${ 
-                          isNearest 
-                            ? "bg-green-500 hover:bg-green-600 text-white" 
-                            : "bg-secondary text-white" 
-                        }`} 
-                      > 
-                        {isAssigning ? ( 
-                          <> 
-                            <Loader2 className="h-4 w-4 animate-spin" /> 
-                            Assigning... 
-                          </> 
-                        ) : ( 
-                          <> 
-                            <Check className="h-4 w-4" /> 
-                            {driver.isLive ? "Assign Driver" : "Driver Offline"} 
-                          </> 
-                        )} 
-                      </button> 
-                      <button 
-                        onClick={handleCancelSelection} 
-                        className="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200" 
-                      > 
-                        Cancel 
-                      </button> 
-                    </div> 
-                  </div> 
-                ); 
-              })()} 
-            </div> 
-          )} 
-           
-          {/* Bottom stats */} 
-          {mode === "tracking" && !loading && !error && driverGroups.size > 0 && ( 
-            <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 lg:bottom-6 lg:left-6 lg:right-6 z-20"> 
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2 sm:p-4"> 
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4"> 
-                  <StatsCard 
-                    icon={<MapPin className="h-5 w-5" />} 
-                    title="Vehicles Live" 
-                    value={stats.liveVehicles} 
-                    iconBgColor="bg-blue-50" 
-                    iconColor="text-blue-600" 
-                  /> 
-                  <StatsCard 
-                    icon={<Clock className="h-5 w-5" />} 
-                    title="Deliveries Today" 
-                    value={stats.deliveriesToday} 
-                    iconBgColor="bg-emerald-50" 
-                    iconColor="text-emerald-600" 
-                  /> 
-                  <StatsCard 
-                    icon={<CheckCircle className="h-5 w-5" />} 
-                    title="On-Time Delivery" 
-                    value={`${stats.onTimeDelivery}%`} 
-                    iconBgColor="bg-purple-50" 
-                    iconColor="text-purple-600" 
-                  /> 
-                </div> 
-              </div> 
-            </div> 
-          )} 
-        </div> 
-      </div> 
- 
-      {/* Mobile FAB */} 
-      <button 
-        onClick={toggleSidebar} 
-        className="fixed bottom-6 left-6 z-40 flex lg:hidden items-center justify-center p-3 bg-white rounded-full shadow-lg border border-gray-200" 
-        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"} 
-      > 
-        {isSidebarOpen ? ( 
-          <PanelLeftClose className="h-6 w-6 text-gray-700" /> 
-        ) : ( 
-          <PanelLeftOpen className="h-6 w-6 text-gray-700" /> 
-        )} 
-      </button> 
-    </div>, 
-    document.body 
-  ); 
+            }
+
+            return (
+              <button
+                key={driverName}
+                type="button"
+                onClick={() => setActiveOrderId(orders[0].id)}
+                className={`w-full rounded-2xl border p-3.5 text-left transition-all ${
+                  isActive
+                    ? "border-white/60 bg-white shadow-lg"
+                    : "border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15"
+                }`}
+                aria-label={`Driver ${driverName}, ${count} orders`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="relative shrink-0">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold ${
+                        isActive ? "text-white" : "bg-white/15 text-white"
+                      }`}
+                      style={isActive ? { backgroundColor: color } : undefined}
+                    >
+                      {getInitials(driverName)}
+                    </div>
+                    <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 ${isActive ? "border-white" : "border-[#6750A4]"} bg-emerald-400 animate-pulse`} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className={`truncate text-sm font-bold ${isActive ? "text-gray-900" : "text-white"}`}>
+                          {driverName}
+                        </p>
+                        <div className={`mt-1 flex flex-wrap items-center gap-1.5 text-[10px] ${isActive ? "text-gray-500" : "text-white/60"}`}>
+                          <span className={`rounded-full px-1.5 py-0.5 font-semibold ${
+                            isActive
+                              ? isInHouse
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-blue-50 text-blue-700"
+                              : "bg-white/10 text-white/80"
+                          }`}>
+                            {isInHouse ? "In-House" : "3PL"}
+                          </span>
+                          <span>•</span>
+                          <span>{count} destination{count === 1 ? "" : "s"}</span>
+                        </div>
+                      </div>
+                      <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold ${
+                        isActive ? "bg-emerald-50 text-emerald-700" : "bg-emerald-400/15 text-emerald-200"
+                      }`}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      {[
+                        ["Speed", speed != null ? `${Math.round(Number(speed))} km/h` : "—"],
+                        ["Range", distanceDisplay || "—"],
+                        ["Stops", String(count)],
+                      ].map(([label, value]) => (
+                        <div
+                          key={label}
+                          className={`rounded-lg px-2.5 py-2 ${isActive ? "bg-gray-50" : "bg-black/10"}`}
+                        >
+                          <p className={`text-[9px] uppercase tracking-wide ${isActive ? "text-gray-400" : "text-white/40"}`}>
+                            {label}
+                          </p>
+                          <p className={`mt-0.5 truncate text-[11px] font-bold ${isActive ? "text-gray-700" : "text-white/85"}`}>
+                            {value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {isActive && (
+                      <div className="mt-3 rounded-lg bg-secondary/5 px-2.5 py-2">
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-secondary/60">Current delivery</p>
+                        <p className="mt-0.5 truncate text-[11px] font-semibold text-gray-700">
+                          #{activeOrder.id} · {activeOrder.recipient_name || activeOrder.customer_name || "Recipient"}
+                        </p>
+                        <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-gray-500">
+                          {activeDestination.address}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Render
+  const latestSyncAt = realtimeUpdatedAt || lastUpdated;
+  const realtimeHealthy =
+    (mode === "driver_selection" && availableDrivers.length > 0) ||
+    activeRealtimeSubscriptions > 0 ||
+    realtimeUpdatedAt !== null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-gray-100">
+      {/* Production dispatch header */}
+      <header className="z-30 flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-3 py-2.5 shadow-sm sm:px-5 lg:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            onClick={toggleSidebar}
+            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary lg:flex"
+            aria-label="Toggle sidebar"
+          >
+            {isSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+          </button>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-white shadow-sm shadow-secondary/20">
+            <Navigation2 className="h-5 w-5" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="truncate text-sm font-bold tracking-tight text-gray-900 sm:text-base lg:text-lg">
+                {mode === "driver_selection" ? "Driver Assignment Map" : "Live Delivery Map"}
+              </h2>
+              <span className={`hidden items-center gap-1.5 rounded-full px-2 py-1 text-[9px] font-bold sm:flex ${
+                realtimeHealthy ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+              }`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${realtimeHealthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                {realtimeHealthy ? "REALTIME" : "API SYNC"}
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-[10px] text-gray-500 sm:text-xs">
+              {mode === "driver_selection" && normalizedOrder
+                ? `Order #${normalizedOrder.id} · ${normalizedOrder.customerName}`
+                : `${stats.liveVehicles} vehicle${stats.liveVehicles === 1 ? "" : "s"} currently live`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <div className="mr-1 hidden text-right xl:block">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">Last sync</p>
+            <p className="text-[11px] font-semibold text-gray-600">
+              {latestSyncAt ? latestSyncAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Waiting..."}
+            </p>
+          </div>
+
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition hover:border-secondary/30 hover:bg-secondary/5 hover:text-secondary disabled:opacity-50"
+            aria-label="Refresh delivery data"
+            title="Refresh delivery data"
+          >
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          </button>
+
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            aria-label="Close map"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        {/* Mobile sidebar backdrop */}
+        <div
+          className={`fixed inset-0 z-30 bg-gray-950/35 backdrop-blur-[1px] transition-opacity lg:hidden ${
+            isSidebarOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          }`}
+          onClick={toggleSidebar}
+        />
+
+        {/* Mobile sidebar */}
+        <aside
+          className={`fixed bottom-0 left-0 top-0 z-40 flex w-[86%] max-w-[350px] transform flex-col overflow-hidden border-r border-[#6750A4] bg-[#6750A4] shadow-2xl transition-transform duration-300 lg:hidden ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()}
+        </aside>
+
+        {/* Desktop sidebar */}
+        <aside
+          className={`hidden shrink-0 flex-col overflow-hidden border-r border-[#6750A4] bg-[#6750A4] transition-[width] duration-300 lg:flex ${
+            isSidebarOpen
+              ? mode === "driver_selection"
+                ? "w-[330px] xl:w-[350px]"
+                : "w-[360px] xl:w-[380px]"
+              : "w-[58px]"
+          }`}
+        >
+          {isSidebarOpen
+            ? mode === "driver_selection"
+              ? renderDriverSelectionSidebar()
+              : renderTrackingSidebar()
+            : renderCollapsedSidebarRail()}
+        </aside>
+
+        {/* Map workspace */}
+        <main className="relative min-h-[420px] min-w-0 flex-1 bg-gray-100">
+          <div ref={containerRef} className="absolute inset-0 z-0 h-full w-full" />
+
+          {/* Map context / legend */}
+          {!loading && !error && (
+            <div className="pointer-events-none absolute left-3 top-3 z-20 hidden sm:block lg:left-4 lg:top-4">
+              <div className="rounded-2xl border border-white/70 bg-white/95 px-3.5 py-3 shadow-lg shadow-gray-900/10 backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                    <MapIcon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-800">Dispatch map</p>
+                    <p className="text-[9px] text-gray-400">
+                      {mode === "driver_selection" ? "Live driver availability" : "Realtime fleet positions"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2.5 flex items-center gap-3 border-t border-gray-100 pt-2 text-[9px] font-semibold text-gray-500">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-secondary" /> Pickup</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm border-2 border-amber-400 bg-white" /> Recipient</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Live driver</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === "driver_selection" && normalizedOrder && (
+            <div className="pointer-events-none absolute bottom-4 left-4 z-20 hidden max-w-[520px] lg:block">
+              <div className="rounded-2xl border border-white/70 bg-white/95 p-3.5 shadow-xl shadow-gray-900/10 backdrop-blur-md">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-white">
+                    <Navigation2 className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">Assignment route</p>
+                    <p className="text-xs font-bold text-gray-900">Driver → {normalizedOrder.pickupName} → {normalizedOrder.customerName}</p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-start gap-2 border-t border-gray-100 pt-3">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-secondary">Pickup</p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-gray-700">{normalizedOrder.pickupName}</p>
+                    <p className="mt-0.5 line-clamp-2 text-[9px] leading-4 text-gray-400">{normalizedOrder.companyAddress || "Address unavailable"}</p>
+                  </div>
+                  <div className="mt-4 h-px w-8 bg-secondary/30" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-secondary">Customer</p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-gray-700">{normalizedOrder.customerName}</p>
+                    <p className="mt-0.5 line-clamp-2 text-[9px] leading-4 text-gray-400">{normalizedOrder.address}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Production map control rail */}
+          <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 lg:right-4 lg:top-4">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-1.5 shadow-lg shadow-gray-900/10 backdrop-blur-md">
+              <button
+                onClick={() => setMapStyle("street")}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                  mapStyle === "street" ? "bg-secondary text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                }`}
+                aria-label="Street map"
+                title="Street map"
+              >
+                <MapIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setMapStyle("satellite")}
+                className={`mt-1 flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                  mapStyle === "satellite" ? "bg-secondary text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                }`}
+                aria-label="Satellite map"
+                title="Satellite map"
+              >
+                <Satellite className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-1.5 shadow-lg shadow-gray-900/10 backdrop-blur-md">
+              {mode === "driver_selection" ? (
+                <>
+                  <button
+                    onClick={() => setShowCompanyMarker(prev => !prev)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                      showCompanyMarker ? "bg-secondary/10 text-secondary" : "text-gray-400 hover:bg-gray-100"
+                    }`}
+                    aria-label="Toggle pickup marker"
+                    title="Pickup marker"
+                  >
+                    <Store className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setShowDeliveryMarker(prev => !prev)}
+                    className={`mt-1 flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                      showDeliveryMarker ? "bg-secondary/10 text-secondary" : "text-gray-400 hover:bg-gray-100"
+                    }`}
+                    aria-label="Toggle destination marker"
+                    title="Destination marker"
+                  >
+                    <MapPin className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowCustomerMarker(prev => !prev)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                    showCustomerMarker ? "bg-secondary/10 text-secondary" : "text-gray-400 hover:bg-gray-100"
+                  }`}
+                  aria-label="Toggle recipient markers"
+                  title="Recipient markers"
+                >
+                  <MapPin className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-1.5 shadow-lg shadow-gray-900/10 backdrop-blur-md">
+              <button
+                onClick={fitAllMarkers}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 transition hover:bg-secondary/5 hover:text-secondary"
+                aria-label="Fit all markers"
+                title="Fit all markers"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+              {mode === "tracking" && (
+                <button
+                  onClick={toggleFollow}
+                  className={`mt-1 flex h-9 w-9 items-center justify-center rounded-xl transition ${
+                    followDriver ? "bg-secondary text-white" : "text-gray-500 hover:bg-secondary/5 hover:text-secondary"
+                  }`}
+                  aria-label="Follow selected driver"
+                  title={followDriver ? "Stop following driver" : "Follow selected driver"}
+                >
+                  <Navigation className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Live sync chip */}
+          <div className="absolute bottom-3 left-3 z-20 sm:bottom-4 sm:left-4">
+            <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 py-2 shadow-lg shadow-gray-900/10 backdrop-blur-md">
+              <span className={`h-2 w-2 rounded-full ${realtimeHealthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+              <span className="text-[10px] font-bold text-gray-700">
+                {realtimeHealthy ? "Live updates on" : "Realtime reconnecting"}
+              </span>
+              {latestSyncAt && (
+                <span className="hidden text-[9px] text-gray-400 sm:inline">· {latestSyncAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Loading state */}
+          {loading && !lastUpdated && !driverGroups.size && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+              <div className="rounded-2xl border border-gray-200 bg-white px-6 py-5 text-center shadow-xl">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10">
+                  <Loader2 className="h-5 w-5 animate-spin text-secondary" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-gray-800">
+                  {mode === "driver_selection" ? "Loading delivery map" : "Connecting to live deliveries"}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">Preparing map, drivers and route data...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && !loading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-2xl border border-red-100 bg-white p-6 text-center shadow-xl">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <h3 className="mt-3 text-sm font-bold text-gray-900">Unable to load delivery map</h3>
+                <p className="mt-1 text-xs leading-5 text-gray-500">{error}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-4 rounded-xl bg-secondary px-5 py-2.5 text-xs font-bold text-white transition hover:opacity-90"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && mode === "driver_selection" && normalizedOrder && !normalizedOrder.canAssign && (
+            <div className="absolute left-1/2 top-4 z-20 w-[calc(100%-7rem)] max-w-xl -translate-x-1/2 rounded-xl border border-red-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-md">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                <div>
+                  <p className="text-xs font-bold text-red-700">Driver assignment unavailable</p>
+                  <p className="mt-0.5 text-[10px] text-red-600">{normalizedOrder.assignmentBlockedReason}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && mode === "tracking" && !driverGroups.size && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/75 p-6 backdrop-blur-sm">
+              <div className="max-w-sm rounded-2xl border border-gray-200 bg-white px-7 py-8 text-center shadow-xl">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+                  <Navigation className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-gray-900">No active deliveries</h3>
+                <p className="mt-1.5 text-xs leading-5 text-gray-500">Live vehicles will appear automatically when a delivery moves out for delivery.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Assignment confirmation */}
+          {showConfirmPanel && pendingDriverId && normalizedOrder && (
+            <div className="absolute bottom-16 left-1/2 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 sm:bottom-5">
+              {(() => {
+                const driver = enhancedDrivers.find(d => d.id === pendingDriverId);
+                if (!driver) return null;
+                const isNearest = driver.is_nearest === true;
+
+                return (
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-900/15">
+                    <div className="h-1 bg-secondary" />
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-sm font-bold text-secondary">
+                          {driver.profile_image ? (
+                            <img src={driver.profile_image} alt={driver.name} className="h-11 w-11 rounded-xl object-cover" />
+                          ) : (
+                            getInitials(driver.name)
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-bold text-gray-900">{driver.name}</p>
+                            {isNearest && <span className="rounded-full bg-secondary/10 px-1.5 py-0.5 text-[8px] font-extrabold text-secondary">BEST MATCH</span>}
+                          </div>
+                          <p className="mt-0.5 text-[10px] text-gray-500">{getVehicleName(driver.vehicle_type)} · {driver.is_in_house ? "In-House" : driver.company_name || "3PL"}</p>
+                        </div>
+                        <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> LIVE
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-gray-50 p-3">
+                        <div>
+                          <p className="text-[9px] uppercase tracking-wide text-gray-400">Destination</p>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold text-gray-700">{normalizedOrder.address}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase tracking-wide text-gray-400">Route</p>
+                          <p className="mt-0.5 text-[11px] font-semibold text-gray-700">
+                            {driver.road_distance_to_customer != null
+                              ? `${formatDistance(driver.road_distance_to_customer)} · ${formatDuration(driver.road_eta_to_customer)}`
+                              : driver.distance_to_customer != null
+                                ? formatDistance(driver.distance_to_customer)
+                                : "Calculating..."}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          onClick={handleCancelSelection}
+                          className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-600 transition hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleConfirmAssignment}
+                          disabled={isAssigning || !normalizedOrder.canAssign || !driver.isLive}
+                          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                          {isAssigning ? "Assigning..." : "Assign driver"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Compact live stats */}
+          {mode === "tracking" && !loading && !error && driverGroups.size > 0 && (
+            <div className="absolute bottom-3 right-16 z-20 hidden gap-2 md:flex sm:bottom-4 lg:right-20">
+              <div className="rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md">
+                <p className="text-[9px] uppercase tracking-wide text-gray-400">Live vehicles</p>
+                <p className="mt-0.5 text-sm font-extrabold text-gray-800">{stats.liveVehicles}</p>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md">
+                <p className="text-[9px] uppercase tracking-wide text-gray-400">Deliveries today</p>
+                <p className="mt-0.5 text-sm font-extrabold text-gray-800">{stats.deliveriesToday}</p>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-white shadow-xl shadow-secondary/25 lg:hidden"
+        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+      </button>
+    </div>,
+    document.body
+  );
 }

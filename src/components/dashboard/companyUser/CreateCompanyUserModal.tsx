@@ -201,9 +201,9 @@ export function CreateCompanyUserModal({
         {/* HEADER */}
         <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-start justify-between bg-gradient-to-r from-secondary/5 to-indigo-50 backdrop-blur-sm bg-opacity-95">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-secondary">Create User</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-secondary">{formData.role === "staff" ? "Create Dispatcher" : "Create User"}</h2>
             <p className="text-xs sm:text-sm text-secondary/60 mt-1">
-              Create and onboard a company user instantly
+              {formData.role === "staff" ? "Create and onboard a dispatcher" : "Create and onboard a company user instantly"}
             </p>
           </div>
           <button
@@ -360,8 +360,8 @@ export function CreateCompanyUserModal({
                   className="w-full appearance-none pl-8 sm:pl-10 pr-8 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-2xl border border-gray-200 bg-white focus:ring-4 focus:ring-secondary/10 focus:border-secondary outline-none transition"
                 >
                   <option value="admin">Admin</option>
-                  <option value="staff">Staff</option>
-                  <option value="delivery">Delivery</option>
+                  <option value="staff">Dispatcher</option>
+                  <option value="delivery">Delivery Personnel</option>
                   <option value="viewer">Viewer</option>
                 </select>
               </div>
@@ -494,7 +494,7 @@ export function CreateCompanyUserModal({
             ) : (
               <>
                 <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Create User
+                {formData.role === "staff" ? "Create Dispatcher" : "Create User"}
               </>
             )}
           </button>

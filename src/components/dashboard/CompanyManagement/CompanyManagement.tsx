@@ -203,7 +203,7 @@ const EMPTY_COMPANY_FORM: CompanyFormData = {
   latitude: "",
   longitude: "",
   delivery_fee_per_km: "0.00",
-  is_active: true,
+  is_active: false,
   is_featured: false,
   supports_table_service: false,
   logo: null,
@@ -218,6 +218,18 @@ const EMPTY_COMPANY_FORM: CompanyFormData = {
   license: null,
   contact_phone: "",
   contact_email: "",
+};
+
+const COMPANY_VERIFICATION_STORAGE_KEY = "company-verification-status-v1";
+
+const readCompanyVerificationState = (): Record<string, boolean> => {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(COMPANY_VERIFICATION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 };
 
 export default function CompanyManagement() {
@@ -338,6 +350,34 @@ export default function CompanyManagement() {
   );
   const { toast, showToast } = useToast();
   const [isEditingActive, setIsEditingActive] = useState(false);
+  const [verificationBySlug, setVerificationBySlug] = useState<Record<string, boolean>>(
+    readCompanyVerificationState,
+  );
+  const [verificationDraft, setVerificationDraft] = useState(false);
+  const [originalVerification, setOriginalVerification] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        COMPANY_VERIFICATION_STORAGE_KEY,
+        JSON.stringify(verificationBySlug),
+      );
+    } catch {
+      // Verification is a frontend convenience only. Ignore storage failures.
+    }
+  }, [verificationBySlug]);
+
+  const handleVerificationChange = useCallback(
+    (verified: boolean) => {
+      if (!isSuperAdmin || !editingSlug) return;
+      setVerificationDraft(verified);
+      if (!verified) {
+        setFormData((current) => ({ ...current, is_active: false }));
+      }
+    },
+    [isSuperAdmin, editingSlug],
+  );
 
   // Filtered companies (super admin or marketing agent)
   const filteredCompanies = useMemo(() => {
@@ -895,8 +935,12 @@ export default function CompanyManagement() {
           )
         )
           return true;
-        if (Boolean(formData.is_active) !== Boolean(originalFormData.is_active))
+        if (
+          isSuperAdmin &&
+          Boolean(formData.is_active) !== Boolean(originalFormData.is_active)
+        )
           return true;
+        if (isSuperAdmin && verificationDraft !== originalVerification) return true;
         if (
           Boolean(formData.is_featured) !==
           Boolean(originalFormData.is_featured)
@@ -1007,7 +1051,16 @@ export default function CompanyManagement() {
         "delivery_fee_per_km",
         formData.delivery_fee_per_km || "0.00",
       );
-      formPayload.append("is_active", String(formData.is_active));
+      // Only a super admin may change an existing company's active state.
+      // Every newly created company starts inactive and must be verified first.
+      if (!editingSlug) {
+        formPayload.append("is_active", "false");
+      } else if (isSuperAdmin) {
+        formPayload.append(
+          "is_active",
+          String(verificationDraft ? formData.is_active : false),
+        );
+      }
       formPayload.append("is_featured", String(formData.is_featured));
       formPayload.append(
         "supports_table_service",
@@ -1058,15 +1111,28 @@ export default function CompanyManagement() {
 
       if (editingSlug) {
         await updateCompany(editingSlug, formPayload);
+        if (isSuperAdmin) {
+          setVerificationBySlug((current) => ({
+            ...current,
+            [editingSlug]: verificationDraft,
+          }));
+          setOriginalVerification(verificationDraft);
+        }
       } else {
         await createCompany(formPayload);
+        if (formData.slug.trim()) {
+          setVerificationBySlug((current) => ({
+            ...current,
+            [formData.slug.trim()]: false,
+          }));
+        }
       }
 
       showToast(
         "success",
         editingSlug
           ? "Company updated successfully"
-          : "Company created successfully",
+          : "Company created as inactive. Super admin verification is required before activation.",
       );
 
       setModalOpen(false);
@@ -1107,6 +1173,9 @@ export default function CompanyManagement() {
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
+            canManageActiveStatus={isSuperAdmin}
+            isCompanyVerified={verificationDraft}
+            onVerificationChange={handleVerificationChange}
             submitting={submitting}
             editingSlug={editingSlug}
             headCompanyName={
@@ -1136,6 +1205,9 @@ export default function CompanyManagement() {
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
+            canManageActiveStatus={isSuperAdmin}
+            isCompanyVerified={verificationDraft}
+            onVerificationChange={handleVerificationChange}
             submitting={submitting}
             editingSlug={editingSlug}
             headCompanyName={
@@ -1165,6 +1237,9 @@ export default function CompanyManagement() {
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
+            canManageActiveStatus={isSuperAdmin}
+            isCompanyVerified={verificationDraft}
+            onVerificationChange={handleVerificationChange}
             submitting={submitting}
             editingSlug={editingSlug}
             headCompanyName={
@@ -1194,6 +1269,9 @@ export default function CompanyManagement() {
             onLogoFileChange={handleLogoChange}
             onCoverFileChange={handleCoverChange}
             isEditingActive={true}
+            canManageActiveStatus={isSuperAdmin}
+            isCompanyVerified={verificationDraft}
+            onVerificationChange={handleVerificationChange}
             submitting={submitting}
             editingSlug={editingSlug}
             headCompanyName={
@@ -1220,6 +1298,9 @@ export default function CompanyManagement() {
       handleSubmit,
       handleLogoChange,
       handleCoverChange,
+      isSuperAdmin,
+      verificationDraft,
+      handleVerificationChange,
       validateBasicInfo,
       validateLocation,
       validateDocuments,
@@ -1233,6 +1314,8 @@ export default function CompanyManagement() {
     setLogoPreview(null);
     setCoverPreview(null);
     setFormErrors({});
+    setVerificationDraft(false);
+    setOriginalVerification(false);
   };
 
   const openEdit = useCallback(
@@ -1282,6 +1365,11 @@ export default function CompanyManagement() {
         logo: company.logo as any,
         cover_image: company.cover_image as any,
       });
+      const storedVerification = verificationBySlug[company.slug];
+      const initialVerification =
+        storedVerification === undefined ? Boolean(company.is_active) : storedVerification;
+      setVerificationDraft(initialVerification);
+      setOriginalVerification(initialVerification);
       if (company.logo) setLogoPreview(company.logo);
       if (company.cover_image) setCoverPreview(company.cover_image);
       if (isSuperAdmin || isMarketing) {
@@ -1290,7 +1378,7 @@ export default function CompanyManagement() {
         setIsEditingActive(true);
       }
     },
-    [canEditCompany, isSuperAdmin, showToast],
+    [canEditCompany, isSuperAdmin, isMarketing, showToast, verificationBySlug],
   );
 
   const closeInlineEdit = useCallback(() => {
