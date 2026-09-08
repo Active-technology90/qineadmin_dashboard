@@ -414,6 +414,10 @@ export interface VendorOrder {
   delivery?: Delivery;
   master_order_id?: number;
   fulfillment_type?: string;
+  shipping_lon?: string;
+  shipping_lat?: string;
+  customer_name?: string;
+  vendor_orders?: VendorOrder[];
 }
 
 export interface MasterOrder {

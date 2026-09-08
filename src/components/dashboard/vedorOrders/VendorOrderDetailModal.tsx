@@ -40,7 +40,7 @@ import {
 } from "../../../services/api";
 import { useToast } from "../../../hooks/useToast";
 import { ConfirmationModal } from "../../ui/confimationModal";
-import { CustomSelect } from "../../ui/CustomSelect";
+// import { CustomSelect } from "../../ui/CustomSelect";
 import { db } from "../../../services/firebase";
 import { ref, onValue, off } from "firebase/database";
 import DeliveryTrackingMap from "./DeliveryTrackingMap";
@@ -1400,11 +1400,11 @@ const DeliveryCard = ({
                   ) : ( 
                     <> 
                       <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar"> 
-                        {paginatedStaffList.map((staff, index) => { 
+                        {paginatedStaffList.map((staff) => { 
                           const isSelected = selectedUserId === staff.id; 
                           const hasLocation = staff.calculated_distance != null; 
-                          const globalIndex = (currentPage - 1) * itemsPerPage + index; 
-                          const isNearest = globalIndex === 0 && sortBy === "distance" && sortOrder === "asc" && hasLocation;
+                          // const globalIndex = (currentPage - 1) * itemsPerPage + index; 
+                          // const isNearest = globalIndex === 0 && sortBy === "distance" && sortOrder === "asc" && hasLocation;
                           const routeInfo = routeData[staff.id];
                           const roadDistance = routeInfo?.distanceKm;
                           const roadDuration = routeInfo?.durationMinutes;
@@ -2202,7 +2202,7 @@ export function VendorOrderDetailModal({
   onOpenLiveTracking,
   allOrders = [],
   onSelectOrder,
-  onViewOnMap,
+  // onViewOnMap,
 }: any) {
   if (!order) return null;
   const [refreshing, setRefreshing] = useState(false);

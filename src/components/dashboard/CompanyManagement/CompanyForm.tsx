@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import type { Category, SubCategory, HeadCompany } from "../../../types";
 import LocationPickerModal from "./LocationPickerModal";
 // import { CustomSelect } from "../../ui/CustomSelect";
-import { MapPin, Building2, FileText, Camera, XCircle, Check, Phone, Mail, MapPinned, Palette, CreditCard, FileCheck2, Image as ImageIcon, Eye } from "lucide-react";
+import { MapPin, Building2, FileText, Camera, XCircle, Check, Phone, Mail, MapPinned, Palette, FileCheck2, Image as ImageIcon, Eye } from "lucide-react";
 import { CustomSelect } from "../../ui/CustomSelect";
 
 export interface CompanyFormData {
@@ -71,13 +71,13 @@ export default function CompanyForm({
   onLogoFileChange,
   onCoverFileChange,
   isEditingActive,
-  submitting,
+  submitting: _submitting,
   editingSlug,
   headCompanyName,
   headCompanies = [],
   currentStep = 0,
   onSubmit,
-  onClose,
+  onClose: _onClose,
 }: CompanyFormProps) {
   const filteredSubcategories = subcategories.filter(
     (sub) => sub.category === formData.category,

@@ -6,7 +6,6 @@ import {
   Star,
   Calendar,
   Search,
-  RefreshCw,
   Filter,
   List,
   LayoutGrid,
@@ -60,14 +59,14 @@ const PageHeader = ({
   companyName,
   staffCount,
   isSuperAdmin,
-  onRefresh,
+  onRefresh: _onRefresh,
   onSwitchCompany,
   onAddSpecialist,
 }: {
   companyName?: string;
   staffCount: number;
   isSuperAdmin: boolean;
-  onRefresh: () => void;
+  onRefresh?: () => void;
   onSwitchCompany: () => void;
   onAddSpecialist: () => void;
 }) => (

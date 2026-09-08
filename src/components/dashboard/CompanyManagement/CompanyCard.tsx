@@ -1,11 +1,8 @@
 // src/components/admin/CompanyManagement/CompanyCard.tsx
 
-import React from "react";
 import {
   Building2,
   Tag,
-  ChevronRight,
-  MapPin,
   Star,
   Globe2,
 } from "lucide-react";
@@ -19,8 +16,6 @@ interface CompanyCardProps {
 
 export default function CompanyCard({
   company,
-  onEdit,
-  userRole,
 }: CompanyCardProps) {
   const isActive = company.is_active;
 

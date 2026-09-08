@@ -2,7 +2,7 @@
 
 import type { AvailabilitySlot, ValidationResult } from "../types";
 import {
-  normaliseTime,
+  // normaliseTime,
   isValidTimeFormat,
   isTimeOverlap,
   getDurationMinutes,

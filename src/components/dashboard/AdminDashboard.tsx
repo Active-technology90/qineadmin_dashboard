@@ -1272,7 +1272,7 @@ export default function AdminDashboard() {
             // optionally open tracking map, e.g. setShowTrackingMap(true)
           }}
           allOrders={[]} // or pass existing orders if available
-          onSelectOrder={(ord) => {
+          onSelectOrder={(ord: any) => {
             setNotificationOrder(ord);
             setNotificationReceipt(ord.receipt || null);
           }}

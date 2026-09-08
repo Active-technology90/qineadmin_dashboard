@@ -1,5 +1,5 @@
 // src/components/admin/CompanyManagement/CompanyFormSkeleton.tsx
-import React from "react";
+
 
 interface CompanyFormSkeletonProps {
   currentStep?: number;

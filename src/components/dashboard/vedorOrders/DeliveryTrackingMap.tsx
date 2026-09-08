@@ -9,10 +9,9 @@ import React, {
 import { createPortal } from "react-dom";
 import {
   X, Navigation, Loader2, RefreshCw, Truck, MapPin, Clock,
-  CheckCircle, PanelLeftClose, PanelLeftOpen, Maximize2, Building2,
+  CheckCircle, PanelLeftClose, PanelLeftOpen, Maximize2,
   Users, Search, Check, Phone, Package, Navigation2, Home, Star,
-  Route as RouteIcon, AlertTriangle, Store, User, ArrowRight, Award,
-  Factory, Box, ChevronDown, ChevronUp,
+  Route as RouteIcon, AlertTriangle, Store, User, Award, ChevronDown, ChevronUp,
 } from "lucide-react";
 import {
   getAdminVendorOrders,
@@ -99,7 +98,7 @@ interface AvailableDriver {
   id: number;
   name: string;
   username: string;
-  phone: string;
+  phone?: string | null;
   vehicle_type?: string;
   is_in_house: boolean;
   company_name?: string;
@@ -108,7 +107,7 @@ interface AvailableDriver {
   last_lat?: number | null;
   last_lon?: number | null;
   distance_km?: number | null;
-  average_rating?: string;
+  average_rating?: string | number;
   total_reviews?: number;
   profile_image?: string | null;
   location_source?: "live" | "current" | "last_known" | "api" | "unknown";
@@ -260,7 +259,7 @@ const getOrderDestination = (order: any): OrderDestination => {
   }
 
   let address = "";
-  
+
   if (order.shipping_address_text) {
     address = order.shipping_address_text;
   }
@@ -284,7 +283,7 @@ const getOrderDestination = (order: any): OrderDestination => {
       order.shipping_address_ref?.text,
       order.shipping_address_ref?.full_address,
     ].filter(Boolean);
-    
+
     if (addressFields.length > 0) {
       address = addressFields[0];
     }
@@ -309,12 +308,12 @@ const canAssignDriver = (order: any): { canAssign: boolean; reason?: string } =>
   const masterStatus = order.status?.toLowerCase();
   const deliveryStatus = order.delivery?.status?.toLowerCase();
   const vendorOrders = order.vendor_orders || [];
-  
+
   const blockedStatuses = ['delivered', 'cancelled', 'rejected', 'refunded', 'completed'];
   if (blockedStatuses.includes(masterStatus)) {
     return { canAssign: false, reason: `Order status is ${masterStatus}. Driver assignment is unavailable.` };
   }
-  
+
   if (deliveryStatus && blockedStatuses.includes(deliveryStatus)) {
     return { canAssign: false, reason: `Delivery status is ${deliveryStatus}. Driver assignment is unavailable.` };
   }
@@ -322,9 +321,9 @@ const canAssignDriver = (order: any): { canAssign: boolean; reason?: string } =>
   for (const vo of vendorOrders) {
     const voStatus = vo.status?.toLowerCase();
     const voDeliveryStatus = vo.delivery_status?.toLowerCase() || vo.delivery?.status?.toLowerCase();
-    
-    if (['cancelled', 'rejected', 'refunded'].includes(voStatus) || 
-        (voDeliveryStatus && ['cancelled', 'rejected', 'refunded'].includes(voDeliveryStatus))) {
+
+    if (['cancelled', 'rejected', 'refunded'].includes(voStatus) ||
+      (voDeliveryStatus && ['cancelled', 'rejected', 'refunded'].includes(voDeliveryStatus))) {
       return { canAssign: false, reason: "One or more vendor deliveries are cancelled or rejected." };
     }
   }
@@ -336,15 +335,15 @@ const canAssignDriver = (order: any): { canAssign: boolean; reason?: string } =>
 const normalizeOrder = (order: any): DispatchOrder => {
   const destination = getOrderDestination(order);
   const assignmentCheck = canAssignDriver(order);
-  
+
   const vendorOrder = order.vendor_orders?.[0];
   const company = vendorOrder?.company || order.company;
-  
+
   const pickupLat = company?.latitude != null ? Number(company.latitude) : null;
   const pickupLon = company?.longitude != null ? Number(company.longitude) : null;
-  
+
   const items = vendorOrder?.items || order.items || order.order_items || [];
-  
+
   return {
     id: order.id,
     status: order.status || "unknown",
@@ -377,14 +376,12 @@ const StatusBadge: React.FC<{ status?: string }> = React.memo(({ status }) => {
   const isLive = status === "out_for_delivery" || status === "shipped";
   return (
     <span
-      className={`flex items-center gap-1.5 text-[12px] sm:text-xs font-medium ${
-        isLive ? "text-green-400" : "text-gray-400"
-      }`}
+      className={`flex items-center gap-1.5 text-[12px] sm:text-xs font-medium ${isLive ? "text-green-400" : "text-gray-400"
+        }`}
     >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          isLive ? "bg-green-500 animate-pulse" : "bg-gray-300"
-        }`}
+        className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-green-500 animate-pulse" : "bg-gray-300"
+          }`}
       />
       {isLive ? "Live" : status || "Pending"}
     </span>
@@ -569,9 +566,8 @@ const createDriverPopup = (
         ${orderList}
       </ul>
 
-      ${
-        safePhone
-          ? `<a
+      ${safePhone
+      ? `<a
                 href="tel:${safePhone}"
                 style="
                   display:block;
@@ -586,48 +582,24 @@ const createDriverPopup = (
               >
                 📞 Call ${safeName}
               </a>`
-          : ""
-      }
-    </div>
-  `;
-};
-
-const createPickupPopup = (order: DispatchOrder): string => {
-  return `
-    <div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:300px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="background:#6750A4;border-radius:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;">🏪</div>
-        <div>
-          <div style="font-size:16px;font-weight:700;color:#111827;">Pickup Location</div>
-          <div style="font-size:13px;color:#6B7280;">${escapeHtml(order.pickupName)}</div>
-        </div>
-      </div>
-      ${order.companyAddress ? `
-        <div style="background:#F9FAFB;border-radius:12px;padding:12px;margin-bottom:8px;">
-          <div style="font-size:12px;color:#374151;">📍 ${escapeHtml(order.companyAddress)}</div>
-        </div>
-      ` : ''}
-      ${order.pickupLat != null && order.pickupLon != null ? `
-        <div style="font-size:11px;color:#6B7280;font-family:monospace;">
-          ${order.pickupLat.toFixed(6)}, ${order.pickupLon.toFixed(6)}
-        </div>
-      ` : ''}
+      : ""
+    }
     </div>
   `;
 };
 
 const createDriverPopupForSelection = (
   driver: AvailableDriver,
-  order: DispatchOrder,
-  color: string,
+  _order?: DispatchOrder,
+  color?: string,
   isNearest: boolean = false
 ): string => {
   const safeName = escapeHtml(driver.name);
   const hasLocation = driver.current_lat != null && driver.current_lng != null;
-  const locationLabel = driver.isLive ? "🟢 Live" : 
-                        driver.location_source === "last_known" ? "🕒 Last known" : 
-                        "📡 Available";
-  
+  const locationLabel = driver.isLive ? "🟢 Live" :
+    driver.location_source === "last_known" ? "🕒 Last known" :
+      "📡 Available";
+
   return `
     <div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px;">
       ${isNearest ? `
@@ -723,7 +695,7 @@ const makeCompanyIcon = (): Leaflet.DivIcon => {
 const makeCustomerIcon = (orders: DeliveryWithLocation[]): Leaflet.DivIcon => {
   const L = (window as any).L;
   const customerName = orders[0]?.recipient_name || orders[0]?.customer_name || "Recipient";
-  
+
   return L.divIcon({
     className: "customer-marker-grouped",
     html: `
@@ -797,22 +769,6 @@ const makeDeliveryLocationIcon = (customerName: string): Leaflet.DivIcon => {
   });
 };
 
-const makePickupIcon = (): Leaflet.DivIcon => {
-  const L = (window as any).L;
-  return L.divIcon({
-    className: "pickup-marker",
-    html: `
-      <div style="
-        background:#6750A4;border-radius:50%;width:36px;height:36px;
-        display:flex;align-items:center;justify-content:center;
-        box-shadow:0 4px 12px rgba(103,80,164,0.4);border:3px solid white;font-size:18px;
-      ">🏪</div>
-    `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-  });
-};
-
 const makeDriverIcon = (
   driverName: string,
   count: number,
@@ -826,7 +782,7 @@ const makeDriverIcon = (
   const starBadge = isNearest ? `<span style="
     position:absolute;top:-10px;left:-10px;font-size:20px;
   ">⭐</span>` : "";
-  
+
   return L.divIcon({
     className: "driver-marker-grouped",
     html: `
@@ -917,7 +873,8 @@ export default function DeliveryTrackingMap({
   const clusterGroup = useRef<Leaflet.LayerGroup | null>(null);
   const subscribedIds = useRef<Set<string>>(new Set());
   const initialFitDone = useRef(false);
-  
+
+  console.log('setSortOption', setSortOption)
   // OSRM routing refs
   const routeCache = useRef<Map<RouteCacheKey, RouteCacheEntry>>(new Map());
   const pendingRequests = useRef<Map<RouteCacheKey, Promise<RouteSummary | null>>>(new Map());
@@ -977,7 +934,7 @@ export default function DeliveryTrackingMap({
       const destination = getOrderDestination(order);
       const vendorOrder = order.vendor_orders?.[0];
       const deliveryData = vendorOrder?.delivery || order.delivery;
-      
+
       return {
         ...order,
         delivery: {
@@ -990,9 +947,9 @@ export default function DeliveryTrackingMap({
           delivery_person_phone: fb?.driver_phone ?? deliveryData?.delivery_person_phone ?? "",
           status: fb?.status ?? deliveryData?.status ?? order.delivery_status ?? vendorOrder?.delivery_status ?? "pending",
           logistics_company_name: deliveryData?.logistics_company_name,
-          is_in_house: !deliveryData?.logistics_company_name || 
-                       deliveryData?.logistics_company_name === "" ||
-                       deliveryData?.logistics_company_name === vendorOrder?.company?.name,
+          is_in_house: !deliveryData?.logistics_company_name ||
+            deliveryData?.logistics_company_name === "" ||
+            deliveryData?.logistics_company_name === vendorOrder?.company?.name,
           customer_address: destination.address,
           customer_lat: destination.lat ?? deliveryData?.customer_lat ?? order.shipping_lat,
           customer_lon: destination.lon ?? deliveryData?.customer_lon ?? order.shipping_lon,
@@ -1022,8 +979,8 @@ export default function DeliveryTrackingMap({
     let filtered = combinedOrders.filter(order => {
       const dest = getOrderDestination(order);
       return order.delivery?.status === "out_for_delivery" &&
-             dest.lat != null && dest.lon != null &&
-             order.delivery.delivery_person_name !== "Unassigned";
+        dest.lat != null && dest.lon != null &&
+        order.delivery.delivery_person_name !== "Unassigned";
     });
 
     if (mode === "driver_selection" && selectedOrderId) {
@@ -1045,14 +1002,14 @@ export default function DeliveryTrackingMap({
       const fetchDrivers = async () => {
         setLoadingDrivers(true);
         try {
-          const companySlug = selectedOrder?.vendor_orders?.[0]?.company?.slug || 
-                             selectedOrder?.company?.slug;
+          const companySlug = selectedOrder?.vendor_orders?.[0]?.company?.slug ||
+            selectedOrder?.company?.slug;
           if (!companySlug) {
             showToast("error", "Company information not found");
             setLoadingDrivers(false);
             return;
           }
-          
+
           const res = await getAvailableDeliveryDrivers(companySlug, {
             vendor_order_id: selectedOrderId,
           });
@@ -1211,7 +1168,7 @@ export default function DeliveryTrackingMap({
 
     const driversWithDistance = mapped.filter(d => d.distance_to_customer != null);
     if (driversWithDistance.length > 0) {
-      const nearest = driversWithDistance.reduce((min, d) => 
+      const nearest = driversWithDistance.reduce((min, d) =>
         (d.distance_to_customer! < min.distance_to_customer!) ? d : min
       );
       nearest.is_nearest = true;
@@ -1224,8 +1181,8 @@ export default function DeliveryTrackingMap({
         case "highest_rated":
           return (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0);
         case "fastest_eta":
-          return (a.road_eta_to_customer ?? a.total_route_distance ?? 999999) - 
-                 (b.road_eta_to_customer ?? b.total_route_distance ?? 999999);
+          return (a.road_eta_to_customer ?? a.total_route_distance ?? 999999) -
+            (b.road_eta_to_customer ?? b.total_route_distance ?? 999999);
         case "recommended":
         default:
           if ((a.is_nearest ?? false) !== (b.is_nearest ?? false)) return (a.is_nearest ?? false) ? -1 : 1;
@@ -1254,11 +1211,11 @@ export default function DeliveryTrackingMap({
     if (!customer) return;
 
     enhancedDrivers.forEach((driver: AvailableDriver) => {
-      if (driver.isLive && driver.current_lat != null && driver.current_lng != null && 
-          isValidCoordinate(driver.current_lat, driver.current_lng)) {
+      if (driver.isLive && driver.current_lat != null && driver.current_lng != null &&
+        isValidCoordinate(driver.current_lat, driver.current_lng)) {
         const from: Coordinates = { lat: driver.current_lat, lon: driver.current_lng };
         const to: Coordinates = customer;
-        
+
         const debounceKey = `driver_route_${driver.id}`;
         if (debounceTimers.current.has(debounceKey)) {
           clearTimeout(debounceTimers.current.get(debounceKey));
@@ -1282,13 +1239,13 @@ export default function DeliveryTrackingMap({
   // Filter available drivers
   const filteredAvailableDrivers = useMemo(() => {
     let filtered = [...enhancedDrivers];
-    
+
     if (driverFilter === "in_house") {
       filtered = filtered.filter(d => d.is_in_house === true);
     } else if (driverFilter === "third_party") {
       filtered = filtered.filter(d => d.is_in_house === false);
     }
-    
+
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(d =>
@@ -1299,7 +1256,7 @@ export default function DeliveryTrackingMap({
         d.vehicle_type?.toLowerCase().includes(search)
       );
     }
-    
+
     return filtered;
   }, [enhancedDrivers, driverFilter, searchTerm]);
 
@@ -1450,1255 +1407,1237 @@ export default function DeliveryTrackingMap({
     mapRef.current = map;
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
-      attribution: "© OpenStreetMap contributors", 
-    }).addTo(map); 
- 
-    const cluster = L.markerClusterGroup({ 
-      maxClusterRadius: 60, 
-      spiderfyOnMaxZoom: true, 
-      showCoverageOnHover: false, 
-    }); 
-    map.addLayer(cluster); 
-    clusterGroup.current = cluster; 
- 
-    return () => { 
-      map.remove(); 
-      mapRef.current = null; 
-      clusterGroup.current = null; 
-    }; 
-  }, [leafletLoaded]); 
- 
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const cluster = L.markerClusterGroup({
+      maxClusterRadius: 60,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    });
+    map.addLayer(cluster);
+    clusterGroup.current = cluster;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      clusterGroup.current = null;
+    };
+  }, [leafletLoaded]);
+
   // Reset fit flag when new deliveries appear after being empty 
-  useEffect(() => { 
-    if (liveDeliveries.length > 0) { 
-      initialFitDone.current = false; 
-    } 
-  }, [liveDeliveries.length]); 
- 
+  useEffect(() => {
+    if (liveDeliveries.length > 0) {
+      initialFitDone.current = false;
+    }
+  }, [liveDeliveries.length]);
+
   // Update markers and routes
-  useEffect(() => { 
-    const L = (window as any).L; 
-    if (!mapRef.current || !clusterGroup.current || !L) return; 
- 
-    const cluster = clusterGroup.current; 
-    const currentCustomerKeys = new Set<string>(); 
-    const currentDriverKeys = new Set<string>(); 
- 
+  useEffect(() => {
+    const L = (window as any).L;
+    if (!mapRef.current || !clusterGroup.current || !L) return;
+
+    const cluster = clusterGroup.current;
+    const currentCustomerKeys = new Set<string>();
+    const currentDriverKeys = new Set<string>();
+
     // Customer markers 
-    customerGroups.forEach((orders, key) => { 
-      const [latStr, lngStr] = key.split(","); 
-      const lat = parseFloat(latStr); 
-      const lng = parseFloat(lngStr); 
-      
+    customerGroups.forEach((orders, key) => {
+      const [latStr, lngStr] = key.split(",");
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
+
       if (!isValidCoordinate(lat, lng)) {
         console.warn(`Invalid customer coordinates: ${lat}, ${lng}`);
         return;
       }
-      
-      currentCustomerKeys.add(key); 
- 
-      let marker = customerMarkers.current.get(key); 
-      if (!marker) { 
-        const icon = makeCustomerIcon(orders); 
-        const newMarker = L.marker([lat, lng], { icon }).bindPopup( 
-          createCustomerPopup(orders), 
-          { maxWidth: 320 } 
-        ); 
-        newMarker.on("click", () => setActiveOrderId(orders[0].id)); 
-        cluster.addLayer(newMarker); 
-        customerMarkers.current.set(key, newMarker); 
-      } else { 
-        marker.setLatLng([lat, lng]); 
-        marker.setIcon(makeCustomerIcon(orders)); 
-        marker.setPopupContent(createCustomerPopup(orders)); 
-      } 
-    }); 
- 
+
+      currentCustomerKeys.add(key);
+
+      let marker = customerMarkers.current.get(key);
+      if (!marker) {
+        const icon = makeCustomerIcon(orders);
+        const newMarker = L.marker([lat, lng], { icon }).bindPopup(
+          createCustomerPopup(orders),
+          { maxWidth: 320 }
+        );
+        newMarker.on("click", () => setActiveOrderId(orders[0].id));
+        cluster.addLayer(newMarker);
+        customerMarkers.current.set(key, newMarker);
+      } else {
+        marker.setLatLng([lat, lng]);
+        marker.setIcon(makeCustomerIcon(orders));
+        marker.setPopupContent(createCustomerPopup(orders));
+      }
+    });
+
     // Remove stale customer markers 
-    customerMarkers.current.forEach((marker, key) => { 
-      if (!currentCustomerKeys.has(key)) { 
-        cluster.removeLayer(marker); 
-        customerMarkers.current.delete(key); 
-      } 
-    }); 
- 
+    customerMarkers.current.forEach((marker, key) => {
+      if (!currentCustomerKeys.has(key)) {
+        cluster.removeLayer(marker);
+        customerMarkers.current.delete(key);
+      }
+    });
+
     // Driver selection mode 
-    if (mode === "driver_selection" && normalizedOrder) { 
-      const pickup = normalizedOrder.pickupLat != null && normalizedOrder.pickupLon != null 
-        ? { lat: normalizedOrder.pickupLat, lon: normalizedOrder.pickupLon } 
-        : null; 
-      const customer = normalizedOrder.customerLat != null && normalizedOrder.customerLon != null 
-        ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon } 
-        : null; 
- 
+    if (mode === "driver_selection" && normalizedOrder) {
+      const pickup = normalizedOrder.pickupLat != null && normalizedOrder.pickupLon != null
+        ? { lat: normalizedOrder.pickupLat, lon: normalizedOrder.pickupLon }
+        : null;
+      const customer = normalizedOrder.customerLat != null && normalizedOrder.customerLon != null
+        ? { lat: normalizedOrder.customerLat, lon: normalizedOrder.customerLon }
+        : null;
+
       // Clear existing driver markers and route lines 
-      driverMarkers.current.forEach(marker => cluster.removeLayer(marker)); 
-      driverMarkers.current.clear(); 
-      routeLines.current.forEach(line => line.remove()); 
-      routeLines.current.clear(); 
- 
+      driverMarkers.current.forEach(marker => cluster.removeLayer(marker));
+      driverMarkers.current.clear();
+      routeLines.current.forEach(line => line.remove());
+      routeLines.current.clear();
+
       // Add company marker (pickup location) 
-      if (pickup && showCompanyMarker) { 
-        if (!companyMarkerRef.current) { 
-          companyMarkerRef.current = L.marker([pickup.lat, pickup.lon], { icon: makeCompanyIcon() }) 
-            .bindPopup(createCompanyPopup(normalizedOrder)) 
-            .addTo(mapRef.current); 
-        } else { 
-          companyMarkerRef.current.setLatLng([pickup.lat, pickup.lon]); 
-          companyMarkerRef.current.setPopupContent(createCompanyPopup(normalizedOrder)); 
-        } 
-      } else { 
-        if (companyMarkerRef.current) { 
-          companyMarkerRef.current.remove(); 
-          companyMarkerRef.current = null; 
-        } 
-      } 
- 
+      if (pickup && showCompanyMarker) {
+        if (!companyMarkerRef.current) {
+          companyMarkerRef.current = L.marker([pickup.lat, pickup.lon], { icon: makeCompanyIcon() })
+            .bindPopup(createCompanyPopup(normalizedOrder))
+            .addTo(mapRef.current);
+        } else {
+          companyMarkerRef.current.setLatLng([pickup.lat, pickup.lon]);
+          companyMarkerRef.current.setPopupContent(createCompanyPopup(normalizedOrder));
+        }
+      } else {
+        if (companyMarkerRef.current) {
+          companyMarkerRef.current.remove();
+          companyMarkerRef.current = null;
+        }
+      }
+
       // Add delivery/customer marker with full address
-      if (customer && showDeliveryMarker) { 
-        if (!deliveryMarkerRef.current) { 
-          deliveryMarkerRef.current = L.marker([customer.lat, customer.lon], { 
-            icon: makeDeliveryLocationIcon(normalizedOrder.customerName) 
-          }) 
-            .bindPopup(createCustomerPopupForOrder(normalizedOrder)) 
-            .addTo(mapRef.current); 
-        } else { 
-          deliveryMarkerRef.current.setLatLng([customer.lat, customer.lon]); 
-          deliveryMarkerRef.current.setIcon(makeDeliveryLocationIcon(normalizedOrder.customerName)); 
-          deliveryMarkerRef.current.setPopupContent(createCustomerPopupForOrder(normalizedOrder)); 
-        } 
-      } else { 
-        if (deliveryMarkerRef.current) { 
-          deliveryMarkerRef.current.remove(); 
-          deliveryMarkerRef.current = null; 
-        } 
-      } 
- 
+      if (customer && showDeliveryMarker) {
+        if (!deliveryMarkerRef.current) {
+          deliveryMarkerRef.current = L.marker([customer.lat, customer.lon], {
+            icon: makeDeliveryLocationIcon(normalizedOrder.customerName)
+          })
+            .bindPopup(createCustomerPopupForOrder(normalizedOrder))
+            .addTo(mapRef.current);
+        } else {
+          deliveryMarkerRef.current.setLatLng([customer.lat, customer.lon]);
+          deliveryMarkerRef.current.setIcon(makeDeliveryLocationIcon(normalizedOrder.customerName));
+          deliveryMarkerRef.current.setPopupContent(createCustomerPopupForOrder(normalizedOrder));
+        }
+      } else {
+        if (deliveryMarkerRef.current) {
+          deliveryMarkerRef.current.remove();
+          deliveryMarkerRef.current = null;
+        }
+      }
+
       // Add driver markers and route lines 
-      filteredAvailableDrivers.forEach((driver, index) => { 
-        const color = getDriverColor(index); 
-        const isPending = pendingDriverId === driver.id; 
-        const isSelected = selectedDriverId === driver.id; 
-        const isNearest = driver.is_nearest === true; 
-         
-        if (driver.current_lat != null && driver.current_lng != null &&  
-            isValidCoordinate(driver.current_lat, driver.current_lng)) { 
-          const icon = makeDriverIcon(driver.name, 1, color, driver.is_in_house, isNearest); 
-          const marker = L.marker([driver.current_lat, driver.current_lng], { icon }) 
-            .bindPopup(createDriverPopupForSelection(driver, normalizedOrder, color, isNearest)); 
-           
-          marker.on("click", () => handleDriverMarkerClick(driver.id)); 
-          cluster.addLayer(marker); 
-          driverMarkers.current.set(`selection_${driver.id}`, marker); 
- 
+      filteredAvailableDrivers.forEach((driver, index) => {
+        const color = getDriverColor(index);
+        // const isPending = pendingDriverId === driver.id; 
+        // const isSelected = selectedDriverId === driver.id; 
+        const isNearest = driver.is_nearest === true;
+
+        if (driver.current_lat != null && driver.current_lng != null &&
+          isValidCoordinate(driver.current_lat, driver.current_lng)) {
+          const icon = makeDriverIcon(driver.name, 1, color, driver.is_in_house, isNearest);
+          const marker = L.marker([driver.current_lat, driver.current_lng], { icon })
+            .bindPopup(createDriverPopupForSelection(driver, normalizedOrder, color, isNearest));
+
+          marker.on("click", () => handleDriverMarkerClick(driver.id));
+          cluster.addLayer(marker);
+          driverMarkers.current.set(`selection_${driver.id}`, marker);
+
           // Add route line for this driver to customer 
-          if (customer && driver.isLive) { 
-            const routeData = routeDataByDriver[driver.id]; 
-            const lineKey = `selection_route_${driver.id}`; 
-            let line = routeLines.current.get(lineKey); 
- 
-            if (routeData && routeData.coordinates.length > 0) { 
-              const weight = isNearest ? 6 : 3; 
-              const opacity = isNearest ? 1 : 0.65; 
-              if (!line) { 
-                const newLine = L.polyline(routeData.coordinates, { 
-                  color, 
-                  weight, 
-                  opacity, 
-                }); 
-                newLine.addTo(mapRef.current!); 
-                routeLines.current.set(lineKey, newLine); 
-              } else { 
-                line.setLatLngs(routeData.coordinates); 
-                line.setStyle({ color, weight, opacity, dashArray: undefined }); 
-              } 
-            } else if (customer) { 
-              const weight = isNearest ? 4 : 2; 
-              const opacity = isNearest ? 0.9 : 0.5; 
-              if (!line) { 
-                const newLine = L.polyline( 
-                  [ 
-                    [driver.current_lat, driver.current_lng], 
-                    [customer.lat, customer.lon], 
-                  ], 
-                  { color, weight, opacity, dashArray: "8 6" } 
-                ); 
-                newLine.addTo(mapRef.current!); 
-                routeLines.current.set(lineKey, newLine); 
-              } else { 
-                line.setLatLngs([ 
-                  [driver.current_lat, driver.current_lng], 
-                  [customer.lat, customer.lon], 
-                ]); 
-                line.setStyle({ color, weight, opacity, dashArray: "8 6" }); 
-              } 
-            } 
-          } 
-        } 
-      }); 
- 
+          if (customer && driver.isLive) {
+            const routeData = routeDataByDriver[driver.id];
+            const lineKey = `selection_route_${driver.id}`;
+            let line = routeLines.current.get(lineKey);
+
+            if (routeData && routeData.coordinates.length > 0) {
+              const weight = isNearest ? 6 : 3;
+              const opacity = isNearest ? 1 : 0.65;
+              if (!line) {
+                const newLine = L.polyline(routeData.coordinates, {
+                  color,
+                  weight,
+                  opacity,
+                });
+                newLine.addTo(mapRef.current!);
+                routeLines.current.set(lineKey, newLine);
+              } else {
+                line.setLatLngs(routeData.coordinates);
+                line.setStyle({ color, weight, opacity, dashArray: undefined });
+              }
+            } else if (customer) {
+              const weight = isNearest ? 4 : 2;
+              const opacity = isNearest ? 0.9 : 0.5;
+              if (!line) {
+                const newLine = L.polyline(
+                  [
+                    [driver.current_lat, driver.current_lng],
+                    [customer.lat, customer.lon],
+                  ],
+                  { color, weight, opacity, dashArray: "8 6" }
+                );
+                newLine.addTo(mapRef.current!);
+                routeLines.current.set(lineKey, newLine);
+              } else {
+                line.setLatLngs([
+                  [driver.current_lat, driver.current_lng],
+                  [customer.lat, customer.lon],
+                ]);
+                line.setStyle({ color, weight, opacity, dashArray: "8 6" });
+              }
+            }
+          }
+        }
+      });
+
       // Fit bounds if needed 
-      if (!initialFitDone.current && (pickup || customer)) { 
-        setTimeout(() => { 
-          const bounds = L.latLngBounds([]); 
-          if (pickup && showCompanyMarker) bounds.extend([pickup.lat, pickup.lon]); 
-          if (customer && showDeliveryMarker) bounds.extend([customer.lat, customer.lon]); 
-          driverMarkers.current.forEach(m => bounds.extend(m.getLatLng())); 
-          if (bounds.isValid() && mapRef.current) { 
-            mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: false }); 
-          } 
-          initialFitDone.current = true; 
-        }, 500); 
-      } 
-    } else { 
+      if (!initialFitDone.current && (pickup || customer)) {
+        setTimeout(() => {
+          const bounds = L.latLngBounds([]);
+          if (pickup && showCompanyMarker) bounds.extend([pickup.lat, pickup.lon]);
+          if (customer && showDeliveryMarker) bounds.extend([customer.lat, customer.lon]);
+          driverMarkers.current.forEach(m => bounds.extend(m.getLatLng()));
+          if (bounds.isValid() && mapRef.current) {
+            mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: false });
+          }
+          initialFitDone.current = true;
+        }, 500);
+      }
+    } else {
       // Tracking mode 
-      driverGroups.forEach((orders, driverName) => { 
-        currentDriverKeys.add(driverName); 
-        const color = driverColorMap.get(driverName)!; 
-        const isInHouse = orders[0]?.delivery.is_in_house; 
-        const firstWithCoords = orders.find( 
-          o => o.delivery.current_lat != null && o.delivery.current_lng != null 
-        ); 
-        const driverLat = firstWithCoords?.delivery.current_lat; 
-        const driverLng = firstWithCoords?.delivery.current_lng; 
- 
-        if (driverLat != null && driverLng != null && isValidCoordinate(driverLat, driverLng)) { 
-          let marker = driverMarkers.current.get(driverName); 
-          if (!marker) { 
-            const icon = makeDriverIcon(driverName, orders.length, color, isInHouse); 
-            marker = L.marker([driverLat, driverLng], { icon }).bindPopup( 
-              createDriverPopup(driverName, orders, color, orders[0]?.delivery.delivery_person_phone), 
-              { maxWidth: 320 } 
-            ); 
-            marker.on("click", () => setActiveOrderId(orders[0].id)); 
-            cluster.addLayer(marker); 
-            driverMarkers.current.set(driverName, marker); 
-          } else { 
-            marker.setLatLng([driverLat, driverLng]); 
-            marker.setIcon(makeDriverIcon(driverName, orders.length, color, isInHouse)); 
-            marker.setPopupContent( 
-              createDriverPopup(driverName, orders, color, orders[0]?.delivery.delivery_person_phone) 
-            ); 
-          } 
- 
+      driverGroups.forEach((orders, driverName) => {
+        currentDriverKeys.add(driverName);
+        const color = driverColorMap.get(driverName)!;
+        const isInHouse = orders[0]?.delivery.is_in_house;
+        const firstWithCoords = orders.find(
+          o => o.delivery.current_lat != null && o.delivery.current_lng != null
+        );
+        const driverLat = firstWithCoords?.delivery.current_lat;
+        const driverLng = firstWithCoords?.delivery.current_lng;
+
+        if (driverLat != null && driverLng != null && isValidCoordinate(driverLat, driverLng)) {
+          const marker = driverMarkers.current.get(driverName);
+          if (!marker) {
+            const icon = makeDriverIcon(driverName, orders.length, color, isInHouse);
+            const newMarker: Leaflet.Marker = L.marker([driverLat, driverLng], { icon }).bindPopup(
+              createDriverPopup(driverName, orders, color, orders[0]?.delivery.delivery_person_phone),
+              { maxWidth: 320 }
+            );
+            newMarker.on("click", () => setActiveOrderId(orders[0].id));
+            cluster.addLayer(newMarker);
+            driverMarkers.current.set(driverName, newMarker);
+          } else {
+            marker.setLatLng([driverLat, driverLng]);
+            marker.setIcon(makeDriverIcon(driverName, orders.length, color, isInHouse));
+            marker.setPopupContent(
+              createDriverPopup(driverName, orders, color, orders[0]?.delivery.delivery_person_phone)
+            );
+          }
+
           // Route lines (debounced OSRM) 
-          orders.forEach((order) => { 
+          orders.forEach((order) => {
             const dest = getOrderDestination(order);
             if (dest.lat == null || dest.lon == null) return;
-            
-            const custLat = dest.lat; 
-            const custLng = dest.lon; 
-            const orderId = order.id; 
- 
-            const debounceKey = `route_${orderId}`; 
-            if (debounceTimers.current.has(debounceKey)) { 
-              clearTimeout(debounceTimers.current.get(debounceKey)); 
-            } 
- 
-            debounceTimers.current.set( 
-              debounceKey, 
-              setTimeout(async () => { 
-                const routeSummary = await fetchOSRMRoute( 
-                  { lat: driverLat, lon: driverLng }, 
-                  { lat: custLat, lon: custLng } 
-                ); 
-                let line = routeLines.current.get(`${orderId}`); 
- 
-                if (routeSummary && routeSummary.coordinates.length > 0) { 
-                  if (!line) { 
-                    const newLine = L.polyline(routeSummary.coordinates, { 
-                      color, 
-                      weight: 3, 
-                      opacity: 0.8, 
-                    }); 
-                    newLine.addTo(mapRef.current!); 
-                    routeLines.current.set(`${orderId}`, newLine); 
-                  } else { 
-                    line.setLatLngs(routeSummary.coordinates); 
-                    line.setStyle({ color, weight: 3, opacity: 0.8, dashArray: undefined }); 
-                  } 
-                } else { 
-                  if (!line) { 
-                    const newLine = L.polyline( 
-                      [ 
-                        [driverLat, driverLng], 
-                        [custLat, custLng], 
-                      ], 
-                      { color, weight: 2, opacity: 0.7, dashArray: "8 6" } 
-                    ); 
-                    newLine.addTo(mapRef.current!); 
-                    routeLines.current.set(`${orderId}`, newLine); 
-                  } else { 
-                    line.setLatLngs([ 
-                      [driverLat, driverLng], 
-                      [custLat, custLng], 
-                    ]); 
-                    line.setStyle({ color, weight: 2, opacity: 0.7, dashArray: "8 6" }); 
-                  } 
-                } 
-                debounceTimers.current.delete(debounceKey); 
-              }, 3000) 
-            ); 
-          }); 
-        } else { 
-          const existingMarker = driverMarkers.current.get(driverName); 
-          if (existingMarker) { 
-            cluster.removeLayer(existingMarker); 
-            driverMarkers.current.delete(driverName); 
-            orders.forEach((order) => { 
-              const line = routeLines.current.get(`${order.id}`); 
-              if (line) { 
-                line.remove(); 
-                routeLines.current.delete(`${order.id}`); 
-              } 
-            }); 
-          } 
-        } 
-      }); 
- 
+
+            const custLat = dest.lat;
+            const custLng = dest.lon;
+            const orderId = order.id;
+
+            const debounceKey = `route_${orderId}`;
+            if (debounceTimers.current.has(debounceKey)) {
+              clearTimeout(debounceTimers.current.get(debounceKey));
+            }
+
+            debounceTimers.current.set(
+              debounceKey,
+              setTimeout(async () => {
+                const routeSummary = await fetchOSRMRoute(
+                  { lat: driverLat, lon: driverLng },
+                  { lat: custLat, lon: custLng }
+                );
+                let line = routeLines.current.get(`${orderId}`);
+
+                if (routeSummary && routeSummary.coordinates.length > 0) {
+                  if (!line) {
+                    const newLine = L.polyline(routeSummary.coordinates, {
+                      color,
+                      weight: 3,
+                      opacity: 0.8,
+                    });
+                    newLine.addTo(mapRef.current!);
+                    routeLines.current.set(`${orderId}`, newLine);
+                  } else {
+                    line.setLatLngs(routeSummary.coordinates);
+                    line.setStyle({ color, weight: 3, opacity: 0.8, dashArray: undefined });
+                  }
+                } else {
+                  if (!line) {
+                    const newLine = L.polyline(
+                      [
+                        [driverLat, driverLng],
+                        [custLat, custLng],
+                      ],
+                      { color, weight: 2, opacity: 0.7, dashArray: "8 6" }
+                    );
+                    newLine.addTo(mapRef.current!);
+                    routeLines.current.set(`${orderId}`, newLine);
+                  } else {
+                    line.setLatLngs([
+                      [driverLat, driverLng],
+                      [custLat, custLng],
+                    ]);
+                    line.setStyle({ color, weight: 2, opacity: 0.7, dashArray: "8 6" });
+                  }
+                }
+                debounceTimers.current.delete(debounceKey);
+              }, 3000)
+            );
+          });
+        } else {
+          const existingMarker = driverMarkers.current.get(driverName);
+          if (existingMarker) {
+            cluster.removeLayer(existingMarker);
+            driverMarkers.current.delete(driverName);
+            orders.forEach((order) => {
+              const line = routeLines.current.get(`${order.id}`);
+              if (line) {
+                line.remove();
+                routeLines.current.delete(`${order.id}`);
+              }
+            });
+          }
+        }
+      });
+
       // Remove stale driver markers & lines 
-      driverMarkers.current.forEach((marker, driverName) => { 
-        if (!currentDriverKeys.has(driverName)) { 
-          cluster.removeLayer(marker); 
-          driverMarkers.current.delete(driverName); 
-          const orders = driverGroups.get(driverName); 
-          if (orders) { 
-            orders.forEach((order) => { 
-              const line = routeLines.current.get(`${order.id}`); 
-              if (line) { 
-                line.remove(); 
-                routeLines.current.delete(`${order.id}`); 
-              } 
-            }); 
-          } 
-        } 
-      }); 
-    } 
- 
+      driverMarkers.current.forEach((marker, driverName) => {
+        if (!currentDriverKeys.has(driverName)) {
+          cluster.removeLayer(marker);
+          driverMarkers.current.delete(driverName);
+          const orders = driverGroups.get(driverName);
+          if (orders) {
+            orders.forEach((order) => {
+              const line = routeLines.current.get(`${order.id}`);
+              if (line) {
+                line.remove();
+                routeLines.current.delete(`${order.id}`);
+              }
+            });
+          }
+        }
+      });
+    }
+
     // Fit bounds on first load 
-    if (!initialFitDone.current) { 
-      setTimeout(() => { 
-        const bounds = L.latLngBounds([]); 
-        customerMarkers.current.forEach(m => bounds.extend(m.getLatLng())); 
-        driverMarkers.current.forEach(m => bounds.extend(m.getLatLng())); 
-        if (companyMarkerRef.current) bounds.extend(companyMarkerRef.current.getLatLng()); 
-        if (deliveryMarkerRef.current) bounds.extend(deliveryMarkerRef.current.getLatLng()); 
-        if (pickupMarkerRef.current) bounds.extend(pickupMarkerRef.current.getLatLng()); 
-        if (bounds.isValid() && mapRef.current) { 
-          mapRef.current.fitBounds(bounds, { 
-            padding: [60, 60], 
-            maxZoom: 15, 
-            animate: false, 
-          }); 
-        } 
-        initialFitDone.current = true; 
-      }, 500); 
-    } 
- 
+    if (!initialFitDone.current) {
+      setTimeout(() => {
+        const bounds = L.latLngBounds([]);
+        customerMarkers.current.forEach(m => bounds.extend(m.getLatLng()));
+        driverMarkers.current.forEach(m => bounds.extend(m.getLatLng()));
+        if (companyMarkerRef.current) bounds.extend(companyMarkerRef.current.getLatLng());
+        if (deliveryMarkerRef.current) bounds.extend(deliveryMarkerRef.current.getLatLng());
+        if (pickupMarkerRef.current) bounds.extend(pickupMarkerRef.current.getLatLng());
+        if (bounds.isValid() && mapRef.current) {
+          mapRef.current.fitBounds(bounds, {
+            padding: [60, 60],
+            maxZoom: 15,
+            animate: false,
+          });
+        }
+        initialFitDone.current = true;
+      }, 500);
+    }
+
     // Auto-follow 
-    if (followDriver && activeOrderId) { 
-      const order = liveDeliveries.find(o => o.id === activeOrderId); 
-      if (order?.delivery.current_lat && order.delivery.current_lng) { 
-        mapRef.current?.panTo( 
-          [order.delivery.current_lat, order.delivery.current_lng], 
-          { animate: true } 
-        ); 
-      } 
-    } 
-  }, [ 
-    customerGroups, driverGroups, driverColorMap, liveDeliveries, 
-    followDriver, activeOrderId, mode, normalizedOrder, 
-    filteredAvailableDrivers, pendingDriverId, selectedDriverId, 
-    fetchOSRMRoute, routeDataByDriver, showCompanyMarker, showDeliveryMarker, 
-  ]); 
- 
+    if (followDriver && activeOrderId) {
+      const order = liveDeliveries.find(o => o.id === activeOrderId);
+      if (order?.delivery.current_lat && order.delivery.current_lng) {
+        mapRef.current?.panTo(
+          [order.delivery.current_lat, order.delivery.current_lng],
+          { animate: true }
+        );
+      }
+    }
+  }, [
+    customerGroups, driverGroups, driverColorMap, liveDeliveries,
+    followDriver, activeOrderId, mode, normalizedOrder,
+    filteredAvailableDrivers, pendingDriverId, selectedDriverId,
+    fetchOSRMRoute, routeDataByDriver, showCompanyMarker, showDeliveryMarker,
+  ]);
+
   // Fly to active order on click 
-  useEffect(() => { 
-    if (!activeOrderId || !mapRef.current) return; 
-    const order = liveDeliveries.find(o => o.id === activeOrderId); 
+  useEffect(() => {
+    if (!activeOrderId || !mapRef.current) return;
+    const order = liveDeliveries.find(o => o.id === activeOrderId);
     if (!order) return;
-    
+
     const dest = getOrderDestination(order);
-    const targetLat = order.delivery.current_lat ?? dest.lat; 
-    const targetLng = order.delivery.current_lng ?? dest.lon; 
-    if (targetLat && targetLng && isValidCoordinate(targetLat, targetLng)) { 
-      mapRef.current.flyTo([targetLat, targetLng], 15, { 
-        animate: true, 
-        duration: 1.2, 
-      }); 
-    } 
-  }, [activeOrderId, liveDeliveries]); 
- 
+    const targetLat = order.delivery.current_lat ?? dest.lat;
+    const targetLng = order.delivery.current_lng ?? dest.lon;
+    if (targetLat && targetLng && isValidCoordinate(targetLat, targetLng)) {
+      mapRef.current.flyTo([targetLat, targetLng], 15, {
+        animate: true,
+        duration: 1.2,
+      });
+    }
+  }, [activeOrderId, liveDeliveries]);
+
   // Resize map on sidebar toggle 
-  useEffect(() => { 
-    if (mapRef.current) { 
-      setTimeout(() => mapRef.current?.invalidateSize(), 350); 
-    } 
-  }, [isSidebarOpen]); 
- 
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => mapRef.current?.invalidateSize(), 350);
+    }
+  }, [isSidebarOpen]);
+
   // Fit all markers 
-  const fitAllMarkers = useCallback(() => { 
-    if (!mapRef.current) return; 
-    const L = (window as any).L; 
-    const bounds = L.latLngBounds([]); 
-    customerMarkers.current.forEach(m => bounds.extend(m.getLatLng())); 
-    driverMarkers.current.forEach(m => bounds.extend(m.getLatLng())); 
-    if (companyMarkerRef.current) bounds.extend(companyMarkerRef.current.getLatLng()); 
-    if (deliveryMarkerRef.current) bounds.extend(deliveryMarkerRef.current.getLatLng()); 
-    if (pickupMarkerRef.current) bounds.extend(pickupMarkerRef.current.getLatLng()); 
-    if (bounds.isValid()) { 
-      mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 15, animate: true }); 
-    } 
-  }, []); 
- 
-  const toggleFollow = useCallback(() => { 
-    setFollowDriver(prev => !prev); 
-  }, []); 
- 
+  const fitAllMarkers = useCallback(() => {
+    if (!mapRef.current) return;
+    const L = (window as any).L;
+    const bounds = L.latLngBounds([]);
+    customerMarkers.current.forEach(m => bounds.extend(m.getLatLng()));
+    driverMarkers.current.forEach(m => bounds.extend(m.getLatLng()));
+    if (companyMarkerRef.current) bounds.extend(companyMarkerRef.current.getLatLng());
+    if (deliveryMarkerRef.current) bounds.extend(deliveryMarkerRef.current.getLatLng());
+    if (pickupMarkerRef.current) bounds.extend(pickupMarkerRef.current.getLatLng());
+    if (bounds.isValid()) {
+      mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 15, animate: true });
+    }
+  }, []);
+
+  const toggleFollow = useCallback(() => {
+    setFollowDriver(prev => !prev);
+  }, []);
+
   // Handle driver selection 
-  const handleDriverMarkerClick = (driverId: number) => { 
-    const driver = enhancedDrivers.find(d => d.id === driverId); 
+  const handleDriverMarkerClick = (driverId: number) => {
+    const driver = enhancedDrivers.find(d => d.id === driverId);
     if (!driver?.isLive) {
       showToast("error", "This driver is not currently live. Please select a live driver.");
       return;
     }
-    
-    setPendingDriverId(driverId); 
-    setShowConfirmPanel(true); 
-     
-    if (driver && mapRef.current && driver.current_lat != null && driver.current_lng != null) { 
-      mapRef.current.flyTo([driver.current_lat, driver.current_lng], 15, { 
-        animate: true, 
-        duration: 1, 
-      }); 
-    } 
-  }; 
- 
+
+    setPendingDriverId(driverId);
+    setShowConfirmPanel(true);
+
+    if (driver && mapRef.current && driver.current_lat != null && driver.current_lng != null) {
+      mapRef.current.flyTo([driver.current_lat, driver.current_lng], 15, {
+        animate: true,
+        duration: 1,
+      });
+    }
+  };
+
   // Confirm assignment 
-  const handleConfirmAssignment = async () => { 
-    if (!pendingDriverId || !onDriverSelect || !normalizedOrder) return; 
-     
-    if (!normalizedOrder.canAssign) { 
-      showToast("error", normalizedOrder.assignmentBlockedReason || "Unable to assign driver"); 
-      return; 
-    } 
-     
-    const driver = enhancedDrivers.find(d => d.id === pendingDriverId); 
-    if (!driver) { 
-      showToast("error", "Selected driver not found. Please refresh drivers."); 
-      return; 
-    } 
-     
+  const handleConfirmAssignment = async () => {
+    if (!pendingDriverId || !onDriverSelect || !normalizedOrder) return;
+
+    if (!normalizedOrder.canAssign) {
+      showToast("error", normalizedOrder.assignmentBlockedReason || "Unable to assign driver");
+      return;
+    }
+
+    const driver = enhancedDrivers.find(d => d.id === pendingDriverId);
+    if (!driver) {
+      showToast("error", "Selected driver not found. Please refresh drivers.");
+      return;
+    }
+
     if (!driver.isLive) {
       showToast("error", "This driver is not currently live. Please select a live driver.");
       return;
     }
-     
-    setIsAssigning(true); 
-    try { 
-      await onDriverSelect(pendingDriverId); 
-      setSelectedDriverId(pendingDriverId); 
-      setShowConfirmPanel(false); 
-      setPendingDriverId(null); 
-      showToast("success", "Driver assigned successfully"); 
-       
-      if (onAssignmentComplete) { 
-        onAssignmentComplete(); 
-      } 
-       
-      setTimeout(() => { 
-        onClose(); 
-      }, 1500); 
-    } catch (err) { 
-      showToast("error", "Failed to assign driver. They may no longer be available."); 
-    } finally { 
-      setIsAssigning(false); 
-    } 
-  }; 
- 
-  const handleCancelSelection = () => { 
-    setPendingDriverId(null); 
-    setShowConfirmPanel(false); 
-  }; 
- 
+
+    setIsAssigning(true);
+    try {
+      await onDriverSelect(pendingDriverId);
+      setSelectedDriverId(pendingDriverId);
+      setShowConfirmPanel(false);
+      setPendingDriverId(null);
+      showToast("success", "Driver assigned successfully");
+
+      if (onAssignmentComplete) {
+        onAssignmentComplete();
+      }
+
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      showToast("error", "Failed to assign driver. They may no longer be available.");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setPendingDriverId(null);
+    setShowConfirmPanel(false);
+  };
+
   // Keyboard handler 
-  useEffect(() => { 
-    const handler = (e: KeyboardEvent) => { 
-      if (e.key === "Escape") { 
-        if (showConfirmPanel) { 
-          handleCancelSelection(); 
-        } else if (isSidebarOpen && window.innerWidth < 1024) { 
-          toggleSidebar(); 
-        } else { 
-          onClose(); 
-        } 
-      } 
-    }; 
-    window.addEventListener("keydown", handler); 
-    return () => window.removeEventListener("keydown", handler); 
-  }, [isSidebarOpen, toggleSidebar, onClose, showConfirmPanel]); 
- 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showConfirmPanel) {
+          handleCancelSelection();
+        } else if (isSidebarOpen && window.innerWidth < 1024) {
+          toggleSidebar();
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isSidebarOpen, toggleSidebar, onClose, showConfirmPanel]);
+
   // Cleanup 
-  useEffect(() => { 
-    return () => { 
-      debounceTimers.current.forEach(timer => clearTimeout(timer)); 
-      debounceTimers.current.clear(); 
-      pendingRequests.current.clear(); 
-      routeCache.current.clear(); 
-      if (companyMarkerRef.current) { 
-        companyMarkerRef.current.remove(); 
-        companyMarkerRef.current = null; 
-      } 
-      if (deliveryMarkerRef.current) { 
-        deliveryMarkerRef.current.remove(); 
-        deliveryMarkerRef.current = null; 
-      } 
-    }; 
-  }, []); 
- 
+  useEffect(() => {
+    return () => {
+      debounceTimers.current.forEach(timer => clearTimeout(timer));
+      debounceTimers.current.clear();
+      pendingRequests.current.clear();
+      routeCache.current.clear();
+      if (companyMarkerRef.current) {
+        companyMarkerRef.current.remove();
+        companyMarkerRef.current = null;
+      }
+      if (deliveryMarkerRef.current) {
+        deliveryMarkerRef.current.remove();
+        deliveryMarkerRef.current = null;
+      }
+    };
+  }, []);
+
   // Render driver selection sidebar 
-  const renderDriverSelectionSidebar = () => { 
-    if (!normalizedOrder) return null; 
- 
-    return ( 
-      <> 
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary"> 
-          {/* Collapsible Order Summary Card */} 
-          <div className="bg-white/10 rounded-xl mb-3 overflow-hidden"> 
-            {/* Collapsed Header */} 
-            <button 
-              onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)} 
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors" 
-            > 
-              <div className="flex items-center gap-2 flex-1 min-w-0"> 
-                <h3 className="font-bold text-white text-sm truncate"> 
-                  ORDER #{normalizedOrder.id} 
-                </h3> 
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${ 
-                  normalizedOrder.canAssign  
-                    ? "bg-green-500/20 text-green-300" 
-                    : "bg-red-500/20 text-red-300" 
-                }`}> 
-                  {normalizedOrder.canAssign ? "Assignable" : "Blocked"} 
-                </span> 
-              </div> 
-              {isOrderSummaryExpanded ? ( 
-                <ChevronUp className="h-4 w-4 text-white/60 flex-shrink-0" /> 
-              ) : ( 
-                <ChevronDown className="h-4 w-4 text-white/60 flex-shrink-0" /> 
-              )} 
-            </button> 
-             
-            {/* Expanded Content */} 
-            {isOrderSummaryExpanded && ( 
-              <div className="px-3 pb-3"> 
-                {!normalizedOrder.canAssign && ( 
-                  <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 mb-2"> 
-                    <p className="text-[11px] text-red-300 flex items-start gap-1"> 
-                      <AlertTriangle className="h-3 w-3 flex-shrink-0 mt-0.5" /> 
-                      {normalizedOrder.assignmentBlockedReason} 
-                    </p> 
-                  </div> 
-                )} 
-                 
-                <div className="space-y-1.5 text-[11px] text-white/80"> 
-                  <div className="flex items-center gap-2"> 
-                    <User className="h-3 w-3 text-purple-300" /> 
-                    <span className="font-medium">{normalizedOrder.customerName}</span> 
-                  </div> 
-                  <div className="flex items-center gap-2"> 
-                    <Home className="h-3 w-3 text-amber-300" /> 
-                    <span>{normalizedOrder.address}</span> 
-                  </div> 
-                  {normalizedOrder.customerLat != null && normalizedOrder.customerLon != null && ( 
-                    <div className="flex items-center gap-2 font-mono text-[10px] text-white/60"> 
-                      <Navigation2 className="h-3 w-3 text-green-300" /> 
-                      <span>{normalizedOrder.customerLat.toFixed(6)}, {normalizedOrder.customerLon.toFixed(6)}</span> 
-                    </div> 
-                  )} 
-                  {normalizedOrder.customerPhone && ( 
-                    <div className="flex items-center gap-2"> 
-                      <Phone className="h-3 w-3 text-blue-300" /> 
-                      <span>{normalizedOrder.customerPhone}</span> 
-                    </div> 
-                  )} 
-                  <div className="flex items-center gap-2"> 
-                    <Store className="h-3 w-3 text-purple-300" /> 
-                    <span>{normalizedOrder.pickupName}</span> 
-                  </div> 
-                  <div className="flex items-center gap-2"> 
-                    <span className="text-white/60">Payment:</span> 
-                    <span>{normalizedOrder.paymentStatus}</span> 
-                  </div> 
-                </div> 
-              </div> 
-            )} 
-          </div> 
-           
-          {/* Map Controls */} 
-          <div className="flex gap-1.5 mb-3"> 
-            <button 
-              onClick={() => setShowCompanyMarker(!showCompanyMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showCompanyMarker ? "bg-green-500/20 text-green-300 border border-green-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              🏢 Company 
-            </button> 
-            <button 
-              onClick={() => setShowDeliveryMarker(!showDeliveryMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showDeliveryMarker ? "bg-blue-500/20 text-blue-300 border border-blue-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              📦 Delivery 
-            </button> 
-            <button 
-              onClick={() => setShowCustomerMarker(!showCustomerMarker)} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                showCustomerMarker ? "bg-amber-500/20 text-amber-300 border border-amber-400/30" : "bg-white/10 text-white/50 border border-white/10" 
-              }`} 
-            > 
-              📍 Recipient 
-            </button> 
-          </div> 
-           
-          {/* Search */} 
-          <div className="relative mb-3"> 
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/50" /> 
-            <input 
-              type="text" 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              placeholder="Search drivers..." 
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 text-white placeholder:text-white/40 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-            /> 
-          </div> 
-           
-          {/* Filters */} 
-          <div className="flex gap-1.5 mb-2"> 
-            <button 
-              onClick={() => setDriverFilter("all")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              All 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("in_house")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              In-House 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("third_party")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              3PL 
-            </button> 
-          </div> 
-        </div> 
-         
-        {/* Driver List */} 
-        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary"> 
-          {loadingDrivers && ( 
-            <div className="flex items-center justify-center py-10"> 
-              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" /> 
-              <span className="ml-3 text-sm text-gray-400">Finding available drivers...</span> 
-            </div> 
-          )} 
-           
-          {!loadingDrivers && filteredAvailableDrivers.length === 0 && ( 
-            <div className="text-center py-10"> 
-              <Users className="h-10 w-10 text-gray-500 mx-auto mb-3" /> 
-              <p className="text-sm text-gray-400 font-medium">No available drivers</p> 
-              <p className="text-xs text-gray-500 mt-1"> 
-                {normalizedOrder.canAssign  
-                  ? "There are currently no drivers available for this delivery." 
-                  : "Driver assignment is blocked for this order."} 
-              </p> 
-            </div> 
-          )} 
-           
-          {filteredAvailableDrivers.map((driver, index) => { 
-            const isPending = pendingDriverId === driver.id; 
-            const isSelected = selectedDriverId === driver.id; 
-            const isNearest = driver.is_nearest === true; 
-            const color = getDriverColor(index); 
-            const hasLocation = driver.current_lat != null && driver.current_lng != null; 
+  const renderDriverSelectionSidebar = () => {
+    if (!normalizedOrder) return null;
+
+    return (
+      <>
+        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary">
+          {/* Collapsible Order Summary Card */}
+          <div className="bg-white/10 rounded-xl mb-3 overflow-hidden">
+            {/* Collapsed Header */}
+            <button
+              onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
+              className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <h3 className="font-bold text-white text-sm truncate">
+                  ORDER #{normalizedOrder.id}
+                </h3>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${normalizedOrder.canAssign
+                  ? "bg-green-500/20 text-green-300"
+                  : "bg-red-500/20 text-red-300"
+                  }`}>
+                  {normalizedOrder.canAssign ? "Assignable" : "Blocked"}
+                </span>
+              </div>
+              {isOrderSummaryExpanded ? (
+                <ChevronUp className="h-4 w-4 text-white/60 flex-shrink-0" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-white/60 flex-shrink-0" />
+              )}
+            </button>
+
+            {/* Expanded Content */}
+            {isOrderSummaryExpanded && (
+              <div className="px-3 pb-3">
+                {!normalizedOrder.canAssign && (
+                  <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 mb-2">
+                    <p className="text-[11px] text-red-300 flex items-start gap-1">
+                      <AlertTriangle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                      {normalizedOrder.assignmentBlockedReason}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5 text-[11px] text-white/80">
+                  <div className="flex items-center gap-2">
+                    <User className="h-3 w-3 text-purple-300" />
+                    <span className="font-medium">{normalizedOrder.customerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Home className="h-3 w-3 text-amber-300" />
+                    <span>{normalizedOrder.address}</span>
+                  </div>
+                  {normalizedOrder.customerLat != null && normalizedOrder.customerLon != null && (
+                    <div className="flex items-center gap-2 font-mono text-[10px] text-white/60">
+                      <Navigation2 className="h-3 w-3 text-green-300" />
+                      <span>{normalizedOrder.customerLat.toFixed(6)}, {normalizedOrder.customerLon.toFixed(6)}</span>
+                    </div>
+                  )}
+                  {normalizedOrder.customerPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3 w-3 text-blue-300" />
+                      <span>{normalizedOrder.customerPhone}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Store className="h-3 w-3 text-purple-300" />
+                    <span>{normalizedOrder.pickupName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/60">Payment:</span>
+                    <span>{normalizedOrder.paymentStatus}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Map Controls */}
+          <div className="flex gap-1.5 mb-3">
+            <button
+              onClick={() => setShowCompanyMarker(!showCompanyMarker)}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${showCompanyMarker ? "bg-green-500/20 text-green-300 border border-green-400/30" : "bg-white/10 text-white/50 border border-white/10"
+                }`}
+            >
+              🏢 Company
+            </button>
+            <button
+              onClick={() => setShowDeliveryMarker(!showDeliveryMarker)}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${showDeliveryMarker ? "bg-blue-500/20 text-blue-300 border border-blue-400/30" : "bg-white/10 text-white/50 border border-white/10"
+                }`}
+            >
+              📦 Delivery
+            </button>
+            <button
+              onClick={() => setShowCustomerMarker(!showCustomerMarker)}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${showCustomerMarker ? "bg-amber-500/20 text-amber-300 border border-amber-400/30" : "bg-white/10 text-white/50 border border-white/10"
+                }`}
+            >
+              📍 Recipient
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/50" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search drivers..."
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 text-white placeholder:text-white/40 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-1.5 mb-2">
+            <button
+              onClick={() => setDriverFilter("all")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setDriverFilter("in_house")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              In-House
+            </button>
+            <button
+              onClick={() => setDriverFilter("third_party")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              3PL
+            </button>
+          </div>
+        </div>
+
+        {/* Driver List */}
+        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary">
+          {loadingDrivers && (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" />
+              <span className="ml-3 text-sm text-gray-400">Finding available drivers...</span>
+            </div>
+          )}
+
+          {!loadingDrivers && filteredAvailableDrivers.length === 0 && (
+            <div className="text-center py-10">
+              <Users className="h-10 w-10 text-gray-500 mx-auto mb-3" />
+              <p className="text-sm text-gray-400 font-medium">No available drivers</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {normalizedOrder.canAssign
+                  ? "There are currently no drivers available for this delivery."
+                  : "Driver assignment is blocked for this order."}
+              </p>
+            </div>
+          )}
+
+          {filteredAvailableDrivers.map((driver, index) => {
+            const isPending = pendingDriverId === driver.id;
+            const isSelected = selectedDriverId === driver.id;
+            const isNearest = driver.is_nearest === true;
+            const color = getDriverColor(index);
+            const hasLocation = driver.current_lat != null && driver.current_lng != null;
             const isLive = driver.isLive === true;
-             
-            return ( 
-              <div 
-                key={driver.id} 
-                onClick={() => isLive && normalizedOrder.canAssign && handleDriverMarkerClick(driver.id)} 
-                className={`p-3 lg:p-4 rounded-xl border shadow-md transition ${isLive ? 'cursor-pointer' : 'cursor-not-allowed'} ${ 
-                  isPending 
-                    ? "bg-white/20 border-purple-400 ring-2 ring-purple-400/50" 
-                    : isSelected 
-                    ? "bg-white/15 border-emerald-400 ring-2 ring-emerald-400/50" 
-                    : isNearest 
-                    ? "bg-green-500/10 border-green-500 ring-2 ring-green-500/50" 
-                    : "bg-white/10 border-white/10 hover:bg-white/15" 
-                } ${!normalizedOrder.canAssign || !isLive ? "opacity-50" : ""}`} 
-              > 
-                {isNearest && ( 
-                  <div className="flex items-center gap-1 mb-2"> 
-                    <Award className="h-4 w-4 text-green-400" /> 
-                    <span className="text-[11px] font-bold text-green-300"> 
-                      ⭐ BEST MATCH 
-                    </span> 
-                  </div> 
-                )} 
-                <div className="flex items-center gap-3"> 
-                  {/* Driver avatar/photo */} 
-                  <div className="relative flex-shrink-0"> 
-                    {driver.profile_image ? ( 
-                      <img 
-                        src={driver.profile_image} 
-                        alt={driver.name} 
-                        className="w-10 h-10 rounded-full object-cover border-2" 
-                        style={{ borderColor: isNearest ? "#22C55E" : color }} 
-                      /> 
-                    ) : ( 
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white" 
-                        style={{ backgroundColor: isNearest ? "#22C55E" : color }} 
-                      > 
-                        {getInitials(driver.name)} 
-                      </div> 
-                    )} 
-                    {driver.isLive && ( 
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span> 
-                    )} 
-                  </div> 
-                   
-                  <div className="flex-1 min-w-0"> 
-                    <div className="flex items-center justify-between gap-1"> 
-                      <span className="font-semibold text-sm text-white truncate"> 
-                        {driver.name} 
-                      </span> 
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white"> 
-                        #{index + 1} 
-                      </span> 
-                    </div> 
-                     
-                    <div className="flex items-center gap-1.5 mt-0.5"> 
-                      <span className="text-[10px] text-white/60"> 
-                        {getVehicleIcon(driver.vehicle_type)} {getVehicleName(driver.vehicle_type)} 
-                      </span> 
-                      <span className="text-[10px] text-white/40">·</span> 
-                      {driver.is_in_house ? ( 
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"> 
-                          In-House 
-                        </span> 
-                      ) : ( 
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300"> 
-                          3PL 
-                        </span> 
-                      )} 
-                    </div> 
-                     
-                    {/* Location info */} 
-                    <div className="mt-1.5 space-y-0.5"> 
-                      {hasLocation ? ( 
-                        <> 
-                          {driver.distance_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              📍 {formatDistance(driver.distance_to_customer)} to recipient 
-                            </div> 
-                          )} 
-                          {driver.road_distance_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              🛣 {formatDistance(driver.road_distance_to_customer)} road distance 
-                            </div> 
-                          )} 
-                          {driver.road_eta_to_customer != null && ( 
-                            <div className="text-[10px] text-white/70"> 
-                              ⏱ {formatDuration(driver.road_eta_to_customer)} 
-                            </div> 
-                          )} 
-                          <div className="text-[10px] flex items-center gap-1"> 
-                            {driver.isLive ? ( 
-                              <span className="text-green-400 flex items-center gap-0.5"> 
-                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> 
-                                Live 
-                              </span> 
-                            ) : driver.location_source === "last_known" ? ( 
-                              <span className="text-yellow-400">Last known</span> 
-                            ) : ( 
-                              <span className="text-blue-400">Available</span> 
-                            )} 
-                          </div> 
-                        </> 
-                      ) : ( 
-                        <div className="text-[10px] text-gray-400"> 
-                          ⚪ Location unavailable 
-                        </div> 
-                      )} 
-                    </div> 
-                     
-                    {/* Rating */} 
-                    {(driver.average_rating || driver.total_reviews) && ( 
-                      <div className="flex items-center gap-1 mt-1 text-[10px] text-white/60"> 
-                        <Star className="h-3 w-3 text-yellow-400" /> 
-                        <span>{driver.average_rating || "N/A"}</span> 
-                        {driver.total_reviews && ( 
-                          <span>· {driver.total_reviews} reviews</span> 
-                        )} 
-                      </div> 
-                    )} 
-                  </div> 
-                   
-                  {/* Action button */} 
-                  <div className="flex-shrink-0"> 
-                    {isSelected ? ( 
-                      <span className="text-[10px] font-bold text-emerald-400">✓ Selected</span> 
-                    ) : isPending ? ( 
-                      <span className="text-[10px] font-bold text-purple-400">Pending</span> 
-                    ) : ( 
-                      <button 
-                        onClick={e => { 
-                          e.stopPropagation(); 
-                          if (isLive && normalizedOrder.canAssign) handleDriverMarkerClick(driver.id); 
-                        }} 
-                        disabled={!isLive || !normalizedOrder.canAssign} 
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${ 
-                          isNearest 
-                            ? "bg-green-500 hover:bg-green-600 text-white" 
-                            : "bg-purple-500 hover:bg-purple-600 text-white" 
-                        }`} 
-                      > 
-                        {isLive ? "Select" : "Offline"} 
-                      </button> 
-                    )} 
-                  </div> 
-                </div> 
-              </div> 
-            ); 
-          })} 
-        </div> 
-      </> 
-    ); 
-  }; 
- 
+
+            return (
+              <div
+                key={driver.id}
+                onClick={() => isLive && normalizedOrder.canAssign && handleDriverMarkerClick(driver.id)}
+                className={`p-3 lg:p-4 rounded-xl border shadow-md transition ${isLive ? 'cursor-pointer' : 'cursor-not-allowed'} ${isPending
+                  ? "bg-white/20 border-purple-400 ring-2 ring-purple-400/50"
+                  : isSelected
+                    ? "bg-white/15 border-emerald-400 ring-2 ring-emerald-400/50"
+                    : isNearest
+                      ? "bg-green-500/10 border-green-500 ring-2 ring-green-500/50"
+                      : "bg-white/10 border-white/10 hover:bg-white/15"
+                  } ${!normalizedOrder.canAssign || !isLive ? "opacity-50" : ""}`}
+              >
+                {isNearest && (
+                  <div className="flex items-center gap-1 mb-2">
+                    <Award className="h-4 w-4 text-green-400" />
+                    <span className="text-[11px] font-bold text-green-300">
+                      ⭐ BEST MATCH
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  {/* Driver avatar/photo */}
+                  <div className="relative flex-shrink-0">
+                    {driver.profile_image ? (
+                      <img
+                        src={driver.profile_image}
+                        alt={driver.name}
+                        className="w-10 h-10 rounded-full object-cover border-2"
+                        style={{ borderColor: isNearest ? "#22C55E" : color }}
+                      />
+                    ) : (
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        style={{ backgroundColor: isNearest ? "#22C55E" : color }}
+                      >
+                        {getInitials(driver.name)}
+                      </div>
+                    )}
+                    {driver.isLive && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-sm text-white truncate">
+                        {driver.name}
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white">
+                        #{index + 1}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-white/60">
+                        {getVehicleIcon(driver.vehicle_type)} {getVehicleName(driver.vehicle_type)}
+                      </span>
+                      <span className="text-[10px] text-white/40">·</span>
+                      {driver.is_in_house ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                          In-House
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+                          3PL
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Location info */}
+                    <div className="mt-1.5 space-y-0.5">
+                      {hasLocation ? (
+                        <>
+                          {driver.distance_to_customer != null && (
+                            <div className="text-[10px] text-white/70">
+                              📍 {formatDistance(driver.distance_to_customer)} to recipient
+                            </div>
+                          )}
+                          {driver.road_distance_to_customer != null && (
+                            <div className="text-[10px] text-white/70">
+                              🛣 {formatDistance(driver.road_distance_to_customer)} road distance
+                            </div>
+                          )}
+                          {driver.road_eta_to_customer != null && (
+                            <div className="text-[10px] text-white/70">
+                              ⏱ {formatDuration(driver.road_eta_to_customer)}
+                            </div>
+                          )}
+                          <div className="text-[10px] flex items-center gap-1">
+                            {driver.isLive ? (
+                              <span className="text-green-400 flex items-center gap-0.5">
+                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                                Live
+                              </span>
+                            ) : driver.location_source === "last_known" ? (
+                              <span className="text-yellow-400">Last known</span>
+                            ) : (
+                              <span className="text-blue-400">Available</span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-[10px] text-gray-400">
+                          ⚪ Location unavailable
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rating */}
+                    {(driver.average_rating || driver.total_reviews) && (
+                      <div className="flex items-center gap-1 mt-1 text-[10px] text-white/60">
+                        <Star className="h-3 w-3 text-yellow-400" />
+                        <span>{driver.average_rating || "N/A"}</span>
+                        {driver.total_reviews && (
+                          <span>· {driver.total_reviews} reviews</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action button */}
+                  <div className="flex-shrink-0">
+                    {isSelected ? (
+                      <span className="text-[10px] font-bold text-emerald-400">✓ Selected</span>
+                    ) : isPending ? (
+                      <span className="text-[10px] font-bold text-purple-400">Pending</span>
+                    ) : (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (isLive && normalizedOrder.canAssign) handleDriverMarkerClick(driver.id);
+                        }}
+                        disabled={!isLive || !normalizedOrder.canAssign}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isNearest
+                          ? "bg-green-500 hover:bg-green-600 text-white"
+                          : "bg-purple-500 hover:bg-purple-600 text-white"
+                          }`}
+                      >
+                        {isLive ? "Select" : "Offline"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
   // Render tracking sidebar 
-  const renderTrackingSidebar = () => { 
-    return ( 
-      <> 
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary flex items-center justify-between gap-2"> 
-          <h3 className="font-bold text-white/90 text-xs sm:text-sm uppercase tracking-wider"> 
-            Live Delivery Personnel 
-          </h3> 
-        </div> 
-         
-        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary"> 
-          <div className="flex gap-1.5"> 
-            <button 
-              onClick={() => setDriverFilter("all")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              All 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("in_house")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              In-House 
-            </button> 
-            <button 
-              onClick={() => setDriverFilter("third_party")} 
-              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${ 
-                driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30" 
-              }`} 
-            > 
-              3PL 
-            </button> 
-          </div> 
-        </div> 
-         
-        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary"> 
-          {loading && !driverGroups.size && ( 
-            <div className="flex items-center justify-center py-10"> 
-              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" /> 
-            </div> 
-          )} 
-          {!loading && !driverGroups.size && ( 
-            <div className="text-center py-10 text-xs sm:text-sm text-gray-400"> 
-              No drivers currently out for delivery. 
-            </div> 
-          )} 
-          {Array.from(driverGroups.entries()).map(([driverName, orders], idx) => { 
-            const isActive = orders.some(o => o.id === activeOrderId); 
-            const color = driverColorMap.get(driverName); 
-            const count = orders.length; 
-            const speed = orders[0]?.delivery.speed; 
-            const isInHouse = orders[0]?.delivery.is_in_house; 
- 
+  const renderTrackingSidebar = () => {
+    return (
+      <>
+        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary flex items-center justify-between gap-2">
+          <h3 className="font-bold text-white/90 text-xs sm:text-sm uppercase tracking-wider">
+            Live Delivery Personnel
+          </h3>
+        </div>
+
+        <div className="p-4 lg:p-5 border-b border-gray-200/20 shrink-0 bg-secondary">
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setDriverFilter("all")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "all" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setDriverFilter("in_house")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "in_house" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              In-House
+            </button>
+            <button
+              onClick={() => setDriverFilter("third_party")}
+              className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${driverFilter === "third_party" ? "bg-white text-secondary shadow-md" : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+            >
+              3PL
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-secondary">
+          {loading && !driverGroups.size && (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 text-gray-400 animate-spin" />
+            </div>
+          )}
+          {!loading && !driverGroups.size && (
+            <div className="text-center py-10 text-xs sm:text-sm text-gray-400">
+              No drivers currently out for delivery.
+            </div>
+          )}
+          {Array.from(driverGroups.entries()).map(([driverName, orders], idx) => {
+            const isActive = orders.some(o => o.id === activeOrderId);
+            const color = driverColorMap.get(driverName);
+            const count = orders.length;
+            const speed = orders[0]?.delivery.speed;
+            const isInHouse = orders[0]?.delivery.is_in_house;
+
             // Calculate distance range for this driver 
-            let distanceDisplay: string | null = null; 
-            const driverLat = orders[0]?.delivery.current_lat; 
-            const driverLng = orders[0]?.delivery.current_lng; 
-            if (driverLat != null && driverLng != null) { 
+            let distanceDisplay: string | null = null;
+            const driverLat = orders[0]?.delivery.current_lat;
+            const driverLng = orders[0]?.delivery.current_lng;
+            if (driverLat != null && driverLng != null) {
               const distances = orders.map((o) => {
                 const dest = getOrderDestination(o);
                 if (dest.lat == null || dest.lon == null) return null;
                 return haversine(driverLat, driverLng, dest.lat, dest.lon);
               }).filter(Boolean) as number[];
-              
+
               if (distances.length > 0) {
-                const min = Math.min(...distances).toFixed(1); 
-                const max = Math.max(...distances).toFixed(1); 
+                const min = Math.min(...distances).toFixed(1);
+                const max = Math.max(...distances).toFixed(1);
                 distanceDisplay = min === max ? `${min} km` : `${min}–${max} km`;
               }
-            } 
- 
-            return ( 
-              <div 
-                key={driverName} 
-                onClick={() => setActiveOrderId(orders[0].id)} 
-                className={`p-3 lg:p-4 rounded-xl border shadow-md flex items-center gap-3 transition cursor-pointer hover:shadow-lg ${ 
-                  isActive 
-                    ? "bg-white/15 border-purple-400 ring-2 ring-purple-400/50" 
-                    : "bg-white/10 border-white/10 hover:bg-white/15" 
-                }`} 
-                role="button" 
-                tabIndex={0} 
-                aria-label={`Driver ${driverName}, ${count} orders`} 
-                onKeyDown={(e) => { 
-                  if (e.key === "Enter" || e.key === " ") 
-                    setActiveOrderId(orders[0].id); 
-                }} 
-              > 
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" 
-                  style={{ backgroundColor: color }} 
-                > 
-                  {idx + 1} 
-                </div> 
-                <div className="flex-1 min-w-0"> 
-                  <div className="flex items-center justify-between gap-1"> 
-                    <span className="font-semibold text-sm text-white truncate"> 
-                      {driverName} 
-                    </span> 
-                    <div className="flex items-center gap-2"> 
-                      {isInHouse ? ( 
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"> 
-                          In-House 
-                        </span> 
-                      ) : ( 
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300"> 
-                          3PL 
-                        </span> 
-                      )} 
-                      {count > 1 && ( 
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}> 
-                          {count} 
-                        </span> 
-                      )} 
-                      <Truck className="h-8 w-8" style={{ color }} /> 
-                    </div> 
-                  </div> 
-                  <div className="mt-1 flex items-center gap-2 flex-wrap text-[10px] sm:text-xs text-gray-200"> 
-                    <StatusBadge status="out_for_delivery" /> 
-                    {speed && <span>{speed} km/h</span>} 
-                    {distanceDisplay && <span>· {distanceDisplay}</span>} 
-                    <span>· {orders.length} destination{orders.length > 1 ? "s" : ""}</span> 
-                  </div> 
-                  <div className="text-[10px] sm:text-xs text-gray-200 truncate mt-1 flex items-center gap-1"> 
-                    <MapPin className="h-3 w-3 flex-shrink-0" /> 
-                    {orders.length} destination{orders.length > 1 ? "s" : ""} 
-                  </div> 
-                </div> 
-              </div> 
-            ); 
-          })} 
-        </div> 
-      </> 
-    ); 
-  }; 
- 
+            }
+
+            return (
+              <div
+                key={driverName}
+                onClick={() => setActiveOrderId(orders[0].id)}
+                className={`p-3 lg:p-4 rounded-xl border shadow-md flex items-center gap-3 transition cursor-pointer hover:shadow-lg ${isActive
+                  ? "bg-white/15 border-purple-400 ring-2 ring-purple-400/50"
+                  : "bg-white/10 border-white/10 hover:bg-white/15"
+                  }`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Driver ${driverName}, ${count} orders`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    setActiveOrderId(orders[0].id);
+                }}
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ backgroundColor: color }}
+                >
+                  {idx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-semibold text-sm text-white truncate">
+                      {driverName}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {isInHouse ? (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                          In-House
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+                          3PL
+                        </span>
+                      )}
+                      {count > 1 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>
+                          {count}
+                        </span>
+                      )}
+                      <Truck className="h-8 w-8" style={{ color }} />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 flex-wrap text-[10px] sm:text-xs text-gray-200">
+                    <StatusBadge status="out_for_delivery" />
+                    {speed && <span>{speed} km/h</span>}
+                    {distanceDisplay && <span>· {distanceDisplay}</span>}
+                    <span>· {orders.length} destination{orders.length > 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-gray-200 truncate mt-1 flex items-center gap-1">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    {orders.length} destination{orders.length > 1 ? "s" : ""}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
   // Render 
-  return createPortal( 
-    <div className="fixed inset-0 z-50 bg-gray-100 flex flex-col overflow-hidden"> 
-      {/* Header */} 
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 sticky top-0 backdrop-blur-md"> 
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0"> 
-          <button 
-            onClick={toggleSidebar} 
-            className="hidden lg:flex p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500 shrink-0" 
-            aria-label="Toggle sidebar" 
-          > 
-            {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />} 
-          </button> 
-          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 tracking-tight truncate min-w-0"> 
-            {mode === "driver_selection" ? "Select Delivery Driver" : "Live Vehicle Tracking"} 
-          </h2> 
-          {mode === "driver_selection" && normalizedOrder && ( 
-            <span className="text-xs text-gray-500 truncate"> 
-              #{normalizedOrder.id} · {normalizedOrder.customerName} 
-            </span> 
-          )} 
-          <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full shrink-0"> 
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live 
-          </span> 
-        </div> 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0"> 
-          <span className="hidden xl:inline text-xs text-gray-400"> 
-            Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : "Just now"} 
-          </span> 
-          <button 
-            onClick={() => refetch()} 
-            disabled={isFetching} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Refresh data" 
-          > 
-            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} /> 
-          </button> 
-          <button 
-            onClick={fitAllMarkers} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Fit all markers" 
-          > 
-            <Maximize2 className="h-4 w-4" /> 
-          </button> 
-          {mode === "tracking" && ( 
-            <button 
-              onClick={toggleFollow} 
-              className={`p-1.5 rounded-full hover:bg-gray-100 transition ${ 
-                followDriver ? "bg-purple-100 text-purple-600" : "text-gray-500" 
-              }`} 
-              aria-label="Follow driver" 
-            > 
-              <Navigation className="h-4 w-4" /> 
-            </button> 
-          )} 
-          <button 
-            onClick={onClose} 
-            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500" 
-            aria-label="Close" 
-          > 
-            <X className="h-5 w-5" /> 
-          </button> 
-        </div> 
-      </div> 
- 
-      {/* Content */} 
-      <div className="flex-1 flex overflow-hidden relative"> 
-        {/* Mobile backdrop */} 
-        <div 
-          className={`lg:hidden fixed inset-0 z-30 bg-black/50 transition-opacity ${ 
-            isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none" 
-          }`} 
-          onClick={toggleSidebar} 
-        /> 
- 
-        {/* Mobile drawer */} 
-        <div 
-          className={`fixed top-0 left-0 z-40 w-[85%] max-w-[360px] h-full bg-secondary transform transition-transform duration-300 rounded-r-2xl shadow-2xl flex flex-col overflow-hidden lg:hidden ${ 
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full" 
-          }`} 
-        > 
-          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()} 
-        </div> 
- 
-        {/* Desktop sidebar */} 
-        <div 
-          className={`hidden lg:flex flex-col shrink-0 bg-secondary transition-all duration-300 overflow-hidden ${ 
-            isSidebarOpen ? "w-[340px]" : "w-0 border-r-0" 
-          }`} 
-        > 
-          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()} 
-        </div> 
- 
-        {/* Map */} 
-        <div className="flex-1 relative bg-gray-100 h-full w-full min-h-[400px] sm:min-h-[500px]"> 
-          {loading && !lastUpdated && !driverGroups.size && ( 
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10"> 
-              <Loader2 className="h-10 w-10 text-purple-500 animate-spin" /> 
-              <p className="ml-4 text-sm text-gray-500"> 
-                {mode === "driver_selection" ? "Loading delivery details…" : "Fetching live deliveries…"} 
-              </p> 
-            </div> 
-          )} 
-          {error && !loading && ( 
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-4"> 
-              <X className="h-10 w-10 text-red-400 mb-4" /> 
-              <p className="text-red-500 text-sm mb-4">{error}</p> 
-              <button 
-                onClick={() => refetch()} 
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium" 
-              > 
-                Retry 
-              </button> 
-            </div> 
-          )} 
-          {!loading && !error && mode === "driver_selection" && normalizedOrder && !normalizedOrder.canAssign && ( 
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-500/95 text-white px-4 py-2 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2"> 
-              <AlertTriangle className="h-3.5 w-3.5" /> 
-              <span>{normalizedOrder.assignmentBlockedReason}</span> 
-            </div> 
-          )} 
-          {!loading && !error && mode === "tracking" && !driverGroups.size && ( 
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-6"> 
-              <Navigation className="h-16 w-16 text-amber-400 mb-4" /> 
-              <h3 className="font-bold text-gray-800 text-lg mb-2"> 
-                No active deliveries 
-              </h3> 
-              <p className="text-sm text-gray-500"> 
-                No drivers are currently out for delivery. 
-              </p> 
-            </div> 
-          )} 
-          <div ref={containerRef} className="w-full h-full z-0" /> 
-           
-          {/* Confirmation panel */} 
-          {showConfirmPanel && pendingDriverId && normalizedOrder && ( 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-5"> 
-              {(() => { 
-                const driver = enhancedDrivers.find(d => d.id === pendingDriverId); 
-                if (!driver) return null; 
-                const color = getDriverColor(enhancedDrivers.indexOf(driver)); 
-                const isNearest = driver.is_nearest === true; 
-                 
-                return ( 
-                  <div> 
-                    <div className="flex items-center gap-3 mb-4"> 
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" 
-                        style={{ backgroundColor: isNearest ? "#22C55E" : color }} 
-                      > 
-                        {isNearest ? "⭐" : getInitials(driver.name)} 
-                      </div> 
-                      <div> 
-                        <p className="font-bold text-gray-900 text-sm"> 
-                          {isNearest ? "Assign Nearest Driver" : "Assign Driver"} 
-                        </p> 
-                        <p className="text-xs text-gray-500"> 
-                          {driver.name} · {getVehicleName(driver.vehicle_type)} 
-                        </p> 
-                      </div> 
-                    </div> 
-                     
-                    <div className="space-y-2 text-xs mb-4"> 
-                      <div className="flex items-center gap-2"> 
-                        <Package className="h-3.5 w-3.5 text-purple-500" /> 
-                        <span>Order #{normalizedOrder.id}</span> 
-                      </div> 
-                      <div className="flex items-start gap-2"> 
-                        <Home className="h-3.5 w-3.5 text-amber-500 mt-0.5" /> 
-                        <span>{normalizedOrder.address}</span> 
-                      </div> 
-                      {normalizedOrder.pickupName && ( 
-                        <div className="flex items-center gap-2"> 
-                          <Store className="h-3.5 w-3.5 text-purple-500" /> 
-                          <span>{normalizedOrder.pickupName}</span> 
-                        </div> 
-                      )} 
-                      {driver.road_distance_to_customer != null ? ( 
-                        <div className="flex items-center gap-2"> 
-                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" /> 
-                          <span>{formatDistance(driver.road_distance_to_customer)} road · {formatDuration(driver.road_eta_to_customer)}</span> 
-                        </div> 
-                      ) : driver.distance_to_customer != null ? ( 
-                        <div className="flex items-center gap-2"> 
-                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" /> 
-                          <span>{formatDistance(driver.distance_to_customer)} to recipient</span> 
-                        </div> 
-                      ) : null} 
-                    </div> 
-                     
-                    <div className="flex gap-2"> 
-                      <button 
-                        onClick={handleConfirmAssignment} 
-                        disabled={isAssigning || !normalizedOrder.canAssign || !driver.isLive} 
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 ${ 
-                          isNearest 
-                            ? "bg-green-500 hover:bg-green-600 text-white" 
-                            : "bg-secondary text-white" 
-                        }`} 
-                      > 
-                        {isAssigning ? ( 
-                          <> 
-                            <Loader2 className="h-4 w-4 animate-spin" /> 
-                            Assigning... 
-                          </> 
-                        ) : ( 
-                          <> 
-                            <Check className="h-4 w-4" /> 
-                            {driver.isLive ? "Assign Driver" : "Driver Offline"} 
-                          </> 
-                        )} 
-                      </button> 
-                      <button 
-                        onClick={handleCancelSelection} 
-                        className="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200" 
-                      > 
-                        Cancel 
-                      </button> 
-                    </div> 
-                  </div> 
-                ); 
-              })()} 
-            </div> 
-          )} 
-           
-          {/* Bottom stats */} 
-          {mode === "tracking" && !loading && !error && driverGroups.size > 0 && ( 
-            <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 lg:bottom-6 lg:left-6 lg:right-6 z-20"> 
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2 sm:p-4"> 
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4"> 
-                  <StatsCard 
-                    icon={<MapPin className="h-5 w-5" />} 
-                    title="Vehicles Live" 
-                    value={stats.liveVehicles} 
-                    iconBgColor="bg-blue-50" 
-                    iconColor="text-blue-600" 
-                  /> 
-                  <StatsCard 
-                    icon={<Clock className="h-5 w-5" />} 
-                    title="Deliveries Today" 
-                    value={stats.deliveriesToday} 
-                    iconBgColor="bg-emerald-50" 
-                    iconColor="text-emerald-600" 
-                  /> 
-                  <StatsCard 
-                    icon={<CheckCircle className="h-5 w-5" />} 
-                    title="On-Time Delivery" 
-                    value={`${stats.onTimeDelivery}%`} 
-                    iconBgColor="bg-purple-50" 
-                    iconColor="text-purple-600" 
-                  /> 
-                </div> 
-              </div> 
-            </div> 
-          )} 
-        </div> 
-      </div> 
- 
-      {/* Mobile FAB */} 
-      <button 
-        onClick={toggleSidebar} 
-        className="fixed bottom-6 left-6 z-40 flex lg:hidden items-center justify-center p-3 bg-white rounded-full shadow-lg border border-gray-200" 
-        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"} 
-      > 
-        {isSidebarOpen ? ( 
-          <PanelLeftClose className="h-6 w-6 text-gray-700" /> 
-        ) : ( 
-          <PanelLeftOpen className="h-6 w-6 text-gray-700" /> 
-        )} 
-      </button> 
-    </div>, 
-    document.body 
-  ); 
+  return createPortal(
+    <div className="fixed inset-0 z-50 bg-gray-100 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 sticky top-0 backdrop-blur-md">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <button
+            onClick={toggleSidebar}
+            className="hidden lg:flex p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500 shrink-0"
+            aria-label="Toggle sidebar"
+          >
+            {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+          </button>
+          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 tracking-tight truncate min-w-0">
+            {mode === "driver_selection" ? "Select Delivery Driver" : "Live Vehicle Tracking"}
+          </h2>
+          {mode === "driver_selection" && normalizedOrder && (
+            <span className="text-xs text-gray-500 truncate">
+              #{normalizedOrder.id} · {normalizedOrder.customerName}
+            </span>
+          )}
+          <span className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live
+          </span>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className="hidden xl:inline text-xs text-gray-400">
+            Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : "Just now"}
+          </span>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500"
+            aria-label="Refresh data"
+          >
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={fitAllMarkers}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500"
+            aria-label="Fit all markers"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+          {mode === "tracking" && (
+            <button
+              onClick={toggleFollow}
+              className={`p-1.5 rounded-full hover:bg-gray-100 transition ${followDriver ? "bg-purple-100 text-purple-600" : "text-gray-500"
+                }`}
+              aria-label="Follow driver"
+            >
+              <Navigation className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition text-gray-500"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile backdrop */}
+        <div
+          className={`lg:hidden fixed inset-0 z-30 bg-black/50 transition-opacity ${isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+          onClick={toggleSidebar}
+        />
+
+        {/* Mobile drawer */}
+        <div
+          className={`fixed top-0 left-0 z-40 w-[85%] max-w-[360px] h-full bg-secondary transform transition-transform duration-300 rounded-r-2xl shadow-2xl flex flex-col overflow-hidden lg:hidden ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
+          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()}
+        </div>
+
+        {/* Desktop sidebar */}
+        <div
+          className={`hidden lg:flex flex-col shrink-0 bg-secondary transition-all duration-300 overflow-hidden ${isSidebarOpen ? "w-[340px]" : "w-0 border-r-0"
+            }`}
+        >
+          {mode === "driver_selection" ? renderDriverSelectionSidebar() : renderTrackingSidebar()}
+        </div>
+
+        {/* Map */}
+        <div className="flex-1 relative bg-gray-100 h-full w-full min-h-[400px] sm:min-h-[500px]">
+          {loading && !lastUpdated && !driverGroups.size && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
+              <Loader2 className="h-10 w-10 text-purple-500 animate-spin" />
+              <p className="ml-4 text-sm text-gray-500">
+                {mode === "driver_selection" ? "Loading delivery details…" : "Fetching live deliveries…"}
+              </p>
+            </div>
+          )}
+          {error && !loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-4">
+              <X className="h-10 w-10 text-red-400 mb-4" />
+              <p className="text-red-500 text-sm mb-4">{error}</p>
+              <button
+                onClick={() => refetch()}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {!loading && !error && mode === "driver_selection" && normalizedOrder && !normalizedOrder.canAssign && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-500/95 text-white px-4 py-2 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>{normalizedOrder.assignmentBlockedReason}</span>
+            </div>
+          )}
+          {!loading && !error && mode === "tracking" && !driverGroups.size && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-6">
+              <Navigation className="h-16 w-16 text-amber-400 mb-4" />
+              <h3 className="font-bold text-gray-800 text-lg mb-2">
+                No active deliveries
+              </h3>
+              <p className="text-sm text-gray-500">
+                No drivers are currently out for delivery.
+              </p>
+            </div>
+          )}
+          <div ref={containerRef} className="w-full h-full z-0" />
+
+          {/* Confirmation panel */}
+          {showConfirmPanel && pendingDriverId && normalizedOrder && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
+              {(() => {
+                const driver = enhancedDrivers.find(d => d.id === pendingDriverId);
+                if (!driver) return null;
+                const color = getDriverColor(enhancedDrivers.indexOf(driver));
+                const isNearest = driver.is_nearest === true;
+
+                return (
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                        style={{ backgroundColor: isNearest ? "#22C55E" : color }}
+                      >
+                        {isNearest ? "⭐" : getInitials(driver.name)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">
+                          {isNearest ? "Assign Nearest Driver" : "Assign Driver"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {driver.name} · {getVehicleName(driver.vehicle_type)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-xs mb-4">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-3.5 w-3.5 text-purple-500" />
+                        <span>Order #{normalizedOrder.id}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Home className="h-3.5 w-3.5 text-amber-500 mt-0.5" />
+                        <span>{normalizedOrder.address}</span>
+                      </div>
+                      {normalizedOrder.pickupName && (
+                        <div className="flex items-center gap-2">
+                          <Store className="h-3.5 w-3.5 text-purple-500" />
+                          <span>{normalizedOrder.pickupName}</span>
+                        </div>
+                      )}
+                      {driver.road_distance_to_customer != null ? (
+                        <div className="flex items-center gap-2">
+                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" />
+                          <span>{formatDistance(driver.road_distance_to_customer)} road · {formatDuration(driver.road_eta_to_customer)}</span>
+                        </div>
+                      ) : driver.distance_to_customer != null ? (
+                        <div className="flex items-center gap-2">
+                          <RouteIcon className="h-3.5 w-3.5 text-blue-500" />
+                          <span>{formatDistance(driver.distance_to_customer)} to recipient</span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleConfirmAssignment}
+                        disabled={isAssigning || !normalizedOrder.canAssign || !driver.isLive}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 ${isNearest
+                          ? "bg-green-500 hover:bg-green-600 text-white"
+                          : "bg-secondary text-white"
+                          }`}
+                      >
+                        {isAssigning ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Assigning...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4" />
+                            {driver.isLive ? "Assign Driver" : "Driver Offline"}
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelSelection}
+                        className="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Bottom stats */}
+          {mode === "tracking" && !loading && !error && driverGroups.size > 0 && (
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 lg:bottom-6 lg:left-6 lg:right-6 z-20">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2 sm:p-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+                  <StatsCard
+                    icon={<MapPin className="h-5 w-5" />}
+                    title="Vehicles Live"
+                    value={stats.liveVehicles}
+                    iconBgColor="bg-blue-50"
+                    iconColor="text-blue-600"
+                  />
+                  <StatsCard
+                    icon={<Clock className="h-5 w-5" />}
+                    title="Deliveries Today"
+                    value={stats.deliveriesToday}
+                    iconBgColor="bg-emerald-50"
+                    iconColor="text-emerald-600"
+                  />
+                  <StatsCard
+                    icon={<CheckCircle className="h-5 w-5" />}
+                    title="On-Time Delivery"
+                    value={`${stats.onTimeDelivery}%`}
+                    iconBgColor="bg-purple-50"
+                    iconColor="text-purple-600"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile FAB */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed bottom-6 left-6 z-40 flex lg:hidden items-center justify-center p-3 bg-white rounded-full shadow-lg border border-gray-200"
+        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {isSidebarOpen ? (
+          <PanelLeftClose className="h-6 w-6 text-gray-700" />
+        ) : (
+          <PanelLeftOpen className="h-6 w-6 text-gray-700" />
+        )}
+      </button>
+    </div>,
+    document.body
+  );
 }
