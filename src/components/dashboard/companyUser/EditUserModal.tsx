@@ -21,6 +21,15 @@ const UserAvatar = ({ user, size = 'md' }: { user: any; size?: 'sm' | 'md' | 'lg
   );
 };
 
+const getRoleLabel = (role?: string) =>
+  role === "staff"
+    ? "Dispatcher"
+    : role === "delivery"
+      ? "Delivery"
+      : role
+        ? role.charAt(0).toUpperCase() + role.slice(1)
+        : "—";
+
 interface EditUserModalProps {
   isOpen: boolean;
   user: {
@@ -30,7 +39,7 @@ interface EditUserModalProps {
     email: string;
     username: string;
     phone_number: string;
-    role: 'admin' | 'staff' | 'viewer';
+    role: 'admin' | 'staff' | 'viewer' | 'delivery';
     profile_image?: string;
   };
   onClose: () => void;
@@ -140,7 +149,7 @@ export function EditUserModal({
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <Shield className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                <p className="text-[10px] sm:text-xs text-gray-500">Current role: <span className="font-semibold capitalize text-secondary">{user.role}</span></p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Current role: <span className="font-semibold text-secondary">{getRoleLabel(user.role)}</span></p>
               </div>
             </div>
           </div>
@@ -232,7 +241,8 @@ export function EditUserModal({
                 className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all outline-none bg-white cursor-pointer"
               >
                 <option value="admin">Admin – Full access to company management</option>
-                <option value="staff">Staff – Manage products and orders</option>
+                <option value="staff">Dispatcher – Manage orders and dispatch operations</option>
+                <option value="delivery">Delivery Personnel – Handle assigned deliveries</option>
                 <option value="viewer">Viewer – Read‑only access</option>
               </select>
             </div>

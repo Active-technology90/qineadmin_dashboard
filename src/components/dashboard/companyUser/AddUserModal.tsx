@@ -36,7 +36,7 @@ const UserAvatar = ({
 };
 
 // --------------------------------------------------------------
-// Main modal component – now supports 'delivery' role
+// Main modal component – backend "staff" is presented as Dispatcher in the UI
 // --------------------------------------------------------------
 interface AddUserModalProps {
   isOpen: boolean;
@@ -47,8 +47,8 @@ interface AddUserModalProps {
   onSearchChange: (val: string) => void;
   selectedUser: User | null;
   onSelectUser: (user: User | null) => void;
-  selectedRole: "admin" | "staff" | "viewer" | "delivery"; // ✅ added 'delivery'
-  onRoleChange: (role: "admin" | "staff" | "viewer" | "delivery") => void; // ✅
+  selectedRole: "admin" | "staff" | "viewer" | "delivery";
+  onRoleChange: (role: "admin" | "staff" | "viewer" | "delivery") => void;
   adding: boolean;
   onAdd: () => void;
 }
@@ -290,7 +290,7 @@ export function AddUserModal({
             </div>
           )}
 
-           {/* Role selection – now includes Delivery */}
+           {/* Role selection – "staff" is displayed as Dispatcher */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
               Assign role <span className="text-red-500">*</span>
@@ -304,9 +304,9 @@ export function AddUserModal({
                 <option value="admin">
                   Admin – Full access to company management
                 </option>
-                <option value="staff">Staff – Manage products and orders</option>
+                <option value="staff">Dispatcher – Manage orders and dispatch operations</option>
                 <option value="delivery">
-                  Delivery – Manage deliveries
+                  Delivery Personnel – Handle assigned deliveries
                 </option>
                 <option value="viewer">Viewer – Read‑only access</option>
               </select>
@@ -332,7 +332,7 @@ export function AddUserModal({
             className="flex-1 px-4 sm:px-6 py-1.5 sm:py-2.5 bg-secondary text-white rounded-lg sm:rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base font-medium flex items-center justify-center gap-2"
           >
             {adding && <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />}
-            {adding ? "Adding..." : "Add user"}
+            {adding ? "Adding..." : selectedRole === "staff" ? "Add Dispatcher" : "Add User"}
           </button>
         </div>
       </div>

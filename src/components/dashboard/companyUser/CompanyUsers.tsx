@@ -171,7 +171,7 @@ export default function CompanyUsers() {
   const roleOptions: SelectOption[] = [
     { value: "all", label: "All Roles" },
     { value: "admin", label: `Admin (${roleCounts.admin || 0})` },
-    { value: "staff", label: `Staff (${roleCounts.staff || 0})` },
+    { value: "staff", label: `Dispatcher (${roleCounts.staff || 0})` },
     { value: "viewer", label: `Viewer (${roleCounts.viewer || 0})` },
     { value: "delivery", label: `Delivery (${roleCounts.delivery || 0})` },
   ];
@@ -219,6 +219,14 @@ export default function CompanyUsers() {
     };
     fetchSearchResults();
   }, [debouncedQuery]);
+
+  const openAddDispatcher = () => {
+    // Frontend-only naming: the backend role remains "staff".
+    setSelectedRole("staff");
+    setSelectedUser(null);
+    setSearchTerm("");
+    setShowAddModal(true);
+  };
 
   const handleAddUser = async () => {
     if (!companySlug || !selectedUser) return;
@@ -312,7 +320,7 @@ export default function CompanyUsers() {
           Access Restricted
         </h3>
         <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
-          You don't have permission to view company users.
+          You don't have permission to view team and dispatcher management.
         </p>
       </div>
     );
@@ -323,8 +331,8 @@ export default function CompanyUsers() {
     return (
       <CompanySelector
         companies={companies}
-        title="All Users"
-        subtitle="Select a company to manage users"
+        title="Team & Dispatcher Management"
+        subtitle="Select a company to manage dispatchers, delivery personnel and access"
         searchPlaceholder="Search companies by name..."
         isLoading={isLoadingCompanies}
         disableProductSearch={true}
@@ -386,7 +394,7 @@ export default function CompanyUsers() {
               {isSuperAdmin ? companyName : "All Users"}
             </h1>
             <p className="text-[9px] sm:text-xs text-secondary/60">
-              Manage roles and organization access
+              Dispatcher management, delivery personnel and organization access
             </p>
           </div>
         </div>
@@ -412,6 +420,39 @@ export default function CompanyUsers() {
           </button>
         )}
       </div>
+      {/* ===== DISPATCHER MANAGEMENT ===== */}
+      {!loading && (
+        <div className="rounded-2xl border border-secondary/15 bg-gradient-to-r from-secondary/[0.08] via-white to-white p-3 sm:p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-white shadow-sm shadow-secondary/20">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm sm:text-base font-bold text-gray-900">Dispatcher Management</h2>
+                  <span className="rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary">
+                    {roleCounts.staff} {roleCounts.staff === 1 ? "dispatcher" : "dispatchers"}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[10px] sm:text-xs text-gray-500">
+                  Manage dispatchers, delivery personnel and company access from one place.
+                </p>
+              </div>
+            </div>
+            {canManageUsers && (
+              <button
+                onClick={openAddDispatcher}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-secondary px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary/90"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Add Dispatcher
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ===== 3. COMPACT STATS ROW ===== */}
       {loading ? (
         <StatsSkeleton />
@@ -430,7 +471,7 @@ export default function CompanyUsers() {
             color="purple"
           />
           <StatCard
-            title="Staff"
+            title="Dispatchers"
             value={roleCounts.staff}
             icon={Briefcase}
             color="blue"
@@ -473,7 +514,7 @@ export default function CompanyUsers() {
               Create User
             </button>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => { setSelectedRole("staff"); setShowAddModal(true); }}
               className="
                 py-1 px-3
                 rounded-lg
@@ -501,7 +542,7 @@ export default function CompanyUsers() {
             <SearchInput
               value={tableSearch}
               onChange={setTableSearch}
-              placeholder="Search users..."
+              placeholder="Search team members..."
               loading={loading}
               showMobileFilter={true}
               onMobileFilterClick={() => setShowMobileFilterModal(true)}
@@ -543,7 +584,7 @@ export default function CompanyUsers() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder="Search team members..."
                   value={tableSearch}
                   onChange={(e) => setTableSearch(e.target.value)}
                   className="
@@ -610,7 +651,7 @@ export default function CompanyUsers() {
                 >
                   <option value="all">All</option>
                   <option value="admin">Admin ({roleCounts.admin || 0})</option>
-                  <option value="staff">Staff ({roleCounts.staff || 0})</option>
+                  <option value="staff">Dispatcher ({roleCounts.staff || 0})</option>
                   <option value="viewer">Viewer ({roleCounts.viewer || 0})</option>
                   <option value="delivery">Delivery ({roleCounts.delivery || 0})</option>
                 </select>
@@ -623,7 +664,7 @@ export default function CompanyUsers() {
                 {canManageUsers && (
                   <>
                     <button
-                      onClick={() => setShowAddModal(true)}
+                      onClick={() => { setSelectedRole("staff"); setShowAddModal(true); }}
                       className="
                         h-9 px-3.5
                         rounded-xl

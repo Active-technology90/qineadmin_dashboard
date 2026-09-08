@@ -1,4 +1,4 @@
-// BankManagement.tsx (fully corrected)
+// BankManagement.tsx (frontend Ethiopian bank catalog + public logos)
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Plus,
@@ -8,6 +8,11 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Search,
+  ChevronDown,
+  AlertCircle,
+  Upload,
+  X,
 } from "lucide-react";
 import {
   getCompanyBankAccounts,
@@ -29,35 +34,280 @@ import { useAuth } from "../../../hooks/useAuth";
 import type { BankInfo } from "../../../types";
 
 // ------------------------------------------------------------------
+// Types
+// ------------------------------------------------------------------
+interface AvailableBank {
+  id: string;
+  bank_name: string;
+  logo: string | null;
+}
+
+// Frontend-owned Ethiopian bank catalog used by company admins.
+// No bank-catalog API call is needed for the dropdown.
+const normalizeBankName = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+
+const BANK_NAME_ALIASES: Record<string, string> = {
+  cbe: "commercial bank of ethiopia",
+  "commercial bank ethiopia": "commercial bank of ethiopia",
+  boa: "bank of abyssinia",
+  abyssinia: "bank of abyssinia",
+  dashen: "dashen bank",
+  awash: "awash bank",
+  nib: "nib international bank",
+  hibret: "hibret bank",
+  wegagen: "wegagen bank",
+  oib: "oromia bank",
+  oromia: "oromia bank",
+  lib: "lion international bank",
+  lion: "lion international bank",
+  cbo: "cooperative bank of oromia",
+  coop: "cooperative bank of oromia",
+  berhan: "berhan bank",
+  bunna: "bunna bank",
+  zemen: "zemen bank",
+  enat: "enat bank",
+  global: "global bank ethiopia",
+  abay: "abay bank",
+  shabelle: "shabelle bank",
+  zamzam: "zamzam bank",
+  goh: "goh betoch bank",
+  ahadu: "ahadu bank",
+  hijra: "hijra bank",
+  tsehay: "tsehay bank",
+  tsedey: "tsedey bank",
+  amhara: "amhara bank",
+  rammis: "rammis bank",
+};
+
+const getBankIdentityKey = (name: string) => {
+  const normalized = normalizeBankName(name);
+  const aliased = BANK_NAME_ALIASES[normalized] || normalized;
+
+  return aliased
+    .replace(/\b(bank|of|sc|plc|share company|international)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const FRONTEND_ETHIOPIAN_BANKS: AvailableBank[] = [
+  {
+    id: "cbe",
+    bank_name: "Commercial Bank of Ethiopia",
+    logo: "/cbe (2).jfif",
+  },
+  {
+    id: "bank-of-abyssinia",
+    bank_name: "Bank of Abyssinia",
+    logo: "/abisiniya.png",
+  },
+  {
+    id: "dashen-bank",
+    bank_name: "Dashen Bank",
+    logo: "/Dashen bank.png",
+  },
+  {
+    id: "awash-bank",
+    bank_name: "Awash Bank",
+    logo: "/awash.jfif",
+  },
+  {
+    id: "nib-international-bank",
+    bank_name: "Nib International Bank",
+    logo: "/nib bank.jfif",
+  },
+  {
+    id: "hibret-bank",
+    bank_name: "Hibret Bank",
+    logo: "/hibret bank.png",
+  },
+  {
+    id: "wegagen-bank",
+    bank_name: "Wegagen Bank",
+    logo: "/wegagen.jfif",
+  },
+  {
+    id: "oromia-bank",
+    bank_name: "Oromia Bank",
+    logo: "/oromia.png",
+  },
+  {
+    id: "lion-international-bank",
+    bank_name: "Lion International Bank",
+    logo: "/anbesa.jfif",
+  },
+  {
+    id: "cooperative-bank-of-oromia",
+    bank_name: "Cooperative Bank of Oromia",
+    logo: "/cooprative bank.jfif",
+  },
+  {
+    id: "berhan-bank",
+    bank_name: "Berhan Bank",
+    logo: "/berhane bank.png",
+  },
+  {
+    id: "bunna-bank",
+    bank_name: "Bunna Bank",
+    logo: "/buna.avif",
+  },
+  {
+    id: "zemen-bank",
+    bank_name: "Zemen Bank",
+    logo: "/Zemen_Bank_official_logo.png",
+  },
+  {
+    id: "enat-bank",
+    bank_name: "Enat Bank",
+    logo: "/enat.jfif",
+  },
+  {
+    id: "global-bank-ethiopia",
+    bank_name: "Global Bank Ethiopia",
+    logo: "/global bank.png",
+  },
+  {
+    id: "abay-bank",
+    bank_name: "Abay Bank",
+    logo: "/abay.png",
+  },
+  {
+    id: "shabelle-bank",
+    bank_name: "Shabelle Bank",
+    logo: "/shebelie.png",
+  },
+  {
+    id: "zamzam-bank",
+    bank_name: "ZamZam Bank",
+    logo: "/zam zam.jfif",
+  },
+  {
+    id: "goh-betoch-bank",
+    bank_name: "Goh Betoch Bank",
+    logo: "/goh betoch.png",
+  },
+  {
+    id: "ahadu-bank",
+    bank_name: "Ahadu Bank",
+    logo: "/ahadu.jfif",
+  },
+  {
+    id: "hijra-bank",
+    bank_name: "Hijra Bank",
+    logo: "/hijra.png",
+  },
+  {
+    id: "tsehay-bank",
+    bank_name: "Tsehay Bank",
+    logo: "/tsehay.jfif",
+  },
+  {
+    id: "tsedey-bank",
+    bank_name: "Tsedey Bank",
+    logo: "/tsedey bank.jfif",
+  },
+  {
+    id: "amhara-bank",
+    bank_name: "Amhara Bank",
+    logo: "/amhara.png",
+  },
+  {
+    id: "rammis-bank",
+    bank_name: "Rammis Bank",
+    logo: "/rammis.jfif",
+  },
+];
+
+const BankLogo = ({
+  logo,
+  name,
+  size = "md",
+}: {
+  logo: string | null;
+  name: string;
+  size?: "sm" | "md" | "lg";
+}) => {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [logo]);
+
+  const sizeClasses = {
+    sm: "h-10 w-10",
+    md: "h-12 w-12",
+    lg: "h-14 w-14",
+  };
+
+  const imageSizeClasses = {
+    sm: "h-7 w-7",
+    md: "h-9 w-9",
+    lg: "h-11 w-11",
+  };
+
+  return (
+    <span
+      className={`${sizeClasses[size]} rounded-xl border border-gray-200/80 bg-white shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden`}
+    >
+      {logo && !imageFailed ? (
+        <img
+          src={logo}
+          alt={`${name} logo`}
+          className={`${imageSizeClasses[size]} object-contain`}
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <Building2 className="h-5 w-5 text-gray-400" />
+      )}
+    </span>
+  );
+};
+
+// ------------------------------------------------------------------
+// Helper function to convert URL to File
+// ------------------------------------------------------------------
+const urlToFile = async (url: string, filename: string): Promise<File> => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const extension = blob.type.split('/')[1] || 'jpg';
+  return new File([blob], `${filename}.${extension}`, { type: blob.type });
+};
+
+// ------------------------------------------------------------------
 // Skeleton Row
 // ------------------------------------------------------------------
 const SkeletonRow = () => (
   <tr className="animate-pulse">
-    <td className="px-4 py-3">
+    <td className="px-4 py-4">
       <div className="h-4 bg-gray-200 rounded w-8" />
     </td>
-    <td className="px-4 py-3">
+    <td className="px-4 py-4">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 bg-gray-200 rounded-lg" />
-        <div className="h-4 bg-gray-200 rounded w-24" />
+        <div className="h-11 w-11 bg-gray-200 rounded-xl" />
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-32" />
+          <div className="h-3 bg-gray-100 rounded w-20" />
+        </div>
       </div>
     </td>
-    <td className="px-4 py-3">
-      <div className="h-4 bg-gray-200 rounded w-24" />
+    <td className="px-4 py-4">
+      <div className="h-4 bg-gray-200 rounded w-28" />
     </td>
-    <td className="px-4 py-3">
-      <div className="h-4 bg-gray-200 rounded w-32" />
+    <td className="px-4 py-4">
+      <div className="h-4 bg-gray-200 rounded w-36" />
     </td>
-    <td className="px-4 py-3">
-      <div className="h-6 bg-gray-200 rounded-full w-20" />
+    <td className="px-4 py-4">
+      <div className="h-7 bg-gray-200 rounded-full w-20" />
     </td>
-    <td className="px-4 py-3">
-      <div className="h-6 bg-gray-200 rounded-full w-16" />
-    </td>
-    <td className="px-4 py-3">
+    <td className="px-4 py-4">
       <div className="flex justify-end gap-2">
-        <div className="h-8 w-8 bg-gray-200 rounded" />
-        <div className="h-8 w-8 bg-gray-200 rounded" />
+        <div className="h-9 w-9 bg-gray-200 rounded-lg" />
+        <div className="h-9 w-9 bg-gray-200 rounded-lg" />
       </div>
     </td>
   </tr>
@@ -69,17 +319,294 @@ const SkeletonRow = () => (
 const StatusBadge = ({ isActive }: { isActive: boolean }) => {
   if (isActive) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-        <CheckCircle className="h-3 w-3" />
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+        <CheckCircle className="h-3.5 w-3.5" />
         Active
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-      <XCircle className="h-3 w-3" />
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200/80">
+      <XCircle className="h-3.5 w-3.5" />
       Inactive
     </span>
+  );
+};
+
+// ------------------------------------------------------------------
+// Bank Selector Component (for Company Admin)
+// ------------------------------------------------------------------
+const BankSelector = ({
+  banks,
+  selectedBankId,
+  selectedBankName,
+  onSelect,
+  loading,
+  error,
+}: {
+  banks: AvailableBank[];
+  selectedBankId: string;
+  selectedBankName?: string;
+  onSelect: (bank: AvailableBank) => void;
+  loading: boolean;
+  error?: string | null;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedBank = useMemo(() => {
+    const byId = banks.find((bank) => bank.id === selectedBankId);
+    if (byId) return byId;
+
+    if (!selectedBankName) return undefined;
+    const selectedKey = getBankIdentityKey(selectedBankName);
+    return banks.find((bank) => getBankIdentityKey(bank.bank_name) === selectedKey);
+  }, [banks, selectedBankId, selectedBankName]);
+
+  const selectedBankKey = selectedBank
+    ? getBankIdentityKey(selectedBank.bank_name)
+    : "";
+
+  const filteredBanks = useMemo(() => {
+    const normalizedTerm = normalizeBankName(searchTerm);
+    if (!normalizedTerm) return banks;
+
+    const identityTerm = getBankIdentityKey(searchTerm);
+    return banks.filter((bank) => {
+      const normalizedName = normalizeBankName(bank.bank_name);
+      const identityName = getBankIdentityKey(bank.bank_name);
+
+      return (
+        normalizedName.includes(normalizedTerm) ||
+        (!!identityTerm && identityName.includes(identityTerm))
+      );
+    });
+  }, [banks, searchTerm]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <label className="block text-sm font-semibold text-gray-800">
+          Select Bank <span className="text-red-500">*</span>
+        </label>
+        {!loading && banks.length > 0 && (
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-500">
+            {banks.length} {banks.length === 1 ? "bank" : "banks"}
+          </span>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        disabled={loading}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className={`relative w-full rounded-2xl border px-4 py-3.5 text-left shadow-sm transition-all duration-200 ${
+          error
+            ? "border-red-300 bg-red-50/60 ring-4 ring-red-50"
+            : isOpen
+              ? "border-secondary bg-white ring-4 ring-secondary/10"
+              : "border-gray-200 bg-white hover:border-secondary/50 hover:shadow-md"
+        } disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        {loading ? (
+          <span className="flex min-h-12 items-center gap-3 text-gray-400">
+            <span className="h-12 w-12 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-gray-600">
+                Loading banks
+              </span>
+              <span className="block text-xs text-gray-400 mt-0.5">
+                Using logos from the public folder...
+              </span>
+            </span>
+          </span>
+        ) : selectedBank ? (
+          <span className="flex items-center gap-3 pr-8">
+            <BankLogo
+              logo={selectedBank.logo}
+              name={selectedBank.bank_name}
+              size="md"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-gray-900">
+                {selectedBank.bank_name}
+              </span>
+              <span className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                <CheckCircle className="h-3.5 w-3.5" />
+                Selected
+              </span>
+            </span>
+          </span>
+        ) : (
+          <span className="flex min-h-12 items-center gap-3 pr-8">
+            <span className="h-12 w-12 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-gray-400" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-gray-700">
+                Choose a bank
+              </span>
+              <span className="block text-xs text-gray-400 mt-0.5">
+                Search or browse the available banks
+              </span>
+            </span>
+          </span>
+        )}
+
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-gray-50 p-1.5">
+          <ChevronDown
+            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        </span>
+      </button>
+
+      {error && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+          {error}
+        </p>
+      )}
+
+      {isOpen && !loading && (
+        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-900/10">
+          <div className="border-b border-gray-100 bg-gray-50/70 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3 px-1">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+                  Available banks
+                </p>
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  25 Ethiopian banks use local public logos
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-secondary">
+                {filteredBanks.length} shown
+              </span>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search CBE, Awash, Dashen..."
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-secondary focus:ring-4 focus:ring-secondary/10"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="Clear bank search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div
+            className="max-h-80 overflow-y-auto overscroll-contain p-2"
+            role="listbox"
+          >
+            {filteredBanks.length === 0 ? (
+              <div className="px-6 py-10 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="text-sm font-semibold text-gray-800">
+                  No matching bank
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Try a different bank name or abbreviation.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {filteredBanks.map((bank) => {
+                  const isSelected =
+                    selectedBankKey &&
+                    getBankIdentityKey(bank.bank_name) === selectedBankKey;
+
+                  return (
+                    <button
+                      key={bank.id}
+                      type="button"
+                      onClick={() => {
+                        onSelect(bank);
+                        setIsOpen(false);
+                        setSearchTerm("");
+                      }}
+                      role="option"
+                      aria-selected={!!isSelected}
+                      className={`group flex min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                        isSelected
+                          ? "border-secondary/40 bg-secondary/5 shadow-sm"
+                          : "border-transparent hover:border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <BankLogo logo={bank.logo} name={bank.bank_name} size="sm" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-gray-800 group-hover:text-gray-950">
+                          {bank.bank_name}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] text-gray-400">
+                          Select bank
+                        </span>
+                      </span>
+                      {isSelected && (
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-white">
+                          <CheckCircle className="h-4 w-4" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -92,7 +619,9 @@ export default function BankManagement() {
   const { toast, showToast } = useToast();
 
   const [banks, setBanks] = useState<BankInfo[]>([]);
+  const availableBanks = FRONTEND_ETHIOPIAN_BANKS;
   const [loading, setLoading] = useState(true);
+  const loadingAvailableBanks = false;
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -102,23 +631,26 @@ export default function BankManagement() {
   const [deleting, setDeleting] = useState(false);
 
   const isSuperAdmin = !user?.memberships?.length;
+  const companySlug = company?.slug;
   const companyName = company?.name || "Your Company";
   const canWrite =
     isSuperAdmin || company?.role === "owner" || company?.role === "admin";
 
-  console.log("ddddd", deleting)
-  console.log("ddddd", company?.slug)
+  // Fetch bank accounts - depends only on stable values
   const fetchBanks = useCallback(async () => {
+    if (!isSuperAdmin && !companySlug) {
+      setBanks([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       let response;
       if (isSuperAdmin) {
         response = await getAdminBankAccounts();
-      } else if (company?.slug) {
-        response = await getCompanyBankAccounts(company.slug);
       } else {
-        setBanks([]);
-        return;
+        response = await getCompanyBankAccounts(companySlug!);
       }
       const results = response.data?.results || response.data || [];
       setBanks(
@@ -136,8 +668,9 @@ export default function BankManagement() {
     } finally {
       setLoading(false);
     }
-  }, [showToast, isSuperAdmin, company]);
+  }, [isSuperAdmin, companySlug, showToast]);
 
+  // Company-admin bank choices are frontend-owned; no bank catalog API call is needed.
   useEffect(() => {
     fetchBanks();
   }, [fetchBanks]);
@@ -175,20 +708,70 @@ export default function BankManagement() {
     setShowModal(true);
   };
 
-  // ── Corrected handleSave (multipart + _method patch) ──
+  // Fixed handleSave with logo URL to file conversion for Company Admin
   const handleSave = async (data: Partial<BankInfo>, logoFile?: File) => {
     try {
-      // Remove company_slug if editing (backend may reject)
       if (editingBank) {
         delete data.company_slug;
       }
 
-      let payload: Record<string, unknown> | FormData = data as Record<
-        string,
-        unknown
-      >;
+      // For Company Admin
+      if (!isSuperAdmin) {
+        let logoFileToSend: File | undefined = logoFile;
+        
+        // New company-admin choices use image files from public/.
+        // Existing remote logos are still supported while editing older records.
+        if (!logoFileToSend && data.logo && typeof data.logo === "string") {
+          try {
+            const fileName =
+              data.bank_name?.toLowerCase().replace(/\s+/g, "-") || "bank-logo";
 
-      // If a logo file is provided, use FormData
+            if (
+              data.logo.startsWith("/") ||
+              data.logo.startsWith("http://") ||
+              data.logo.startsWith("https://")
+            ) {
+              logoFileToSend = await urlToFile(data.logo, fileName);
+            }
+          } catch (error) {
+            console.error("Failed to prepare bank logo:", error);
+          }
+        }
+        
+        // Create FormData with all fields
+        const fd = new FormData();
+        fd.append('bank_name', data.bank_name || '');
+        fd.append('account_number', data.account_number || '');
+        fd.append('account_name', data.account_name || '');
+        fd.append('is_active', String(data.is_active ?? true));
+        fd.append('order', String(data.order ?? 0));
+        
+        // Only append logo if we have a file
+        if (logoFileToSend) {
+          fd.append('logo', logoFileToSend);
+        }
+        
+        if (editingBank) {
+          if (companySlug) {
+            await updateCompanyBankAccount(companySlug, editingBank.id, fd);
+          }
+        } else {
+          if (companySlug) {
+            await createCompanyBankAccount(companySlug, fd);
+          }
+        }
+        
+        showToast("success", editingBank ? "Bank account updated successfully" : "Bank account created successfully");
+        setShowModal(false);
+        setEditingBank(null);
+        fetchBanks();
+        return;
+      }
+
+      // Super Admin logic (existing behavior)
+      let payload: Record<string, unknown> | FormData = data as Record<string, unknown>;
+
+      // Only use FormData when there's an actual file to upload
       if (logoFile) {
         const fd = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -201,19 +784,13 @@ export default function BankManagement() {
       }
 
       if (editingBank) {
-        // Update existing bank
         if (isSuperAdmin) {
           await updateAdminBankAccount(editingBank.id, payload);
-        } else if (company?.slug) {
-          await updateCompanyBankAccount(company.slug, editingBank.id, payload);
         }
         showToast("success", "Bank account updated successfully");
       } else {
-        // Create new bank
         if (isSuperAdmin) {
           await createAdminBankAccount(payload);
-        } else if (company?.slug) {
-          await createCompanyBankAccount(company.slug, payload);
         }
         showToast("success", "Bank account created successfully");
       }
@@ -238,8 +815,8 @@ export default function BankManagement() {
       setDeleting(true);
       if (isSuperAdmin) {
         await deleteAdminBankAccount(deleteTarget.id);
-      } else if (company?.slug) {
-        await deleteCompanyBankAccount(company.slug, deleteTarget.id);
+      } else if (companySlug) {
+        await deleteCompanyBankAccount(companySlug, deleteTarget.id);
       }
       showToast("success", "Bank account deleted successfully");
       setDeleteTarget(null);
@@ -254,15 +831,15 @@ export default function BankManagement() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-8">
       <Toast toast={toast} />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
             Bank Accounts
           </h2>
-          <p className="text-xs sm:text-sm text-secondary/70 mt-0.5">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {isSuperAdmin
               ? "Manage all company bank accounts"
               : `Bank accounts for ${companyName}`}
@@ -271,7 +848,7 @@ export default function BankManagement() {
         {canWrite && (
           <button
             onClick={handleCreate}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition shadow-sm hover:shadow-md active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-all shadow-sm hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-secondary/20 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             Add Bank Account
@@ -279,7 +856,7 @@ export default function BankManagement() {
         )}
       </div>
 
-      <div className="mb-4">
+      <div className="mb-5 sm:mb-6">
         <SearchInput
           value={searchTerm}
           onChange={setSearchTerm}
@@ -288,150 +865,147 @@ export default function BankManagement() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm -mx-3 sm:mx-0 px-3 sm:px-0">
-        <table className="min-w-[600px] lg:min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 backdrop-blur-sm shadow-sm">
-            <tr>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  No.
-                </span>
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Bank Name
-                </span>
-              </th>
-              {isSuperAdmin && (
-                <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                    Company
-                  </span>
-                </th>
-              )}
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Account Number
-                </span>
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Account Holder
-                </span>
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  Status
-                </span>
-              </th>
-              {canWrite && (
-                <th className="px-3 py-3 text-right text-xs font-semibold text-secondary uppercase tracking-wider">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                    Actions
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {loading ? (
-              Array.from({ length: pageSize }).map((_, i) => (
-                <SkeletonRow key={i} />
-              ))
-            ) : paginatedBanks.length === 0 ? (
+      <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="min-w-[720px] lg:min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50/80">
               <tr>
-                <td
-                  colSpan={isSuperAdmin ? 7 : 6}
-                  className="text-center py-12 text-gray-500"
-                >
-                  <Building2 className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  <p className="font-medium">No bank accounts found</p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {canWrite
-                      ? "Add your first bank account"
-                      : "No bank accounts have been added yet"}
-                  </p>
-                </td>
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  No.
+                </th>
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Bank Name
+                </th>
+                {isSuperAdmin && (
+                  <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Company
+                  </th>
+                )}
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Account Number
+                </th>
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Account Holder
+                </th>
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                {canWrite && (
+                  <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
-            ) : (
-              paginatedBanks.map((bank, index) => (
-                <tr
-                  key={bank.id}
-                  className="hover:bg-gray-50/60 transition-colors"
-                >
-                  <td className="px-3 py-3 text-sm text-gray-500">
-                    {(currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        {bank.logo ? (
-                          <img
-                            src={bank.logo}
-                            alt={bank.bank_name}
-                            className="h-8 w-8 object-contain"
-                          />
-                        ) : (
-                          <Building2 className="h-5 w-5 text-gray-400" />
-                        )}
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {loading ? (
+                Array.from({ length: pageSize }).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))
+              ) : paginatedBanks.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={isSuperAdmin ? 7 : 6}
+                    className="text-center py-16 px-6"
+                  >
+                    <div className="max-w-sm mx-auto">
+                      <div className="h-16 w-16 mx-auto rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center mb-4">
+                        <Building2 className="h-8 w-8 text-gray-400" />
                       </div>
-                      <span className="font-medium text-gray-900 text-sm">
-                        {bank.bank_name}
-                      </span>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        No bank accounts found
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1.5">
+                        {canWrite
+                          ? "Add your first bank account to get started"
+                          : "No bank accounts have been added yet"}
+                      </p>
+                      {canWrite && (
+                        <button
+                          onClick={handleCreate}
+                          className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition-colors focus:outline-none focus:ring-4 focus:ring-secondary/20"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Bank Account
+                        </button>
+                      )}
                     </div>
                   </td>
-                  {isSuperAdmin && (
-                    <td className="px-3 py-3 text-sm text-gray-600">
-                      {bank.company_name || "N/A"}
+                </tr>
+              ) : (
+                paginatedBanks.map((bank, index) => (
+                  <tr
+                    key={bank.id}
+                    className="hover:bg-gray-50/60 transition-colors"
+                  >
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      {(currentPage - 1) * pageSize + index + 1}
                     </td>
-                  )}
-                  <td className="px-3 py-3">
-                    <span className="font-mono text-sm text-gray-700">
-                      {bank.account_number}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3 text-sm text-gray-700">
-                    {bank.account_name}
-                  </td>
-                  <td className="px-3 py-3">
-                    <StatusBadge isActive={bank.is_active ?? true} />
-                  </td>
-                  {canWrite && (
-                    <td className="px-3 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleEdit(bank)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-secondary hover:bg-secondary/10 transition"
-                          title="Edit"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(bank)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <BankLogo
+                          logo={bank.logo || null}
+                          name={bank.bank_name}
+                          size="sm"
+                        />
+                        <div className="min-w-0">
+                          <span className="font-medium text-gray-900 text-sm truncate block">
+                            {bank.bank_name}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {bank.bank_id || 'Bank'}
+                          </span>
+                        </div>
                       </div>
                     </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    {isSuperAdmin && (
+                      <td className="px-4 sm:px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                        {bank.company_name || "N/A"}
+                      </td>
+                    )}
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className="font-mono text-sm text-gray-700 whitespace-nowrap">
+                        {bank.account_number}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                      {bank.account_name}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      <StatusBadge isActive={bank.is_active ?? true} />
+                    </td>
+                    {canWrite && (
+                      <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleEdit(bank)}
+                            className="p-2 rounded-lg text-gray-500 hover:text-secondary hover:bg-secondary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                            title="Edit bank account"
+                            aria-label={`Edit ${bank.bank_name}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(bank)}
+                            className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
+                            title="Delete bank account"
+                            aria-label={`Delete ${bank.bank_name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {!loading && totalPages > 1 && (
-        <div className="mt-4">
+        <div className="mt-6 flex justify-center sm:justify-end">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -444,12 +1018,15 @@ export default function BankManagement() {
         <BankAccountForm
           bank={editingBank}
           isSuperAdmin={isSuperAdmin}
-          companySlug={company?.slug}
+          companySlug={companySlug}
+          availableBanks={availableBanks}
+          loadingAvailableBanks={loadingAvailableBanks}
           onClose={() => {
             setShowModal(false);
             setEditingBank(null);
           }}
           onSave={handleSave}
+          showToast={showToast}
         />
       )}
 
@@ -465,322 +1042,522 @@ export default function BankManagement() {
 }
 
 // ------------------------------------------------------------------
-// Bank Account Form (logo upload with file, no base64)
+// Bank Account Form
 // ------------------------------------------------------------------
 function BankAccountForm({
   bank,
   isSuperAdmin,
   companySlug: _,
+  availableBanks,
+  loadingAvailableBanks,
   onClose,
   onSave,
+  showToast,
 }: {
   bank: BankInfo | null;
   isSuperAdmin: boolean;
   companySlug?: string;
+  availableBanks: AvailableBank[];
+  loadingAvailableBanks: boolean;
   onClose: () => void;
   onSave: (data: Partial<BankInfo>, logoFile?: File) => void;
+  showToast: (type: "success" | "error", message: string) => void;
 }) {
-  const [formData, setFormData] = useState<Record<string, any>>({
-    bank_name: "",
+  const [formData, setFormData] = useState({
     account_number: "",
     account_name: "",
     is_active: true,
     order: 0,
+    bank_id: "",
+    bank_name: "",
+    company_slug: "",
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
+  // Initialize form data when bank changes
   useEffect(() => {
     if (bank) {
       setFormData({
-        bank_name: bank.bank_name || "",
         account_number: bank.account_number || "",
         account_name: bank.account_name || "",
         is_active: bank.is_active ?? true,
         order: bank.order ?? 0,
+        bank_id: bank.bank_id || "",
+        bank_name: bank.bank_name || "",
+        company_slug: bank.company_slug || "",
       });
       setLogoPreview(bank.logo || null);
     } else {
       setFormData({
-        bank_name: "",
         account_number: "",
         account_name: "",
         is_active: true,
         order: 0,
+        bank_id: "",
+        bank_name: "",
+        company_slug: "",
       });
       setLogoPreview(null);
     }
     setLogoFile(null);
+    setValidationErrors({});
   }, [bank]);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be under 5 MB");
+    
+    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showToast("error", "Please upload a PNG, JPG, SVG, or WebP image");
       return;
     }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("error", "File size must be under 5 MB");
+      return;
+    }
+    
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+    }
+    
+    const objectUrl = URL.createObjectURL(file);
+    objectUrlRef.current = objectUrl;
+    
     setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+    setLogoPreview(objectUrl);
   };
 
   const clearLogo = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     setLogoFile(null);
     setLogoPreview(bank?.logo || null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleBankSelect = (selectedBank: AvailableBank) => {
+    setFormData(prev => ({
+      ...prev,
+      bank_id: selectedBank.id,
+      bank_name: selectedBank.bank_name,
+    }));
+    setLogoPreview(selectedBank.logo);
+    setValidationErrors(prev => ({ ...prev, bank_id: "" }));
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    if (!isSuperAdmin && !formData.bank_id) {
+      errors.bank_id = "Please select a bank";
+    }
+    
+    if (!formData.account_number.trim()) {
+      errors.account_number = "Account number is required";
+    }
+    
+    if (!formData.account_name.trim()) {
+      errors.account_name = "Account holder name is required";
+    }
+    
+    if (isSuperAdmin && !formData.bank_name.trim()) {
+      errors.bank_name = "Bank name is required";
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.bank_name.trim() ||
-      !formData.account_number.trim() ||
-      !formData.account_name.trim()
-    )
+    
+    if (!validateForm()) {
       return;
+    }
 
     setSaving(true);
     try {
-      const dataToSend = { ...formData };
+      const dataToSend: Partial<BankInfo> = {
+        account_number: formData.account_number,
+        account_name: formData.account_name,
+        is_active: formData.is_active,
+        order: formData.order,
+        bank_name: formData.bank_name,
+      };
 
-      // Remove company_slug on edit or if not superadmin
-      if (!isSuperAdmin || bank) {
-        delete dataToSend.company_slug;
+      if (isSuperAdmin) {
+        if (!bank) {
+          dataToSend.company_slug = formData.company_slug || undefined;
+        }
+        // For Super Admin, pass logoFile if exists
+        await onSave(dataToSend, logoFile || undefined);
+      } else {
+        // For Company Admin, include the selected public logo path
+        const selectedBank = availableBanks.find(b => b.id === formData.bank_id);
+        if (selectedBank?.logo) {
+          dataToSend.logo = selectedBank.logo;
+        }
+        
+        // Parent loads the public asset and sends it as the existing logo file field
+        await onSave(dataToSend, undefined);
       }
-
-      // Pass the file to parent – parent will handle multipart
-      await onSave(dataToSend, logoFile ?? undefined);
     } finally {
       setSaving(false);
     }
   };
 
+  const selectedBank = useMemo(() => {
+    const byId = availableBanks.find((bank) => bank.id === formData.bank_id);
+    if (byId) return byId;
+
+    if (!formData.bank_name) return undefined;
+    const selectedKey = getBankIdentityKey(formData.bank_name);
+    return availableBanks.find(
+      (bank) => getBankIdentityKey(bank.bank_name) === selectedKey,
+    );
+  }, [availableBanks, formData.bank_id, formData.bank_name]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-secondary">
-            {bank ? "Edit Bank Account" : "New Bank Account"}
-          </h3>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-4">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-secondary">
+              {bank ? "Edit Bank Account" : "Add Bank Account"}
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {isSuperAdmin
+                ? "Manage bank account details"
+                : "Add a company bank account"}
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 transition"
+            className="p-2 rounded-full hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 flex-shrink-0"
+            disabled={saving}
+            aria-label="Close modal"
           >
-            <XCircle className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto space-y-3">
-          {/* Bank Name & Account Number */}
-          <div className="flex flex-col md:flex-row items-start gap-3">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                Bank Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.bank_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, bank_name: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-                placeholder="e.g. Commercial Bank of Ethiopia"
-                required
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                Account Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.account_number}
-                onChange={(e) =>
-                  setFormData({ ...formData, account_number: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-                placeholder="e.g. 100013456789"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Account Holder Name & Company Slug */}
-          <div className="flex flex-col md:flex-row items-start gap-3">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                Account Holder Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.account_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, account_name: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-                placeholder="e.g. ABC Trading PLC"
-                required
-              />
-            </div>
-            {isSuperAdmin && !bank && (
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                  Company Slug
-                </label>
-                <input
-                  type="text"
-                  value={formData.company_slug || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, company_slug: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-                  placeholder="e.g. abc-trading"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Leave empty for an unassigned bank account.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Bank Logo */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">
-              Bank Logo
-            </label>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                {/* Preview */}
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50"
-                >
-                  {logoPreview ? (
-                    <img
-                      src={logoPreview}
-                      alt="Bank Logo"
-                      className="h-full w-full object-contain p-1"
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center text-gray-400">
-                      <Building2 className="h-6 w-6 mb-1" />
-                      <span className="text-xs font-medium">No Logo</span>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {isSuperAdmin ? (
+              <>
+                {/* Super Admin Form */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                    Bank Information
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Bank Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.bank_name}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, bank_name: e.target.value }));
+                          setValidationErrors(prev => ({ ...prev, bank_name: "" }));
+                        }}
+                        className={`w-full px-4 py-3 rounded-xl border ${
+                          validationErrors.bank_name
+                            ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                            : "border-gray-200 focus:border-secondary focus:ring-secondary/20"
+                        } focus:outline-none focus:ring-4 transition text-sm placeholder-gray-400`}
+                        placeholder="e.g. Commercial Bank of Ethiopia"
+                      />
+                      {validationErrors.bank_name && (
+                        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+                          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                          {validationErrors.bank_name}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-xs font-semibold">
-                      Upload
-                    </span>
-                  </div>
-                </div>
-
-                {/* Upload Controls */}
-                <div className="flex-1 space-y-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm">
-                      Upload Bank Logo
-                    </h4>
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      PNG, JPG or SVG • Max 5 MB
-                    </p>
-                  </div>
-
-                  {logoFile && (
-                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1">
-                      <p className="text-xs font-medium text-emerald-700 truncate">
-                        {logoFile.name}
-                      </p>
-                      <p className="text-xs text-emerald-600">
-                        {(logoFile.size / 1024).toFixed(1)} KB
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-secondary/90"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {logoPreview ? "Replace" : "Choose"}
-                    </button>
-                    {(logoPreview || logoFile) && (
-                      <button
-                        type="button"
-                        onClick={clearLogo}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
-                      >
-                        <XCircle className="h-3.5 w-3.5" />
-                        Remove
-                      </button>
+                    {!bank && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Company Slug
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.company_slug}
+                          onChange={(e) =>
+                            setFormData(prev => ({ ...prev, company_slug: e.target.value }))
+                          }
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 focus:outline-none transition text-sm placeholder-gray-400"
+                          placeholder="e.g. abc-trading"
+                        />
+                        <p className="text-xs text-gray-400 mt-1.5">
+                          Leave empty for an unassigned bank account.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
+
+                {/* Logo Upload */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                    Bank Logo
+                  </h4>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-5">
+                    <div className="flex flex-col sm:flex-row items-center gap-5">
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-secondary/20"
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Upload bank logo"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                      >
+                        {logoPreview ? (
+                          <img
+                            src={logoPreview}
+                            alt="Bank Logo"
+                            className="h-full w-full object-contain p-2"
+                          />
+                        ) : (
+                          <div className="flex h-full flex-col items-center justify-center text-gray-400">
+                            <Building2 className="h-7 w-7 mb-1.5" />
+                            <span className="text-xs font-medium">No Logo</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Upload className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 space-y-3 w-full">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+
+                        <div>
+                          <h4 className="font-semibold text-gray-900 text-sm">
+                            Upload Bank Logo
+                          </h4>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            PNG, JPG, SVG, or WebP • Max 5 MB
+                          </p>
+                        </div>
+
+                        {logoFile && (
+                          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+                            <p className="text-xs font-medium text-emerald-700 truncate">
+                              {logoFile.name}
+                            </p>
+                            <p className="text-xs text-emerald-600">
+                              {(logoFile.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-xs font-medium text-white transition hover:bg-secondary/90 focus:outline-none focus:ring-4 focus:ring-secondary/20"
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            {logoPreview ? "Replace" : "Choose"}
+                          </button>
+                          {(logoPreview || logoFile) && (
+                            <button
+                              type="button"
+                              onClick={clearLogo}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Company Admin Form */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                    Bank
+                  </h4>
+                  <BankSelector
+                    banks={availableBanks}
+                    selectedBankId={formData.bank_id}
+                    selectedBankName={formData.bank_name}
+                    onSelect={handleBankSelect}
+                    loading={loadingAvailableBanks}
+                    error={validationErrors.bank_id}
+                  />
+                </div>
+
+                {selectedBank && (
+                  <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
+                    <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <CheckCircle className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-emerald-900">
+                        Bank selected
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-emerald-700/80">
+                        Use the bank name and logo provided by the system. Add only this company's account details below.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Account Information */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                Account Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Account Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.account_number}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, account_number: e.target.value }));
+                      setValidationErrors(prev => ({ ...prev, account_number: "" }));
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl border ${
+                      validationErrors.account_number
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-gray-200 focus:border-secondary focus:ring-secondary/20"
+                    } focus:outline-none focus:ring-4 transition text-sm placeholder-gray-400`}
+                    placeholder="e.g. 100013456789"
+                  />
+                  {validationErrors.account_number && (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                      {validationErrors.account_number}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Account Holder Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.account_name}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, account_name: e.target.value }));
+                      setValidationErrors(prev => ({ ...prev, account_name: "" }));
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl border ${
+                      validationErrors.account_name
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-gray-200 focus:border-secondary focus:ring-secondary/20"
+                    } focus:outline-none focus:ring-4 transition text-sm placeholder-gray-400`}
+                    placeholder="e.g. ABC Trading PLC"
+                  />
+                  {validationErrors.account_name && (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                      {validationErrors.account_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Settings */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                Settings
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.order}
+                    onChange={(e) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        order: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 focus:outline-none transition text-sm placeholder-gray-400"
+                  />
+                </div>
+                <div className="flex items-end pb-2">
+                  <label className="flex items-center gap-2.5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, is_active: e.target.checked }))
+                      }
+                      className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
+                    />
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                      Active
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Order & Active */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                Display Order
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.order || 0}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    order: parseInt(e.target.value) || 0,
-                  })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition text-sm"
-              />
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 cursor-pointer py-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_active ?? true}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
-                  className="w-4 h-4 rounded border-gray-300 text-secondary focus:ring-secondary/20"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Active
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-3 border-t border-gray-100">
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50 flex gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-gray-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors shadow-sm disabled:opacity-50 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-secondary/20"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {bank ? "Update" : "Create"} Account

@@ -318,6 +318,9 @@ const DeliveryCard = ({
   const [routeData, setRouteData] = useState<Record<number, { distanceKm: number | null; durationMinutes: number | null; loading: boolean; error?: boolean }>>({}); 
   const [showMapPreview, setShowMapPreview] = useState(false); 
 
+  console.log('showDriverTypeFilter',showDriverTypeFilter)
+  console.log('showVehicleTypeFilter',showVehicleTypeFilter)
+
   const [usernameMap, setUsernameMap] = useState<Map<string, string>>( 
     new Map(), 
   ); 
@@ -891,789 +894,875 @@ const DeliveryCard = ({
     return null;
   }, [filteredStaffList, sortBy, sortOrder]);
 
-  return ( 
-    <> 
-      <Card 
-        title="Delivery Details" 
-        icon={Truck} 
-        status={delivery?.status} 
-        className={ 
-          (!delivery && deliveryStatus) || canManage || cod 
-            ? "ring-2 ring-purple-100 border-purple-200" 
-            : "" 
-        } 
-      > 
-        <AnimatePresence mode="wait"> 
-          {!showAssignForm ? ( 
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-            > 
-              {delivery?.delivery_person_name ? ( 
-                <div className="flex items-center gap-4"> 
-                  {delivery.delivery_person_image ? ( 
-                    <div 
-                      className="relative group cursor-pointer" 
-                      onClick={() => setShowFullscreenImage(true)} 
-                      role="button" 
-                      tabIndex={0} 
-                      onKeyDown={(e) => { 
-                        if (e.key === "Enter" || e.key === " ") 
-                          setShowFullscreenImage(true); 
-                      }} 
-                    > 
-                      <img 
-                        src={delivery.delivery_person_image} 
-                        alt={ 
-                          delivery.delivery_person_username || 
-                          delivery.delivery_person_name 
-                        } 
-                        className="w-14 h-14 rounded-full object-contain ring-2 ring-transparent group-hover:ring-purple-400 group-hover:shadow-lg transition-all duration-300" 
-                      /> 
-                      <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"> 
-                        <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" /> 
-                      </div> 
-                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-1 shadow-md"> 
-                        <div className="h-2 w-2 rounded-full bg-white"></div> 
-                      </div> 
-                    </div> 
-                  ) : ( 
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg border border-purple-200 shadow-sm"> 
-                      {getInitials( 
-                        usernameMap.get(delivery.delivery_person_phone) || 
-                          delivery.delivery_person_name, 
-                      )} 
-                    </div> 
-                  )} 
-                  <div className="flex-1"> 
-                    <div className="flex items-center gap-1.5 flex-wrap"> 
-                      <p className="font-bold text-gray-900 text-sm"> 
-                        {usernameMap.get(delivery.delivery_person_phone) || 
-                          delivery.delivery_person_name} 
-                      </p> 
-                      {delivery.logistics_company_name ? ( 
-                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200"> 
-                          {delivery.logistics_company_name} (3PL) 
-                        </span> 
-                      ) : ( 
-                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"> 
-                          In-House 
-                        </span> 
-                      )} 
-                    </div> 
- 
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50/50 px-2 py-1 rounded-lg w-fit border border-blue-200 mt-1"> 
-                      <PhoneCall className="h-3 w-3 text-blue-600" /> 
-                      <span className="text-[11px] font-mono font-bold text-blue-700 tracking-tight"> 
-                        {delivery.delivery_person_phone} 
-                      </span> 
-                      <CopyButton text={delivery.delivery_person_phone} /> 
-                    </div> 
- 
-                    {delivery?.status === "declined" && ( 
-                      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 shadow-sm"> 
-                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" /> 
-                        <div className="flex-1"> 
-                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider"> 
-                            Driver Declined Delivery 
-                          </p> 
-                          <p className="text-xs text-amber-700 font-medium leading-relaxed"> 
-                            {delivery.decline_reason 
-                              ? `Reason: ${delivery.decline_reason}` 
-                              : "The assigned driver declined this order. Please reassign to another driver."} 
-                          </p> 
-                        </div> 
-                      </div> 
-                    )} 
- 
-                    <div className="flex flex-wrap items-center gap-2 mt-2"> 
-                      {delivery?.status === "out_for_delivery" && 
-                        onOpenLiveTracking && ( 
-                          <button 
-                            onClick={onOpenLiveTracking} 
-                            className="inline-flex items-center justify-center gap-2 
-                              rounded-xl border border-emerald-200 
-                              bg-gradient-to-r from-emerald-500 to-green-600 
-                              px-4 py-1.5 
-                              text-xs sm:text-sm font-semibold text-white 
-                              shadow-sm transition-all duration-200 
-                              hover:from-emerald-600 hover:to-green-700 
-                              hover:shadow-lg hover:-translate-y-0.5 
-                              active:translate-y-0 
-                              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" 
-                          > 
-                            <span className="relative flex h-2.5 w-2.5"> 
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-70" /> 
-                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" /> 
-                            </span> 
-                            <Navigation className="h-4 w-4" /> 
-                            <span>Live Tracking</span> 
-                          </button> 
-                        )} 
-                       
-                      {order.fulfillment_type === "delivery" && ( 
-                        <button 
-                          onClick={handleViewOnMap} 
-                          className="inline-flex items-center justify-center gap-1.5 
-                            rounded-xl border border-purple-200 
-                            bg-purple-50 text-secondary 
-                            px-3 py-1.5 
-                            text-xs font-semibold 
-                            shadow-sm transition-all duration-200 
-                            hover:bg-purple-100 hover:shadow-md 
-                            focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2" 
-                        > 
-                          <MapPin className="h-3.5 w-3.5" /> 
-                          <span>View on Map</span> 
-                        </button> 
-                      )} 
-                    </div> 
- 
-                    {ratingMap.has(delivery.delivery_person_phone) && ( 
-                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-600"> 
-                        <span> 
-                          {renderRating( 
-                            ratingMap.get(delivery.delivery_person_phone)! 
-                              .average_rating, 
-                            ratingMap.get(delivery.delivery_person_phone)! 
-                              .total_reviews, 
-                          )} 
-                        </span> 
-                      </div> 
-                    )} 
-                    {isOrderFailed && failureReason && ( 
-                      <div className="mt-2 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 shadow-sm"> 
-                        <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" /> 
-                        <div className="flex-1"> 
-                          <p className="text-[9px] font-semibold text-rose-600"> 
-                            Reason 
-                          </p> 
-                          <p className="text-xs text-rose-700 font-medium leading-relaxed"> 
-                            {failureReason} 
-                          </p> 
-                        </div> 
-                      </div> 
-                    )} 
-                    {delivery?.attempts && delivery.attempts.length > 0 && ( 
-                      <div className="mt-3 pt-2.5 border-t border-gray-100"> 
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1"> 
-                          <History className="h-3 w-3 text-gray-400" /> Dispatch History ({delivery.attempts.length}) 
-                        </p> 
-                        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1"> 
-                          {delivery.attempts.map((att: any) => { 
-                            const isDeclined = att.status === "declined"; 
-                            const isAccepted = att.status === "accepted"; 
-                            const isReassigned = att.status === "reassigned"; 
-                            return ( 
-                              <div 
-                                key={att.id} 
-                                className={`text-[11px] p-2 rounded-lg flex items-start justify-between gap-2 border ${ 
-                                  isDeclined 
-                                    ? "bg-rose-50/70 border-rose-200 text-rose-800" 
-                                    : isAccepted 
-                                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-800" 
-                                    : isReassigned 
-                                    ? "bg-gray-50 border-gray-200 text-gray-600" 
-                                    : "bg-blue-50/70 border-blue-200 text-blue-800" 
-                                }`} 
-                              > 
-                                <div className="flex-1 min-w-0"> 
-                                  <div className="flex items-center gap-1.5 flex-wrap font-semibold"> 
-                                    <span>{att.driver_name || `Driver #${att.driver}`}</span> 
-                                    {att.logistics_company_name && ( 
-                                      <span className="text-[9px] font-medium px-1.5 py-0.2 bg-white rounded border border-current"> 
-                                        {att.logistics_company_name} 
-                                      </span> 
-                                    )} 
-                                  </div> 
-                                  {att.decline_reason && ( 
-                                    <p className="text-[10px] italic mt-0.5 opacity-90 truncate"> 
-                                      "{att.decline_reason}" 
-                                    </p> 
-                                  )} 
-                                </div> 
-                                <div className="text-right flex-shrink-0"> 
-                                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${ 
-                                    isDeclined 
-                                      ? "bg-rose-200 text-rose-900" 
-                                      : isAccepted 
-                                      ? "bg-emerald-200 text-emerald-900" 
-                                      : isReassigned 
-                                      ? "bg-gray-200 text-gray-800" 
-                                      : "bg-blue-200 text-blue-900" 
-                                  }`}> 
-                                    {att.status} 
-                                  </span> 
-                                  {att.assigned_at && ( 
-                                    <p className="text-[9px] text-gray-400 mt-0.5"> 
-                                      {new Date(att.assigned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
-                                    </p> 
-                                  )} 
-                                </div> 
-                              </div> 
-                            ); 
-                          })} 
-                        </div> 
-                      </div> 
-                    )} 
-                  </div> 
-                  {deliveryStatus || 
-                    ((canManage || cod) && ( 
-                      <button 
-                        onClick={() => setShowAssignForm(true)} 
-                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100 hover:bg-gray-100 transition-colors" 
-                      > 
-                        Change 
-                      </button> 
-                    ))} 
-                </div> 
- 
-              ) : ( 
-                <div className="text-center py-2"> 
-                  <p className="text-xs text-gray-400 mb-3 italic"> 
-                    No delivery person assigned yet 
-                  </p> 
-                  <div className="flex flex-col sm:flex-row gap-2"> 
-                    {deliveryStatus || 
-                      (canManage && ( 
-                        <button 
-                          onClick={() => setShowAssignForm(true)} 
-                          className="flex-1 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-[#59409A] shadow-md transition-all" 
-                        > 
-                          Assign Delivery person 
-                        </button> 
-                      ))} 
-                     
-                    {order.fulfillment_type === "delivery" && ( 
-                      <button 
-                        onClick={handleViewOnMap} 
-                        className="flex-1 py-2 bg-purple-50 text-secondary rounded-xl text-xs font-bold border border-purple-200 hover:bg-purple-100 shadow-sm transition-all flex items-center justify-center gap-2" 
-                      > 
-                        <MapPin className="h-4 w-4" /> 
-                        View on Map 
-                      </button> 
-                    )} 
-                  </div> 
-                  {isOrderFailed && failureReason && ( 
-                    <div className="mt-3 p-2.5 bg-rose-50/90 border border-rose-200 rounded-xl flex items-start gap-2.5 text-left shadow-sm"> 
-                      <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0 mt-0.5" /> 
-                      <div className="flex-1"> 
-                        <p className="text-[9px] font-semibold text-rose-600"> 
-                          Reason 
-                        </p> 
-                        <p className="text-xs text-rose-700 font-medium leading-relaxed"> 
-                          {failureReason} 
-                        </p> 
-                      </div> 
-                    </div> 
-                  )} 
-                </div> 
-              )} 
-            </motion.div> 
-          ) : ( 
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              className="space-y-4" 
-            > 
-              {/* Compact Header with View Toggle */}
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-bold text-gray-700"> 
-                  Assign Delivery Person 
-                </h3>
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+  return (
+    <>
+      <Card
+        title="Delivery Details"
+        icon={Truck}
+        status={delivery?.status}
+        className={
+          (!delivery && deliveryStatus) || canManage || cod
+            ? "border-gray-200 ring-1 ring-gray-100"
+            : "border-gray-200"
+        }
+      >
+        <AnimatePresence mode="wait">
+          {!showAssignForm ? (
+            <motion.div
+              key="delivery-summary"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="space-y-4"
+            >
+              {delivery?.delivery_person_name ? (
+                <>
+                  {/* Assigned driver */}
+                  <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                            Assigned driver
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            Current delivery assignment and contact details
+                          </p>
+                        </div>
+                        <StatusBadge status={delivery.status || "pending"} />
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex min-w-0 items-center gap-3.5">
+                          {delivery.delivery_person_image ? (
+                            <button
+                              type="button"
+                              onClick={() => setShowFullscreenImage(true)}
+                              className="group relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 sm:h-16 sm:w-16"
+                              aria-label="View delivery person image"
+                            >
+                              <img
+                                src={delivery.delivery_person_image}
+                                alt={
+                                  delivery.delivery_person_username ||
+                                  delivery.delivery_person_name
+                                }
+                                className="h-full w-full object-cover"
+                              />
+                              <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
+                                <ZoomIn className="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
+                              </span>
+                            </button>
+                          ) : (
+                            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-secondary/15 bg-secondary/5 text-lg font-bold text-secondary sm:h-16 sm:w-16">
+                              {getInitials(
+                                usernameMap.get(delivery.delivery_person_phone) ||
+                                  delivery.delivery_person_name,
+                              )}
+                            </div>
+                          )}
+
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h5 className="truncate text-base font-semibold text-gray-950 sm:text-lg">
+                                {usernameMap.get(delivery.delivery_person_phone) ||
+                                  delivery.delivery_person_name}
+                              </h5>
+                              {delivery.logistics_company_name ? (
+                                <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                  3PL
+                                </span>
+                              ) : (
+                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                  In-house
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="mt-1 truncate text-xs text-gray-500">
+                              {delivery.logistics_company_name || "Company delivery team"}
+                            </p>
+
+                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-600">
+                              <span className="inline-flex items-center gap-1.5">
+                                <PhoneCall className="h-3.5 w-3.5 text-gray-400" />
+                                <span className="font-medium">
+                                  {delivery.delivery_person_phone || "No phone"}
+                                </span>
+                                <CopyButton text={delivery.delivery_person_phone} />
+                              </span>
+
+                              {ratingMap.has(delivery.delivery_person_phone) && (
+                                <span className="inline-flex items-center gap-1.5 font-medium text-gray-600">
+                                  {renderRating(
+                                    ratingMap.get(delivery.delivery_person_phone)!
+                                      .average_rating,
+                                    ratingMap.get(delivery.delivery_person_phone)!
+                                      .total_reviews,
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 lg:justify-end">
+                          {delivery?.status === "out_for_delivery" &&
+                            onOpenLiveTracking && (
+                              <button
+                                type="button"
+                                onClick={onOpenLiveTracking}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                              >
+                                <span className="relative flex h-2 w-2">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                                </span>
+                                Live tracking
+                              </button>
+                            )}
+
+                          {order.fulfillment_type === "delivery" && (
+                            <button
+                              type="button"
+                              onClick={handleViewOnMap}
+                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-secondary/15"
+                            >
+                              <MapPin className="h-3.5 w-3.5 text-secondary" />
+                              View map
+                            </button>
+                          )}
+
+                          {!deliveryStatus && (canManage || cod) && (
+                            <button
+                              type="button"
+                              onClick={() => setShowAssignForm(true)}
+                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-secondary/20 bg-secondary/5 px-3.5 py-2 text-xs font-semibold text-secondary transition hover:bg-secondary/10 focus:outline-none focus:ring-2 focus:ring-secondary/15"
+                            >
+                              <Users className="h-3.5 w-3.5" />
+                              Change driver
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Operational alerts */}
+                  {delivery?.status === "declined" && (
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+                      <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-amber-900">
+                          Driver declined this delivery
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-amber-700">
+                          {delivery.decline_reason
+                            ? `Reason: ${delivery.decline_reason}`
+                            : "The assigned driver declined this order. Assign another driver to continue."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {isOrderFailed && failureReason && (
+                    <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5">
+                      <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-600" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-rose-900">
+                          Delivery issue
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-rose-700">
+                          {failureReason}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dispatch history */}
+                  {delivery?.attempts && delivery.attempts.length > 0 && (
+                    <section className="rounded-2xl border border-gray-200 bg-white">
+                      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5">
+                        <div className="flex items-center gap-2">
+                          <History className="h-4 w-4 text-gray-400" />
+                          <p className="text-xs font-semibold text-gray-800">
+                            Dispatch history
+                          </p>
+                        </div>
+                        <span className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">
+                          {delivery.attempts.length} attempts
+                        </span>
+                      </div>
+
+                      <div className="max-h-44 divide-y divide-gray-100 overflow-y-auto">
+                        {delivery.attempts.map((att: any) => {
+                          const attemptStatus = att.status?.toLowerCase();
+                          const statusClass =
+                            attemptStatus === "accepted"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : attemptStatus === "declined"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : attemptStatus === "reassigned"
+                                  ? "bg-gray-50 text-gray-600 border-gray-200"
+                                  : "bg-blue-50 text-blue-700 border-blue-200";
+
+                          return (
+                            <div
+                              key={att.id}
+                              className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5"
+                            >
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="truncate text-xs font-semibold text-gray-800">
+                                    {att.driver_name || `Driver #${att.driver}`}
+                                  </p>
+                                  {att.logistics_company_name && (
+                                    <span className="truncate text-[10px] text-gray-400">
+                                      {att.logistics_company_name}
+                                    </span>
+                                  )}
+                                </div>
+                                {att.decline_reason && (
+                                  <p className="mt-1 truncate text-[11px] text-gray-500">
+                                    {att.decline_reason}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex flex-shrink-0 items-center gap-2">
+                                <span className={`rounded-md border px-2 py-1 text-[9px] font-semibold uppercase ${statusClass}`}>
+                                  {att.status}
+                                </span>
+                                {att.assigned_at && (
+                                  <span className="hidden text-[10px] text-gray-400 sm:inline">
+                                    {new Date(att.assigned_at).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+                </>
+              ) : (
+                /* No assigned driver */
+                <section className="rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 px-5 py-7 text-center sm:px-8 sm:py-8">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <Truck className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <h5 className="mt-3 text-sm font-semibold text-gray-900">
+                    No driver assigned
+                  </h5>
+                  <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-gray-500">
+                    Choose an available in-house driver or logistics partner to continue this delivery.
+                  </p>
+
+                  <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+                    {!deliveryStatus && canManage && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAssignForm(true)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary-light focus:outline-none focus:ring-2 focus:ring-secondary/25"
+                      >
+                        <Users className="h-3.5 w-3.5" />
+                        Assign driver
+                      </button>
+                    )}
+
+                    {order.fulfillment_type === "delivery" && (
+                      <button
+                        type="button"
+                        onClick={handleViewOnMap}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-secondary/15"
+                      >
+                        <MapPin className="h-3.5 w-3.5 text-secondary" />
+                        View delivery map
+                      </button>
+                    )}
+                  </div>
+
+                  {isOrderFailed && failureReason && (
+                    <div className="mx-auto mt-4 flex max-w-lg items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-left">
+                      <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-600" />
+                      <div>
+                        <p className="text-xs font-semibold text-rose-900">Delivery issue</p>
+                        <p className="mt-1 text-xs leading-5 text-rose-700">{failureReason}</p>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="driver-assignment"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="space-y-4"
+            >
+              {/* Assignment header */}
+              <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAssignForm(false)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+                      aria-label="Back to delivery details"
+                    >
+                      <span className="text-base leading-none">←</span>
+                    </button>
+                    <div>
+                      <h5 className="text-sm font-semibold text-gray-950">
+                        Assign delivery driver
+                      </h5>
+                      <p className="mt-0.5 text-[11px] text-gray-500">
+                        Compare availability, vehicle, rating and route before assigning.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="inline-flex self-start rounded-lg border border-gray-200 bg-gray-50 p-1 sm:self-auto">
                   <button
+                    type="button"
                     onClick={() => setShowMapPreview(false)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${!showMapPreview ? "bg-white text-secondary shadow-sm" : "text-gray-600 hover:text-gray-800"}`}
+                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                      !showMapPreview
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
                   >
                     List
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowMapPreview(true)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${showMapPreview ? "bg-white text-secondary shadow-sm" : "text-gray-600 hover:text-gray-800"}`}
+                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                      showMapPreview
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
                   >
-                    Route Map
+                    Map
                   </button>
                 </div>
               </div>
 
               {showMapPreview ? (
-                <div className="bg-gray-50 rounded-xl p-4 min-h-[300px] flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 text-purple-300 mx-auto mb-3" />
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Route Map Preview</p>
-                    <p className="text-xs text-gray-500 mb-4">Driver locations and routes will appear here</p>
-                    <button
-                      onClick={handleViewOnMap}
-                      className="px-4 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary-light transition-colors"
-                    >
-                      Open Full Map
-                    </button>
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+                  <div className="flex min-h-[300px] items-center justify-center p-8 text-center">
+                    <div>
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <MapPin className="h-5 w-5 text-secondary" />
+                      </div>
+                      <h6 className="mt-3 text-sm font-semibold text-gray-900">
+                        Delivery route map
+                      </h6>
+                      <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-gray-500">
+                        Open the full map to review the order location, live drivers and route context.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleViewOnMap}
+                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary-light"
+                      >
+                        <Navigation className="h-3.5 w-3.5" />
+                        Open full map
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* Search and Sort Toolbar */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /> 
-                      <input 
-                        type="text" 
-                        value={searchTerm} 
-                        onChange={(e) => setSearchTerm(e.target.value)} 
-                        placeholder="Search delivery person..." 
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-                      /> 
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="distance">Distance</option>
-                        <option value="rating">Rating</option>
-                        <option value="name">Name</option>
-                      </select>
-                      <button
-                        onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                        className="px-3 py-2.5 rounded-xl text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-                        aria-label={`Sort ${sortOrder === "asc" ? "descending" : "ascending"}`}
-                      >
-                        {sortOrder === "asc" ? "↑" : "↓"}
-                      </button>
-                    </div>
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search driver, phone, username or logistics company"
+                      className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-xs text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10"
+                    />
                   </div>
 
-                  {/* Collapsible Driver Type Filter */}
-                  <div className="bg-gray-50 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => setShowDriverTypeFilter(!showDriverTypeFilter)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
-                      aria-expanded={showDriverTypeFilter}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        <div className="text-left">
-                          <span className="text-xs font-bold text-gray-700">Driver Type</span>
-                          {!showDriverTypeFilter && (
-                            <p className="text-[10px] text-gray-500">
-                              {filterType === "all" ? "All Drivers" : filterType === "in_house" ? "In-House" : "3PL Partners"}
-                            </p>
-                          )}
+                  {/* Production filter controls */}
+                  <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50/70 p-2.5">
+                    {/* Driver type row */}
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="w-20 flex-shrink-0 px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Driver Type
+                      </span>
+                      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+                        {[
+                          { value: "all", label: "All" },
+                          { value: "in_house", label: "In-house" },
+                          { value: "third_party", label: "3PL" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setFilterType(option.value as any);
+                              setShowDriverTypeFilter(option.value !== "all");
+                              setSelectedUserId("");
+                            }}
+                            className={`flex-shrink-0 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition ${
+                              filterType === option.value
+                                ? "border-secondary bg-secondary text-white shadow-sm"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-gray-200/80" />
+
+                    {/* Vehicle type row */}
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="w-20 flex-shrink-0 px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Vehicle
+                      </span>
+                      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+                        {[
+                          { value: "all", label: "All", icon: "" },
+                          { value: "motorcycle", label: "Motorcycle", icon: "🏍️" },
+                          { value: "car", label: "Car", icon: "🚗" },
+                          { value: "bicycle", label: "Bicycle", icon: "🚲" },
+                          { value: "van", label: "Van", icon: "🚐" },
+                          { value: "foot", label: "Foot", icon: "🚶" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setVehicleTypeFilter(option.value as any);
+                              setShowVehicleTypeFilter(option.value !== "all");
+                              setSelectedUserId("");
+                            }}
+                            className={`flex-shrink-0 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition ${
+                              vehicleTypeFilter === option.value
+                                ? "border-secondary bg-secondary text-white shadow-sm"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                            }`}
+                          >
+                            {option.icon && <span className="mr-1">{option.icon}</span>}
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-gray-200/80" />
+
+                    {/* Sort and page controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Display
+                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-shrink-0">
+                          <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="h-8 appearance-none rounded-lg border border-gray-200 bg-white py-1 pl-3 pr-8 text-[11px] font-semibold text-gray-600 outline-none transition hover:border-gray-300 focus:border-secondary/50"
+                          >
+                            <option value="distance">Distance</option>
+                            <option value="rating">Rating</option>
+                            <option value="name">Name</option>
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                          className="h-8 flex-shrink-0 rounded-lg border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
+                          aria-label={`Sort ${sortOrder === "asc" ? "descending" : "ascending"}`}
+                        >
+                          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
+                        </button>
+
+                        <div className="relative flex-shrink-0">
+                          <select
+                            value={itemsPerPage}
+                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                            className="h-8 appearance-none rounded-lg border border-gray-200 bg-white py-1 pl-3 pr-8 text-[11px] font-semibold text-gray-600 outline-none transition hover:border-gray-300 focus:border-secondary/50"
+                          >
+                            <option value={10}>10 / page</option>
+                            <option value={25}>25 / page</option>
+                            <option value={50}>50 / page</option>
+                            <option value={100}>100 / page</option>
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
-                      <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showDriverTypeFilter ? "rotate-180" : ""}`} />
-                    </button>
-                    <AnimatePresence>
-                      {showDriverTypeFilter && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="px-4 pb-3 space-y-2">
-                            {[
-                              { value: "all", label: "All Drivers" },
-                              { value: "in_house", label: "In-House" },
-                              { value: "third_party", label: "3PL Partners" },
-                            ].map((option) => (
-                              <button
-                                key={option.value}
-                                onClick={() => {
-                                  setFilterType(option.value as any);
-                                  setSelectedUserId("");
-                                }}
-                                className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                                  filterType === option.value
-                                    ? "bg-secondary text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                                }`}
-                              >
-                                {option.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    </div>
                   </div>
 
-                  {/* Collapsible Vehicle Type Filter */}
-                  <div className="bg-gray-50 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => setShowVehicleTypeFilter(!showVehicleTypeFilter)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
-                      aria-expanded={showVehicleTypeFilter}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-gray-500" />
-                        <div className="text-left">
-                          <span className="text-xs font-bold text-gray-700">Vehicle Type</span>
-                          {!showVehicleTypeFilter && (
-                            <p className="text-[10px] text-gray-500">
-                              {vehicleTypeFilter === "all" ? "All Vehicles" : getVehicleName(vehicleTypeFilter)}
-                            </p>
-                          )}
+                  {/* Results summary */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">
+                        Available drivers
+                        <span className="ml-1.5 font-medium text-gray-400">
+                          {filteredStaffList.length}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-gray-400">
+                        Select one driver, then confirm the assignment below.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-500">
+                        {staffWithDistance.filter((s) => s.is_in_house).length} in-house
+                      </span>
+                      <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-500">
+                        {staffWithDistance.filter((s) => !s.is_in_house).length} 3PL
+                      </span>
+                      <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-500">
+                        {staffWithDistance.filter((s) => s.calculated_distance != null).length} located
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Driver list */}
+                  {loadingStaff ? (
+                    <div className="flex min-h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white">
+                      <div className="text-center">
+                        <Loader2 className="mx-auto h-5 w-5 animate-spin text-secondary" />
+                        <p className="mt-2 text-xs font-medium text-gray-500">
+                          Loading available drivers...
+                        </p>
+                      </div>
+                    </div>
+                  ) : filteredStaffList.length === 0 ? (
+                    <div className="flex min-h-48 items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-6 text-center">
+                      <div>
+                        <Users className="mx-auto h-8 w-8 text-gray-300" />
+                        <p className="mt-2 text-sm font-semibold text-gray-800">
+                          No matching drivers
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {searchTerm || filterType !== "all" || vehicleTypeFilter !== "all"
+                            ? "Try changing the search or filters."
+                            : "There are no available drivers for this order right now."}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                        <div className="hidden grid-cols-[minmax(190px,1.8fr)_110px_120px_150px_84px] items-center gap-3 border-b border-gray-100 bg-gray-50/80 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 lg:grid">
+                          <span>Driver</span>
+                          <span>Vehicle</span>
+                          <span>Rating</span>
+                          <span>Route</span>
+                          <span className="text-right">Select</span>
                         </div>
-                      </div>
-                      <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showVehicleTypeFilter ? "rotate-180" : ""}`} />
-                    </button>
-                    <AnimatePresence>
-                      {showVehicleTypeFilter && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="px-4 pb-3 space-y-2">
-                            {[
-                              { value: "all", label: "All Vehicles", icon: "🛵" },
-                              { value: "motorcycle", label: "Motorcycle", icon: "🏍️" },
-                              { value: "car", label: "Car", icon: "🚗" },
-                              { value: "bicycle", label: "Bicycle", icon: "🚲" },
-                              { value: "van", label: "Van", icon: "🚐" },
-                              { value: "foot", label: "On Foot", icon: "🚶" },
-                            ].map((option) => (
+
+                        <div className="max-h-[470px] divide-y divide-gray-100 overflow-y-auto">
+                          {paginatedStaffList.map((staff, index) => {
+                            const isSelected = selectedUserId === staff.id;
+                            const hasLocation = staff.calculated_distance != null;
+                            const globalIndex = (currentPage - 1) * itemsPerPage + index;
+                            const isNearest =
+                              globalIndex === 0 &&
+                              sortBy === "distance" &&
+                              sortOrder === "asc" &&
+                              hasLocation;
+                            const routeInfo = routeData[staff.id];
+                            const roadDistance = routeInfo?.distanceKm;
+                            const roadDuration = routeInfo?.durationMinutes;
+                            const isRouteLoading = routeInfo?.loading;
+                            const isBestMatch = bestMatchDriver?.id === staff.id;
+
+                            return (
                               <button
-                                key={option.value}
-                                onClick={() => {
-                                  setVehicleTypeFilter(option.value as any);
-                                  setSelectedUserId("");
-                                }}
-                                className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-all text-left ${
-                                  vehicleTypeFilter === option.value
-                                    ? "bg-secondary text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                                key={staff.id}
+                                type="button"
+                                onClick={() => setSelectedUserId(staff.id)}
+                                className={`group relative block w-full px-4 py-3.5 text-left transition ${
+                                  isSelected
+                                    ? "bg-secondary/[0.045]"
+                                    : "bg-white hover:bg-gray-50/80"
                                 }`}
                               >
-                                {option.icon} {option.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                                <div className="grid gap-3 lg:grid-cols-[minmax(190px,1.8fr)_110px_120px_150px_84px] lg:items-center">
+                                  <div className="flex min-w-0 items-center gap-3">
+                                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border text-xs font-bold ${
+                                      isSelected
+                                        ? "border-secondary/25 bg-secondary/10 text-secondary"
+                                        : "border-gray-200 bg-gray-50 text-gray-600"
+                                    }`}>
+                                      {getInitials(staff.name)}
+                                    </div>
 
-                  {/* Results count */}
-                  <div className="flex items-center justify-between"> 
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest"> 
-                      Available ({filteredStaffList.length})
-                    </label> 
-                    <select
-                      value={itemsPerPage}
-                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                      className="text-[10px] px-2 py-1 rounded-lg bg-white border border-gray-200 focus:outline-none"
-                    >
-                      <option value={10}>10 / page</option>
-                      <option value={25}>25 / page</option>
-                      <option value={50}>50 / page</option>
-                      <option value={100}>100 / page</option>
-                    </select>
-                  </div> 
-                   
-                  {loadingStaff ? ( 
-                    <div className="space-y-3"> 
-                      <div className="animate-pulse flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 text-purple-500 animate-spin" />
-                        <span className="ml-2 text-sm text-gray-500">Finding available drivers...</span>
-                      </div>
-                    </div> 
-                  ) : filteredStaffList.length === 0 ? ( 
-                    <div className="text-center py-8"> 
-                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" /> 
-                      <p className="text-sm font-semibold text-gray-600 mb-1"> 
-                        No available delivery persons 
-                      </p> 
-                      <p className="text-xs text-gray-500"> 
-                        {searchTerm || filterType !== "all" || vehicleTypeFilter !== "all" 
-                          ? "Try adjusting your search or filters" 
-                          : "There are currently no delivery persons available for this delivery."} 
-                      </p> 
-                    </div> 
-                  ) : ( 
-                    <> 
-                      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar"> 
-                        {paginatedStaffList.map((staff) => { 
-                          const isSelected = selectedUserId === staff.id; 
-                          const hasLocation = staff.calculated_distance != null; 
-                          // const globalIndex = (currentPage - 1) * itemsPerPage + index; 
-                          // const isNearest = globalIndex === 0 && sortBy === "distance" && sortOrder === "asc" && hasLocation;
-                          const routeInfo = routeData[staff.id];
-                          const roadDistance = routeInfo?.distanceKm;
-                          const roadDuration = routeInfo?.durationMinutes;
-                          const isRouteLoading = routeInfo?.loading;
-                          const isBestMatch = bestMatchDriver?.id === staff.id;
-                           
-                          return ( 
-                            <div 
-                              key={staff.id} 
-                              onClick={() => setSelectedUserId(staff.id)} 
-                              className={`relative p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${ 
-                                isSelected 
-                                  ? "border-secondary bg-purple-50 shadow-md" 
-                                  : isBestMatch
-                                  ? "border-emerald-400 bg-emerald-50/50 shadow-md"
-                                  : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm" 
-                              }`} 
-                              role="button" 
-                              tabIndex={0} 
-                              onKeyDown={(e) => { 
-                                if (e.key === "Enter" || e.key === " ") { 
-                                  setSelectedUserId(staff.id); 
-                                } 
-                              }} 
-                            > 
-                              {isBestMatch && ( 
-                                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full shadow-sm flex items-center gap-1"> 
-                                  ⭐ BEST MATCH 
-                                </span> 
-                              )} 
-                               
-                              <div className="flex items-start gap-3"> 
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0"> 
-                                  {getInitials(staff.name)} 
-                                </div> 
-                                 
-                                <div className="flex-1 min-w-0"> 
-                                  <div className="flex items-center justify-between gap-2"> 
-                                    <div className="min-w-0 flex-1"> 
-                                      <p className="font-bold text-gray-900 text-sm truncate"> 
-                                        {staff.name} 
-                                      </p> 
-                                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap"> 
-                                        {staff.is_in_house ? ( 
-                                          <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"> 
-                                            In-House 
-                                          </span> 
-                                        ) : ( 
-                                          <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200"> 
-                                            {staff.company_name || "3PL"} 
-                                          </span> 
-                                        )} 
-                                        {staff.vehicle_type && ( 
-                                          <span className="text-[10px] text-gray-500"> 
-                                            {getVehicleIcon(staff.vehicle_type)} {getVehicleName(staff.vehicle_type)}
-                                          </span> 
-                                        )} 
-                                      </div> 
-                                    </div> 
-                                     
-                                    <div className="flex flex-col items-end gap-1 flex-shrink-0"> 
-                                      {isRouteLoading ? (
-                                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                          Calculating route...
-                                        </span>
-                                      ) : roadDistance != null ? (
-                                        <>
-                                          <span className={`text-xs font-bold ${isBestMatch ? "text-emerald-600" : "text-gray-600"}`}> 
-                                            📍 {formatDistance(roadDistance)} 
+                                    <div className="min-w-0">
+                                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                                        <p className="max-w-full truncate text-xs font-semibold text-gray-900 sm:text-sm">
+                                          {staff.name}
+                                        </p>
+                                        {(isBestMatch || isNearest) && (
+                                          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
+                                            Best match
                                           </span>
-                                          {roadDuration != null && (
-                                            <span className="text-[10px] text-gray-500">
-                                              ⏱ {formatDuration(roadDuration)}
-                                            </span>
-                                          )}
+                                        )}
+                                        {staff.location_source === "live" && (
+                                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-600">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                            Live
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-gray-500">
+                                        <span>
+                                          {staff.is_in_house
+                                            ? "In-house"
+                                            : staff.company_name || "3PL partner"}
+                                        </span>
+                                        {staff.phone && (
+                                          <>
+                                            <span className="text-gray-300">•</span>
+                                            <span className="font-mono">{staff.phone}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 lg:block">
+                                    <span className="text-[10px] font-medium text-gray-400 lg:hidden">
+                                      Vehicle
+                                    </span>
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {getVehicleIcon(staff.vehicle_type)} {getVehicleName(staff.vehicle_type)}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 lg:block">
+                                    <span className="text-[10px] font-medium text-gray-400 lg:hidden">
+                                      Rating
+                                    </span>
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {staff.average_rating && staff.average_rating !== "0.00"
+                                        ? renderRating(staff.average_rating, staff.total_reviews)
+                                        : "No reviews"}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 lg:block">
+                                    <span className="text-[10px] font-medium text-gray-400 lg:hidden">
+                                      Route
+                                    </span>
+                                    {isRouteLoading ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-400">
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        Calculating
+                                      </span>
+                                    ) : roadDistance != null ? (
+                                      <div>
+                                        <p className="text-xs font-semibold text-gray-800">
+                                          {formatDistance(roadDistance)}
+                                        </p>
+                                        {roadDuration != null && (
+                                          <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-gray-500">
+                                            <Clock className="h-3 w-3" />
+                                            {formatDuration(roadDuration)}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ) : hasLocation ? (
+                                      <p className="text-xs font-semibold text-gray-700">
+                                        {formatDistance(staff.calculated_distance)}
+                                      </p>
+                                    ) : (
+                                      <span className="text-[10px] text-gray-400">
+                                        Unavailable
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center justify-start lg:justify-end">
+                                    <span className={`inline-flex min-w-[72px] items-center justify-center rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold transition ${
+                                      isSelected
+                                        ? "border-secondary bg-secondary text-white"
+                                        : "border-gray-200 bg-white text-gray-600 group-hover:border-secondary/25 group-hover:text-secondary"
+                                    }`}>
+                                      {isSelected ? (
+                                        <>
+                                          <Check className="mr-1 h-3 w-3" /> Selected
                                         </>
-                                      ) : hasLocation ? ( 
-                                        <> 
-                                          <span className={`text-xs font-bold ${isBestMatch ? "text-emerald-600" : "text-gray-600"}`}> 
-                                            📍 {formatDistance(staff.calculated_distance)} 
-                                          </span> 
-                                          {staff.location_source === 'live' && ( 
-                                            <span className="text-[9px] text-green-600 flex items-center gap-0.5"> 
-                                              <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></span> 
-                                              Live 
-                                            </span> 
-                                          )} 
-                                        </> 
-                                      ) : ( 
-                                        <span className="text-xs text-gray-400"> 
-                                          No location 
-                                        </span> 
-                                      )} 
-                                       
-                                      {isSelected && ( 
-                                        <span className="text-[10px] font-bold text-secondary"> 
-                                          ✓ Selected 
-                                        </span> 
-                                      )} 
-                                    </div> 
-                                  </div> 
-                                   
-                                  <div className="mt-2 flex items-center justify-between"> 
-                                    <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0"> 
-                                      <span className="flex items-center gap-1 truncate"> 
-                                        <PhoneCall className="h-3 w-3 flex-shrink-0" /> 
-                                        {staff.phone || "No Phone"} 
-                                      </span> 
-                                      {staff.average_rating && staff.average_rating !== "0.00" && ( 
-                                        <span className="flex-shrink-0"> 
-                                          {renderRating(staff.average_rating, staff.total_reviews)} 
-                                        </span> 
-                                      )} 
-                                    </div> 
-                                     
-                                    <button 
-                                      onClick={(e) => { 
-                                        e.stopPropagation(); 
-                                        setSelectedUserId(staff.id); 
-                                      }} 
-                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex-shrink-0 ${ 
-                                        isSelected 
-                                          ? "bg-secondary text-white" 
-                                          : isBestMatch
-                                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                                          : "bg-gray-100 text-gray-600 hover:bg-gray-200" 
-                                      }`} 
-                                    > 
-                                      {isSelected ? "Selected" : "Select"} 
-                                    </button> 
-                                  </div> 
-                                </div> 
-                              </div> 
-                            </div> 
-                          ); 
-                        })} 
-                      </div> 
- 
-                      {/* Pagination */} 
-                      {totalPages > 1 && ( 
-                        <div className="flex items-center justify-between pt-2"> 
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-                            disabled={currentPage === 1} 
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
-                          > 
-                            ← Prev 
-                          </button> 
-                          <div className="flex items-center gap-1"> 
-                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => { 
-                              let pageNum; 
-                              if (totalPages <= 5) { 
-                                pageNum = i + 1; 
-                              } else if (currentPage <= 3) { 
-                                pageNum = i + 1; 
-                              } else if (currentPage >= totalPages - 2) { 
-                                pageNum = totalPages - 4 + i; 
-                              } else { 
-                                pageNum = currentPage - 2 + i; 
-                              } 
-                               
-                              return ( 
-                                <button 
-                                  key={pageNum} 
-                                  onClick={() => setCurrentPage(pageNum)} 
-                                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${ 
-                                    currentPage === pageNum 
-                                      ? "bg-secondary text-white" 
-                                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50" 
-                                  }`} 
-                                > 
-                                  {pageNum} 
-                                </button> 
-                              ); 
-                            })} 
-                          </div> 
-                          <button 
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-                            disabled={currentPage === totalPages} 
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
-                          > 
-                            Next → 
-                          </button> 
-                        </div> 
-                      )} 
-                    </> 
-                  )} 
- 
-                  {/* Summary stats */} 
-                  <div className="flex gap-2 text-[10px] text-gray-500 flex-wrap"> 
-                    <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full"> 
-                      {staffWithDistance.filter(s => s.is_in_house).length} In-House 
-                    </span> 
-                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full"> 
-                      {staffWithDistance.filter(s => !s.is_in_house).length} 3PL 
-                    </span> 
-                    {staffWithDistance.filter(s => s.calculated_distance != null).length > 0 && ( 
-                      <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-full"> 
-                        📍 {staffWithDistance.filter(s => s.calculated_distance != null).length} with location 
-                      </span> 
-                    )} 
-                  </div> 
- 
-                  <div className="flex gap-2 pt-2"> 
-                    <button 
-                      onClick={handleAssign} 
-                      disabled={assigning || !selectedUserId} 
-                      className="flex-1 bg-secondary text-white py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-md hover:bg-secondary-light transition-colors" 
-                    > 
-                      {assigning ? ( 
-                        <> 
-                          <Loader2 className="h-3 w-3 animate-spin" /> 
-                          Assigning... 
-                        </> 
-                      ) : ( 
-                        "Assign Driver" 
-                      )} 
-                    </button> 
-                    <button 
-                      onClick={() => setShowAssignForm(false)} 
-                      className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors" 
-                    > 
-                      Cancel 
-                    </button> 
-                  </div> 
+                                      ) : (
+                                        "Select"
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {totalPages > 1 && (
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-[10px] font-medium text-gray-400">
+                            Page {currentPage} of {totalPages}
+                          </p>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                              className="h-8 rounded-lg border border-gray-200 bg-white px-3 text-[10px] font-semibold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              Previous
+                            </button>
+
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) pageNum = i + 1;
+                              else if (currentPage <= 3) pageNum = i + 1;
+                              else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                              else pageNum = currentPage - 2 + i;
+
+                              return (
+                                <button
+                                  key={pageNum}
+                                  type="button"
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`h-8 w-8 rounded-lg text-[10px] font-semibold transition ${
+                                    currentPage === pageNum
+                                      ? "bg-secondary text-white"
+                                      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+
+                            <button
+                              type="button"
+                              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                              disabled={currentPage === totalPages}
+                              className="h-8 rounded-lg border border-gray-200 bg-white px-3 text-[10px] font-semibold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Assignment action bar */}
+                  <div className="sticky bottom-0 z-10 -mx-2 mt-1 border-t border-gray-200 bg-white/95 px-2 pt-3 backdrop-blur sm:-mx-3 sm:px-3">
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        {selectedUserId ? (
+                          <p className="truncate text-[11px] font-medium text-gray-500">
+                            Selected: <span className="font-semibold text-gray-800">{staffList.find((s) => s.id === selectedUserId)?.name || `Driver #${selectedUserId}`}</span>
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-gray-400">
+                            Select a driver to enable assignment.
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 sm:flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setShowAssignForm(false)}
+                          className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 sm:flex-none"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAssign}
+                          disabled={assigning || !selectedUserId}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary-light disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-36 sm:flex-none"
+                        >
+                          {assigning ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              Assigning...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Assign driver
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </>
-              )} 
-            </motion.div> 
-          )} 
-        </AnimatePresence> 
-      </Card> 
- 
-      <AnimatePresence> 
-        {showFullscreenImage && delivery?.delivery_person_image && ( 
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4" 
-            onClick={() => setShowFullscreenImage(false)} 
-          > 
-            <button 
-              onClick={() => setShowFullscreenImage(false)} 
-              className="absolute top-6 right-6 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 backdrop-blur-sm z-10" 
-            > 
-              <X className="h-6 w-6" /> 
-            </button> 
- 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white/70 text-xs font-medium flex items-center gap-2"> 
-              <ZoomIn className="h-3.5 w-3.5" /> 
-              <span>Click anywhere to close</span> 
-            </div> 
- 
-            <motion.img 
-              src={delivery.delivery_person_image} 
-              alt="Delivery Person" 
-              initial={{ scale: 0.9, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.9, opacity: 0 }} 
-              transition={{ type: "spring", damping: 25, stiffness: 300 }} 
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10" 
-            /> 
-          </motion.div> 
-        )} 
-      </AnimatePresence> 
-    </> 
-  ); 
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+
+      <AnimatePresence>
+        {showFullscreenImage && delivery?.delivery_person_image && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 p-4 backdrop-blur-lg"
+            onClick={() => setShowFullscreenImage(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setShowFullscreenImage(false)}
+              className="absolute right-6 top-6 z-10 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition hover:scale-110 hover:bg-white/20"
+              aria-label="Close image preview"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/50 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm">
+              <ZoomIn className="h-3.5 w-3.5" />
+              <span>Click anywhere to close</span>
+            </div>
+
+            <motion.img
+              src={delivery.delivery_person_image}
+              alt="Delivery Person"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 };
+
 // ─── RECEIPT REVIEW CARD ──────────────────────────────────────────
 const ReceiptReviewCard = ({
   receipt,
@@ -2202,7 +2291,6 @@ export function VendorOrderDetailModal({
   onOpenLiveTracking,
   allOrders = [],
   onSelectOrder,
-  // onViewOnMap,
 }: any) {
   if (!order) return null;
   const [refreshing, setRefreshing] = useState(false);
