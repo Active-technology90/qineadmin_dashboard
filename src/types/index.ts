@@ -833,6 +833,7 @@ export interface ServiceSubscription {
 
 export interface BankInfo {
   id: number;
+  bank_id?: string;
   bank_name: string;
   account_number: string;
   account_name: string;

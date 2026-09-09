@@ -628,7 +628,6 @@ export default function BankManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingBank, setEditingBank] = useState<BankInfo | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BankInfo | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const isSuperAdmin = !user?.memberships?.length;
   const companySlug = company?.slug;
@@ -812,7 +811,6 @@ export default function BankManagement() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      setDeleting(true);
       if (isSuperAdmin) {
         await deleteAdminBankAccount(deleteTarget.id);
       } else if (companySlug) {
@@ -825,8 +823,6 @@ export default function BankManagement() {
       const msg =
         error?.response?.data?.detail || "Failed to delete bank account";
       showToast("error", msg);
-    } finally {
-      setDeleting(false);
     }
   };
 
