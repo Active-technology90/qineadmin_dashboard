@@ -181,6 +181,7 @@ function CompanyGridCard({
 }) {
   const logoUrl = (company as any).logo || (company as any).logo_url;
   const showIcon = !logoUrl || imageError;
+  const isActive = (company as any).is_active !== false;
 
   return (
     <motion.button
@@ -221,6 +222,20 @@ function CompanyGridCard({
         <p className="text-xs text-gray-500 truncate capitalize mt-0.5">
           {company.business_type || 'Company'}
         </p>
+        <div className="mt-1 flex items-center justify-center gap-1">
+          <span
+            className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold ${
+              isActive
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+          {!isActive && (
+            <span className="text-[9px] sm:text-[10px] text-gray-500">View only</span>
+          )}
+        </div>
       </div>
     </motion.button>
   );

@@ -11,7 +11,6 @@ import {
   Search,
   ChevronDown,
   AlertCircle,
-  Upload,
   X,
 } from "lucide-react";
 import {
@@ -633,7 +632,7 @@ export default function BankManagement() {
   const companySlug = company?.slug;
   const companyName = company?.name || "Your Company";
   const canWrite =
-    isSuperAdmin || company?.role === "owner" || company?.role === "admin";
+    isSuperAdmin || company?.role === "owner";
 
   // Fetch bank accounts - depends only on stable values
   const fetchBanks = useCallback(async () => {
@@ -1022,7 +1021,6 @@ export default function BankManagement() {
             setEditingBank(null);
           }}
           onSave={handleSave}
-          showToast={showToast}
         />
       )}
 
@@ -1048,7 +1046,6 @@ function BankAccountForm({
   loadingAvailableBanks,
   onClose,
   onSave,
-  showToast,
 }: {
   bank: BankInfo | null;
   isSuperAdmin: boolean;
@@ -1057,7 +1054,6 @@ function BankAccountForm({
   loadingAvailableBanks: boolean;
   onClose: () => void;
   onSave: (data: Partial<BankInfo>, logoFile?: File) => void;
-  showToast: (type: "success" | "error", message: string) => void;
 }) {
   const [formData, setFormData] = useState({
     account_number: "",
@@ -1068,12 +1064,8 @@ function BankAccountForm({
     bank_name: "",
     company_slug: "",
   });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const objectUrlRef = useRef<string | null>(null);
 
   // Initialize form data when bank changes
   useEffect(() => {
@@ -1087,7 +1079,6 @@ function BankAccountForm({
         bank_name: bank.bank_name || "",
         company_slug: bank.company_slug || "",
       });
-      setLogoPreview(bank.logo || null);
     } else {
       setFormData({
         account_number: "",
@@ -1098,56 +1089,9 @@ function BankAccountForm({
         bank_name: "",
         company_slug: "",
       });
-      setLogoPreview(null);
     }
-    setLogoFile(null);
     setValidationErrors({});
   }, [bank]);
-
-  // Cleanup object URL on unmount
-  useEffect(() => {
-    return () => {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-      }
-    };
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      showToast("error", "Please upload a PNG, JPG, SVG, or WebP image");
-      return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("error", "File size must be under 5 MB");
-      return;
-    }
-    
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-    }
-    
-    const objectUrl = URL.createObjectURL(file);
-    objectUrlRef.current = objectUrl;
-    
-    setLogoFile(file);
-    setLogoPreview(objectUrl);
-  };
-
-  const clearLogo = () => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-    setLogoFile(null);
-    setLogoPreview(bank?.logo || null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
 
   const handleBankSelect = (selectedBank: AvailableBank) => {
     setFormData(prev => ({
@@ -1155,14 +1099,21 @@ function BankAccountForm({
       bank_id: selectedBank.id,
       bank_name: selectedBank.bank_name,
     }));
-    setLogoPreview(selectedBank.logo);
-    setValidationErrors(prev => ({ ...prev, bank_id: "" }));
+    setValidationErrors(prev => ({ ...prev, bank_id: "", bank_name: "" }));
   };
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     
-    if (!isSuperAdmin && !formData.bank_id) {
+    const selectedCatalogBank = availableBanks.find(
+      (availableBank) =>
+        availableBank.id === formData.bank_id ||
+        (!!formData.bank_name &&
+          getBankIdentityKey(availableBank.bank_name) ===
+            getBankIdentityKey(formData.bank_name)),
+    );
+
+    if (!selectedCatalogBank) {
       errors.bank_id = "Please select a bank";
     }
     
@@ -1172,10 +1123,6 @@ function BankAccountForm({
     
     if (!formData.account_name.trim()) {
       errors.account_name = "Account holder name is required";
-    }
-    
-    if (isSuperAdmin && !formData.bank_name.trim()) {
-      errors.bank_name = "Bank name is required";
     }
     
     setValidationErrors(errors);
@@ -1199,19 +1146,41 @@ function BankAccountForm({
         bank_name: formData.bank_name,
       };
 
+      const selectedCatalogBank = availableBanks.find(
+        (availableBank) =>
+          availableBank.id === formData.bank_id ||
+          getBankIdentityKey(availableBank.bank_name) ===
+            getBankIdentityKey(formData.bank_name),
+      );
+
+      if (selectedCatalogBank) {
+        dataToSend.bank_name = selectedCatalogBank.bank_name;
+        dataToSend.bank_id = selectedCatalogBank.id;
+      }
+
       if (isSuperAdmin) {
         if (!bank) {
           dataToSend.company_slug = formData.company_slug || undefined;
         }
-        // For Super Admin, pass logoFile if exists
-        await onSave(dataToSend, logoFile || undefined);
-      } else {
-        // For Company Admin, include the selected public logo path
-        const selectedBank = availableBanks.find(b => b.id === formData.bank_id);
-        if (selectedBank?.logo) {
-          dataToSend.logo = selectedBank.logo;
+
+        let selectedLogoFile: File | undefined;
+        if (selectedCatalogBank?.logo) {
+          try {
+            selectedLogoFile = await urlToFile(
+              selectedCatalogBank.logo,
+              selectedCatalogBank.id || "bank-logo",
+            );
+          } catch (error) {
+            console.error("Failed to prepare selected bank logo:", error);
+          }
         }
-        
+
+        await onSave(dataToSend, selectedLogoFile);
+      } else {
+        if (selectedCatalogBank?.logo) {
+          dataToSend.logo = selectedCatalogBank.logo;
+        }
+
         // Parent loads the public asset and sends it as the existing logo file field
         await onSave(dataToSend, undefined);
       }
@@ -1258,185 +1227,55 @@ function BankAccountForm({
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
-            {isSuperAdmin ? (
-              <>
-                {/* Super Admin Form */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
-                    Bank Information
-                  </h4>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Bank Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.bank_name}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, bank_name: e.target.value }));
-                          setValidationErrors(prev => ({ ...prev, bank_name: "" }));
-                        }}
-                        className={`w-full px-4 py-3 rounded-xl border ${
-                          validationErrors.bank_name
-                            ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                            : "border-gray-200 focus:border-secondary focus:ring-secondary/20"
-                        } focus:outline-none focus:ring-4 transition text-sm placeholder-gray-400`}
-                        placeholder="e.g. Commercial Bank of Ethiopia"
-                      />
-                      {validationErrors.bank_name && (
-                        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
-                          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                          {validationErrors.bank_name}
-                        </p>
-                      )}
-                    </div>
-                    {!bank && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Company Slug
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.company_slug}
-                          onChange={(e) =>
-                            setFormData(prev => ({ ...prev, company_slug: e.target.value }))
-                          }
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 focus:outline-none transition text-sm placeholder-gray-400"
-                          placeholder="e.g. abc-trading"
-                        />
-                        <p className="text-xs text-gray-400 mt-1.5">
-                          Leave empty for an unassigned bank account.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {/* Same static bank selector for Super Admin and Company Admin */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                Bank
+              </h4>
+              <BankSelector
+                banks={availableBanks}
+                selectedBankId={formData.bank_id}
+                selectedBankName={formData.bank_name}
+                onSelect={handleBankSelect}
+                loading={loadingAvailableBanks}
+                error={validationErrors.bank_id}
+              />
+            </div>
+
+            {selectedBank && (
+              <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
+                <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckCircle className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-emerald-900">
+                    Bank selected
+                  </p>
+                  <p className="mt-0.5 text-xs leading-5 text-emerald-700/80">
+                    The bank name and logo come from the system bank list.
+                  </p>
                 </div>
+              </div>
+            )}
 
-                {/* Logo Upload */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
-                    Bank Logo
-                  </h4>
-                  <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-5">
-                    <div className="flex flex-col sm:flex-row items-center gap-5">
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all hover:border-secondary hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-secondary/20"
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Upload bank logo"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            fileInputRef.current?.click();
-                          }
-                        }}
-                      >
-                        {logoPreview ? (
-                          <img
-                            src={logoPreview}
-                            alt="Bank Logo"
-                            className="h-full w-full object-contain p-2"
-                          />
-                        ) : (
-                          <div className="flex h-full flex-col items-center justify-center text-gray-400">
-                            <Building2 className="h-7 w-7 mb-1.5" />
-                            <span className="text-xs font-medium">No Logo</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 space-y-3 w-full">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-
-                        <div>
-                          <h4 className="font-semibold text-gray-900 text-sm">
-                            Upload Bank Logo
-                          </h4>
-                          <p className="mt-0.5 text-xs text-gray-500">
-                            PNG, JPG, SVG, or WebP • Max 5 MB
-                          </p>
-                        </div>
-
-                        {logoFile && (
-                          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
-                            <p className="text-xs font-medium text-emerald-700 truncate">
-                              {logoFile.name}
-                            </p>
-                            <p className="text-xs text-emerald-600">
-                              {(logoFile.size / 1024).toFixed(1)} KB
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-xs font-medium text-white transition hover:bg-secondary/90 focus:outline-none focus:ring-4 focus:ring-secondary/20"
-                          >
-                            <Upload className="h-3.5 w-3.5" />
-                            {logoPreview ? "Replace" : "Choose"}
-                          </button>
-                          {(logoPreview || logoFile) && (
-                            <button
-                              type="button"
-                              onClick={clearLogo}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Company Admin Form */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-4">
-                    Bank
-                  </h4>
-                  <BankSelector
-                    banks={availableBanks}
-                    selectedBankId={formData.bank_id}
-                    selectedBankName={formData.bank_name}
-                    onSelect={handleBankSelect}
-                    loading={loadingAvailableBanks}
-                    error={validationErrors.bank_id}
-                  />
-                </div>
-
-                {selectedBank && (
-                  <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
-                    <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <CheckCircle className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-emerald-900">
-                        Bank selected
-                      </p>
-                      <p className="mt-0.5 text-xs leading-5 text-emerald-700/80">
-                        Use the bank name and logo provided by the system. Add only this company's account details below.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
+            {isSuperAdmin && !bank && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Company Slug
+                </label>
+                <input
+                  type="text"
+                  value={formData.company_slug}
+                  onChange={(e) =>
+                    setFormData(prev => ({ ...prev, company_slug: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 focus:outline-none transition text-sm placeholder-gray-400"
+                  placeholder="e.g. abc-trading"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Leave empty for an unassigned bank account.
+                </p>
+              </div>
             )}
 
             {/* Account Information */}

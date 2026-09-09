@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Building2, Plus, Search, X, Repeat } from "lucide-react";
+import { Building2, Plus, Search, X, Repeat, Lock } from "lucide-react";
 // import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
@@ -24,12 +24,20 @@ export default function CompanyProducts() {
 
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
-  // Get logo from companies list (since CurrentCompany doesn't have logo)
-  const companyLogo = useMemo(() => {
-    if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: any) => c.slug === companySlug);
-    return foundCompany?.logo || null;
-  }, [companySlug, companies]);
+  // Keep the selected company record so status can control write access.
+  const selectedCompany = useMemo(() => {
+    if (!companySlug) return null;
+    return (
+      companies.find((c: any) => c.slug === companySlug) ||
+      (company as any) ||
+      null
+    );
+  }, [companySlug, companies, company]);
+
+  const companyLogo = selectedCompany?.logo || selectedCompany?.logo_url || null;
+  // If status is not present yet, do not lock the screen while company data is loading.
+  const companyIsActive = selectedCompany?.is_active !== false;
+  const isCompanyViewOnly = !companyIsActive;
 
   const isSuperAdmin = !user?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -44,12 +52,12 @@ export default function CompanyProducts() {
     return membership?.role || "";
   }, [user, companySlug, isSuperAdmin]);
 
-  // Role‑based permissions
+  // Role-based permissions. Inactive companies are always view-only, including for super admins.
   const isAdmin = companyRole === "admin" || isSuperAdmin;
-  const isStaff = companyRole === "staff";
-  const canEditBasic = isAdmin || isStaff;
+  // const isStaff = companyRole === "staff";
+  const canEditBasic = companyIsActive && (isAdmin);
   // const canEditPricing = isAdmin;
-  const canDelete = isAdmin;
+  const canDelete = companyIsActive && isAdmin;
 
   // Products hook
   const [pageSize, setPageSize] = useState(10);
@@ -99,6 +107,13 @@ export default function CompanyProducts() {
   const [toastZIndex, setToastZIndex] = useState(50);
     const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
 
+  useEffect(() => {
+    if (!isCompanyViewOnly) return;
+    setIsModalOpen(false);
+    setEditingProduct(null);
+    setDeleteTarget(null);
+  }, [isCompanyViewOnly]);
+
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
@@ -116,6 +131,10 @@ export default function CompanyProducts() {
 
   // Handlers with permission checks (unchanged except we now use `companyRole`)
   const handleAdd = () => {
+    if (isCompanyViewOnly) {
+      showToast("error", "This company is inactive. Products are view-only.");
+      return;
+    }
     if (!canEditBasic) {
       showToast("error", "No permission");
       return;
@@ -124,6 +143,10 @@ export default function CompanyProducts() {
     setIsModalOpen(true);
   };
   const handleEdit = (product: any) => {
+    if (isCompanyViewOnly) {
+      showToast("error", "This company is inactive. Products are view-only.");
+      return;
+    }
     if (!canEditBasic) {
       showToast("error", "No permission");
       return;
@@ -133,6 +156,11 @@ export default function CompanyProducts() {
   };
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    if (isCompanyViewOnly) {
+      showToast("error", "This company is inactive. Products are view-only.");
+      setDeleteTarget(null);
+      return;
+    }
     if (!canDelete) {
       showToast("error", "No permission");
       setDeleteTarget(null);
@@ -148,7 +176,13 @@ export default function CompanyProducts() {
     }
   };
   const handleSave = async (data: any, existingProductId?: number) => {
-    // Permission checks...
+    if (!canEditBasic) {
+      const message = isCompanyViewOnly
+        ? "This company is inactive. Products are view-only."
+        : "No permission";
+      showToast("error", message);
+      throw new Error(message);
+    }
     try {
       // If we have an existingProductId passed from modal (for update after back button)
       if (existingProductId) {
@@ -182,6 +216,7 @@ export default function CompanyProducts() {
         companies={companies} // ✅ now populated
         isLoading={isLoadingCompanies}
         title="All Products"
+        subtitle="Select a company. Inactive companies are available in view-only mode."
         searchPlaceholder="Search products and companies by name..."
         onSelect={(slug, name) => {
           // If the user has NO memberships, they are a super admin → role = "admin"
@@ -217,7 +252,7 @@ export default function CompanyProducts() {
         onCancel={() => setDeleteTarget(null)}
       />
       <ProductModal
-        isOpen={isModalOpen}
+        isOpen={isModalOpen && canEditBasic}
         editingProduct={editingProduct}
         companySlug={companySlug}
         onClose={() => setIsModalOpen(false)}
@@ -225,7 +260,7 @@ export default function CompanyProducts() {
         onProductUpdated={refetch}
         // Staff: can edit everything on create, but price/stock read‑only on edit
         isStaff={companyRole === "staff"}
-        canEditBasic={canEditBasic} // true for staff & admin
+        canEditBasic={canEditBasic}
         canEditPricing={true} // let the isStaff logic handle edit restriction
         onShowToast={showToastWithHigherZIndex}
       />
@@ -245,12 +280,23 @@ export default function CompanyProducts() {
               ) : isSuperAdmin && !companyLogo ? (
                 <Building2 className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400" />
               ) : null}
-              <div>
-                {isSuperAdmin ? (
-                  <h2 className="text-xs sm:text-2xl font-extrabold text-secondary tracking-tight break-words">{companyName}</h2>
-                ) : (
-                  <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">All Products</p>
-                )}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  {isSuperAdmin ? (
+                    <h2 className="text-xs sm:text-2xl font-extrabold text-secondary tracking-tight break-words">{companyName}</h2>
+                  ) : (
+                    <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">All Products</p>
+                  )}
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] sm:text-xs font-semibold ${
+                      companyIsActive
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-red-50 text-red-700 border-red-200"
+                    }`}
+                  >
+                    {companyIsActive ? "Active" : "Inactive · View only"}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -267,6 +313,15 @@ export default function CompanyProducts() {
             )}
           </div>
         </div>
+
+        {isCompanyViewOnly && (
+          <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs sm:text-sm text-amber-800">
+            <Lock className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <p>
+              This company is inactive. You can view and search its products, but adding, editing, and deleting are disabled. Only a super admin can reactivate the company from Company Management.
+            </p>
+          </div>
+        )}
 {/* BUTTONS SECTION - Desktop only (hidden on mobile) */}
 <div className="hidden lg:flex flex-row justify-end items-center gap-3 mt-3 sm:mt-4 mb-3">
   {/* Desktop Add Product button */}

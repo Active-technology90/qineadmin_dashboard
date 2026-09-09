@@ -1450,6 +1450,11 @@ export default function CompanyManagement() {
                 Manage your company details and settings
               </p>
             )}
+            {isSuperAdmin && (
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                Company activation and deactivation are super-admin only. Inactive companies remain visible but their company operations are view-only.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {canAddCompany && (
