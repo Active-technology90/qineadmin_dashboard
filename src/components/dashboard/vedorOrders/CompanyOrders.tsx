@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Package, Building2, Settings, X, Navigation } from "lucide-react";
+import { Package, Building2, Settings, X, Navigation, Package2 } from "lucide-react";
 import { Pagination } from "../../ui/Pagination";
 
 import {
@@ -18,6 +18,7 @@ import { useReadOnly } from "../AdminDashboard";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { SearchInput } from "../../ui/SearchInput";
 import DeliveryTrackingMap from "./DeliveryTrackingMap";
+import PageHeader from "../../ui/PageHeader";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -478,42 +479,35 @@ export default function CompanyOrders() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <Toast toast={toast} />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {!isAdminLike && effectiveSlug ? (
-            <>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
-                  All Orders
-                </h2>
-              </div>
-              {readOnly && (
-                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-[10px] sm:text-xs px-2 py-1 rounded-full">
-                  View Only
-                </span>
-              )}
-            </>
-          ) : (
-            <div>
-              <h2 className="text-base sm:text-2xl font-extrabold text-secondary tracking-tight break-words">
-                All Orders
-              </h2>
-              <p className="text-[10px] sm:text-sm font-medium text-secondary">
-                {isAdminLike
-                  ? "Viewing all company orders"
-                  : "No company selected"}
-              </p>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={() => setShowTrackingMap(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition shadow-sm"
-        >
-          <Navigation className="h-4 w-4" />
-          <span className="sm:inline">Live Tracking</span>
-        </button>
-      </div>
+      <PageHeader
+        title="All Orders"
+          icon={Package2}
+        description={
+          isAdminLike
+            ? "View and manage orders across all companies."
+            : effectiveSlug
+              ? "View and manage orders for the selected company."
+              : "Select a company to view its orders."
+        }
+        badge={
+          readOnly ? (
+            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600 sm:text-xs">
+              View Only
+            </span>
+          ) : undefined
+        }
+        actions={
+          <button
+            type="button"
+            onClick={() => setShowTrackingMap(true)}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary/90 sm:text-sm"
+          >
+            <Navigation className="h-4 w-4" />
+            <span>Live Tracking</span>
+          </button>
+        }
+        className="mb-4 sm:mb-6"
+      />
 
       {/* Mobile Search Bar with Filter Button */}
       <div className="mb-4 lg:hidden">

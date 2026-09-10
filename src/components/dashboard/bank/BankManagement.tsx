@@ -12,6 +12,7 @@ import {
   ChevronDown,
   AlertCircle,
   X,
+  Package,
 } from "lucide-react";
 import {
   getCompanyBankAccounts,
@@ -31,6 +32,7 @@ import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useAuth } from "../../../hooks/useAuth";
 import type { BankInfo } from "../../../types";
+import PageHeader from "../../ui/PageHeader";
 
 // ------------------------------------------------------------------
 // Types
@@ -829,28 +831,28 @@ export default function BankManagement() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-8">
       <Toast toast={toast} />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
-        <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl font-bold text-secondary tracking-tight">
-            Bank Accounts
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {isSuperAdmin
-              ? "Manage all company bank accounts"
-              : `Bank accounts for ${companyName}`}
-          </p>
-        </div>
-        {canWrite && (
-          <button
-            onClick={handleCreate}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-all shadow-sm hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-secondary/20 w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Add Bank Account
-          </button>
-        )}
-      </div>
-
+      <PageHeader
+        title="Bank Accounts"
+        description={
+          isSuperAdmin
+            ? "Manage all company bank accounts."
+            : `Manage bank accounts for ${companyName}.`
+        }
+        icon={Building2}
+        actions={
+          canWrite ? (
+            <button
+              type="button"
+              onClick={handleCreate}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary/90 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 focus-visible:ring-offset-2 sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Add Bank Account
+            </button>
+          ) : undefined
+        }
+        className="mb-5 sm:mb-6"
+      />
       <div className="mb-5 sm:mb-6">
         <SearchInput
           value={searchTerm}

@@ -39,6 +39,7 @@ import { CreateCompanyUserModal } from "./CreateCompanyUserModal";
 import { TableControls } from "../../ui/TableControls";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { SearchInput } from "../../ui/SearchInput";
+import PageHeader from "../../ui/PageHeader";
 
 // ----------------------------------------------------------------------
 // Compact skeletons
@@ -87,12 +88,6 @@ export default function CompanyUsers() {
 
   const companySlug = company?.slug ?? null;
   const companyName = company?.name ?? "";
-
-  const companyLogo = useMemo(() => {
-    if (!companySlug || !companies.length) return null;
-    const foundCompany = companies.find((c: any) => c.slug === companySlug);
-    return foundCompany?.logo || null;
-  }, [companySlug, companies]);
 
   const isSuperAdmin = !currentUser?.memberships?.length;
   const showSelector = isSuperAdmin && !companySlug;
@@ -368,58 +363,32 @@ export default function CompanyUsers() {
   // ----------------------------------------------------------------------
   return (
     <div className="space-y-3 px-4 sm:px-0">
-      {/* ===== 1. COMPACT HEADER ===== */}
-      <div className="flex flex-row items-center justify-between gap-3 px-0">
-        {/* LEFT SIDE - Logo and Title */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Logo only shows for Super Admin */}
-          {isSuperAdmin && (
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
-            {companyLogo ? (
-              <img
-                src={companyLogo}
-                alt={companyName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
-              </div>
-            )}
-          </div>
-
-          )}
-          <div className="min-w-0">
-            <h1 className="text-xs sm:text-2xl font-extrabold text-secondary leading-tight break-words">
-              {isSuperAdmin ? companyName : "All Users"}
-            </h1>
-            <p className="text-[9px] sm:text-xs text-secondary/60">
-              Dispatcher management, delivery personnel and organization access
-            </p>
-          </div>
-        </div>
-
-        {/* RIGHT SIDE - Switch button (only for super admin) */}
-        {isSuperAdmin && (
-          <button
-            onClick={clearCompany}
-            className="
-              py-0.5 lg:py-1.5 px-2 lg:px-3.5
-             rounded-lg
-             border-2 border-secondary
-              bg-transparent
-              text-xs font-medium text-secondary
-              hover:bg-secondary/5
-              transition-all
-              flex items-center justify-center gap-1.5
-              whitespace-nowrap
-            "
-          >
-           <Repeat className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-secondary" />
-            <span className="hidden lg:inline">Switch</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={isSuperAdmin ? companyName || "Company Users" : "All Users"}
+        eyebrow={isSuperAdmin ? "User Management" : undefined}
+        description="Manage dispatchers, delivery personnel, and organization access."
+        icon={Users}
+        badge={
+          !loading ? (
+            <span className="inline-flex items-center rounded-full bg-secondary/10 px-2.5 py-1 text-[10px] font-bold text-secondary sm:text-xs">
+              {filteredUsers.length} {filteredUsers.length === 1 ? "user" : "users"}
+            </span>
+          ) : undefined
+        }
+        actions={
+          isSuperAdmin ? (
+            <button
+              type="button"
+              onClick={clearCompany}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-secondary/30 bg-white px-3.5 py-2.5 text-xs font-semibold text-secondary shadow-sm transition hover:border-secondary hover:bg-secondary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 focus-visible:ring-offset-2 sm:w-auto"
+            >
+              <Repeat className="h-4 w-4" />
+              Switch Company
+            </button>
+          ) : undefined
+        }
+        loading={loading}
+      />
       {/* ===== DISPATCHER MANAGEMENT ===== */}
       {!loading && (
         <div className="rounded-2xl border border-secondary/15 bg-gradient-to-r from-secondary/[0.08] via-white to-white p-3 sm:p-4 shadow-sm">

@@ -782,7 +782,7 @@ export default function AdminProfile() {
                                             : "bg-gray-100 text-gray-600"
                                     }`}
                                   >
-                                    {membership.role}
+                                    {membership.role === "staff" ? "Dispatcher" : membership.role}
                                   </span>
                                   {isActive && (
                                     <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full">
@@ -802,7 +802,7 @@ export default function AdminProfile() {
                                       : "bg-gray-100 text-gray-600"
                                 }`}
                               >
-                                {membership.role}
+                                {membership.role === "staff" ? "Dispatcher" : membership.role}
                               </span>
                               {isActive ? (
                                 <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />

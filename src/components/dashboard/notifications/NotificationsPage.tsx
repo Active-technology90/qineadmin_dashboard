@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useNotifications } from "../../../context/NotificationsContext";
 import { getEventMeta, formatRelativeTime } from "./meta";
+import PageHeader from "../../ui/PageHeader";
 
 function getNotificationDateGroup(iso: string): string {
   try {
@@ -122,38 +123,34 @@ export default function NotificationsPage({
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Header */}
-      <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-secondary" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-              Notifications
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-500" aria-live="polite">
-              {headerSubtitle}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
-          {unread > 0 && (
+    <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-2 py-2 sm:py-2">
+      <PageHeader
+        title="Notifications"
+        description={<span aria-live="polite">{headerSubtitle}</span>}
+        icon={Bell}
+        badge={
+          unread > 0 && !isInitialLoading ? (
+            <span className="inline-flex items-center rounded-full bg-secondary/10 px-2.5 py-1 text-[10px] font-bold text-secondary sm:text-xs">
+              {unread} unread
+            </span>
+          ) : undefined
+        }
+        actions={
+          unread > 0 ? (
             <button
               type="button"
               onClick={handleMarkAllRead}
               disabled={markingAll}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-secondary hover:bg-secondary/80 border border-indigo-100 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 transition"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary/85 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 sm:w-auto sm:text-sm"
             >
-              <CheckCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Mark all read</span>
-              <span className="sm:hidden">Mark read</span>
+              <CheckCheck className="h-4 w-4" />
+              {markingAll ? "Marking..." : "Mark all read"}
             </button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+        loading={isInitialLoading}
+        className="mb-5 sm:mb-6"
+      />
 
       {/* Filter tabs */}
       <div

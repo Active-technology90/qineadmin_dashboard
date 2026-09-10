@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CreditCard, CheckCircle2, Zap, Package, XCircle, Clock, AlertTriangle, ArrowUp, ArrowDown, Shield } from "lucide-react";
 import { getSubscriptionPlans, getMySubscription, initializeSubscriptionPayment, verifySubscriptionPayment } from "../../../services/api";
 import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
+import { PageHeader } from "../../ui/PageHeader";
 // ========== LOADING SKELETON ==========
 const SkeletonCard = () => (
   <div className="bg-white rounded-3xl p-8 border-2 border-gray-100 shadow-sm animate-pulse">
@@ -233,31 +234,19 @@ export default function BillingPage() {
   const daysRemaining = activeSub?.days_remaining;
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10">
-      <div className="flex items-center gap-3">
-        {isLoading ? (
-          <div className="h-8 sm:h-10 w-1 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
-        ) : (
-          <div className="h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-secondary/20 flex-shrink-0" />
-        )}
-        {isLoading ? (
-          <div className="flex-1 animate-pulse">
-            <div className="h-8 sm:h-10 bg-gray-200 rounded w-48 sm:w-64 mb-2" />
-            <div className="h-4 bg-gray-200 rounded w-64 sm:w-96" />
-          </div>
-        ) : (
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-secondary">Billing & Subscription</h1>
-            <p className="text-secondary/60 text-sm mt-0.5">Manage your company's active plan and limits.</p>
-          </div>
-        )}
-      </div>
+    <div className="mx-auto max-w-7xl space-y-6 px-3 py-4 sm:space-y-8 sm:p-6 lg:p-2 ">
+      <PageHeader
+        title="Billing & Subscription"
+        description="Manage your company's active plan and limits."
+        icon={CreditCard}
+        loading={isLoading}
+      />
 
       {/* Current Subscription Section */}
       {isLoading ? (
         <SkeletonCurrentPlan />
       ) : (
-      <div className={`bg-white rounded-3xl p-8 shadow-sm border relative overflow-hidden ${
+      <div className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-sm border relative overflow-hidden ${
         isExpired ? "border-red-200" : "border-gray-100"
       }`}>
         {/* Background Accent */}
@@ -410,7 +399,7 @@ export default function BillingPage() {
               <motion.div
                 key={plan.id}
                 whileHover={isAuthorized ? { y: -8 } : {}}
-                className={`bg-white rounded-3xl p-8 border-2 transition-all shadow-sm relative flex flex-col ${
+                className={`bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 border-2 transition-all shadow-sm relative flex flex-col ${
                   isAuthorized ? "hover:shadow-xl" : ""
                 } ${
                   action === "current" 

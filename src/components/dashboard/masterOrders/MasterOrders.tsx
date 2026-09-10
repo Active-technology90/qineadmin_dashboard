@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Eye, Package, Truck, X } from "lucide-react";
+import { Eye, Package, Package2, Truck, X } from "lucide-react";
 import { getAdminMasterOrders } from "../../../services/api";
 import type { MasterOrder } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
@@ -9,6 +9,7 @@ import { OrderDetailModal } from "./OrderDetailModal";
 import { OrderFilters } from "./OrderFilters";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { SearchInput } from "../../ui/SearchInput";
+import PageHeader from "../../ui/PageHeader";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -278,13 +279,12 @@ export default function Orders() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
       <Toast toast={toast} />
 
-      {/* Header with title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
-        <div>
-          <h2 className="text-base sm:text-2xl font-extrabold text-secondary tracking-tight">All Master Orders</h2>
-          <p className="text-xs sm:text-sm text-secondary mt-0.5">Manage and track all customer orders</p>
-        </div>
-      </div>
+      <PageHeader
+        title="All Master Orders"
+          icon={Package2}
+        description="Manage and track customer orders across the platform."
+        className="mb-4 sm:mb-6"
+      />
 
       {/* Search Bar with Mobile Filter Button Inside - HIDDEN ON DESKTOP, VISIBLE ON MOBILE */}
       <div className="mb-4 lg:hidden">

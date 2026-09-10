@@ -303,7 +303,7 @@ export default function CompanyForm({
                 ? "Verified. The active status can now be changed."
                 : "Verify this company before activating it."}
             </p>
-            <p className="text-[10px] text-gray-400 mt-1">Frontend-only verification state</p>
+            {/* <p className="text-[10px] text-gray-400 mt-1">Frontend-only verification state</p> */}
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input

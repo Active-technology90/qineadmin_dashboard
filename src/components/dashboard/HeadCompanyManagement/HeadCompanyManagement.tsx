@@ -14,6 +14,7 @@ import { ErrorView } from "../../ui/ErrorView";
 import { Toast } from "../../ui/Toast";
 import { useToast } from "../../../hooks/useToast";
 import { DragDropImageUpload } from "../../ui/DragDropImageUpload";
+import PageHeader from "../../ui/PageHeader";
 
 interface HeadCompanyFormData {
   name: string;
@@ -174,26 +175,31 @@ export default function HeadCompanyManagement() {
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
       <Toast toast={toast} />
 
-      {/* Header - Responsive */}
-      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <div className="hidden xs:block h-6 sm:h-8 md:h-10 w-0.5 sm:w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
-          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-secondary truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
-            Head Companies
-          </h2>
-          <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[10px] sm:text-xs font-medium">
-            {filtered.length}
-          </span>
-        </div>
-        <button
-          onClick={openCreate}
-          className="shrink-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 rounded-full bg-secondary hover:bg-[#5b4694] active:scale-[0.98] transition-all shadow-sm hover:shadow-md text-white font-semibold text-[10px] xs:text-xs sm:text-sm px-2 xs:px-3 sm:px-4 md:px-5 py-1.5 xs:py-2 sm:py-2"
-        >
-          <Plus size={14} className="xs:h-[15px] xs:w-[15px] sm:h-4 sm:w-4" />
-          <span className="truncate hidden xs:inline">Create Head Company</span>
-          <span className="truncate xs:hidden">New</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Head Companies"
+        description="Manage parent companies and the organizations grouped under them."
+        icon={Building2}
+        badge={
+          !loading ? (
+            <span className="inline-flex items-center rounded-full bg-secondary/10 px-2.5 py-1 text-[10px] font-bold text-secondary sm:text-xs">
+              {filtered.length}
+            </span>
+          ) : undefined
+        }
+        actions={
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5b4694] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 focus-visible:ring-offset-2 sm:w-auto"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Head Company</span>
+            <span className="sm:hidden">Create</span>
+          </button>
+        }
+        loading={loading}
+        className="mb-4 sm:mb-6"
+      />
 
       {/* Search - Responsive */}
       <div className="mb-3 sm:mb-4">

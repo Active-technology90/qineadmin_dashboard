@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus, ImageIcon, Edit, Trash2, Filter } from "lucide-react";
+import { Plus, ImageIcon, Edit, Trash2, Filter, Package2 } from "lucide-react";
 import {
   getSubCategories,
   createSubCategory,
@@ -30,6 +30,7 @@ import { useReadOnly } from "./AdminDashboard";
 import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
 import MobileCardSkeleton from "../ui/MobileCardSkeleton";
 import FilterSortSheet from "../ui/FilterSortSheet";
+import PageHeader from "../ui/PageHeader";
 
 const MemoizedDataTable = React.memo(DataTable) as typeof DataTable;
 const MemoizedPagination = React.memo(Pagination);
@@ -451,38 +452,35 @@ export default function SubCategoryManagement() {
   return (
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
       <Toast toast={toast} />
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0 w-full overflow-hidden">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
-          <div className="hidden xs:block h-8 sm:h-10 w-1 rounded-full bg-gradient-to-b from-secondary to-[#8B5CF6] shrink-0" />
-          <div className="min-w-0 flex items-center gap-1.5 xs:gap-2 sm:gap-3 overflow-hidden">
-            <h2 className="text-[17px] xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary truncate leading-tight">
-              SubCategories
-            </h2>
-            {readOnly && (
-              <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100/80 backdrop-blur-sm text-[10px] xs:text-[11px] text-gray-600 font-medium px-1.5 xs:px-2 sm:px-2.5 py-1 whitespace-nowrap max-w-full">
-                <span className="truncate">View Only</span>
-              </span>
-            )}
-          </div>
-        </div>
-        {!readOnly && (
-          <button
-            onClick={() => {
-              resetForm();
-              setModalOpen(true);
-            }}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-secondary hover:bg-secondary-dark active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md text-white font-semibold text-[11px] xs:text-xs sm:text-sm px-2.5 xs:px-3 sm:px-4 md:px-5 py-1 sm:py-2.5 min-h-[24px] xs:min-h-[42px] sm:min-h-[40px] max-w-[165px] xs:max-w-none whitespace-nowrap overflow-hidden"
-            aria-label="Add SubCategory"
-          >
-            <Plus
-              size={16}
-              className="shrink-0 xs:h-[17px] xs:w-[17px] sm:h-[18px] sm:w-[18px]"
-            />
-            <span className="truncate">Add SubCategory</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Subcategories"
+        description="Manage subcategories and connect them to the right parent category."
+        icon={Package2}
+        badge={
+          readOnly ? (
+            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600 sm:text-xs">
+              View Only
+            </span>
+          ) : undefined
+        }
+        actions={
+          !readOnly ? (
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setModalOpen(true);
+              }}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary/90 sm:text-sm"
+              aria-label="Add Subcategory"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Subcategory</span>
+            </button>
+          ) : undefined
+        }
+        className="mb-4 sm:mb-6"
+      />
 
       {/* ========== DESKTOP CONTROLS (hidden on mobile) ========== */}
       <div className="hidden md:block  bg-white/90 backdrop-blur-sm border-b border-gray-200/80 px-4 py-3 mb-6">

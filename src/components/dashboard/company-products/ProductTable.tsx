@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { Package, Edit, Trash2, Star } from "lucide-react";
+import { Package, Edit, Trash2, Star, Eye } from "lucide-react";
 
-interface Product {
+export interface Product {
   id: number;
   sku: string;
   title: string;
@@ -15,12 +15,19 @@ interface Product {
   is_featured?: boolean;
   average_rating?: string | number;
   total_reviews?: number;
+  description?: string;
+  category?: string;
+  brand?: string;
+  barcode?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface ProductTableProps {
   products: Product[];
   totalItems: number;
   loading: boolean;
+  onView?: (product: Product) => void;
   onEdit?: (product: Product) => void;
   onDelete?: (id: number, title: string) => void;
 }
@@ -149,6 +156,7 @@ export function ProductTable({
   products,
   totalItems,
   loading,
+  onView,
   onEdit,
   onDelete,
 }: ProductTableProps) {
@@ -210,7 +218,7 @@ export function ProductTable({
                   Featured
                 </span>
               </th>
-                {onEdit || onDelete ? (
+                {onView || onEdit || onDelete ? (
                   <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                     <span className="inline-flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
@@ -222,7 +230,7 @@ export function ProductTable({
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} hasActions={!!(onEdit || onDelete)} />
+                <SkeletonRow key={i} hasActions={!!(onView || onEdit || onDelete)} />
               ))}
             </tbody>
           </table>
@@ -298,7 +306,7 @@ export function ProductTable({
                   Featured
                 </span>
               </th>
-              {onEdit || onDelete ? (
+              {onView || onEdit || onDelete ? (
                 <th className="px-1.5 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-semibold text-secondary uppercase tracking-wider whitespace-nowrap">
                   <span className="inline-flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
@@ -357,27 +365,47 @@ export function ProductTable({
                       {product.is_featured ? 'Yes' : 'No'}
                     </span>
                   </td>
-                 <td className="px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-                      {onEdit && (
-                        <button
-                          onClick={() => onEdit(product)}
-                          className="p-1 rounded-md hover:bg-secondary/10 transition-colors"
-                        >
-                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
-                        </button>
-                      )}
+                  {(onView || onEdit || onDelete) && (
+                    <td className="px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+                        {onView && (
+                          <button
+                            type="button"
+                            onClick={() => onView(product)}
+                            className="p-1 rounded-md hover:bg-blue-50 transition-colors"
+                            title="View details"
+                            aria-label={`View details for ${product.title}`}
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+                          </button>
+                        )}
 
-                      {onDelete && (
-                        <button
-                          onClick={() => onDelete(product.id, product.title)}
-                          className="p-1 rounded-md hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                        {onEdit && (
+                          <button
+                            type="button"
+                            onClick={() => onEdit(product)}
+                            className="p-1 rounded-md hover:bg-secondary/10 transition-colors"
+                            title="Edit product"
+                            aria-label={`Edit ${product.title}`}
+                          >
+                            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
+                          </button>
+                        )}
+
+                        {onDelete && (
+                          <button
+                            type="button"
+                            onClick={() => onDelete(product.id, product.title)}
+                            className="p-1 rounded-md hover:bg-red-50 transition-colors"
+                            title="Delete product"
+                            aria-label={`Delete ${product.title}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

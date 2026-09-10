@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { Building2, Plus, Search, X, Repeat, Lock } from "lucide-react";
+import { Plus, Search, X, Repeat, Lock, Package2 } from "lucide-react";
 // import type { CompanyListItem } from "../../../types";
 import { useAuth } from "../../../context/authContext";
 // import { useCompanySelection } from '../../../hooks/useCompanySelection';
 import { useCompanyProducts } from "../../../hooks/useCompanyProducts";
 import { CompanySelector } from "./CompanySelector";
-import { ProductTable } from "./ProductTable";
+import { ProductTable, type Product } from "./ProductTable";
+import { ProductDetailView } from "./ProductDetailView";
 import { ProductModal } from "./ProductModal";
 import { DeleteConfirmModal } from "../../ui/DeleteConfirmModal";
 import { Toast } from "../../ui/Toast";
@@ -16,6 +17,7 @@ import { useCurrentCompany } from "../../../context/CurrentCompanyContext";
 import { useCompaniesList } from "../../../hooks/useCompaniesList";
 import { CustomSelect, type SelectOption } from "../../ui/CustomSelect";
 import { SearchInput } from "../../ui/SearchInput";
+import PageHeader from "../../ui/PageHeader";
 
 export default function CompanyProducts() {
   const { user } = useAuth();
@@ -34,7 +36,6 @@ export default function CompanyProducts() {
     );
   }, [companySlug, companies, company]);
 
-  const companyLogo = selectedCompany?.logo || selectedCompany?.logo_url || null;
   // If status is not present yet, do not lock the screen while company data is loading.
   const companyIsActive = selectedCompany?.is_active !== false;
   const isCompanyViewOnly = !companyIsActive;
@@ -95,6 +96,7 @@ export default function CompanyProducts() {
 
   // Modals & toast
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
@@ -142,6 +144,10 @@ export default function CompanyProducts() {
     setEditingProduct(null);
     setIsModalOpen(true);
   };
+  const handleView = (product: Product) => {
+    setViewingProduct(product);
+  };
+
   const handleEdit = (product: any) => {
     if (isCompanyViewOnly) {
       showToast("error", "This company is inactive. Products are view-only.");
@@ -240,6 +246,24 @@ export default function CompanyProducts() {
       </div>
     );
 
+  if (viewingProduct) {
+    return (
+      <ProductDetailView
+        product={viewingProduct}
+        companyName={companyName}
+        onBack={() => setViewingProduct(null)}
+        onEdit={
+          canEditBasic
+            ? (product) => {
+                setViewingProduct(null);
+                handleEdit(product);
+              }
+            : undefined
+        }
+      />
+    );
+  }
+
   // Normal content (identical to your last version)
   return (
     <>
@@ -266,90 +290,63 @@ export default function CompanyProducts() {
       />
 
       <div className="px-3 sm:px-5 md:px-6">
-        {/* TITLE SECTION - Full width on top with Switch button on right */}
-        <div className="w-full mb-3">
-          <div className="flex items-center justify-between">
-            {/* LEFT SIDE - Logo and Title */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {isSuperAdmin && companyLogo ? (
-                <img
-                  src={companyLogo}
-                  alt={companyName}
-                  className="w-6 h-6 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200"
-                />
-              ) : isSuperAdmin && !companyLogo ? (
-                <Building2 className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400" />
-              ) : null}
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  {isSuperAdmin ? (
-                    <h2 className="text-xs sm:text-2xl font-extrabold text-secondary tracking-tight break-words">{companyName}</h2>
-                  ) : (
-                    <p className="text-sm sm:text-2xl font-extrabold text-secondary tracking-tight break-words">All Products</p>
-                  )}
-                  <span
-                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] sm:text-xs font-semibold ${
-                      companyIsActive
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : "bg-red-50 text-red-700 border-red-200"
-                    }`}
-                  >
-                    {companyIsActive ? "Active" : "Inactive · View only"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-                       {/* RIGHT SIDE - Switch button (only for super admin) */}
-            {isSuperAdmin && (
-              <button
-                onClick={clearCompany}
-                className="py-0.5 lg:py-1.5 px-2 lg:px-3.5 rounded-lg border-2 border-secondary bg-transparent text-xs font-medium text-secondary hover:bg-secondary/5 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
-               
-              >
-                <Repeat className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-secondary" />
-                <span className="hidden lg:inline">Switch</span>
-              </button>
-            )}
-          </div>
-        </div>
+        <PageHeader
+            title="All Products"
+              icon={Package2}
+          eyebrow={isSuperAdmin && companyName ? companyName : undefined}
+          description={
+            isCompanyViewOnly
+              ? "Browse and search this company’s products. Editing is disabled while the company is inactive."
+              : "Manage your company’s products, pricing, stock, and availability."
+          }
+          badge={
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold sm:text-xs ${
+                companyIsActive
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-red-200 bg-red-50 text-red-700"
+              }`}
+            >
+              {companyIsActive ? "Active" : "Inactive · View only"}
+            </span>
+          }
+          actions={
+            <>
+              {isSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={clearCompany}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-secondary shadow-sm transition hover:border-secondary/30 hover:bg-secondary/5 sm:text-sm"
+                >
+                  <Repeat className="h-4 w-4" />
+                  <span>Switch company</span>
+                </button>
+              )}
+              {canEditBasic && (
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-secondary/90 sm:text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Product</span>
+                </button>
+              )}
+            </>
+          }
+          className="mb-3 sm:mb-4"
+        />
 
         {isCompanyViewOnly && (
-          <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs sm:text-sm text-amber-800">
+          <div className="mb-3 mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 sm:text-sm">
             <Lock className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <p>
               This company is inactive. You can view and search its products, but adding, editing, and deleting are disabled. Only a super admin can reactivate the company from Company Management.
             </p>
           </div>
         )}
-{/* BUTTONS SECTION - Desktop only (hidden on mobile) */}
-<div className="hidden lg:flex flex-row justify-end items-center gap-3 mt-3 sm:mt-4 mb-3">
-  {/* Desktop Add Product button */}
-  {canEditBasic && (
-    <button
-      onClick={handleAdd}
-      className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-secondary text-white hover:bg-secondary flex items-center gap-1 sm:gap-1.5 shadow-sm text-xs sm:text-sm"
-    >
-      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
-    </button>
-  )}
-</div>
       </div>
 
-            {/* Mobile Action Buttons - Below Search (visible only on mobile) */}
-      <div className="flex flex-row justify-end items-center gap-3 mt-2 mb-1 lg:hidden">
-        {/* RIGHT SIDE - Add Product button only (mobile) */}
-        <div>
-          {canEditBasic && (
-            <button
-              onClick={handleAdd}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-secondary text-white hover:bg-secondary/90 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition-all shadow-sm"
-            >
-              <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Add Product
-            </button>
-          )}
-        </div>
-      </div>
             {/* Search Bar with Page Size Selector - MOBILE ONLY (visible on mobile, hidden on desktop) */}
 <div className="mb-2 lg:hidden">
         <div className="flex items-center gap-2">
@@ -422,6 +419,7 @@ export default function CompanyProducts() {
           products={products}
           totalItems={totalItems}
           loading={loading}
+          onView={handleView}
           onEdit={canEditBasic ? handleEdit : undefined}
           onDelete={
             canDelete

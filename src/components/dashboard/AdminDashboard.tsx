@@ -881,7 +881,7 @@ export default function AdminDashboard() {
                   />
                   <SidebarItem
                     icon={<Users className="h-5 w-5" />}
-                    label="Staff & Specialists"
+                    label="Dispatchers & Specialists"
                     active={activeTab === "serviceStaff"}
                     collapsed={sidebarCollapsed}
                     onClick={() => navigate("serviceStaff")}
@@ -1082,7 +1082,7 @@ export default function AdminDashboard() {
                             : "bg-gray-50 text-gray-600 border-gray-200"
                         }`}
                     >
-                      {company.role}
+                      {company.role === "staff" ? "Dispatcher" : company.role}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -1159,7 +1159,7 @@ export default function AdminDashboard() {
                         <div className="mt-2 flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
                           <p className="text-xs font-medium text-indigo-700">
-                            Role: {company.role}
+                            Role: {company.role === "staff" ? "Dispatcher" : company.role}
                           </p>
                         </div>
                       )}

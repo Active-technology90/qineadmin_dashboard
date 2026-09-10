@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Plus } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import api from "../../../services/api";
 import {
   createCompany,
@@ -41,6 +41,7 @@ import CompanyFilters from "./CompanyFilters";
 import CompanyForm from "./CompanyForm";
 import type { CompanyFormData } from "./CompanyForm";
 import LocationPickerModal from "./LocationPickerModal";
+import PageHeader from "../../ui/PageHeader";
 
 type PaginatedResponse<T> = {
   results: T[];
@@ -1415,16 +1416,20 @@ export default function CompanyManagement() {
 
   if (loading) {
     return (
-      <div className="max-w-full min-h-screen p-4 sm:p-6 lg:p-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="animate-pulse">
-            <div className="h-8 w-48 bg-gray-300/70 rounded mb-2"></div>
-            <div className="h-4 w-64 bg-gray-300/70 rounded"></div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-24 bg-gray-300/70 rounded-xl animate-pulse"></div>
-          </div>
-        </div>
+      <div className="max-w-full min-h-screen p-3 sm:p-4 lg:p-6">
+        <PageHeader
+          title={isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
+          description={
+            isSuperAdmin
+              ? "Manage company access, status, and operational settings."
+              : isMarketing
+                ? "Manage company profiles and marketing information."
+                : "Manage your company details and settings."
+          }
+          icon={Building2}
+          loading
+          className="mb-4 sm:mb-6"
+        />
         {isSuperAdmin || isMarketing ? (
           <SkeletonTable rowCount={pageSize} />
         ) : (
@@ -1438,40 +1443,33 @@ export default function CompanyManagement() {
     <div className="max-w-full min-h-screen">
       <Toast toast={toast} />
       <div className="p-2 sm:p-4 md:p-4 lg:p-6 space-y-3 sm:space-y-3 md:space-y-4">
-        {/* Header */}
-        <div className="pt-1 px-2 sm:pt-3 md:pt-4 flex justify-between items-center gap-3 flex-wrap">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base sm:text-sm md:text-xl font-bold text-secondary truncate">
-              {isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
-            </h2>
-            {!isSuperAdmin && !isMarketing && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-[#674FA3]"></span>
-                Manage your company details and settings
-              </p>
-            )}
-            {isSuperAdmin && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                Company activation and deactivation are super-admin only. Inactive companies remain visible but their company operations are view-only.
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {canAddCompany && (
+        <PageHeader
+          title={isSuperAdmin || isMarketing ? "Companies" : "Company Detail"}
+          description={
+            isSuperAdmin
+              ? "Manage company activation, access, and operational settings. Inactive companies remain visible in view-only mode."
+              : isMarketing
+                ? "Manage company profiles and marketing information."
+                : "Manage your company details and settings."
+          }
+          icon={Building2}
+          actions={
+            canAddCompany ? (
               <button
+                type="button"
                 onClick={() => {
                   resetForm();
                   setModalOpen(true);
                 }}
-                className="bg-secondary text-white px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 hover:bg-[#5b4694] transition shadow-sm text-sm sm:text-base flex-shrink-0"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5b4694] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 focus-visible:ring-offset-2 sm:w-auto"
               >
-                <Plus size={18} className="w-3 h-3 sm:w-5 sm:h-5" />
-                <span className="hidden md:inline">Add Company</span>
-                <span className="inline md:hidden text-xs">Add</span>
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Company</span>
+                <span className="sm:hidden">Add</span>
               </button>
-            )}
-          </div>
-        </div>
+            ) : undefined
+          }
+        />
 
         {(isSuperAdmin || isMarketing) && (
           <CompanyFilters

@@ -15,6 +15,7 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  Megaphone,
   MegaphoneOff,
   CircleCheck,
   CircleAlert,
@@ -34,6 +35,7 @@ import {
   deleteCompanyAd,
 } from "../../services/api";
 import { useCurrentCompany } from "../../context/CurrentCompanyContext";
+import PageHeader from "../ui/PageHeader";
 
 // ----------------------------------------------------------------------
 // Types – matches the system’s expected ad structure
@@ -990,37 +992,35 @@ export default function AdManagement() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Sticky Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/80 backdrop-blur-md rounded-2xl -mt-2 pt-3 sm:pt-4 pb-3 px-3 sm:px-4 border-b border-gray-100 w-full overflow-hidden"
-        >
-          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 min-w-0 w-full">
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <h1 className="text-base xs:text-xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent truncate leading-tight">
-                {isCompanyAdmin ? "My Company Ads" : "Advertisments"}
-              </h1>
-              <p className="text-gray-500 text-[11px] xs:text-xs sm:text-sm mt-0.5 truncate">
-                {isCompanyAdmin
-                  ? "Manage ads for your company"
-                  : "Manage placements across your platform"}
-              </p>
-            </div>
-            {!isReadOnly && (
-              <div className="shrink-0">
-                <Button
-                  onClick={openCreateModal}
-                  size="lg"
-                  className="shadow-sm inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-nowrap min-h-[28px] sm:min-h-[40px] max-w-[140px] xs:max-w-none overflow-hidden"
-                >
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                  <span className="truncate">New Ads</span>
-                </Button>
-              </div>
-            )}
-          </div>
-        </motion.div>
+        <PageHeader
+          title={isCompanyAdmin ? "My Company Ads" : "Advertisements"}
+          description={
+            isCompanyAdmin
+              ? "Manage advertisements and placements for your company."
+              : "Manage advertisement placements across the platform."
+          }
+          icon={Megaphone}
+          loading={isLoading && ads.length === 0}
+          badge={
+            isReadOnly ? (
+              <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600 sm:text-xs">
+                View Only
+              </span>
+            ) : undefined
+          }
+          actions={
+            !isReadOnly ? (
+              <Button
+                onClick={openCreateModal}
+                size="md"
+                className="w-full shadow-sm sm:w-auto"
+              >
+                <Plus className="h-4 w-4 shrink-0" />
+                <span>New Ad</span>
+              </Button>
+            ) : undefined
+          }
+        />
 
         {/* Stats Grid */}
         <div className="hidden xs:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -1078,19 +1078,6 @@ export default function AdManagement() {
               onPageChange={setCurrentPage}
             />
           </>
-        )}
-
-        {/* Floating Mobile Action Button */}
-        {!isReadOnly && (
-          <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={openCreateModal}
-            className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full bg-secondary text-white shadow-xl flex items-center justify-center z-40"
-          >
-            <Plus className="w-6 h-6" />
-          </motion.button>
         )}
 
         {/* Modals */}

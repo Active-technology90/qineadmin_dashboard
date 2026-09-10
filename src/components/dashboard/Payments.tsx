@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Download, RefreshCw, X, Building2 } from "lucide-react";
+import { Search, Download, RefreshCw, X, Building2, Package2 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { Toast } from "../ui/Toast";
 import { Pagination } from "../ui/Pagination";
@@ -12,6 +12,7 @@ import { CompanySelector } from "./company-products/CompanySelector";
 import type { VendorOrder } from "../../types";
 import { CustomSelect, type SelectOption } from "../ui/CustomSelect";
 import { SearchInput } from "../ui/SearchInput";
+import PageHeader from "../ui/PageHeader";
 
 interface Payout {
   id: number;
@@ -218,37 +219,41 @@ export default function Payments() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <Toast toast={toast} />
 
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-3 mb-4">
-        <div>
-          <p className="text-xs sm:text-base font-bold text-secondary">
-            {isAllPayouts
-              ? "Showing payouts across all companies"
-              : `Payouts for ${companyName}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {isSuperAdmin && (
-            <button
-              onClick={() => setIsCompanySelectorOpen(true)}
-              className="px-2 sm:px-3 py-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm transition"
-            >
-              <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> 
-              <span className="hidden xs:inline">Select Company</span>
-              <span className="inline xs:hidden">Select</span>
-            </button>
-          )}
-          {isSuperAdmin && companySlug && (
-            <button
-              onClick={() => clearCompany()}
-              className="p-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
-              aria-label="Clear company"
-            >
-              <X className="h-3 w-3 sm:h-4 sm:w-4" />
-            </button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Payouts"
+          icon={Package2}
+        description={
+          isAllPayouts
+            ? "Review payouts across all companies."
+            : `Review payouts for ${companyName || "the selected company"}.`
+        }
+        actions={
+          isSuperAdmin ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsCompanySelectorOpen(true)}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-secondary shadow-sm transition hover:border-secondary/30 hover:bg-secondary/5 sm:text-sm"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>{companySlug ? "Change company" : "Select company"}</span>
+              </button>
+              {companySlug && (
+                <button
+                  type="button"
+                  onClick={clearCompany}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  aria-label="Clear selected company"
+                  title="Show payouts for all companies"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </>
+          ) : undefined
+        }
+        className="mb-4 sm:mb-6"
+      />
 
       {/* Company Selector Overlay */}
       {isCompanySelectorOpen && (
